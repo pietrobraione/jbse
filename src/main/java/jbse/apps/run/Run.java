@@ -21,7 +21,7 @@ import jbse.apps.Formatter;
 import jbse.apps.StateFormatterGraphviz;
 import jbse.apps.StateFormatterJUnitTestSuite;
 import jbse.apps.StateFormatterText;
-import jbse.apps.StateFormatterTrace;
+import jbse.apps.StateFormatterPath;
 import jbse.apps.Timer;
 import jbse.apps.Util;
 import jbse.apps.run.RunParameters.DecisionProcedureCreationStrategy;
@@ -31,7 +31,7 @@ import jbse.apps.run.RunParameters.InteractionMode;
 import jbse.apps.run.RunParameters.StateFormatMode;
 import jbse.apps.run.RunParameters.StepShowMode;
 import jbse.apps.run.RunParameters.TextMode;
-import jbse.apps.run.RunParameters.TraceTypes;
+import jbse.apps.run.RunParameters.PathTypes;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -80,7 +80,7 @@ import jbse.val.Simplex;
  * <li>the current execution state in textual form.</li>
  * </ul>
  * 
- * {@code Run} executes a trace until it reaches a stuck state; then, if it
+ * {@code Run} executes a path until it reaches a stuck state; then, if it
  * can backtrack to some state, it asks the user via console whether it should
  * backtrack. {@code Run} tries to establish a connection with a decision
  * procedure to prune infeasible branches; in the case it fails to connect to a
@@ -127,26 +127,26 @@ public final class Run {
     /** The concretization checker. */
     private InitialHeapChecker checker = null;
 
-    /** Counter for the number of analyzed traces that are safe (do not violate assertions). */
-    private long tracesSafe = 0;
+    /** Counter for the number of analyzed paths that are safe (do not violate assertions). */
+    private long pathsSafe = 0;
 
-    /** Counter for the number of analyzed traces that are unsafe (violate some assertion). */
-    private long tracesUnsafe = 0;
+    /** Counter for the number of analyzed paths that are unsafe (violate some assertion). */
+    private long pathsUnsafe = 0;
 
     /** 
-     * Counter for the number of analyzed traces that are unmanageable 
+     * Counter for the number of analyzed paths that are unmanageable 
      * (the symbolic executor is not able to execute them). 
      */
-    private long tracesUnmanageable = 0;
+    private long pathsUnmanageable = 0;
 
-    /** Counter for the number of analyzed traces that are safe and concretizable. */
-    private long tracesConcretizableSafe = 0;
+    /** Counter for the number of analyzed paths that are safe and concretizable. */
+    private long pathsConcretizableSafe = 0;
 
-    /** Counter for the number of analyzed traces that are unsafe and concretizable. */
-    private long tracesConcretizableUnsafe = 0;
+    /** Counter for the number of analyzed paths that are unsafe and concretizable. */
+    private long pathsConcretizableUnsafe = 0;
 
-    /** Counter for the number of analyzed traces that are out of scope and concretizable. */
-    private long tracesConcretizableOutOfScope = 0;
+    /** Counter for the number of analyzed paths that are out of scope and concretizable. */
+    private long pathsConcretizableOutOfScope = 0;
 
     /** The time spent during the concretization checks. */
     private long elapsedTimeConcretization = 0;
@@ -175,17 +175,17 @@ public final class Run {
      *
      */
     private enum CounterKind {
-        /** Increment the counter of the safe traces. */
+        /** Increment the counter of the safe paths. */
         INC_SAFE,
-        /** Increment the counter of the unsafe traces. */
+        /** Increment the counter of the unsafe paths. */
         INC_UNSAFE,
-        /** Increment the counter of the out of scope traces. */
+        /** Increment the counter of the out of scope paths. */
         INC_OUT_OF_SCOPE
     }
 
     private class ActionsRun extends Runner.Actions {
-        private String endOfTraceMessage;
-        private TraceTypes traceKind;
+        private String endOfPathMessage;
+        private PathTypes pathKind;
         private boolean mayPrint;
 
         /**
@@ -207,7 +207,7 @@ public final class Run {
          * @return {@code true} iff the user told to stop execution.
          */
         private boolean printAndAsk() {
-            if (this.endOfTraceMessage == null && this.traceKind != TraceTypes.CONTRADICTORY && this.stackSizeAcceptable() && this.mayPrint) {
+            if (this.endOfPathMessage == null && this.pathKind != PathTypes.CONTRADICTORY && this.stackSizeAcceptable() && this.mayPrint) {
                 try {
                     final State currentState = Run.this.getCurrentState();
                     Run.this.emitState(currentState);
@@ -254,12 +254,12 @@ public final class Run {
         }
         
         @Override
-        public boolean atTraceStart() {
+        public boolean atPathStart() {
             //scope not yet exhausted
-            this.endOfTraceMessage = null;
+            this.endOfPathMessage = null;
 
-            //trace initially assumed to be safe
-            this.traceKind = TraceTypes.SAFE;
+            //path initially assumed to be safe
+            this.pathKind = PathTypes.SAFE;
 
             //exits if user wants
             boolean stop = false;
@@ -294,13 +294,13 @@ public final class Run {
 
         @Override
         public boolean atContradictionException(ContradictionException e) {
-            this.traceKind = TraceTypes.CONTRADICTORY;
+            this.pathKind = PathTypes.CONTRADICTORY;
             return false;
         }
 
         @Override
         public boolean atFailureException(FailureException e) {
-            this.traceKind = TraceTypes.UNSAFE;
+            this.pathKind = PathTypes.UNSAFE;
             return false;
         }
 
@@ -313,22 +313,22 @@ public final class Run {
 
         @Override
         public boolean atScopeExhaustionHeap() {
-            this.traceKind = TraceTypes.OUT_OF_SCOPE;
-            this.endOfTraceMessage = WARNING_SCOPE_EXHAUSTED_HEAP;
+            this.pathKind = PathTypes.OUT_OF_SCOPE;
+            this.endOfPathMessage = WARNING_SCOPE_EXHAUSTED_HEAP;
             return super.atScopeExhaustionHeap();
         }
 
         @Override
         public boolean atScopeExhaustionDepth() {
-            this.traceKind = TraceTypes.OUT_OF_SCOPE;
-            this.endOfTraceMessage = WARNING_SCOPE_EXHAUSTED_DEPTH;
+            this.pathKind = PathTypes.OUT_OF_SCOPE;
+            this.endOfPathMessage = WARNING_SCOPE_EXHAUSTED_DEPTH;
             return super.atScopeExhaustionDepth();
         }
 
         @Override
         public boolean atScopeExhaustionCount() {
-            this.traceKind = TraceTypes.OUT_OF_SCOPE;
-            this.endOfTraceMessage = WARNING_SCOPE_EXHAUSTED_COUNT;
+            this.pathKind = PathTypes.OUT_OF_SCOPE;
+            this.endOfPathMessage = WARNING_SCOPE_EXHAUSTED_COUNT;
             return super.atScopeExhaustionCount();
         }
 
@@ -336,20 +336,20 @@ public final class Run {
         public boolean atCannotManageStateException(CannotManageStateException e)
         throws CannotManageStateException {
             if (e instanceof CannotInvokeNativeException) {
-                this.traceKind = TraceTypes.UNMANAGEABLE;
-                this.endOfTraceMessage = WARNING_CANNOT_INVOKE_NATIVE + e.getMessage();
+                this.pathKind = PathTypes.UNMANAGEABLE;
+                this.endOfPathMessage = WARNING_CANNOT_INVOKE_NATIVE + e.getMessage();
                 return false;
             } else if (e instanceof NotYetImplementedException) {
-                this.traceKind = TraceTypes.UNMANAGEABLE;
-                this.endOfTraceMessage = WARNING_NOT_IMPLEMENTED_FEATURE + e.getMessage();
+                this.pathKind = PathTypes.UNMANAGEABLE;
+                this.endOfPathMessage = WARNING_NOT_IMPLEMENTED_FEATURE + e.getMessage();
                 return false;
             } else if (e instanceof MetaUnsupportedException) {
-                this.traceKind = TraceTypes.UNMANAGEABLE;
-                this.endOfTraceMessage = WARNING_META_UNSUPPORTED + e.getMessage();
+                this.pathKind = PathTypes.UNMANAGEABLE;
+                this.endOfPathMessage = WARNING_META_UNSUPPORTED + e.getMessage();
                 return false;
             } else if (e instanceof UninterpretedUnsupportedException) {
-                this.traceKind = TraceTypes.UNMANAGEABLE;
-                this.endOfTraceMessage = WARNING_UNINTERPRETED_UNSUPPORTED + e.getMessage();
+                this.pathKind = PathTypes.UNMANAGEABLE;
+                this.endOfPathMessage = WARNING_UNINTERPRETED_UNSUPPORTED + e.getMessage();
                 return false;
             } else {
                 Run.this.err(ERROR_UNEXPECTED);
@@ -414,7 +414,7 @@ public final class Run {
         }
 
         @Override
-        public boolean atTraceEnd() {
+        public boolean atPathEnd() {
             try {
                 final State currentState = Run.this.engine.getCurrentState();
                 //prints the leaf state if the case
@@ -422,7 +422,7 @@ public final class Run {
                     Run.this.parameters.getStepShowMode() == StepShowMode.SOURCE ||    //already shown
                     Run.this.parameters.getStepShowMode() == StepShowMode.METHOD ||    //already shown
                     Run.this.parameters.getStepShowMode() == StepShowMode.NONE   ||    //not to show
-                    !Run.this.parameters.getTracesToShow().contains(this.traceKind)) { //not to show
+                    !Run.this.parameters.getPathsToShow().contains(this.pathKind)) { //not to show
                     //does nothing, the leaf state has been already printed 
                     //or must not be printed at all
                 } else {
@@ -437,38 +437,38 @@ public final class Run {
                     Run.this.emitState(currentState);
                 } 
 
-                //displays trace end message and updates stats
+                //displays path end message and updates stats
                 final CounterKind counterKind;
-                switch (this.traceKind) {
+                switch (this.pathKind) {
                 case SAFE:
-                    ++Run.this.tracesSafe;
-                    this.endOfTraceMessage = MSG_SAFE_TRACE;
+                    ++Run.this.pathsSafe;
+                    this.endOfPathMessage = MSG_PATH_SAFE;
                     counterKind = CounterKind.INC_SAFE;
                     break;
                 case UNSAFE:
-                    ++Run.this.tracesUnsafe;
-                    this.endOfTraceMessage = MSG_UNSAFE_TRACE;
+                    ++Run.this.pathsUnsafe;
+                    this.endOfPathMessage = MSG_PATH_UNSAFE;
                     counterKind = CounterKind.INC_UNSAFE;
                     break;
                 case OUT_OF_SCOPE:
                     //counter is provided by runner
-                    //this.endOfTraceMessage already set
+                    //this.endOfPathMessage already set
                     counterKind = CounterKind.INC_OUT_OF_SCOPE;
                     break;
                 case UNMANAGEABLE:
-                    ++Run.this.tracesUnmanageable;
-                    //this.endOfTraceMessage already set
+                    ++Run.this.pathsUnmanageable;
+                    //this.endOfPathMessage already set
                     counterKind = null;
                     break;
                 case CONTRADICTORY:
-                    this.endOfTraceMessage = MSG_CONTRADICTORY_TRACE;
+                    this.endOfPathMessage = MSG_PATH_CONTRADICTORY;
                     counterKind = null;
                     break;
                 default: //to keep compiler happy:
                     throw new AssertionError();
                 }
                 if (Run.this.parameters.getShowWarnings()) {
-                    Run.this.log(currentState.getBranchIdentifier() + "[" + currentState.getSequenceNumber() + "]" + this.endOfTraceMessage);
+                    Run.this.log(currentState.getBranchIdentifier() + "[" + currentState.getSequenceNumber() + "]" + this.endOfPathMessage);
                 }
                 if (Run.this.parameters.getDoConcretization()) {
                     checkFinalStateIsConcretizable(counterKind);
@@ -556,17 +556,17 @@ public final class Run {
             Run.this.elapsedTimeConcretization += elapsedTime;
             if (concretizable) {
                 if (ctr == CounterKind.INC_OUT_OF_SCOPE) {
-                    ++Run.this.tracesConcretizableOutOfScope;
+                    ++Run.this.pathsConcretizableOutOfScope;
                 } else if (ctr == CounterKind.INC_SAFE) {
-                    ++Run.this.tracesConcretizableSafe;
+                    ++Run.this.pathsConcretizableSafe;
                 } else { //ctr == CounterKind.INC_UNSAFE
-                    ++Run.this.tracesConcretizableUnsafe;
+                    ++Run.this.pathsConcretizableUnsafe;
                 }
             }
             if (Run.this.parameters.getShowWarnings()) {
                 final State currentState = Run.this.engine.getCurrentState();
                 Run.this.log(currentState.getBranchIdentifier() +
-                             (concretizable ? MSG_CONCRETIZABLE_TRACE : MSG_NOT_CONCRETIZABLE_TRACE));
+                             (concretizable ? MSG_PATH_CONCRETIZABLE : MSG_PATH_NOT_CONCRETIZABLE));
             }
         }
     }
@@ -832,8 +832,8 @@ public final class Run {
             this.formatter = new StateFormatterText(this.parameters.getSourcePath(), false);
         } else if (type == StateFormatMode.GRAPHVIZ) {
             this.formatter = new StateFormatterGraphviz();
-        } else if (type == StateFormatMode.TRACE) {
-            this.formatter = new StateFormatterTrace();
+        } else if (type == StateFormatMode.PATH) {
+            this.formatter = new StateFormatterPath();
         } else if (type == StateFormatMode.JUNIT_TEST) {
             this.formatter = new StateFormatterJUnitTestSuite(this::getInitialState, this::getModel);
         } else {
@@ -1072,33 +1072,33 @@ public final class Run {
         final long elapsedTimeDecisionProcedure = (this.timer == null ? 0 : this.timer.getTime());
         final long speed = this.engine.getAnalyzedStates() * 1000 / elapsedTime;
         final long speedPostInitialPhase = (elapsedTime == elapsedTimePreInitialPhase) ? 0 : (this.engine.getAnalyzedStates() - this.preInitialStateCount) * 1000 / (elapsedTime - elapsedTimePreInitialPhase);
-        final long tracesContradictory = 
-            this.runner.getTracesTotal() -
-            this.tracesSafe - 
-            this.tracesUnsafe -
-            this.runner.getTracesOutOfScope() -
-            this.tracesUnmanageable;
+        final long pathsViolatingAssumptions = 
+            this.runner.getPathsTotal() -
+            this.pathsSafe - 
+            this.pathsUnsafe -
+            this.runner.getPathsOutOfScope() -
+            this.pathsUnmanageable;
         log(MSG_END_STATES + this.engine.getAnalyzedStates() + ", " +
         	MSG_END_STATES_PREINITIAL + this.preInitialStateCount + ", " +
-            MSG_END_TRACES_TOT + this.runner.getTracesTotal() + ", " +
-            MSG_END_TRACES_SAFE + this.tracesSafe + 
+            MSG_END_PATHS_TOT + this.runner.getPathsTotal() + ", " +
+            MSG_END_PATHS_SAFE + this.pathsSafe + 
             (Run.this.parameters.getDoConcretization() ? 
-             " (" + this.tracesConcretizableSafe + " concretizable)" :
+             " (" + this.pathsConcretizableSafe + " concretizable)" :
              "") +
             ", " +
-            MSG_END_TRACES_UNSAFE + this.tracesUnsafe + 
+            MSG_END_PATHS_UNSAFE + this.pathsUnsafe + 
             (Run.this.parameters.getDoConcretization() ? 
-             " (" + this.tracesConcretizableUnsafe + " concretizable)" :
+             " (" + this.pathsConcretizableUnsafe + " concretizable)" :
              "") +
             ", " +
-            MSG_END_TRACES_OUT_OF_SCOPE + this.runner.getTracesOutOfScope() +
+            MSG_END_PATHS_OUT_OF_SCOPE + this.runner.getPathsOutOfScope() +
             (Run.this.parameters.getDoConcretization() ? 
-             " (" + this.tracesConcretizableOutOfScope + " concretizable)" :  
+             " (" + this.pathsConcretizableOutOfScope + " concretizable)" :  
              "") +
             ", " +
-            MSG_END_TRACES_VIOLATING_ASSUMPTION + tracesContradictory +
+            MSG_END_PATHS_VIOLATING_ASSUMPTION + pathsViolatingAssumptions +
             ", " +
-            MSG_END_TRACES_UNMANAGEABLE + this.tracesUnmanageable + ".");
+            MSG_END_PATHS_UNMANAGEABLE + this.pathsUnmanageable + ".");
         log(MSG_END_ELAPSED + Util.formatTime(elapsedTime) + ", " +
         	MSG_END_ELAPSED_PREINITIAL + Util.formatTime(elapsedTimePreInitialPhase) + ", " +
             MSG_END_SPEED + speed + " states/sec, " +
@@ -1178,20 +1178,20 @@ public final class Run {
     /** Message: start of symbolic execution. */
     private static final String MSG_START = "Starting symbolic execution of method ";
 
-    /** Message: the trace is safe. */
-    private static final String MSG_SAFE_TRACE = " trace is safe.";
+    /** Message: the path is safe. */
+    private static final String MSG_PATH_SAFE = " path is safe.";
 
-    /** Message: the trace is unsafe (violated an assertion). */
-    private static final String MSG_UNSAFE_TRACE = " trace violates an assertion.";
+    /** Message: the path is unsafe (violated an assertion). */
+    private static final String MSG_PATH_UNSAFE = " path violates an assertion.";
 
-    /** Message: the trace is contradictory/irrelevant (violated an assumption). */
-    private static final String MSG_CONTRADICTORY_TRACE = " trace violates an assumption.";
+    /** Message: the path is contradictory/irrelevant (violated an assumption). */
+    private static final String MSG_PATH_CONTRADICTORY = " path violates an assumption.";
 
-    /** Message: the trace is concretizable. */
-    private static final String MSG_CONCRETIZABLE_TRACE = " trace has a concretizable final state.";
+    /** Message: the path is concretizable. */
+    private static final String MSG_PATH_CONCRETIZABLE = " path has a concretizable final state.";
 
-    /** Message: the trace is not concretizable. */
-    private static final String MSG_NOT_CONCRETIZABLE_TRACE = " trace has not a concretizable final state.";
+    /** Message: the path is not concretizable. */
+    private static final String MSG_PATH_NOT_CONCRETIZABLE = " path has not a concretizable final state.";
 
     /** Message: end of symbolic execution. */
     private static final String MSG_END = "Symbolic execution finished at ";
@@ -1220,23 +1220,23 @@ public final class Run {
     /** Message: analyzed pre-initial states. */
     private static final String MSG_END_STATES_PREINITIAL = "Analyzed pre-initial states: ";
 
-    /** Message: total traces. */
-    private static final String MSG_END_TRACES_TOT = "Analyzed traces: ";
+    /** Message: total paths. */
+    private static final String MSG_END_PATHS_TOT = "Analyzed paths: ";
 
-    /** Message: total traces violating assumptions. */
-    private static final String MSG_END_TRACES_VIOLATING_ASSUMPTION = "Violating assumptions: ";
+    /** Message: total paths violating assumptions. */
+    private static final String MSG_END_PATHS_VIOLATING_ASSUMPTION = "Violating assumptions: ";
 
-    /** Message: total unmanageable traces. */
-    private static final String MSG_END_TRACES_UNMANAGEABLE = "Unmanageable: ";
+    /** Message: total unmanageable paths. */
+    private static final String MSG_END_PATHS_UNMANAGEABLE = "Unmanageable: ";
 
-    /** Message: total safe traces. */
-    private static final String MSG_END_TRACES_SAFE = "Safe: ";
+    /** Message: total safe paths. */
+    private static final String MSG_END_PATHS_SAFE = "Safe: ";
 
-    /** Message: total unsafe traces. */
-    private static final String MSG_END_TRACES_UNSAFE = "Unsafe: ";
+    /** Message: total unsafe paths. */
+    private static final String MSG_END_PATHS_UNSAFE = "Unsafe: ";
 
-    /** Message: total traces. */
-    private static final String MSG_END_TRACES_OUT_OF_SCOPE = "Out of scope: ";
+    /** Message: total paths. */
+    private static final String MSG_END_PATHS_OUT_OF_SCOPE = "Out of scope: ";
 
     /** Message: will consider all the clauses satisfiable. */
     private static final String MSG_DECISION_BASIC = "Will use a noninteractive, always-sat decision procedure when necessary.";
@@ -1255,13 +1255,13 @@ public final class Run {
     private static final String WARNING_TIMEOUT = "Timeout.";
 
     /** Warning: exhausted heap scope. */
-    private static final String WARNING_SCOPE_EXHAUSTED_HEAP = " trace exhausted heap scope.";
+    private static final String WARNING_SCOPE_EXHAUSTED_HEAP = " path exhausted heap scope.";
 
     /** Warning: exhausted depth scope. */
-    private static final String WARNING_SCOPE_EXHAUSTED_DEPTH = " trace exhausted depth scope.";
+    private static final String WARNING_SCOPE_EXHAUSTED_DEPTH = " path exhausted depth scope.";
 
     /** Warning: exhausted count scope. */
-    private static final String WARNING_SCOPE_EXHAUSTED_COUNT = " trace exhausted count scope.";
+    private static final String WARNING_SCOPE_EXHAUSTED_COUNT = " path exhausted count scope.";
 
     /** Warning: cannot manage a native method invocation. */
     private static final String WARNING_CANNOT_INVOKE_NATIVE = " performed an unmanageable native method invocation: ";
@@ -1324,7 +1324,7 @@ public final class Run {
     private static final String ERROR_UNDEF_DECISION_PROCEDURE = "Unexpected internal error: This decision procedure is unimplemented.";
 
     /** Error: no or bad JRE. */
-    private static final String ERROR_BAD_CLASSPATH = "Cannot found item in the classpath.";
+    private static final String ERROR_BAD_CLASSPATH = "Cannot find item in the classpath.";
 
     /** Error: unexpected internal error (stepping while engine stuck). */
     private static final String ERROR_ENGINE_STUCK = "Unexpected internal error: Attempted step while in a stuck state.";
@@ -1336,5 +1336,5 @@ public final class Run {
     private static final String PROMPT_SHOULD_STEP = "Proceed with next step? (x: abort, any other: step): ";
 
     /** Prompt: ask user whether should continue execution by backtracking. */
-    private static final String PROMPT_SHOULD_BACKTRACK = "Trace finished, pending backtrack points; proceed with backtrack? (x: abort, any other: backtrack): ";
+    private static final String PROMPT_SHOULD_BACKTRACK = "At the end of the path, pending backtrack points; proceed with backtrack? (x: abort, any other: backtrack): ";
 }

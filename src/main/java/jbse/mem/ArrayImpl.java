@@ -372,11 +372,18 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
      *        the initial state.
      * @param maxSimpleArrayLength an {@code int}, the maximum length an array may have
      *        to be granted simple representation.
+     * @throws InvalidInputException iff {@code (initSymbolic && !symbolic) || (isInitial && !symbolic)}. 
      * @throws InvalidTypeException iff {@code classFile} is invalid. 
      */
     public ArrayImpl(Calculator calc, boolean symbolic, boolean initSymbolic, Value initValue, Primitive length, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, boolean isInitial, int maxSimpleArrayLength) 
-    throws InvalidTypeException {
+    throws InvalidInputException, InvalidTypeException {
         super(calc, symbolic, classFile, origin, epoch, false, 0, new Signature(classFile.getClassName(), "" + INT, "length"));
+        if (initSymbolic && !symbolic) {
+        	throw new InvalidInputException("Attempted creation of a concrete array with symbolic initialization.");
+        }
+        if (isInitial && !symbolic) {
+        	throw new InvalidInputException("Attempted creation of an initial concrete array.");
+        }
         if (classFile == null || !classFile.isArray()) {
             throw new InvalidTypeException("Attempted creation of an array with type " + classFile.getClassName());
         }
@@ -406,7 +413,8 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
      * @param calc a {@link Calculator}. It must not be {@code null}. It will
      *        only be used during object construction and will not be stored
      *        in this {@link ObjektImpl}.
-     * @param referenceToOtherArray a {@link Reference} to an {@link ArrayImpl} that backs this array.
+     * @param referenceToOtherArray a {@link Reference} to an initial {@link ArrayImpl} 
+     *        that will back this array.
      * @param otherArray the {@link ArrayImpl} that backs this array.
      * @throws InvalidInputException if {@code referenceToOtherArray == null}.
      * @throws NullPointerException if {@code otherArray == null}.
@@ -510,6 +518,11 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     @Override
     public boolean isInitial() {
         return this.isInitial;
+    }
+    
+    @Override
+    public void makeInitial() throws InvalidInputException {
+    	throw new InvalidInputException("Attempted to makeInitial an array: Arrays can only be made initial through their constructors.");
     }
     
     @Override

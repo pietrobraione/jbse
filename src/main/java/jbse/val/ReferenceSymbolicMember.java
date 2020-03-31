@@ -8,6 +8,10 @@ import jbse.val.exc.InvalidTypeException;
  * (that is, is a member of an object transitively referred by a root). 
  */
 public abstract class ReferenceSymbolicMember extends ReferenceSymbolicAtomic implements SymbolicMember {
+	/** 
+	 * The {@link ReferenceSymbolic} to the container object 
+	 * this symbol originates from. 
+	 */
     private final ReferenceSymbolic container;
 
     /**
@@ -19,14 +23,17 @@ public abstract class ReferenceSymbolicMember extends ReferenceSymbolicAtomic im
      *        object with same identifier will be treated as equal.
      * @param staticType a {@link String}, the static type of the
      *        reference (taken from bytecode).
-     * @throws InvalidTypeException  if {@code staticType} is not an array or instance
+     * @param genericSignatureType a {@link String}, the generic signature 
+     *        type of the reference (taken from bytecode, its type erasure
+     *        must be {@code staticType}).
+     * @throws InvalidTypeException if {@code staticType} is not an array or instance
 	 *         reference type.
-     * @throws InvalidInputException if {@code staticType == null}.
+     * @throws InvalidInputException if {@code staticType == null || genericSignatureType == null}.
      * @throws NullPointerException if {@code container == null}.
      */
-    ReferenceSymbolicMember(ReferenceSymbolic container, int id, String staticType) 
+    ReferenceSymbolicMember(ReferenceSymbolic container, int id, String staticType, String genericSignatureType) 
     throws InvalidInputException, InvalidTypeException {
-    	super(id, staticType, container.historyPoint());
+    	super(id, staticType, genericSignatureType, container.historyPoint());
     	this.container = container;
     }
     

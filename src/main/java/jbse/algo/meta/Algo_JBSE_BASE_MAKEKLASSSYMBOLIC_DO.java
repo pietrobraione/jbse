@@ -192,7 +192,7 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
                     final ReferenceConcrete ref = (ReferenceConcrete) fieldValue;
                     if (state.isNull(ref)) {
                         //makes the new value of the field
-                        final ReferenceSymbolic newFieldValue = (ReferenceSymbolic) state.createSymbolMemberField(fieldType, currentObjekt.getOrigin(), fieldName, fieldClass);
+                        final ReferenceSymbolic newFieldValue = (ReferenceSymbolic) state.createSymbolMemberField(fieldType, fieldType, currentObjekt.getOrigin(), fieldName, fieldClass);
 
                         //sets the field
                         var.setValue(newFieldValue);
@@ -209,7 +209,7 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
                         if (oClass == null || 
                             (!oClass.equals(this.cf_JAVA_CLASS) && !oClass.isSubclass(this.cf_JAVA_CLASSLOADER) && !oClass.isSubclass(this.cf_JAVA_THREAD))) {
                             //makes the new value of the field
-                            final ReferenceSymbolic newFieldValue = (ReferenceSymbolic) state.createSymbolMemberField(fieldType, currentObjekt.getOrigin(), fieldName, fieldClass);
+                            final ReferenceSymbolic newFieldValue = (ReferenceSymbolic) state.createSymbolMemberField(fieldType, fieldType, currentObjekt.getOrigin(), fieldName, fieldClass);
 
                             //sets the field
                             var.setValue(newFieldValue);
@@ -243,7 +243,7 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
                     }
                 } else if (fieldValue instanceof ReferenceSymbolic) {
                     //makes the new value of the field
-                    final ReferenceSymbolic newFieldValue = (ReferenceSymbolic) state.createSymbolMemberField(fieldType, currentObjekt.getOrigin(), fieldName, fieldClass);
+                    final ReferenceSymbolic newFieldValue = (ReferenceSymbolic) state.createSymbolMemberField(fieldType, fieldType, currentObjekt.getOrigin(), fieldName, fieldClass);
 
                     //sets the field
                     var.setValue(newFieldValue);

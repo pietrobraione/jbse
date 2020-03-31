@@ -16,23 +16,23 @@ import jbse.val.Value;
 /**
  * A {@link Formatter} which yields a one-line text rendition of 
  * the current {@link State}, including only the current identification
- * of the state in its trace, the current method and the current 
- * statement/bytecode. Useful to print execution traces.
+ * of the state in its path, the current method and the current 
+ * statement/bytecode. Useful to print execution paths.
  * 
  * @author Pietro Braione
  *
  */
-public final class StateFormatterTrace implements Formatter {
+public final class StateFormatterPath implements Formatter {
     /** 
-     * The {@link String} used by {@link StateFormatterTrace#formatState(State)} to
+     * The {@link String} used by {@link StateFormatterPath#formatState(State)} to
      * indicate a stuck {@link State}. 
      */
     private static final String LEAF = "LEAF";
 
-    /** The {@link String} used by {@link StateFormatterTrace#formatState(State)} to separates fields. */
+    /** The {@link String} used by {@link StateFormatterPath#formatState(State)} to separates fields. */
     private static final String FIELD_SEP = " ";
 
-    /** Here the result of {@link StateFormatterTrace#formatState(State)}. */
+    /** Here the result of {@link StateFormatterPath#formatState(State)}. */
     private String output;
 
     private BytecodeFormatter bcf = new BytecodeFormatter();

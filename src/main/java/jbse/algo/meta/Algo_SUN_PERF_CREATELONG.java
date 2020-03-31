@@ -34,6 +34,7 @@ import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -72,7 +73,7 @@ public final class Algo_SUN_PERF_CREATELONG extends Algo_INVOKEMETA_Nonbranching
     @Override
     protected void cookMore(State state) 
     throws InterruptException, UndefinedResultException, SymbolicValueNotAllowedException, 
-    ClasspathException, ThreadStackEmptyException, InvalidInputException {
+    ClasspathException, ThreadStackEmptyException, InvalidInputException, RenameUnsupportedException {
     	final Calculator calc = this.ctx.getCalculator();
         //gets the first (String name) parameter
         final Reference nameReference = (Reference) this.data.operand(1);

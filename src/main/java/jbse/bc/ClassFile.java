@@ -20,6 +20,7 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -81,6 +82,16 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     public abstract String getClassName();
     
     /**
+     * Renames this class.
+     * 
+     * @param classNameNew a {@link String}, the new name
+     *        for this class.
+     * @throws RenameUnsupportedException if the class cannot
+     *         be renamed.
+     */
+    public abstract void rename(String classNameNew) throws RenameUnsupportedException;
+    
+    /**
      * Returns the internal type name for 
      * this class.
      * 
@@ -102,15 +113,14 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * 
      * @return the package name of this class as a {@link String}.
      */
-    public String getPackageName() {
-        final String className = getClassName();
-        int lastSlash = className.lastIndexOf('/');
-        if (lastSlash == -1) {
-            return "";
-        } else {
-            return className.substring(0, lastSlash);
-        }
-    }
+    public abstract String getPackageName();
+    
+    /**
+     * Returns the generic signature (type) of this class.
+     * 
+     * @return a {@link String} or {@code null} if the class has not a generic signature.
+     */
+    public abstract String getGenericSignatureType();
     
     /**
      * Returns the modifiers of the class.
@@ -185,6 +195,13 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * @return {@code true} iff the class is abstract.
      */
     public abstract boolean isAbstract();
+
+    /**
+     * Tests whether the class is final.
+     * 
+     * @return {@code true} iff the class is final.
+     */
+    public abstract boolean isFinal();
 
     /**
      * Tests whether the class has public visibility.
@@ -614,11 +631,26 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * Given the signature of a method, returns a local variable table for that method.
      * 
      * @param methodSignature the structure that contains the signature of a method.
-     * @return a {@link LocalVariableTable} for the method.
+     * @return a {@link LocalVariableTable} for the method containing the local variable table
+     *         of the method. If no LocalVariableTable attribute is found, the method returns 
+     *         a default {@link LocalVariableTable} that is built from {@code methodSignature}.
      * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
      * @throws MethodCodeNotFoundException iff the method has not the Code attribute.
      */
     public abstract LocalVariableTable getLocalVariableTable(Signature methodSignature) 
+    throws MethodNotFoundException, MethodCodeNotFoundException;    
+
+    /**
+     * Given the signature of a method, returns a local variable type table for that method.
+     * 
+     * @param methodSignature the structure that contains the signature of a method.
+     * @return a {@link LocalVariableTable} for the method containing the local variable type table
+     *         of the method. If no LocalVariableTypeTable attribute is found, the method returns
+     *         an empty {@link LocalVariableTable}.
+     * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
+     * @throws MethodCodeNotFoundException iff the method has not the Code attribute.
+     */
+    public abstract LocalVariableTable getLocalVariableTypeTable(Signature methodSignature) 
     throws MethodNotFoundException, MethodCodeNotFoundException;    
 
     /**
@@ -1216,12 +1248,12 @@ public abstract class ClassFile implements Comparable<ClassFile> {
         int i = 0;
         short slot = 0;
         if (!isStatic) {
-            lvt.setEntry(slot, REFERENCE + this.getClassName() + TYPEEND, 
+            lvt.addRow(slot, REFERENCE + this.getClassName() + TYPEEND, 
                          "this", 0, this.getCodeLength(methodSignature));
             ++i; ++slot;
         }
         for (String descriptor : parDescList) {
-            lvt.setEntry(slot, descriptor, 
+            lvt.addRow(slot, descriptor, 
                          "__PARAM[" + i + "]", 0, this.getCodeLength(methodSignature));
             ++i; ++slot;
             if (!isCat_1(descriptor.charAt(0))) {

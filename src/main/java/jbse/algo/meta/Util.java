@@ -1,5 +1,6 @@
 package jbse.algo.meta;
 
+import static jbse.algo.Util.failExecution;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_INVOKEBASIC;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOINTERFACE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOSPECIAL;
@@ -7,6 +8,18 @@ import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOSTATIC;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOVIRTUAL;
 
 import java.lang.reflect.Modifier;
+
+import jbse.algo.InterruptException;
+import jbse.algo.exc.SymbolicValueNotAllowedException;
+import jbse.bc.ClassFile;
+import jbse.bc.Signature;
+import jbse.bc.exc.MethodNotFoundException;
+import jbse.common.exc.ClasspathException;
+import jbse.mem.Instance;
+import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
+import jbse.val.Reference;
+import jbse.val.Value;
 
 class Util {
 	static final long INVALID_FILE_ID = -1L; //luckily, both an invalid file descriptor and an invalid file handle are -1
@@ -91,6 +104,93 @@ class Util {
         return ((byte) ((flags >>> REFERENCE_KIND_SHIFT) & REFERENCE_KIND_MASK)) > REF_getStatic;
     }
     
+	//The check has some code taken from CallInfo::CallInfo(Method*, Klass*)
+	//for unreflecting the method, see hotspot:/src/share/vm/interpreter/linkResolver.cpp,
+	//that is invoked by MethodHandles::init_MemberName at row 169, 
+	//hotspot:/src/share/vm/prims/methodHandles.cpp (note that we skip
+	//the case miranda+default because they seem specific to the
+	//Hotspot case)
+    static int getMemberNameFlagsMethod(ClassFile cfMethod, Signature methodSignature) throws MethodNotFoundException {
+		int flags = (short) (((short) cfMethod.getMethodModifiers(methodSignature)) & JVM_RECOGNIZED_METHOD_MODIFIERS);
+		if (canBeStaticallyBound(cfMethod, methodSignature)) {
+			if (cfMethod.isMethodStatic(methodSignature)) {
+				flags |= IS_METHOD      | (REF_invokeStatic  << REFERENCE_KIND_SHIFT);
+			} else if ("<init>".equals(methodSignature.getName()) || "<clinit>".equals(methodSignature.getName())) {
+				flags |= IS_CONSTRUCTOR | (REF_invokeSpecial << REFERENCE_KIND_SHIFT);
+			} else { //it is private (invokespecial) or is final (invokevirtual)
+				flags |= IS_METHOD      | (REF_invokeSpecial << REFERENCE_KIND_SHIFT);
+			}
+		} else if (cfMethod.isInterface()) {
+			flags |= IS_METHOD | (REF_invokeInterface << REFERENCE_KIND_SHIFT);
+		} else {
+			flags |= IS_METHOD | (REF_invokeVirtual << REFERENCE_KIND_SHIFT);
+		}
+		
+        if (cfMethod.isMethodCallerSensitive(methodSignature)) {
+            flags |= CALLER_SENSITIVE;
+        }
+        
+        return flags;
+    }
+    	
+	private static boolean canBeStaticallyBound(ClassFile cfMethod, Signature methodSignature) throws MethodNotFoundException {
+		//a default method cannot be statically bound
+		if (cfMethod.isInterface() && !cfMethod.isMethodAbstract(methodSignature)) {
+			return false;
+		}
+		
+		//a final method can be statically bound
+		if (cfMethod.isMethodFinal(methodSignature) || cfMethod.isFinal()) {
+			return true;
+		}
+		
+		//a static method is statically bound (invokestatic)
+		if (cfMethod.isMethodStatic(methodSignature)) {
+			return true;
+		}
+		
+		//a constructor is statically bound (invokespecial)
+		if ("<init>".equals(methodSignature.getName()) || "<clinit>".equals(methodSignature.getName())) {
+			return true;
+		}
+		
+		//a private method is statically bound (invokespecial)
+		if (cfMethod.isMethodPrivate(methodSignature)) {
+			return true;
+		}
+		
+		//no other method can be statically bound
+		return false;
+	}
+	
+	@FunctionalInterface
+	interface ErrorAction {
+		void doIt(String s) throws InterruptException, SymbolicValueNotAllowedException, ClasspathException;
+	}
+
+    static final ErrorAction OK                                             = msg -> { };
+	static final ErrorAction FAIL_JBSE                                      = msg -> { failExecution(msg); };
+	static final ErrorAction INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION = msg -> { throw new SymbolicValueNotAllowedException(msg); };
+
+	static Instance getInstance(State state, Value ref, String paramName, 
+	ErrorAction whenNoRef, ErrorAction whenNull, ErrorAction whenUnresolved)
+	throws InterruptException, SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
+		if (ref == null) {
+			whenNoRef.doIt("Unexpected null value while accessing " + paramName + ".");
+			return null;
+		}
+		final Reference theReference = (Reference) ref;
+		if (state.isNull(theReference)) {
+			whenNull.doIt("The " + paramName + " parameter to java.lang.invoke.MethodHandleNatives.resolve was null.");
+			return null;
+		}
+		final Instance theInstance = (Instance) state.getObject(theReference);
+		if (theInstance == null) {
+			whenUnresolved.doIt("The " + paramName + " parameter to java.lang.invoke.MethodHandleNatives.resolve was an unresolved symbolic reference on the operand stack.");
+		}
+		return theInstance;
+	}
+
     //do not instantiate!
     private Util() {
         throw new AssertionError();

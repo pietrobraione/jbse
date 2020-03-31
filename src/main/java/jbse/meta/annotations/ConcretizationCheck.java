@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 /**
  * Indicates that the target is a concretization check that 
- * may be invoked at the end of a trace. The annotation 
+ * may be invoked at the end of a path. The annotation 
  * only applies to nonstatic (instance) parameterless methods with 
  * boolean return value, and only one method in a same class may 
  * be annotated with it. Whenever a fresh symbolic object is assumed, 

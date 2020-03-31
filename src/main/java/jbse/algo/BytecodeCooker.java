@@ -1,6 +1,7 @@
 package jbse.algo;
 
 import jbse.algo.exc.CannotManageStateException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
@@ -57,10 +58,12 @@ public interface BytecodeCooker {
      * @throws ContradictionException possibly raised if some initialization
      *         assumption is contradicted (currently JBSE does not manage
      *         initialization in the decider).
+     * @throws RenameUnsupportedException possibly raised if the wrong
+     *         model class is selected (should never happen).
      */
     void cook(State state) 
     throws DecisionException, ClasspathException, InvalidInputException, 
     InvalidTypeException, InvalidOperatorException, InvalidOperandException, 
     ThreadStackEmptyException, CannotManageStateException, InterruptException, 
-    ContradictionException;
+    ContradictionException, RenameUnsupportedException;
 }

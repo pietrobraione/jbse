@@ -2,9 +2,19 @@ package jbse.dec;
 
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.common.Type.className;
+import static jbse.common.Type.eraseGenericParameters;
+import static jbse.common.Type.isTypeParameter;
+import static jbse.common.Type.ARRAYOF;
+import static jbse.common.Type.REFERENCE;
+import static jbse.common.Type.splitClassGenericSignatureTypeParameters;
+import static jbse.common.Type.TYPEEND;
+import static jbse.common.Type.TYPEVAR;
+import static jbse.common.Type.typeParameterIdentifier;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,10 +30,15 @@ import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
+import jbse.dec.SolverEquationGenericTypes.Apply;
+import jbse.dec.SolverEquationGenericTypes.Some;
+import jbse.dec.SolverEquationGenericTypes.TypeTerm;
+import jbse.dec.SolverEquationGenericTypes.Var;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.Clause;
@@ -57,6 +72,8 @@ import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.ReferenceSymbolicApply;
+import jbse.val.ReferenceSymbolicAtomic;
+import jbse.val.ReferenceSymbolicMember;
 import jbse.val.Simplex;
 import jbse.val.Term;
 import jbse.val.Value;
@@ -662,6 +679,11 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions has a version
      *         number that is unsupported by this version of JBSE.
+     * @throws RenameUnsupportedException if {@code valToLoad} is a symbolic 
+     *         reference and the class for 
+     *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+     *         or the class of one of its possibile expansions derives from a 
+     *         model class but the classfile does not support renaming.
      * @throws WrongClassNameException when {@code valToLoad} is a symbolic 
      *         reference and the bytecode for
      *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
@@ -681,7 +703,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      */
     public Outcome resolve_XLOAD_GETX(State state, Value valToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result) 
     throws InvalidInputException, DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException {
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
+    IncompatibleClassFileException, ClassFileNotAccessibleException {
         if (state == null || valToLoad == null || result == null) {
             throw new InvalidInputException("resolve_XLOAD_GETX invoked with a null parameter.");
         }
@@ -717,6 +740,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions has a version
      *         number that is unsupported by this version of JBSE.
+     * @throws RenameUnsupportedException when {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+     *         or the class of one of its possibile expansions derives from a 
+     *         model class but the classfile does not support renaming.
      * @throws WrongClassNameException when the bytecode for
      *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions has a 
@@ -734,8 +760,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      */
     protected Outcome resolve_XLOAD_GETX_Unresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
     throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, 
-    ClassFileNotAccessibleException {
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
+    IncompatibleClassFileException, ClassFileNotAccessibleException {
         try {
             final boolean partialReferenceResolution = 
             doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XLOAD_GETX(), result);
@@ -822,6 +848,11 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions has a version
      *         number that is unsupported by this version of JBSE.
+     * @throws RenameUnsupportedException when {@code valToLoad} is a symbolic 
+     *         reference and the class
+     *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+     *         or the class of one of its possibile expansions derives from a 
+     *         model class but the classfile does not support renaming.
      * @throws WrongClassNameException when {@code valToLoad} is a symbolic 
      *         reference and the bytecode for
      *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
@@ -842,8 +873,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
     //TODO should be final?
     public Outcome resolve_XALOAD(State state, List<ArrayAccessInfo> arrayAccessInfos, SortedSet<DecisionAlternative_XALOAD> result, List<ReferenceSymbolic> nonExpandedRefs)
     throws InvalidInputException, DecisionException, ClassFileNotFoundException, 
-    ClassFileIllFormedException, BadClassFileVersionException, WrongClassNameException, 
-    IncompatibleClassFileException, ClassFileNotAccessibleException {
+    ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, 
+    WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException {
         if (state == null || arrayAccessInfos == null || result == null || nonExpandedRefs == null) {
             throw new InvalidInputException("resolve_XALOAD invoked with a null parameter.");
         }
@@ -1006,6 +1037,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions has a version
      *         number that is unsupported by this version of JBSE.
+     * @throws RenameUnsupportedException if the classfile for 
+     *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+     *         or for the class name of one of its possibile expansions derives from a 
+     *         model class but the classfile does not support renaming.
      * @throws WrongClassNameException when the bytecode for
      *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions has a 
@@ -1023,7 +1058,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      */
     protected Outcome resolve_XALOAD_Unresolved(State state, ArrayAccessInfo arrayAccessInfo, SortedSet<DecisionAlternative_XALOAD> result)
     throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    BadClassFileVersionException, WrongClassNameException, 
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException {
         try {
             final boolean accessConcrete = (arrayAccessInfo.accessExpression == null);
@@ -1084,6 +1119,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         {@code refToResolve.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions has a version
      *         number that is unsupported by this version of JBSE.
+     * @throws RenameUnsupportedException if {@code refToResolve.}{@link Signature#getClassName() getClassName()}
+     *         or the class of one of its possibile expansions derives from a 
+     *         model class but the classfile does not support renaming.
      * @throws WrongClassNameException when the bytecode for
      *         {@code refToResolve.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions has a 
@@ -1099,21 +1137,21 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      */
     protected <D, DA extends D, DE extends D, DN extends D> 
     boolean doResolveReference(State state, ReferenceSymbolic refToResolve, 
-                               DecisionAlternativeReferenceFactory<DA, DE, DN> factory, SortedSet<D> result) 
-                               throws InvalidInputException, DecisionException, ClassFileNotFoundException, 
-                               ClassFileIllFormedException, BadClassFileVersionException, WrongClassNameException, 
-                               IncompatibleClassFileException, ClassFileNotAccessibleException {
+    DecisionAlternativeReferenceFactory<DA, DE, DN> factory, SortedSet<D> result) 
+    throws InvalidInputException, DecisionException, ClassFileNotFoundException, 
+    ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, 
+    WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException {
         int branchCounter = result.size() + 1;
-        final ClassHierarchy hier = state.getClassHierarchy();
 
-        //loads the static type of the reference and determines
+        //loads the most precise subclass of the reference's static type 
+        //that can be inferred from the generic type information, and determines
         //whether it can be assumed to be initialized (if not, 
         //the only compatible resolution of the reference is null)
+        //TODO loading the class of the reference, invoking getPossibleAliases and getPossibleExpansions introduces unwanted dependence on State
         final ClassFile refToResolveClass;
         try {                               
-            refToResolveClass = hier.loadCreateClass(CLASSLOADER_APP, className(refToResolve.getStaticType()), true); 
+            refToResolveClass = mostPreciseResolutionClass(state, refToResolve);  
             //TODO instead of rethrowing exceptions (class file not found, ill-formed or unaccessible) just set refToResolveTypeIsSatInitialized to false??
-            //TODO loading the static type of the reference should be done elsewhere, so to remove dependence on State
         } catch (PleaseLoadClassException e) {
             //this should never happen since we bypassed standard loading
             throw new UnexpectedInternalException(e);
@@ -1139,7 +1177,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
             }
 
             //same for static expansions
-            final Set<ClassFile> possibleExpansions = getPossibleExpansions(state, refToResolveClass); //TODO incapsulate thrown exceptions (class file not found, ill-formed or unaccessible) as effect in each decision alternative, or just skip class and report cumulatively these missed class as non-expanded references
+            final Set<ClassFile> possibleExpansions = getPossibleExpansions(state, refToResolveClass); //TODO encapsulate thrown exceptions (class file not found, ill-formed or unaccessible) as effect in each decision alternative, or just skip class and report cumulatively these missed class as non-expanded references
             if (possibleExpansions == null) {
                 throw new UnexpectedInternalException("Symbolic reference " + refToResolve + 
                                                       " (" + refToResolve.asOriginString() + ") has a bad type " + refToResolve.getStaticType() + ".");
@@ -1164,8 +1202,203 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
         //is there a partial reference resolution?
         return partialReferenceResolution;
     }
+    
+    private ClassFile mostPreciseResolutionClass(State state, ReferenceSymbolic refToResolve) 
+    throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, 
+    IncompatibleClassFileException, PleaseLoadClassException, BadClassFileVersionException, RenameUnsupportedException, 
+    WrongClassNameException {
+    	final String staticClassName = className(refToResolve.getStaticType());
+    	final String mostPreciseResolutionClassName;
+    	if (refToResolve instanceof ReferenceSymbolicAtomic) {
+    		final ReferenceSymbolicAtomic refToResolveAtomic = (ReferenceSymbolicAtomic) refToResolve;
+    		final String genericSignatureType = refToResolveAtomic.getGenericSignatureType();
+    		if (staticClassName.equals(className(eraseGenericParameters(genericSignatureType)))) {
+    			//the generic type does not convey any additional information
+        		mostPreciseResolutionClassName = staticClassName;
+    		} else if (isTypeParameter(genericSignatureType)) {
+    			mostPreciseResolutionClassName = solveTypeInformation(state, refToResolveAtomic, staticClassName, typeParameterIdentifier(genericSignatureType));
+    		} else {
+    			//this should not happen, but in any case there is no
+    			//relevant information that can be exploited
+        		mostPreciseResolutionClassName = staticClassName;
+    		}
+    	} else {
+    		//the reference symbolic is the result of an uninterpreted function
+    		//application: no interesting information here
+    		//TODO really?
+    		mostPreciseResolutionClassName = staticClassName;
+    	}
+    	return state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, mostPreciseResolutionClassName, true);
+    }
+    
+    private String solveTypeInformation(State state, ReferenceSymbolic refToResolve, String staticClassName, String typeParameter) 
+    throws ClassFileIllFormedException, InvalidInputException, ClassFileNotFoundException, ClassFileNotAccessibleException, IncompatibleClassFileException, 
+    PleaseLoadClassException, BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException {
+    	final ClassHierarchy hier = state.getClassHierarchy();
+    	final SolverEquationGenericTypes solver = new SolverEquationGenericTypes();
+    	ReferenceSymbolic ref = refToResolve;
+    	while (ref instanceof ReferenceSymbolicMember) {
+        	//gets the container reference, where the type parameter is 
+        	//instantiated, and its class, where the type parameter is declared
+        	final ReferenceSymbolicMember refMember = (ReferenceSymbolicMember) ref;
+    		final ReferenceSymbolic containerRef = refMember.getContainer(); //TODO does it work correctly for MemberArrays, MemberKeys and MemberValues?
+        	final ClassFile containerRefClass;
+    		try {
+    			containerRefClass = hier.loadCreateClass(CLASSLOADER_APP, className(containerRef.getStaticType()), true);
+    		} catch (InvalidInputException | ClassFileNotFoundException | 
+    				ClassFileIllFormedException | ClassFileNotAccessibleException | IncompatibleClassFileException | 
+    				PleaseLoadClassException | BadClassFileVersionException | WrongClassNameException e) {
+    			//this should never happen
+    			throw new UnexpectedInternalException(e);
+    		}
+    		
+    		//finds the generic parameter declarations across
+    		//the (possible) nesting of classes
+    		ClassFile declClass = containerRefClass;
+    		final LinkedList<String> containerTypeInstantiationsList = new LinkedList<>();
+    		while (true) {
+    			final String classSignatureType = declClass.getGenericSignatureType();
+        		final String classTypeParameters;
+    			if (classSignatureType == null) {
+    				classTypeParameters = "";
+    			} else {
+    				classTypeParameters = splitClassGenericSignatureTypeParameters(classSignatureType);
+    			}
+    			containerTypeInstantiationsList.addFirst(REFERENCE + declClass.getClassName() + classTypeParameters + TYPEEND);
+    			final String next = declClass.classContainer();
+    			if (next == null) {
+    				break;
+    			}
+    			declClass = hier.loadCreateClass(CLASSLOADER_APP, next, true);
+    		}
+    		
+    		//analyzes the container reference to determine the 
+    		//instantiation of the generic parameter
+    		final String containerSignatureType;
+    		if (containerRef instanceof ReferenceSymbolicAtomic) {
+    			final ReferenceSymbolicAtomic containerAtomic = (ReferenceSymbolicAtomic) containerRef;
+    			containerSignatureType = containerAtomic.getGenericSignatureType();
+    		} else {
+    			break; //nothing else to do
+    		}
+    		final String[] containerSignatureTypes = containerSignatureType.split("\\.");
+    		for (int i = 1; i < containerSignatureTypes.length; ++i) {
+    	    	containerSignatureTypes[i - 1] = containerSignatureTypes[i - 1] + TYPEEND;
+    	    	final int start = splitClassGenericSignatureTypeParameters(containerSignatureTypes[i - 1]).length();
+    	    	final String s = containerSignatureTypes[i - 1].substring(start);
+    	    	final int end = s.indexOf('<');
+    	    	containerSignatureTypes[i] = (end == -1 ? s : s.substring(0, end)) + "$" + containerSignatureTypes[i];
+    		}
+    		
+    		//adds the equations
+    		for (int k = 0; k < containerSignatureTypes.length; ++k) {
+    			solver.addEquation(textToApply(containerRef.asOriginString(), containerTypeInstantiationsList.get(k)), textToTerm((containerRef instanceof ReferenceSymbolicMember ? ((ReferenceSymbolicMember) containerRef).getContainer().asOriginString() : ""), containerSignatureTypes[k]));
+    		}
+    		
+    		ref = containerRef;
+    	}
+    	
+    	solver.solve();
+    	if (solver.hasSolution()) {
+    		final String solution = solver.getVariableValue(new Var((refToResolve instanceof ReferenceSymbolicMember ? ((ReferenceSymbolicMember) refToResolve).getContainer().asOriginString() : "") + "?" + typeParameter));
+    		return (solution == null ? staticClassName : solution); //solution == null when no equations, i.e., when refToResolve is not a ReferenceSymbolicMember
+    	} else {
+    		return staticClassName;
+    	}
+    }
+    
+	private static final Var[] EMPTY_VAR_ARRAY = new Var[0];
+    
+    private static Apply textToApply(String prefix, String text) {
+		final String functor = text.substring(1, text.indexOf('<'));
+		final ArrayList<Var> vars = new ArrayList<>();
+		final String[] preVars = text.substring(text.indexOf('<') + 1).split(":");
+		for (int k = 0; k < preVars.length - 1; ++k) {
+			vars.add(new Var(prefix + "?" + (k == 0 ? preVars[k] : preVars[k].substring(preVars[k].indexOf(';') + 1))));
+		}
+		
+		return new Apply(functor, vars.toArray(EMPTY_VAR_ARRAY));
+    }
 
-    /**
+	private static final TypeTerm[] EMPTY_TYPETERM_ARRAY = new TypeTerm[0];
+	
+	private static TypeTerm textToTerm(String prefix, String text) throws InvalidInputException {
+		if (text.charAt(0) == TYPEVAR) {
+			return new Var(prefix + "?" + text.substring(1, text.length() - 1));
+		} else if (text.equals("*")) {
+			return Some.instance();
+		} else if (text.charAt(0) == REFERENCE || text.charAt(0) == ARRAYOF) {
+			final int langleIndex = text.indexOf('<');
+			final String functor = text.substring(1, (langleIndex == -1 ? (text.length() - 1) : langleIndex));
+			if (langleIndex == -1) {
+				return new Apply(functor);
+			} else {
+				final ArrayList<TypeTerm> args = new ArrayList<>();
+				int i = functor.length() + 2;
+				boolean unknown = false;
+				while (i < text.length()) {
+					final char c = text.charAt(i);
+					if (c == '*') {
+						args.add(textToTerm(prefix, text.substring(i, i + 1)));
+						++i;
+					} else if (c == '+' || c == '-') {
+						unknown = true;
+						++i;
+					} else if (c == TYPEVAR) {
+						final int start = i;
+						do {
+							++i;
+						} while (text.charAt(i) != TYPEEND);
+						args.add(unknown ? Some.instance() : textToTerm(prefix, text.substring(start, i + 1)));
+						++i;
+						unknown = false;
+					} else if (c == REFERENCE) {
+						final int start = i;
+						int level = 1;
+						do {
+							++i;
+							if (text.charAt(i) == '<') {
+								++level;
+							} else if (text.charAt(i) == '>') {
+								--level;
+							}
+						} while (text.charAt(i) != TYPEEND || level != 1);
+						args.add(unknown ? Some.instance() : textToTerm(prefix, text.substring(start, i + 1)));
+						++i;
+						unknown = false;
+					} else if (c == ARRAYOF) {
+						final int start = i;
+						do {
+							++i;
+						} while (text.charAt(i) == ARRAYOF);
+						if (text.charAt(i) == TYPEVAR || text.charAt(i) == REFERENCE) {
+							int level = 1;
+							do {
+								++i;
+								if (text.charAt(i) == '<') {
+									++level;
+								} else if (text.charAt(i) == '>') {
+									--level;
+								}
+							} while (text.charAt(i) != TYPEEND || level != 1);
+						}
+						args.add(unknown ? Some.instance() : textToTerm(prefix, text.substring(start, i + 1)));
+						++i;
+						unknown = false;
+					} else if (c == '>') {
+						break;
+					} else {
+						throw new InvalidInputException("Cannot parse as a generic type equational term the string: " + text + ".");
+					}
+				}
+				return new Apply(functor, args.toArray(EMPTY_TYPETERM_ARRAY));
+			}
+		} else {
+			throw new InvalidInputException("Cannot parse as a generic type equational term the string: " + text + ".");
+		}
+	}
+
+	/**
      * Returns all the heap objects in a state that may be possible
      * aliases of a given {@link ReferenceSymbolic}.
      *
@@ -1264,6 +1497,11 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         candidate subclass names for {@code refClass} in 
      *         {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
      *         expansion backdoor has a version number that is unsupported by this version of JBSE.
+     * @throws RenameUnsupportedException when any of the 
+     *         candidate subclass names for {@code refClass} in 
+     *         {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
+     *         expansion backdoor derives from a 
+     *         model class but the classfile does not support renaming.
      * @throws WrongClassNameException when the bytecode for any of the 
      *         candidate subclass names for {@code refClass} in 
      *         {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
@@ -1279,7 +1517,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      */
     private static Set<ClassFile> getPossibleExpansions(State state, ClassFile refClass) 
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    BadClassFileVersionException, WrongClassNameException, 
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException {
         if (!refClass.isReference() && !refClass.isArray()) {
             return null;

@@ -1,5 +1,7 @@
 package jbse.mem;
 
+import jbse.common.exc.InvalidInputException;
+
 /**
  * Abstract superclass of all the wrapper classes for objects that go in the heap.
  */
@@ -37,8 +39,15 @@ abstract class HeapObjektWrapper<T extends HeapObjektImpl> extends ObjektWrapper
     
     protected final long getDestinationPosition() {
     	return this.destinationPosition;
-    }    
+    }
+    
+    @Override
+    public final boolean isInitial() {
+    	return getDelegate().isInitial();
+    }
 	
+	public abstract void makeInitial() throws InvalidInputException;
+
     @Override
     public abstract HeapObjekt clone();
 }

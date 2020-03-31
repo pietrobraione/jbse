@@ -26,11 +26,11 @@ final public class Analysis {
     }
 
     /**
-     * Asks JBSE to stop the execution of the current trace and
+     * Asks JBSE to stop the execution of the current path and
      * discard it because it violates some assumption. It is dual 
      * to {@link #fail()}. 
      * It is invoked by instrumentation code to discard execution 
-     * traces that will not fail in future, or that are of no 
+     * paths that will not fail in future, or that are of no 
      * interest for the analysis (e.g., because they violate 
      * some assumed precondition).
      * When executed on a JVM different from JBSE, it 
@@ -96,7 +96,7 @@ final public class Analysis {
     }
 
     /**
-     * Asks JBSE to stop the execution of the current trace
+     * Asks JBSE to stop the execution of the current path
      * and report it. It is dual to {@link #ignore()} and 
      * opposite to {@link #succeed()}.
      * It is used whenever instrumentation code discovers a failure. 
@@ -459,7 +459,7 @@ final public class Analysis {
     /**
      * Assumes that a class has not yet been initialized; if 
      * it is initialized it {@link #ignore() ignore}s the current
-     * trace. When executed on a JVM different from JBSE, if
+     * path. When executed on a JVM different from JBSE, if
      * the class is initialized exits with error code 99.
      * 
      * @param classToCheck the {@link Class}.

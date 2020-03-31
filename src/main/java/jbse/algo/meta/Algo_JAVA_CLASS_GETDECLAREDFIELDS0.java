@@ -48,6 +48,7 @@ import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
@@ -151,6 +152,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
             } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
                      WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
                 throw new ClasspathException(e);
+            } catch (RenameUnsupportedException e) {
+            	//this should never happen
+            	failExecution(e);
             }
 
 
@@ -183,7 +187,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                     } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
                              WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
                         throw new ClasspathException(e);
-                    } catch (FastArrayAccessNotAllowedException e) {
+                    } catch (RenameUnsupportedException | FastArrayAccessNotAllowedException e) {
                         //this should never happen
                         failExecution(e);
                     }
@@ -282,6 +286,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                         //TODO should throw a subclass of LinkageError
                         throwVerifyError(state, calc);
                         exitFromAlgorithm();
+                    } catch (RenameUnsupportedException e) {
+                    	//this should never happen
+                    	failExecution(e);
                     }
 
                     //sets override
@@ -304,8 +311,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                         exitFromAlgorithm();
                     } catch (FieldNotFoundException | ClassFileNotFoundException | 
                              ClassFileIllFormedException | BadClassFileVersionException | 
-                             WrongClassNameException | IncompatibleClassFileException | 
-                             ClassFileNotAccessibleException | FastArrayAccessNotAllowedException e) {
+                             RenameUnsupportedException | WrongClassNameException | 
+                             IncompatibleClassFileException | ClassFileNotAccessibleException | 
+                             FastArrayAccessNotAllowedException e) {
                         //this should never happen
                         failExecution(e);
                     }

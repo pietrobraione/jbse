@@ -34,6 +34,11 @@ final class InstanceWrapper_JAVA_CLASSLOADER extends InstanceWrapper<InstanceImp
 	}
 
 	@Override
+	public void makeInitial() throws InvalidInputException {
+		throw new InvalidInputException("Attempted to makeInitial an instance of java.lang.ClassLoader (or subclass).");
+	}
+
+	@Override
 	public Instance_JAVA_CLASSLOADER clone() {
 		//a wrapper shall never be cloned
 		throw new UnexpectedInternalException("Tried to clone an InstanceWrapper_JAVA_CLASSLOADER.");

@@ -9,6 +9,8 @@ import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_SERIALIZABLE;
 import static jbse.bc.Signatures.SIGNATURE_POLYMORPHIC_DESCRIPTOR;
 import static jbse.common.Type.className;
+import static jbse.common.Type.classNameContained;
+import static jbse.common.Type.classNameContainer;
 import static jbse.common.Type.getArrayMemberType;
 import static jbse.common.Type.isArray;
 import static jbse.common.Type.isPrimitive;
@@ -22,8 +24,12 @@ import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -50,6 +56,7 @@ import jbse.bc.exc.MethodAbstractException;
 import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.Util;
 import jbse.common.exc.InvalidInputException;
@@ -62,12 +69,49 @@ import jbse.common.exc.UnexpectedInternalException;
  * @author Pietro Braione
  */
 public final class ClassHierarchy implements Cloneable {
+	/**
+	 * The {@link Classpath} of symbolic execution, where 
+	 * all the classfiles are picked.
+	 */
     private final Classpath cp;
+    
+    /**
+     * The expansion backdoor, associating class names to sets of 
+     * names of their subclasses. It is used in place of the class 
+     * hierarchy to perform expansion of symbolic references.
+     */
     private final Map<String, Set<String>> expansionBackdoor;
+    
+    /**
+     * Associates class names to the class names of the corresponding 
+     * model classes that replace them. It is not mutated.
+     */
+    private final HashMap<String, String> modelClassSubstitutions;
+    
+    /** 
+     * Private classpath where all the model classes are picked;
+     * It is nothing more nothing less than the classpath of the 
+     * JBSE execution. It is not mutated. 
+     */
+    private final ArrayList<Path> implementationClassPath;
+    
     private final HashMap<ClassFile, ArrayList<Signature>> allFieldsOf;
+    
+    /** The {@link ClassFileFactory} used to create {@link ClassFile}s. */
     private final ClassFileFactory f;
-    private ClassFileStore cfs; //not final because of clone
-    private HashMap<String, Path> systemPackages; //not final because of clone
+    
+    /**
+     * The {@link ClassFileStore} used to store the {@link ClassFile}s
+     * after they have been loaded. Not final because of clone.
+     */
+    private ClassFileStore cfs;
+    
+    /**
+     * Associates the names of the system packages to the 
+     * jar file or directory from which the classes in the 
+     * package were loaded from. Not final because of clone.
+     */
+    private HashMap<String, Path> systemPackages;
     
     private static class FindBytecodeResult {
         final byte[] bytecode;
@@ -77,7 +121,7 @@ public final class ClassHierarchy implements Cloneable {
             this.bytecode = bytecode;
             this.loadedFrom = loadedFrom;
         }
-    }
+   }
 
     /**
      * Constructor.
@@ -88,20 +132,38 @@ public final class ClassHierarchy implements Cloneable {
      * @param expansionBackdoor a 
      *        {@link Map}{@code <}{@link String}{@code , }{@link Set}{@code <}{@link String}{@code >>}
      *        associating class names to sets of names of their subclasses. It 
-     *        is used in place of the class hierarchy to perform expansion. It must not be {@code null}.
+     *        is used in place of the class hierarchy to perform expansion of 
+     *        symbolic references. It must not be {@code null}.
+     * @param modelClassSubstitutions a 
+     *        {@link Map}{@code <}{@link String}{@code , }{@link String}{@code >}
+     *        associating class names to the class names of the corresponding 
+     *        model classes that replace them. 
      * @throws InvalidClassFileFactoryClassException in the case {@link fClass}
      *         has not the expected features (missing constructor, unaccessible 
      *         constructor...).
-     * @throws InvalidInputException if {@code classPath == null || factoryClass == null || expansionBackdoor == null}.
+     * @throws InvalidInputException if 
+     *         {@code classPath == null || factoryClass == null || expansionBackdoor == null || modelClassSubstitutions == null}.
      */
-    public ClassHierarchy(Classpath classPath, Class<? extends ClassFileFactory> factoryClass, Map<String, Set<String>> expansionBackdoor)
+    public ClassHierarchy(Classpath classPath, Class<? extends ClassFileFactory> factoryClass, Map<String, Set<String>> expansionBackdoor, Map<String, String> modelClassSubstitutions)
     throws InvalidClassFileFactoryClassException, InvalidInputException {
-    	if (classPath == null || factoryClass == null || expansionBackdoor == null) {
-    		throw new InvalidInputException("Attempted creation of a " + this.getClass().getName() + " with a null classPath, or factoryClass, or expansionBackdoor.");
+    	if (classPath == null || factoryClass == null || expansionBackdoor == null || modelClassSubstitutions == null) {
+    		throw new InvalidInputException("Attempted creation of a " + this.getClass().getName() + " with a null classPath, or factoryClass, or expansionBackdoor, or modelClassSubstitutions.");
     	}
         this.cp = classPath.clone(); //safety copy
         this.cfs = new ClassFileStore();
         this.expansionBackdoor = new HashMap<>(expansionBackdoor); //safety copy
+        this.modelClassSubstitutions = new HashMap<>(modelClassSubstitutions); //safety copy
+        this.implementationClassPath = new ArrayList<>();
+        final ClassLoader cl = ClassLoader.getSystemClassLoader();
+        final URL[] urls = ((URLClassLoader) cl).getURLs();
+        for (URL url : urls) {
+        	try {
+				this.implementationClassPath.add(Paths.get(url.toURI()));
+			} catch (URISyntaxException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
+        }
         this.allFieldsOf = new HashMap<>();
         try {
             this.f = factoryClass.newInstance();
@@ -208,7 +270,7 @@ public final class ClassHierarchy implements Cloneable {
     }
     
     /**
-     * Adds a {@link ClassFile} for to this hierarchy.
+     * Adds a {@link ClassFile} to this hierarchy.
      * 
      * @param initiatingLoader an {@code int}, the identifier of 
      *        a classloader.
@@ -270,7 +332,7 @@ public final class ClassHierarchy implements Cloneable {
     public ClassFile createClassFileAnonymousDummy(byte[] bytecode) 
     throws ClassFileIllFormedException, InvalidInputException {
         final ClassFile retval =
-            this.f.newClassFileAnonymous(bytecode, null, null);
+            this.f.newClassFileAnonymous(bytecode, null, null, null);
         return retval;
     }
 
@@ -298,7 +360,7 @@ public final class ClassHierarchy implements Cloneable {
         if (classFile == null) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".addClassFileAnonymous() with a classFile parameter that has value null.");
         }
-        if (!classFile.isAnonymous()) {
+        if (!classFile.isAnonymousUnregistered()) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".addClassFileAnonymous() with a classFile parameter that is not anonymous.");
         }
         if (hostClass == null) {
@@ -306,8 +368,10 @@ public final class ClassHierarchy implements Cloneable {
         }
         final ClassFile retVal;
         try {
-            retVal = this.f.newClassFileAnonymous(classFile.getBinaryFileContent(), cpPatches, hostClass);
-        } catch (ClassFileIllFormedException e) {
+            retVal = this.f.newClassFileAnonymous(classFile.getBinaryFileContent(), loadCreateClass(JAVA_OBJECT), cpPatches, hostClass);
+        } catch (ClassFileIllFormedException | WrongClassNameException | ClassFileNotFoundException | 
+        		ClassFileNotAccessibleException | IncompatibleClassFileException | BadClassFileVersionException | 
+        		RenameUnsupportedException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -391,6 +455,9 @@ public final class ClassHierarchy implements Cloneable {
      *         for one of the subclass names in the expansion backdoor
      *         has a version number that is unsupported by this 
      *         version of JBSE.
+     * @throws RenameUnsupportedException if the classfile for one of 
+     *         the subclass names in the expansion backdoor derives from a 
+     *         model class but the classfile does not support renaming.
      * @throws WrongClassNameException  when the bytecode for one of 
      *         the subclass names in the expansion backdoor has a 
      *         class name different from that used for resolving it.
@@ -398,7 +465,7 @@ public final class ClassHierarchy implements Cloneable {
     public Set<ClassFile> getAllConcreteSubclasses(ClassFile classFile)
     throws InvalidInputException, ClassFileNotFoundException, 
     ClassFileIllFormedException, ClassFileNotAccessibleException, IncompatibleClassFileException, 
-    BadClassFileVersionException, WrongClassNameException {
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException {
         if (classFile == null) {
             throw new InvalidInputException("Tried to get the concrete subclasses of a null classfile.");
         }
@@ -494,6 +561,8 @@ public final class ClassHierarchy implements Cloneable {
      * @throws BadClassFileVersionException if the classfile for {@code classSignature}  
      *         or of one of its superclasses/superinterfaces has a version number that is 
      *         unsupported by this version of JBSE.
+     * @throws RenameUnsupportedException if the classfile for {@code classSignature} derives from a 
+     *         model class but the classfile does not support renaming.
      * @throws WrongClassNameException if the class name specified in {@code bytecode} is different
      *         from {@code classSignature}. 
      */
@@ -501,7 +570,7 @@ public final class ClassHierarchy implements Cloneable {
     throws InvalidInputException, ClassFileNotFoundException, 
     ClassFileIllFormedException, ClassFileNotAccessibleException, 
     IncompatibleClassFileException, BadClassFileVersionException, 
-    WrongClassNameException  {
+    RenameUnsupportedException, WrongClassNameException  {
         try {
             return loadCreateClass(CLASSLOADER_BOOT, classSignature, false);
         } catch (PleaseLoadClassException e) {
@@ -556,13 +625,15 @@ public final class ClassHierarchy implements Cloneable {
      * @throws BadClassFileVersionException if the classfile for {@code classSignature}  
      *         or of one of its superclasses/superinterfaces has a version number that is 
      *         unsupported by this version of JBSE.
+     * @throws RenameUnsupportedException if the classfile for {@code classSignature} derives from a 
+     *         model class but the classfile does not support renaming.
      * @throws WrongClassNameException if the class name specified in {@code bytecode} is different
      *         from {@code classSignature}. 
      */
     public ClassFile loadCreateClass(int initiatingLoader, String classSignature, boolean bypassStandardLoading) 
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, 
     ClassFileNotAccessibleException, IncompatibleClassFileException, PleaseLoadClassException, 
-    BadClassFileVersionException, WrongClassNameException  {
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException  {
         //checks parameters
         if (initiatingLoader < CLASSLOADER_BOOT) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".loadCreateClass with invalid initiating loader " + initiatingLoader + ".");
@@ -638,7 +709,7 @@ public final class ClassHierarchy implements Cloneable {
                         //creates a ClassFile for the class and puts it in the 
                         //loaded class cache, registering it with all the compatible 
                         //initiating loaders through the delegation chain
-                        accessed = defineClass(definingClassLoader, classSignature, findBytecodeResult.bytecode, bypassStandardLoading);
+                        accessed = defineClass(definingClassLoader, classSignature, findBytecodeResult.bytecode, bypassStandardLoading, true);
                         for (int i = definingClassLoader; i <= initiatingLoader; ++i) {
                             addClassFileClassArray(i, accessed);
                         }
@@ -675,14 +746,18 @@ public final class ClassHierarchy implements Cloneable {
      * Defines a class from a bytecode array according to the JVMS v8 section 5.3.5.
      * 
      * @param definingClassLoader an {@code int}, the identifier of the defining class loader.
-     * @param classSignature a {@link String}, the name of the class to be defined. If it is
-     *        {@code null} then the method does not check that the class name in {@code byte[]}
-     *        {@link Object#equals(Object) equals} this parameter.
+     * @param classSignature a {@link String}, the name of the class to be defined. If it is not
+     *        {@code null} then the method checks that the class name in {@code bytecode}
+     *        {@link Object#equals(Object) equals} this parameter, or sets the class name in 
+     *        {@code bytecode} to this parameter, depending on the value of {@code rename}.
      * @param bytecode a {@code byte[]} containing the content of the classfile for the class.
      * @param bypassStandardLoading  a {@code boolean}. If it is {@code true} and the {@code definingClassLoader}
      *        is either {@link ClassLoaders#CLASSLOADER_EXT} or {@link ClassLoaders#CLASSLOADER_APP}, 
      *        bypasses the standard loading procedure and loads itself the superclass/superinterfaces, 
      *        instead of raising {@link PleaseLoadClassException}.
+     * @param rename a {@code boolean}. If it is {@code true}, {@code classSignature != null} and
+     *        the class name specified in {@code bytecode} is different from {@code classSignature}, 
+     *        then modifies the name in {@code bytecode} to align it with {@code classSignature}.
      * @return the defined {@code classFile}.
      * @throws InvalidInputException if  
      *         {@code definingClassLoader < }{@link ClassLoaders#CLASSLOADER_BOOT CLASSLOADER_BOOT}, or if
@@ -691,8 +766,10 @@ public final class ClassHierarchy implements Cloneable {
      *         {@code definingClassLoader}.
      * @throws BadClassFileVersionException if {@code bytecode}'s classfile version number is unsupported
      *         by this version of JBSE.
-     * @throws WrongClassNameException if the class name specified in {@code bytecode} is different
-     *         from {@code classSignature}. 
+     * @throws RenameUnsupportedException if {@code rename == true} but the generated classfile
+     *         does not support renaming.
+     * @throws WrongClassNameException if {@code classSignature != null}, {@code rename == false}, and 
+     *         the class name specified in {@code bytecode} is different from {@code classSignature}. 
      * @throws ClassFileIllFormedException if {@code bytecode} or the bytecode for  
      *         its superclass/superinterfaces is ill-formed.
      * @throws ClassFileNotFoundException if a class file for {@code bytecode}'s superclass/superinterfaces 
@@ -709,8 +786,8 @@ public final class ClassHierarchy implements Cloneable {
      * @throws PleaseLoadClassException if creation cannot be performed because
      *         a superclass/superinterface must be loaded via a user-defined classloader before. 
      */
-    public ClassFile defineClass(int definingClassLoader, String classSignature, byte[] bytecode, boolean bypassStandardLoading) 
-    throws InvalidInputException, AlreadyDefinedClassException, BadClassFileVersionException, 
+    public ClassFile defineClass(int definingClassLoader, String classSignature, byte[] bytecode, boolean bypassStandardLoading, boolean rename) 
+    throws InvalidInputException, AlreadyDefinedClassException, BadClassFileVersionException, RenameUnsupportedException, 
     WrongClassNameException, ClassFileIllFormedException, ClassFileNotFoundException, 
     ClassFileNotAccessibleException, IncompatibleClassFileException, PleaseLoadClassException {
         //checks parameters
@@ -741,7 +818,11 @@ public final class ClassHierarchy implements Cloneable {
         
         //checks the name
         if (classSignature != null && !classDummy.getClassName().equals(classSignature)) {
-            throw new WrongClassNameException("The classfile for class " + classDummy.getClassName() + " has different class name " + classDummy.getClassName());
+        	if (rename) {
+        		classDummy.rename(classSignature);
+        	} else {
+        		throw new WrongClassNameException("The classfile for class " + classDummy.getClassName() + " has different class name " + classDummy.getClassName());
+        	}
         }
 
         //uses the dummy ClassFile to recursively resolve all the immediate 
@@ -794,17 +875,27 @@ public final class ClassHierarchy implements Cloneable {
      *         in {@code paths}.
      */
     private FindBytecodeResult findBytecode(String className, int initiatingLoader) {
-        final Iterable<Path> paths = (initiatingLoader == CLASSLOADER_BOOT ? this.cp.bootClassPath() :
+    	final String sourceContainer = classNameContainer(className);
+    	final boolean toSubstitute = this.modelClassSubstitutions.containsKey(sourceContainer);
+    	final String targetClassName;
+    	if (toSubstitute) {
+    		final String targetContainer = this.modelClassSubstitutions.get(sourceContainer);
+    		targetClassName = targetContainer + classNameContained(className);
+    	} else {
+    		targetClassName = className;
+    	}
+        final Iterable<Path> paths = (toSubstitute ? this.implementationClassPath :
+                                      initiatingLoader == CLASSLOADER_BOOT ? this.cp.bootClassPath() :
                                       initiatingLoader == CLASSLOADER_EXT ? this.cp.extClassPath() :
                                       this.cp.userClassPath());
         for (Path path : paths) {
             try {
                 if (Files.isDirectory(path)) {
-                    final Path pathOfClass = path.resolve(className + ".class");
+                    final Path pathOfClass = path.resolve(targetClassName + ".class");
                     return new FindBytecodeResult(Files.readAllBytes(pathOfClass), path);
                 } else if (Util.isJarFile(path)) {
                     try (final JarFile f = new JarFile(path.toFile())) {
-                        final JarEntry e = f.getJarEntry(className + ".class");
+                        final JarEntry e = f.getJarEntry(targetClassName + ".class");
                         if (e == null) {
                             continue;
                         }
@@ -848,6 +939,8 @@ public final class ClassHierarchy implements Cloneable {
      * @throws BadClassFileVersionException if the bytecode for {@code classSignature}
      *         or its superclasses/superinterfaces has a version number that is unsupported
      *         by this version of JBSE.
+     * @throws RenameUnsupportedException if the classfile for {@code classSignature} derives from a 
+     *         model class but the classfile does not support renaming.
      * @throws WrongClassNameException if the bytecode for {@code classSignature}
      *         or its superclasses/superinterfaces contains a class name that is different
      *         from the expected one ({@code classSignature} or the corresponding 
@@ -861,8 +954,8 @@ public final class ClassHierarchy implements Cloneable {
      */
     public ClassFile resolveClass(ClassFile accessor, String classSignature, boolean bypassStandardLoading) 
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, 
-    ClassFileNotAccessibleException, PleaseLoadClassException {
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
+    IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException {
         //loads/creates the class for classSignature
         final int initiatingLoader = accessor.getDefiningClassLoader();
         final ClassFile accessed = loadCreateClass(initiatingLoader, classSignature, bypassStandardLoading);
@@ -876,7 +969,8 @@ public final class ClassHierarchy implements Cloneable {
     }
 
     /**
-     * Performs field resolution (see JVMS v8. section 5.4.3.2).
+     * Performs field resolution (see JVMS v8. section 5.4.3.2). Equivalent to
+     * {@link #resolveField(ClassFile, Signature, boolean, ClassFile) resolveField}{@code (accessor, fieldSignature, bypassStandardLoading, null)}.
      * 
      * @param accessor a {@link ClassFile}, the accessor's class.
      * @param fieldSignature the {@link Signature} of the field to be resolved.
@@ -897,6 +991,8 @@ public final class ClassHierarchy implements Cloneable {
      * @throws BadClassFileVersionException if the bytecode for {@code fieldSignature.}{@link Signature#getClassName() getClassName()}
      *         or its superclasses/superinterfaces has a version number that is unsupported
      *         by this version of JBSE.
+     * @throws RenameUnsupportedException if the classfile for {@code fieldSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces derives from a model class but the classfile does not support renaming.
      * @throws WrongClassNameException if the bytecode for {@code fieldSignature.}{@link Signature#getClassName() getClassName()}
      *         or its superclasses/superinterfaces contains a class name that is different
      *         from the expected one ({@code fieldSignature.}{@link Signature#getClassName() getClassName()} or the corresponding 
@@ -914,15 +1010,65 @@ public final class ClassHierarchy implements Cloneable {
      */
     public ClassFile resolveField(ClassFile accessor, Signature fieldSignature, boolean bypassStandardLoading) 
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, BadClassFileVersionException, 
-    WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, FieldNotAccessibleException, 
-    FieldNotFoundException, PleaseLoadClassException {
+    RenameUnsupportedException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, 
+    FieldNotAccessibleException, FieldNotFoundException, PleaseLoadClassException {
+    	return resolveField(accessor, fieldSignature, bypassStandardLoading, null);
+    }
+    
+    /**
+     * Performs field resolution (see JVMS v8. section 5.4.3.2).
+     * 
+     * @param accessor a {@link ClassFile}, the accessor's class.
+     * @param fieldSignature the {@link Signature} of the field to be resolved.
+     * @param bypassStandardLoading a {@code boolean}; if it is {@code true} and the defining classloader
+     *        of {@code accessor}
+     *        is either {@link ClassLoaders#CLASSLOADER_EXT CLASSLOADER_EXT} or {@link ClassLoaders#CLASSLOADER_APP CLASSLOADER_APP}, 
+     *        bypasses the standard loading procedure and loads itself the classes, instead of raising 
+     *        {@link PleaseLoadClassException}.
+     * @param classStart a {@link ClassFile}, the class from which
+     *        the resolution will start. It can be {@code null}, 
+     *        in which case the resolution will start from
+     *        {@code fieldSignature.}{@link Signature#getClassName() getClassName()}.
+     * @return the {@link ClassFile} of the class of the resolved field.
+     * @throws InvalidInputException if {@code fieldSignature} is invalid ({@code null} name or class name), or if 
+     *         {@code accessor.}{@link ClassFile#getDefiningClassLoader() getDefiningClassLoader}{@code () < }{@link ClassLoaders#CLASSLOADER_BOOT CLASSLOADER_BOOT}, 
+     *         or if {@code bypassStandardLoading == true} and
+     *         {@code accessor.}{@link ClassFile#getDefiningClassLoader() getDefiningClassLoader}{@code () > }{@link ClassLoaders#CLASSLOADER_APP CLASSLOADER_APP}.
+     * @throws ClassFileNotFoundException if there is no class file for {@code fieldSignature.}{@link Signature#getClassName() getClassName()}
+     *         and its superclasses/superinterfaces in the classpath.
+     * @throws ClassFileIllFormedException if the class file for {@code fieldSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces is ill-formed.
+     * @throws BadClassFileVersionException if the bytecode for {@code fieldSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces has a version number that is unsupported
+     *         by this version of JBSE.
+     * @throws RenameUnsupportedException if the classfile for {@code fieldSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces derives from a model class but the classfile does not support renaming.
+     * @throws WrongClassNameException if the bytecode for {@code fieldSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces contains a class name that is different
+     *         from the expected one ({@code fieldSignature.}{@link Signature#getClassName() getClassName()} or the corresponding 
+     *         superclass/superinterface name).
+     * @throws IncompatibleClassFileException if the superclass for {@code fieldSignature.}{@link Signature#getClassName() getClassName()} 
+     *         is resolved to an interface type, or any superinterface is resolved to an object type.
+     * @throws ClassFileNotAccessibleException if the resolved class 
+     *         {@code fieldSignature.}{@link Signature#getClassName() getClassName}{@code ()}
+     *         is not accessible from {@code accessor}.
+     * @throws FieldNotAccessibleException if the resolved field is not 
+     *         accessible from {@code accessor}.
+     * @throws FieldNotFoundException if resolution of the field fails.
+     * @throws PleaseLoadClassException if creation cannot be performed because
+     *         a class must be loaded via a user-defined classloader before.
+     */
+    public ClassFile resolveField(ClassFile accessor, Signature fieldSignature, boolean bypassStandardLoading, ClassFile classStart) 
+    throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, BadClassFileVersionException, 
+    RenameUnsupportedException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, 
+    FieldNotAccessibleException, FieldNotFoundException, PleaseLoadClassException {
         //checks the parameters
         if (fieldSignature.getName() == null) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".resolveField with an invalid signature (null name field).");
         }
 
         //resolves the class of the field signature
-        final ClassFile fieldSignatureClass = resolveClass(accessor, fieldSignature.getClassName(), bypassStandardLoading);
+        final ClassFile fieldSignatureClass = (classStart == null ? resolveClass(accessor, fieldSignature.getClassName(), bypassStandardLoading) : classStart);
 
         //performs field lookup starting from it
         final ClassFile accessed = resolveFieldLookup(fieldSignatureClass, fieldSignature);
@@ -951,7 +1097,7 @@ public final class ClassHierarchy implements Cloneable {
      * of the field signature. The lookup procedure is the recursive procedure
      * described in the JVMS v8, section 5.4.3.2.
      * 
-     * @param startClass a {@link ClassFile} for the class where lookup starts.
+     * @param classStart a {@link ClassFile} for the class where lookup starts.
      * @param fieldSignature a field {@link Signature}. Only the name and the descriptor
      *        will be considered.
      * @return the {@link ClassFile} for the class where a field with the type 
@@ -959,15 +1105,15 @@ public final class ClassHierarchy implements Cloneable {
      *         or {@code null} if such declaration does not exist in the 
      *         hierarchy. 
      */
-    private ClassFile resolveFieldLookup(ClassFile startClass, Signature fieldSignature) {
+    private ClassFile resolveFieldLookup(ClassFile classStart, Signature fieldSignature) {
         //if the field is declared in startClass,
         //lookup finishes
-        if (startClass.hasFieldDeclaration(fieldSignature)) {
-            return startClass;
+        if (classStart.hasFieldDeclaration(fieldSignature)) {
+            return classStart;
         }
 
         //otherwise, lookup recursively in all the immediate superinterfaces
-        for (ClassFile classFileSuperinterface : startClass.getSuperInterfaces()) {
+        for (ClassFile classFileSuperinterface : classStart.getSuperInterfaces()) {
             final ClassFile classFileLookup = resolveFieldLookup(classFileSuperinterface, fieldSignature);
             if (classFileLookup != null) {
                 return classFileLookup;
@@ -975,7 +1121,7 @@ public final class ClassHierarchy implements Cloneable {
         }
 
         //otherwise, lookup recursively in the superclass (if any)
-        final ClassFile classFileSuperclass = startClass.getSuperclass();
+        final ClassFile classFileSuperclass = classStart.getSuperclass();
         if (classFileSuperclass == null) {
             //no superclass: lookup failed
             return null;
@@ -987,7 +1133,8 @@ public final class ClassHierarchy implements Cloneable {
     
     /**
      * Performs both method and interface method resolution 
-     * (see JVMS v8, section 5.4.3.3 and 5.4.3.4).
+     * (see JVMS v8, section 5.4.3.3 and 5.4.3.4). Equivalent 
+     * to {@link #resolveMethod(ClassFile, Signature, boolean, boolean, ClassFile) resolveMethod}{@code (accessor, methodSignature, isInterface, bypassStandardLoading, null)}.
      * 
      * @param accessor a {@link ClassFile}, the accessor's class.
      * @param methodSignature the {@link Signature} of the method to be resolved.  
@@ -1012,6 +1159,8 @@ public final class ClassHierarchy implements Cloneable {
      * @throws BadClassFileVersionException if the bytecode for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
      *         or its superclasses/superinterfaces has a version number that is unsupported
      *         by this version of JBSE.
+     * @throws RenameUnsupportedException if the classfile for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces derives from a model class but the classfile does not support renaming.
      * @throws WrongClassNameException if the bytecode for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
      *         or its superclasses/superinterfaces contains a class name that is different
      *         from the expected one ({@code methodSignature.}{@link Signature#getClassName() getClassName()} or the corresponding 
@@ -1029,15 +1178,70 @@ public final class ClassHierarchy implements Cloneable {
      */
     public ClassFile resolveMethod(ClassFile accessor, Signature methodSignature, boolean isInterface, boolean bypassStandardLoading) 
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, BadClassFileVersionException, 
-    WrongClassNameException, ClassFileNotAccessibleException, IncompatibleClassFileException, MethodNotFoundException, 
-    MethodNotAccessibleException, PleaseLoadClassException {
+    RenameUnsupportedException, WrongClassNameException, ClassFileNotAccessibleException, IncompatibleClassFileException, 
+    MethodNotFoundException, MethodNotAccessibleException, PleaseLoadClassException {
+    	return resolveMethod(accessor, methodSignature, isInterface, bypassStandardLoading, null);
+    }
+    
+    /**
+     * Performs both method and interface method resolution 
+     * (see JVMS v8, section 5.4.3.3 and 5.4.3.4).
+     * 
+     * @param accessor a {@link ClassFile}, the accessor's class.
+     * @param methodSignature the {@link Signature} of the method to be resolved.  
+     * @param isInterface {@code true} iff the method to be resolved is required to be 
+     *        an interface method (i.e., if the bytecode which triggered the resolution
+     *        is invokeinterface).
+     * @param bypassStandardLoading a {@code boolean}; if it is {@code true} and the defining classloader
+     *        of {@code accessor}
+     *        is either {@link ClassLoaders#CLASSLOADER_EXT CLASSLOADER_EXT} or {@link ClassLoaders#CLASSLOADER_APP CLASSLOADER_APP}, 
+     *        bypasses the standard loading procedure and loads itself the classes, instead of raising 
+     *        {@link PleaseLoadClassException}.
+     * @param classStart a {@link ClassFile}, the class from which
+     *        the resolution will start. It can be {@code null}, 
+     *        in which case the resolution will start from
+     *        {@code methodSignature.}{@link Signature#getClassName() getClassName()}.
+     * @return the {@link ClassFile} for the resolved method.
+     * @throws InvalidInputException if {@code methodSignature} is invalid ({@code null} name or class name), or if 
+     *         {@code accessor.}{@link ClassFile#getDefiningClassLoader() getDefiningClassLoader}{@code () < }{@link ClassLoaders#CLASSLOADER_BOOT CLASSLOADER_BOOT}, 
+     *         or if {@code bypassStandardLoading == true} and
+     *         {@code accessor.}{@link ClassFile#getDefiningClassLoader() getDefiningClassLoader}{@code () > }{@link ClassLoaders#CLASSLOADER_APP CLASSLOADER_APP}, 
+     *         or if the class for {@code java.lang.Object} was not yet loaded by the bootstrap classloading mechanism.
+     * @throws ClassFileNotFoundException if there is no class for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         and its superclasses/superinterfaces in the classpath.
+     * @throws ClassFileIllFormedException if the class file for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces is ill-formed.
+     * @throws BadClassFileVersionException if the bytecode for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces has a version number that is unsupported
+     *         by this version of JBSE.
+     * @throws RenameUnsupportedException if the classfile for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces derives from a model class but the classfile does not support renaming.
+     * @throws WrongClassNameException if the bytecode for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces contains a class name that is different
+     *         from the expected one ({@code methodSignature.}{@link Signature#getClassName() getClassName()} or the corresponding 
+     *         superclass/superinterface name).
+     * @throws ClassFileNotAccessibleException if the resolved class for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         is not accessible from {@code accessor}.
+     * @throws IncompatibleClassFileException if the symbolic reference in 
+     *         {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         to the method disagrees with {@code isInterface}.
+     * @throws MethodNotFoundException if resolution fails.
+     * @throws MethodNotAccessibleException if the resolved method is not accessible 
+     *         by {@code accessor}.
+     * @throws PleaseLoadClassException if resolution cannot be performed because
+     *         a class must be loaded via a user-defined classloader before. 
+     */
+    public ClassFile resolveMethod(ClassFile accessor, Signature methodSignature, boolean isInterface, boolean bypassStandardLoading, ClassFile classStart) 
+    throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, BadClassFileVersionException, 
+    RenameUnsupportedException, WrongClassNameException, ClassFileNotAccessibleException, IncompatibleClassFileException, 
+    MethodNotFoundException, MethodNotAccessibleException, PleaseLoadClassException {
         //checks the parameters
         if (methodSignature.getName() == null) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".resolveMethod with an invalid signature (null name field).");
         }
 
         //resolves the class of the method's signature
-        final ClassFile methodSignatureClass = resolveClass(accessor, methodSignature.getClassName(), bypassStandardLoading);
+        final ClassFile methodSignatureClass = (classStart == null ? resolveClass(accessor, methodSignature.getClassName(), bypassStandardLoading) : classStart);
 
         //checks if the symbolic reference to the method class 
         //is an interface (JVMS v8, section 5.4.3.3 step 1 and section 5.4.3.4 step 1)
@@ -1219,6 +1423,9 @@ public final class ClassHierarchy implements Cloneable {
      * @throws BadClassFileVersionException if the bytecode for one of the classes 
      *         in {@code descriptor} has a version number that is unsupported
      *         by this version of JBSE.
+     * @throws RenameUnsupportedException if the classfile for one of the classes 
+     *         in {@code descriptor} derives from a model class but the classfile 
+     *         does not support renaming.
      * @throws WrongClassNameException if the bytecode for one of the classes 
      *         in {@code descriptor} contains a class name that is different
      *         from the expected one (that is, the one contained in the descriptor).
@@ -1232,8 +1439,8 @@ public final class ClassHierarchy implements Cloneable {
      */
     public ClassFile[] resolveMethodType(ClassFile accessor, String descriptor, boolean bypassStandardLoading) 
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, 
-    ClassFileNotAccessibleException, PleaseLoadClassException {
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
+    IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException {
         //checks the parameters
         if (descriptor == null) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".resolveMethodType with descriptor == null.");

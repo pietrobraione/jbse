@@ -83,7 +83,7 @@ public final class EngineParameters implements Cloneable {
          * identifier reflecting the decision which generated it.
          * This identification may be complex and not exec-faithful, 
          * but gives an unique identifier to symbolic execution
-         * traces up to target code recompilation.
+         * paths up to target code recompilation.
          */
         LONG(StateTree.StateIdentificationMode.LONG);
 
@@ -167,6 +167,13 @@ public final class EngineParameters implements Cloneable {
     private boolean bypassStandardLoading = true;
     
     /** 
+     * The path of the JBSE library; overridden by 
+     * {@code initialState}'s JBSE library path when 
+     * {@code initialState != null}. 
+     */
+    private Path jbseLibPath = Paths.get("jbse-lib.jar");
+    
+    /** 
      * The Java home, where the JRE resides; overridden by 
      * {@code initialState}'s bootstrap path when 
      * {@code initialState != null}. 
@@ -202,7 +209,7 @@ public final class EngineParameters implements Cloneable {
     private ArrayList<ExecutionObserver> observers = new ArrayList<>();
 
     /** The {@link TriggerRulesRepo}, containing all the trigger rules. */
-    private TriggerRulesRepo repoTrigger = new TriggerRulesRepo();
+    private TriggerRulesRepo triggerRulesRepo = new TriggerRulesRepo();
 
     /** The expansion backdoor. */
     private HashMap<String, Set<String>> expansionBackdoor = new HashMap<>();
@@ -235,6 +242,12 @@ public final class EngineParameters implements Cloneable {
      * to their members.
      */
     private boolean makePreInitClassesSymbolic = false;
+    
+    /**
+     * Whether a model class must be used instead of the
+     * default JDK implementation of {@code java.util.HashMap}.
+     */
+    private boolean useHashMapModel = false;
 
     /**
      * Constructor.
@@ -368,6 +381,7 @@ public final class EngineParameters implements Cloneable {
      */
     public void setStartingState(State s) { 
         this.startingState = s;
+        this.jbseLibPath = null;
         this.javaHome = null;
         this.extPaths.clear();
         this.userPaths.clear();
@@ -438,6 +452,49 @@ public final class EngineParameters implements Cloneable {
      */
     public Calculator getCalculator() {
     	return this.calc;
+    }
+
+    /**
+     * Sets the path of the JBSE library, and cancels the effect 
+     * of any previous call to {@link #setStartingState(State)}.
+     * 
+     * @param jbseLibPath a {@link String}.
+     * @throws NullPointerException if {@code jbseLibPath == null}.
+     */
+    public void setJBSELibPath(String jbseLibPath) {
+        if (jbseLibPath == null) {
+            throw new NullPointerException();
+        }
+        this.startingState = null; 
+        this.jbseLibPath = Paths.get(jbseLibPath);
+    }
+    
+    /**
+     * Sets the path of the JBSE library, and cancels the effect 
+     * of any previous call to {@link #setStartingState(State)}.
+     * 
+     * @param jbseLibPath a {@link Path}.
+     * @throws NullPointerException if {@code jbseLibPath == null}.
+     */
+    public void setJBSELibPath(Path jbseLibPath) {
+        if (jbseLibPath == null) {
+            throw new NullPointerException();
+        }
+        this.startingState = null; 
+        this.jbseLibPath = jbseLibPath;
+    }
+
+    /**
+     * Gets the path of the JBSE library.
+     * 
+     * @return a {@link Path}, the path of the JBSE library.
+     */
+    public Path getJBSELibPath() {
+        if (this.startingState == null) {
+            return this.jbseLibPath;
+        } else {
+            return this.startingState.getClasspath().jbseLibPath();
+        }
     }
 
     /**
@@ -600,7 +657,7 @@ public final class EngineParameters implements Cloneable {
      */
     public Classpath getClasspath() throws IOException {
         if (this.startingState == null) {
-            return new Classpath(this.javaHome, this.extPaths, this.userPaths);
+            return new Classpath(this.jbseLibPath, this.javaHome, this.extPaths, this.userPaths);
         } else {
             return this.startingState.getClasspath();
         }
@@ -611,13 +668,14 @@ public final class EngineParameters implements Cloneable {
      * containing all the trigger rules that
      * must be used.
      * 
-     * @return a {@link TriggerRulesRepo}. It
-     *         is the one that backs this
-     *         {@link EngineParameters}, not a
-     *         safety copy.
+     * @return a {@link TriggerRulesRepo}.
      */
     public TriggerRulesRepo getTriggerRulesRepo() {
-        return this.repoTrigger;
+        final TriggerRulesRepo retVal = this.triggerRulesRepo.clone();
+        if (getUseHashMapModel()) {
+        	retVal.addExpandTo("java/util/HashMap", "(?!{°}*java/util/HashMap:initialMap{EOL}){°}*", "java/util/HashMap", new Signature("java/util/HashMap", "(Ljava/util/HashMap;)V", "initSymbolic"), "{$REF}");
+        }
+        return retVal;
     }
 
     /**
@@ -670,7 +728,7 @@ public final class EngineParameters implements Cloneable {
                                    String triggerClassName, String triggerParametersSignature, String triggerMethodName,
                                    String triggerParameter) {
         if (triggerClassName != null && triggerParametersSignature != null && triggerMethodName == null) {
-            this.repoTrigger.addExpandTo(toExpand, originExp, classAllowed, 
+            this.triggerRulesRepo.addExpandTo(toExpand, originExp, classAllowed, 
                                          new Signature(triggerClassName, triggerParametersSignature, triggerMethodName), triggerParameter);
         }
 
@@ -726,7 +784,7 @@ public final class EngineParameters implements Cloneable {
     public void addResolveAliasOriginTrigger(String toResolve, String originExp, String pathAllowedExp, 
                                              String triggerClassName, String triggerParametersSignature, String triggerMethodName,
                                              String triggerParameter) {
-        this.repoTrigger.addResolveAliasOrigin(toResolve, originExp, pathAllowedExp, 
+        this.triggerRulesRepo.addResolveAliasOrigin(toResolve, originExp, pathAllowedExp, 
                                                new Signature(triggerClassName, triggerParametersSignature, triggerMethodName), triggerParameter);
     }
 
@@ -759,7 +817,7 @@ public final class EngineParameters implements Cloneable {
     public void addResolveAliasInstanceofTrigger(String toResolve, String originExp, String classAllowed, 
                                                  String triggerClassName, String triggerParametersSignature, String triggerMethodName,
                                                  String triggerParameter) {
-        this.repoTrigger.addResolveAliasInstanceof(toResolve, originExp, classAllowed,
+        this.triggerRulesRepo.addResolveAliasInstanceof(toResolve, originExp, classAllowed,
                                                    new Signature(triggerClassName, triggerParametersSignature, triggerMethodName), triggerParameter);
     }
 
@@ -790,7 +848,7 @@ public final class EngineParameters implements Cloneable {
     public void addResolveNullTrigger(String toResolve, String originExp, 
                                       String triggerClassName, String triggerParametersSignature, String triggerMethodName,
                                       String triggerParameter) {
-        this.repoTrigger.addResolveNull(toResolve, originExp,
+        this.triggerRulesRepo.addResolveNull(toResolve, originExp,
                                         new Signature(triggerClassName, triggerParametersSignature, triggerMethodName), triggerParameter);
     }
 
@@ -1014,6 +1072,45 @@ public final class EngineParameters implements Cloneable {
     public boolean getMakePreInitClassesSymbolic() {
     	return this.makePreInitClassesSymbolic;
     }
+    
+    /**
+     * Sets whether, instead of the JDK implementation of 
+     * {@code java.util.HashMap}, a model class must be used
+     * during symbolic execution.
+     * 
+     * @param useHashMapModel a {@code boolean}. If {@code true} all
+     *        the hash maps will be replaced by a model class that
+     *        is more symbolic-execution-friendly than {@code java.util.HashMap}.
+     */
+    public void setUseHashMapModel(boolean useHashMapModel) {
+    	this.useHashMapModel = useHashMapModel;
+    }
+    
+    /**
+     * Returns whether, instead of the JDK implementation of 
+     * {@code java.util.HashMap}, a model class must be used
+     * during symbolic execution.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean getUseHashMapModel() {
+    	return this.useHashMapModel;
+    }
+    
+    /**
+     * Returns a map of the model class substitutions.
+     * 
+     * @return a {@link Map}{@code <}{@link String}{@code , }{@link String}{@code >}
+     *         associating class names to the class names of the corresponding 
+     *         model classes that replace them.
+     */
+    public Map<String, String> getModelClassSubstitutions() {
+    	final HashMap<String, String> retVal = new HashMap<>();
+    	if (this.useHashMapModel) {
+    		retVal.put("java/util/HashMap", "jbse/base/JAVA_MAP");
+    	}
+    	return retVal;
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -1030,7 +1127,7 @@ public final class EngineParameters implements Cloneable {
         o.userPaths = (ArrayList<Path>) this.userPaths.clone();
         //calc and decisionProcedure are *not* cloned
         o.observedVars = (ArrayList<Signature>) this.observedVars.clone();
-        o.repoTrigger = this.repoTrigger.clone();
+        o.triggerRulesRepo = this.triggerRulesRepo.clone();
         o.expansionBackdoor = new HashMap<>();
         for (Map.Entry<String, Set<String>> e : o.expansionBackdoor.entrySet()) {
             o.expansionBackdoor.put(e.getKey(), new HashSet<>(e.getValue()));

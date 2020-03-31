@@ -3,6 +3,7 @@ package jbse.algo;
 import java.util.function.Supplier;
 
 import jbse.algo.BytecodeData_1KME.Kind;
+import jbse.bc.Signature;
 import jbse.tree.DecisionAlternative;
 
 /**
@@ -23,12 +24,14 @@ extends Algorithm<BytecodeData_1KME, R, DE, RE, UP> {
     protected boolean isSpecial; //set by setter (called by Algo_INVOKEX_Abstract)
     protected boolean isStatic; //set by setter (called by Algo_INVOKEX_Abstract)
     protected boolean isOverriddenMethodNative; //set by setter (called by Algo_INVOKEX_Abstract)
+    protected Signature methodSignatureImplementation; //set by setter (called by Algo_INVOKEX_Abstract)
 
-    public final void setFeatures(boolean isInterface, boolean isSpecial, boolean isStatic, boolean isOverriddenMethodNative) {
+    public final void setFeatures(boolean isInterface, boolean isSpecial, boolean isStatic, boolean isOverriddenMethodNative, Signature methodSignatureImplementation) {
         this.isInterface = isInterface;
         this.isSpecial = isSpecial;
         this.isStatic = isStatic;
         this.isOverriddenMethodNative = isOverriddenMethodNative;
+        this.methodSignatureImplementation = methodSignatureImplementation;
     }
 
     @Override

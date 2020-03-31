@@ -27,7 +27,7 @@ public interface DecisionAlternative {
 	 * from a trivial decision, either because the 
 	 * decision was taken by checking concrete values 
 	 * (see {@link #concrete}), or because the same
-	 * decision was taken earlier in the same trace. 
+	 * decision was taken earlier in the same path. 
 	 * Note that this is (currently) checked only for 
 	 * symbolic references resolutions, thus in all 
 	 * the sheer numeric decisions is 

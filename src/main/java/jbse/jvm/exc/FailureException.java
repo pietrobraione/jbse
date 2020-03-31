@@ -1,7 +1,7 @@
 package jbse.jvm.exc;
 
 /**
- * This exception is raised when a trace fails, typically because 
+ * This exception is raised when a path fails, typically because 
  * it last state falsifies an assertion. 
  * 
  * @author Pietro Braione

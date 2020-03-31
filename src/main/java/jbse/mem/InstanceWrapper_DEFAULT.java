@@ -30,6 +30,12 @@ final class InstanceWrapper_DEFAULT extends InstanceWrapper<InstanceImpl_DEFAULT
 	}
 
 	@Override
+	public void makeInitial() throws InvalidInputException {
+		possiblyCloneDelegate();
+		getDelegate().makeInitial();
+	}
+
+	@Override
 	public final Instance clone() {
 		//a wrapper shall never be cloned
 		throw new UnexpectedInternalException("Attempted to clone an InstanceWrapper.");

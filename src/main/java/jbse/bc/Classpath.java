@@ -19,6 +19,7 @@ import jbse.common.Util;
  * @author Pietro Braione
  */
 public class Classpath implements Cloneable {
+    private final Path jbseLibPath;
     private final Path javaHome;
     private ArrayList<Path> bootClassPath; //nonfinal because of clone
     private ArrayList<Path> extClassPath; //nonfinal because of clone
@@ -29,6 +30,7 @@ public class Classpath implements Cloneable {
     /**
      * Constructor.
      * 
+     * @param jbseLibPath a {@link Path}, the path of the JBSE library.
      * @param javaHome a {@link Path}, the Java home directory.
      * @param extDirs a {@link List}{@code <}{@link Path}{@code >}, 
      *        the extension directories. It must contain valid paths
@@ -39,7 +41,8 @@ public class Classpath implements Cloneable {
      *        or jar files.
      * @throws IOException if an I/O error occurs.
      */
-    public Classpath(Path javaHome, List<Path> extDirs, List<Path> userPaths) throws IOException {
+    public Classpath(Path jbseLibPath, Path javaHome, List<Path> extDirs, List<Path> userPaths) throws IOException {
+    	this.jbseLibPath = jbseLibPath.toAbsolutePath();
         this.javaHome = javaHome.toAbsolutePath();
         
         //bootstrap paths
@@ -53,6 +56,7 @@ public class Classpath implements Cloneable {
         addClassPath(this.bootClassPath, javaHome.resolve("lib").resolve("charset.jar"));
         addClassPath(this.bootClassPath, javaHome.resolve("lib").resolve("jfr.jar"));
         addClassPath(this.bootClassPath, javaHome.resolve("classes"));
+        addClassPath(this.bootClassPath, jbseLibPath);
         
         //extension paths and dirs
         this.extClassPath = new ArrayList<>();
@@ -111,6 +115,15 @@ public class Classpath implements Cloneable {
         } catch (NoSuchFileException | NotDirectoryException e) {
         	return; //do nothing, path is not a path to a directory
         }
+    }
+    
+    /**
+     * Returns the path of the JBSE library.
+     * 
+     * @return a {@link Path}.
+     */
+    public Path jbseLibPath() {
+        return this.jbseLibPath;
     }
     
     /**

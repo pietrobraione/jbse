@@ -266,6 +266,37 @@ public final class RunnerParameters implements Cloneable {
     }
 
     /**
+     * Sets the path of the JBSE library, and cancels the effect 
+     * of any previous call to {@link #setStartingState(State)}.
+     * 
+     * @param jbseLibPath a {@link String}.
+     * @throws NullPointerException if {@code jbseLibPath == null}.
+     */
+    public void setJBSELibPath(String jbseLibPath) {
+    	this.engineParameters.setJBSELibPath(jbseLibPath);
+    }
+    
+    /**
+     * Sets the path of the JBSE library, and cancels the effect 
+     * of any previous call to {@link #setStartingState(State)}.
+     * 
+     * @param jbseLibPath a {@link Path}.
+     * @throws NullPointerException if {@code jbseLibPath == null}.
+     */
+    public void setJBSELibPath(Path jbseLibPath) {
+    	this.engineParameters.setJBSELibPath(jbseLibPath);
+    }
+
+    /**
+     * Gets the path of the JBSE library.
+     * 
+     * @return a {@link Path}, the path of the JBSE library.
+     */
+    public Path getJBSELibPath() {
+    	return this.engineParameters.getJBSELibPath();
+    }
+
+    /**
      * Sets the Java home, and cancels the effect 
      * of any previous call to {@link #setStartingState(State)}.
      * 
@@ -765,6 +796,30 @@ public final class RunnerParameters implements Cloneable {
     public boolean getMakePreInitClassesSymbolic() {
     	return this.engineParameters.getMakePreInitClassesSymbolic();
     }
+    
+    /**
+     * Sets whether, instead of the JDK implementation of 
+     * {@code java.util.HashMap}, a model class must be used
+     * during symbolic execution.
+     * 
+     * @param useHashMapModel a {@code boolean}. If {@code true} all
+     *        the hash maps will be replaced by a model class that
+     *        is more symbolic-execution-friendly than {@code java.util.HashMap}.
+     */
+    public void setUseHashMapModel(boolean useHashMapModel) {
+    	this.engineParameters.setUseHashMapModel(useHashMapModel);
+    }
+    
+    /**
+     * Returns whether, instead of the JDK implementation of 
+     * {@code java.util.HashMap}, a model class must be used
+     * during symbolic execution.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean getUseHashMapModel() {
+    	return this.engineParameters.getUseHashMapModel();
+    }
 
     /**
      * Sets a timeout for execution.
@@ -985,7 +1040,7 @@ public final class RunnerParameters implements Cloneable {
      * 
      * @param identifierSubregion a {@link String}, the subregion identifier.
      *        For example, if {@code identifierSubregion.equals(".1.2.1")} the 
-     *        execution will explore only the traces whose identifier starts
+     *        execution will explore only the paths whose identifier starts
      *        with .1.2.1 (i.e., 1.2.1.1.2, 1.2.1.3.2.1.4, and not 1.2.2.1.2).
      * @throws NullPointerException if {@code identifierSubregion == null}.
      */

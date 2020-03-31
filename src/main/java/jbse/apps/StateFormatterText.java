@@ -523,7 +523,7 @@ public final class StateFormatterText implements Formatter {
 
     private static void formatFrame(State s, StringBuilder sb, Frame f, List<Path> srcPath, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
-        sb.append(indentCurrent); sb.append("Method signature: "); sb.append(f.getCurrentMethodSignature().toString());
+        sb.append(indentCurrent); sb.append("Method signature: "); sb.append(f.getMethodSignature().toString());
         if (f instanceof SnippetFrameWrap) {
             sb.append(" (executing snippet, will resume with program counter "); sb.append(((SnippetFrameWrap) f).getContextFrame().getReturnProgramCounter()); sb.append(")");
         }
@@ -589,7 +589,7 @@ public final class StateFormatterText implements Formatter {
             if (srcPath == null) {
                 row = null;
             } else {
-                row = Util.getSrcFileRow(f.getCurrentMethodSignature().getClassName(), srcPath, FILE_SEP, sourceRow);
+                row = Util.getSrcFileRow(f.getMethodSignature().getClassName(), srcPath, FILE_SEP, sourceRow);
             }
             sb.append(row == null ? "<UNKNOWN>" : row);
         }

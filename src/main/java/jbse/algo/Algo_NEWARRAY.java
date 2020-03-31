@@ -12,6 +12,7 @@ import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
@@ -38,7 +39,7 @@ final class Algo_NEWARRAY extends Algo_XNEWARRAY<BytecodeData_1AT> {
 
     @Override
     protected void preCook(State state) 
-    throws InterruptException, InvalidInputException, ClasspathException {
+    throws InterruptException, InvalidInputException, ClasspathException, RenameUnsupportedException {
         //sets the array length
         try {
             this.dimensionsCounts = new Primitive[] { (Primitive) this.data.operand(0) };

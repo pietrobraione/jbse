@@ -30,6 +30,7 @@ import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -61,7 +62,8 @@ public final class Algo_JAVA_CLASSLOADER_DEFINECLASS1 extends Algo_INVOKEMETA_No
     @Override
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, ClasspathException, InterruptException, 
-    SymbolicValueNotAllowedException, InvalidInputException, InvalidTypeException {
+    SymbolicValueNotAllowedException, InvalidInputException, InvalidTypeException, 
+    RenameUnsupportedException {
     	final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the first ('this') parameter
@@ -125,7 +127,7 @@ public final class Algo_JAVA_CLASSLOADER_DEFINECLASS1 extends Algo_INVOKEMETA_No
             }
             
             //defines the class
-            this.classFile = state.getClassHierarchy().defineClass(classLoader, name, buf, state.bypassStandardLoading());
+            this.classFile = state.getClassHierarchy().defineClass(classLoader, name, buf, state.bypassStandardLoading(), false);
             state.ensureInstance_JAVA_CLASS(calc, this.classFile);
         } catch (PleaseLoadClassException e) {
             invokeClassLoaderLoadClass(state, calc, e);

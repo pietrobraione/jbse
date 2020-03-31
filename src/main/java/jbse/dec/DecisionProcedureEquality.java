@@ -1,7 +1,5 @@
 package jbse.dec;
 
-import java.util.LinkedHashMap;
-
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
@@ -29,7 +27,7 @@ import jbse.val.exc.NoResultException;
  *
  */
 public final class DecisionProcedureEquality extends DecisionProcedureChainOfResponsibility {
-	private final Partition equivalence = new Partition();
+	private final Partition<Primitive> equivalence = new Partition<>();
 
 	public DecisionProcedureEquality(DecisionProcedure component) 
 	throws InvalidInputException {
@@ -329,104 +327,6 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 				super.rewriteTerm(x);
 			} else {
 				setResult(rewrite(xEq));
-			}
-		}
-	}
-	
-	/**
-	 * Union-find partition of primitives.
-	 * 
-	 * @author Pietro Braione
-	 */
-	private static class Partition {
-		private final LinkedHashMap<Primitive, PartitionNode> nodes = new LinkedHashMap<Primitive, PartitionNode>();
-		
-		void union(Primitive elemFirst, Primitive elemSecond) {
-			if (elemFirst.equals(elemSecond)) {
-				return;
-			}
-			final int firstLength = elemFirst.toString().length();
-			final int secondLength = elemSecond.toString().length();
-			final boolean firstShorter = (firstLength < secondLength);
-			final PartitionNode partitionFirst = (firstShorter ? rootNode(elemFirst) : rootNode(elemSecond));
-			final PartitionNode partitionSecond = (firstShorter ? rootNode(elemSecond) : rootNode(elemFirst));
-			final PartitionNode partitionLower, partitionHigher; 
-			if (partitionFirst.rank < partitionSecond.rank) {
-				partitionLower = partitionFirst;
-				partitionHigher = partitionSecond;
-			} else { 
-				partitionLower = partitionSecond;
-				partitionHigher = partitionFirst;
-				if (partitionLower.rank == partitionHigher.rank) {
-					++partitionHigher.rank;
-				}
-			}
-			partitionLower.parent = partitionHigher;
-		}
-		
-		Primitive find (Primitive elem) {
-			PartitionNode node = this.nodes.get(elem);
-			if (node == null) {
-				return elem;
-			}
-			return findRootAndCompress(node).element;
-		}
-		
-		/* aggressive closure, seemingly offers no advantage
-		private static class PrimitivePair {
-			Primitive oldValue;
-			Primitive newValue;
-			PrimitivePair(Primitive oldValue, Primitive newValue) {
-				this.oldValue = oldValue;
-				this.newValue = newValue;
-			}
-		}
-		
-		void close(CalculatorRewriting calc, Rewriter[] rewriters) {
-			final ArrayList<PrimitivePair> normalized = new ArrayList<PrimitivePair>();
-			for (final Primitive oldValue : this.nodes.keySet()) {
-				final Primitive newValue = calc.applyRewriters(oldValue, rewriters); 		//TODO may cause divergence!!!!!!!!!
-				normalized.add(new PrimitivePair(oldValue, newValue));
-			}
-			for (final PrimitivePair p : normalized) {
-				this.union(p.oldValue, p.newValue);
-			}
-		}*/
-		
-		void reset() {
-			this.nodes.clear();
-		}
-
-		private PartitionNode findRootAndCompress(PartitionNode node) {
-			if (node.parent != node) {
-				node.parent = findRootAndCompress(node.parent);
-			}
-			return node.parent;
-		}
-		
-		private PartitionNode rootNode(Primitive elem) {
-			PartitionNode elemNode = this.nodes.get(elem);
-			if (elemNode == null) {
-				elemNode = new PartitionNode(elem);
-				this.nodes.put(elem, elemNode);
-			}
-			return findRootAndCompress(elemNode);
-		}
-		
-		private static class PartitionNode {
-			final Primitive element;
-			PartitionNode parent;
-			int rank;
-			
-			PartitionNode(Primitive element) {
-				this.element = element;
-				this.parent = this;
-				this.rank = 0;
-			}
-			
-			@Override
-			public String toString() {
-				return ">" + this.parent.element +"(r" + this.rank + ")";
 			}
 		}
 	}

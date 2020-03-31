@@ -50,10 +50,10 @@ public final class TriggerRulesRepo implements Cloneable {
      */
 	public void addExpandTo(String toExpand, String originExp,
 	String classAllowed, Signature triggerMethod, String triggerParameter) {
-		Set<TriggerRuleExpandsTo> c = rulesExpandsTo.get(toExpand);
+		Set<TriggerRuleExpandsTo> c = this.rulesExpandsTo.get(toExpand);
 		if (c == null) {
 			c = new HashSet<>();
-			rulesExpandsTo.put(toExpand, c);
+			this.rulesExpandsTo.put(toExpand, c);
 		}
 		c.add(new TriggerRuleExpandsTo(originExp, classAllowed, triggerMethod, triggerParameter));
 		//TODO detect overlap of expand-to-nothing with expand-to-something rules and throw exception  
@@ -95,10 +95,10 @@ public final class TriggerRulesRepo implements Cloneable {
      */
 	public void addResolveAliasOrigin(String toResolve, String originExp,
 	String pathAllowedExp, Signature triggerMethod, String triggerParameter) {
-		Set<TriggerRuleAliases> c = rulesAliases.get(toResolve);
+		Set<TriggerRuleAliases> c = this.rulesAliases.get(toResolve);
 		if (c == null) {
 			c = new HashSet<>();
-			rulesAliases.put(toResolve, c);
+			this.rulesAliases.put(toResolve, c);
 		}
 		c.add(new TriggerRuleAliasesTarget(originExp, pathAllowedExp, triggerMethod, triggerParameter));
 	}
@@ -133,10 +133,10 @@ public final class TriggerRulesRepo implements Cloneable {
      */
 	public void addResolveAliasInstanceof(String toResolve, String originExp,
 	String classAllowed, Signature triggerMethod, String triggerParameter) {
-		Set<TriggerRuleAliases> c = rulesAliases.get(toResolve);
+		Set<TriggerRuleAliases> c = this.rulesAliases.get(toResolve);
 		if (c == null) {
 			c = new HashSet<>();
-			rulesAliases.put(toResolve, c);
+			this.rulesAliases.put(toResolve, c);
 		}
 		c.add(new TriggerRuleAliasesInstanceof(originExp, classAllowed, triggerMethod, triggerParameter));
 	}
@@ -160,10 +160,10 @@ public final class TriggerRulesRepo implements Cloneable {
      */ 
 	public void addResolveNull(String toResolve, String originExp, Signature triggerMethod, 
 	String triggerParameter) {
-		Set<TriggerRuleNull> c = rulesNull.get(toResolve);
+		Set<TriggerRuleNull> c = this.rulesNull.get(toResolve);
 		if (c == null) {
 			c = new HashSet<>();
-			rulesNull.put(toResolve, c);
+			this.rulesNull.put(toResolve, c);
 		}
 		c.add(new TriggerRuleNull(originExp, triggerMethod, triggerParameter));
 	}
@@ -179,8 +179,8 @@ public final class TriggerRulesRepo implements Cloneable {
 	public ArrayList<TriggerRuleExpandsTo> matchingTriggerRulesExpandsTo(ReferenceSymbolic ref) {
 		final String type = ref.getStaticType();
 		final String refClass = Type.className(type);
-		final ArrayList<TriggerRuleExpandsTo> retVal = new ArrayList<TriggerRuleExpandsTo>();
-		final Set<TriggerRuleExpandsTo> rulesSet = rulesExpandsTo.get(refClass);
+		final ArrayList<TriggerRuleExpandsTo> retVal = new ArrayList<>();
+		final Set<TriggerRuleExpandsTo> rulesSet = this.rulesExpandsTo.get(refClass);
 		if (rulesSet != null) {
 			for (TriggerRuleExpandsTo rule : rulesSet) {
 				if (rule.matches(ref)) {
@@ -202,8 +202,8 @@ public final class TriggerRulesRepo implements Cloneable {
 	public ArrayList<TriggerRuleAliases> matchingTriggerRulesAliasesNonMax(ReferenceSymbolic ref) {
 		final String type = ref.getStaticType();
 		final String refClass = Type.className(type);
-		final ArrayList<TriggerRuleAliases> retVal = new ArrayList<TriggerRuleAliases>();
-		final Set<TriggerRuleAliases> rulesSet = rulesAliases.get(refClass);
+		final ArrayList<TriggerRuleAliases> retVal = new ArrayList<>();
+		final Set<TriggerRuleAliases> rulesSet = this.rulesAliases.get(refClass);
 		if (rulesSet != null) {
 			for (TriggerRuleAliases rule : rulesSet) {
 				if (rule.matches(ref) && !rule.requiresMax()) {
@@ -225,8 +225,8 @@ public final class TriggerRulesRepo implements Cloneable {
 	public ArrayList<TriggerRuleAliases> matchingTriggerRulesAliasesMax(ReferenceSymbolic ref) {
 		final String type = ref.getStaticType();
 		final String refClass = Type.className(type);
-		final ArrayList<TriggerRuleAliases> retVal = new ArrayList<TriggerRuleAliases>();
-		final Set<TriggerRuleAliases> rulesSet = rulesAliases.get(refClass);
+		final ArrayList<TriggerRuleAliases> retVal = new ArrayList<>();
+		final Set<TriggerRuleAliases> rulesSet = this.rulesAliases.get(refClass);
 		if (rulesSet != null) {
 			for (TriggerRuleAliases rule : rulesSet) {
 				if (rule.matches(ref) && rule.requiresMax()) {
@@ -248,8 +248,8 @@ public final class TriggerRulesRepo implements Cloneable {
 	public ArrayList<TriggerRuleNull> matchingTriggerRulesNull(ReferenceSymbolic ref) {
 		final String type = ref.getStaticType();
 		final String refClass = Type.className(type);
-		final ArrayList<TriggerRuleNull> retVal = new ArrayList<TriggerRuleNull>();
-		final Set<TriggerRuleNull> rulesSet = rulesNull.get(refClass);
+		final ArrayList<TriggerRuleNull> retVal = new ArrayList<>();
+		final Set<TriggerRuleNull> rulesSet = this.rulesNull.get(refClass);
 		if (rulesSet != null) {
 			for (TriggerRuleNull rule : rulesSet) {
 				if (rule.matches(ref)) {
