@@ -1995,7 +1995,7 @@ public final class State implements Cloneable {
             	}
             	final String fieldGenericSignatureType = cf.getFieldGenericSignatureType(fieldSignature);
                 myObj.setFieldValue(fieldSignature, 
-                                    (Value) createSymbolMemberField(fieldType, (fieldGenericSignatureType == null ? fieldType : fieldGenericSignatureType), myObj.getOrigin(), fieldName, fieldClass));
+                                    (Value) createSymbolMemberField(fieldType, fieldGenericSignatureType, myObj.getOrigin(), fieldName, fieldClass));
             } catch (InvalidTypeException | InvalidInputException | FieldNotFoundException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
@@ -3805,7 +3805,9 @@ public final class State implements Cloneable {
      * @param genericSignatureType a {@link String}, the generic signature 
      *        type of the local variable from which the symbol originates.
      *        Used only for fields of reference types, in
-     *        case {@code staticType} is primitive it is ignored.
+     *        case {@code staticType} is primitive it is ignored. It
+     *        can be {@code null}, in such case it is assumed to be
+     *        equal to {@code staticType}.
      * @param container a {@link ReferenceSymbolic}, the container object
      *        the symbol originates from. It must not refer an array.
      * @param fieldName a {@link String}, the name of the field in the 
@@ -3827,7 +3829,7 @@ public final class State implements Cloneable {
     	if (isPrimitive(staticType)) {
     		return this.symbolFactory.createSymbolMemberFieldPrimitive(staticType, container, fieldName, fieldClass);
     	} else {
-    		return this.symbolFactory.createSymbolMemberFieldReference(staticType, genericSignatureType, container, fieldName, fieldClass);
+    		return this.symbolFactory.createSymbolMemberFieldReference(staticType, (genericSignatureType == null ? staticType : genericSignatureType), container, fieldName, fieldClass);
     	}
     }
 
@@ -3837,6 +3839,12 @@ public final class State implements Cloneable {
      * 
      * @param staticType a {@link String}, the static type of the
      *        local variable from which the symbol originates.
+     * @param genericSignatureType a {@link String}, the generic signature 
+     *        type of the local variable from which the symbol originates.
+     *        Used only for fields of reference types, in
+     *        case {@code staticType} is primitive it is ignored. It
+     *        can be {@code null}, in such case it is assumed to be
+     *        equal to {@code staticType}.
      * @param container a {@link ReferenceSymbolic}, the container object
      *        the symbol originates from. It must refer an array.
      * @param index a {@link Primitive}, the index of the slot in the 
@@ -3847,12 +3855,16 @@ public final class State implements Cloneable {
      * @throws InvalidInputException if the state is frozen or {@code index == null || staticType == null}.
      * @throws NullPointerException if {@code container == null}.
      */
-    public Symbolic createSymbolMemberArray(String staticType, ReferenceSymbolic container, Primitive index) 
+    public Symbolic createSymbolMemberArray(String staticType, String genericSignatureType, ReferenceSymbolic container, Primitive index) 
     throws InvalidTypeException, InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        return null; //this.symbolFactory.createSymbolMemberArray(staticType, container, index);
+        if (isPrimitive(staticType)) {
+            return this.symbolFactory.createSymbolMemberArrayPrimitive(staticType, container, index);
+        } else {
+            return this.symbolFactory.createSymbolMemberArrayReference(staticType, (genericSignatureType == null ? staticType : genericSignatureType), container, index);            
+        }
     }
 
     /**

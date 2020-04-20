@@ -1377,7 +1377,8 @@ public final class Util {
                             try {
                                 final ClassFile memberClass = arrayToProcess.getType().getMemberClass();
                                 final String memberType = memberClass.getInternalTypeName(); 
-                                val = (Value) state.createSymbolMemberArray(memberType, arrayToProcess.getOrigin(), calc.push(index).add(referringArrayOffset).pop());
+                                final String memberGenericSignature = memberClass.getGenericSignatureType();
+                                val = (Value) state.createSymbolMemberArray(memberType, memberGenericSignature, arrayToProcess.getOrigin(), calc.push(index).add(referringArrayOffset).pop());
                             } catch (InvalidOperandException | InvalidTypeException exc) {
                                 //this should never happen
                                 failExecution(exc);
