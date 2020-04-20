@@ -33,6 +33,7 @@ public final class Signatures {
     public static final String JAVA_BITS                     = "java/nio/Bits";
     public static final String JAVA_BOOLEAN                  = "java/lang/Boolean";
     public static final String JAVA_BOUNDMETHODHANDLE        = "java/lang/invoke/BoundMethodHandle";
+    public static final String JAVA_BOUNDMETHODHANDLE_FACTORY = "java/lang/invoke/BoundMethodHandle$Factory";
     public static final String JAVA_BOUNDMETHODHANDLE_SPECIESDATA = "java/lang/invoke/BoundMethodHandle$SpeciesData";
     public static final String JAVA_BOUNDMETHODHANDLE_SPECIES_L   = "java/lang/invoke/BoundMethodHandle$Species_L";
     public static final String JAVA_BYTE                     = "java/lang/Byte";
@@ -131,6 +132,7 @@ public final class Signatures {
     public static final String JBSE_ANALYSIS                 = internalClassName(jbse.meta.Analysis.class.getName());
     public static final String JBSE_BASE                     = internalClassName(jbse.base.Base.class.getName());
     public static final String JBSE_JAVA_MAP                 = internalClassName(jbse.base.JAVA_MAP.class.getName());
+    public static final String JDK_TYPE                      = "jdk/internal/org/objectweb/asm/Type";
     public static final String SUN_ASCIICASEINSENSITIVECOMPARATOR = "sun/misc/ASCIICaseInsensitiveComparator";
     public static final String SUN_CALLERSENSITIVE           = "sun/reflect/CallerSensitive";
     public static final String SUN_CONSTANTPOOL              = "sun/reflect/ConstantPool";
@@ -148,6 +150,7 @@ public final class Signatures {
     public static final String SUN_URLCLASSPATH              = "sun/misc/URLClassPath";
     public static final String SUN_URLCLASSPATH_JARLOADER    = "sun/misc/URLClassPath$JarLoader";
     public static final String SUN_VERIFYACCESS              = "sun/invoke/util/VerifyAccess";
+    public static final String SUN_VERIFYTYPE                = "sun/invoke/util/VerifyType";
     public static final String SUN_VM                        = "sun/misc/VM";
     public static final String SUN_WIN32ERRORMODE            = "sun/io/Win32ErrorMode";
     public static final String SUN_WRAPPER_FORMAT            = "sun/invoke/util/Wrapper$Format";
@@ -343,12 +346,16 @@ public final class Signatures {
                       "(" + REFERENCE + JAVA_CLASS + TYPEEND + INT + REFERENCE + JAVA_CLASS + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + 
                       REFERENCE + JAVA_OBJECT + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_MEMBERNAME + TYPEEND,
                       "linkMethod");
+    public static final Signature JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET =
+        new Signature(JAVA_METHODHANDLENATIVES, "(" + REFERENCE + JAVA_MEMBERNAME + TYPEEND + ")" + LONG, "objectFieldOffset");
     public static final Signature JAVA_METHODHANDLENATIVES_REGISTERNATIVES =
         new Signature(JAVA_METHODHANDLENATIVES, "()" + VOID, "registerNatives");
     public static final Signature JAVA_METHODHANDLENATIVES_RESOLVE =
         new Signature(JAVA_METHODHANDLENATIVES, 
                       "(" + REFERENCE + JAVA_MEMBERNAME + TYPEEND + REFERENCE + JAVA_CLASS + TYPEEND + ")" + REFERENCE + JAVA_MEMBERNAME + TYPEEND, 
                       "resolve");
+    public static final Signature JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET =
+        new Signature(JAVA_METHODHANDLENATIVES, "(" + REFERENCE + JAVA_MEMBERNAME + TYPEEND + ")" + LONG, "staticFieldOffset");
     public static final Signature JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING =
         new Signature(JAVA_METHODTYPE, "()" + REFERENCE + JAVA_STRING + TYPEEND, "toMethodDescriptorString");
     public static final Signature JAVA_OBJECT_CLONE =

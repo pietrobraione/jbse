@@ -80,22 +80,13 @@ public final class Algo_SUN_UNSAFE_OBJECTFIELDOFFSET extends Algo_INVOKEMETA_Non
             }            
             final Signature fieldSignature = declaredFields[slot];
             
-            //gets the offset by scanning the fields list of the 
-            //object backwards
-            //TODO this calculation should be encapsulated somewhere in ObjektImpl, or all the logic here and in ObjektImpl should be moved in ClassHierarchy or in ClassFile.
-            final Signature[] allFields = state.getClassHierarchy().getAllFields(fldClassFile);
-            boolean found = false;
-            for (int _ofst = 0; _ofst < allFields.length; ++_ofst) {
-                if (allFields[allFields.length - 1 - _ofst].equals(fieldSignature)) {
-                    found = true;
-                    this.ofst = (Simplex) calc.pushInt(_ofst).to(LONG).pop();
-                    break;
-                }
-            }
-            if (!found) {
+            //gets the offset
+            final int _ofst = fldClassFile.getFieldOffset(fieldSignature);
+            if (_ofst == -1) {
                 //this should never happen
                 failExecution("Declared field " + fieldSignature + " not found in the list of all fields of an object with class " + fldClassFile.getClassName() + ".");
             }
+            this.ofst = (Simplex) calc.pushInt(_ofst).to(LONG).pop();
         } catch (ClassCastException e) {
             throwVerifyError(state, calc);
             exitFromAlgorithm();

@@ -8,6 +8,8 @@ import static jbse.common.Type.className;
 import static jbse.common.Type.isCat_1;
 import static jbse.common.Type.splitParametersDescriptors;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -878,6 +880,16 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     public abstract Signature[] getDeclaredFieldsStatic();
 
     /**
+     * Returns the number of static fields of this class.
+     * 
+     * @return an {@code int}, the number of static fields
+     *         declared by this class.
+     */
+    public final int numOfStaticFields() {
+        return getDeclaredFieldsStatic().length;
+    }
+    
+    /**
      * Gets all the fields declared by this class 
      * (not by its superclasses), both static and not.
      *  
@@ -890,6 +902,52 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      *         to {@link #getDeclaredFieldsNonStatic()}.
      */
     public abstract Signature[] getDeclaredFields();
+
+    /**
+     * Returns all the fields known to an object of 
+     * this class. 
+     * 
+     * @return a {@link Signature}{@code []}. It will contain all the 
+     *         {@link Signature}s of the class' static fields, followed
+     *         by all the {@link Signature}s of the class' object (nonstatic) 
+     *         fields, followed by all the {@link Signature}s of the object 
+     *         fields of the superclass, the superclass' superclass, etc.
+     */	
+    public final Signature[] getAllFields() {
+    	final ArrayList<Signature> signatures = new ArrayList<>(0);
+    	boolean isStartClass = true;
+    	for (ClassFile c : superclasses()) {
+    		if (isStartClass) {
+    			signatures.addAll(Arrays.asList(c.getDeclaredFieldsStatic()));
+    			isStartClass = false;
+    		}
+    		final Signature[] fields = c.getDeclaredFieldsNonStatic();
+    		signatures.addAll(Arrays.asList(fields));
+    	}
+        final Signature[] retVal = signatures.toArray(SIGNATURE_ARRAY);
+        return retVal;
+    }
+    
+    /**
+     * Gets the offset of a field.
+     * 
+     * @param fieldSignature a {@link Signature}.
+     * @return a nonnegative {@code int}, the offset of the field
+     *         with signature {@code sig}, or {@code -1} if an 
+     *         instance of this class has no field with signature
+     *         {@code fieldSignature}.
+     */
+    public final int getFieldOffset(Signature fieldSignature) {
+        final Signature[] allFields = getAllFields();
+        for (int _ofst = 0; _ofst < allFields.length; ++_ofst) {
+            if (allFields[allFields.length - 1 - _ofst].equals(fieldSignature)) {
+            	return _ofst;
+            }
+        }
+        return -1;
+    }
+
+    private static final Signature[] SIGNATURE_ARRAY = new Signature[0];
 
     /**
      * Given an index of the constant pool of CONSTANT_FieldRef type, returns the signature of the field.

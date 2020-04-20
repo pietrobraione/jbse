@@ -39,7 +39,9 @@ import static jbse.algo.Overrides.ALGO_JAVA_FILEINPUTSTREAM_READBYTES;
 import static jbse.algo.Overrides.ALGO_JAVA_FILEOUTPUTSTREAM_WRITEBYTES;
 import static jbse.algo.Overrides.ALGO_JAVA_JARFILE_GETMETAINFENTRYNAMES;
 import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_INIT;
+import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET;
 import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_RESOLVE;
+import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_CLONE;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_GETCLASS;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_HASHCODE;
@@ -217,8 +219,10 @@ import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
 import static jbse.bc.Signatures.JAVA_MAPPEDBYTEBUFFER;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_GETCONSTANT;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_INIT;
+import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_RESOLVE;
+import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET;
 import static jbse.bc.Signatures.JAVA_METHODTYPEFORM;
 import static jbse.bc.Signatures.JAVA_OBJECT_CLONE;
 import static jbse.bc.Signatures.JAVA_OBJECT_GETCLASS;
@@ -345,6 +349,7 @@ import static jbse.bc.Signatures.JBSE_JAVA_MAP_MAKEINITIAL;
 import static jbse.bc.Signatures.JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION;
 import static jbse.bc.Signatures.JBSE_JAVA_MAP_REFINEONKEYANDBRANCH;
 import static jbse.bc.Signatures.JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH;
+import static jbse.bc.Signatures.JDK_TYPE;
 import static jbse.bc.Signatures.SUN_ASCIICASEINSENSITIVECOMPARATOR;
 import static jbse.bc.Signatures.SUN_JARINDEX;
 import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
@@ -382,6 +387,7 @@ import static jbse.bc.Signatures.SUN_UNSAFE_SHOULDBEINITIALIZED;
 import static jbse.bc.Signatures.SUN_URLCLASSPATH_GETLOOKUPCACHEURLS;
 import static jbse.bc.Signatures.SUN_URLCLASSPATH_JARLOADER;
 import static jbse.bc.Signatures.SUN_VERIFYACCESS;
+import static jbse.bc.Signatures.SUN_VERIFYTYPE;
 import static jbse.bc.Signatures.SUN_VM_INITIALIZE;
 import static jbse.bc.Signatures.SUN_WIN32ERRORMODE_SETERRORMODE;
 import static jbse.bc.Signatures.SUN_WRAPPER_FORMAT;
@@ -645,8 +651,10 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_JARFILE_GETMETAINFENTRYNAMES,                  ALGO_JAVA_JARFILE_GETMETAINFENTRYNAMES);
             addBaseOverridden(JAVA_METHODHANDLENATIVES_GETCONSTANT,               BASE_JAVA_METHODHANDLENATIVES_GETCONSTANT);
             addMetaOverridden(JAVA_METHODHANDLENATIVES_INIT,                      ALGO_JAVA_METHODHANDLENATIVES_INIT);
+            addMetaOverridden(JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET,         ALGO_JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET);
             addMetaOverridden(JAVA_METHODHANDLENATIVES_REGISTERNATIVES,           ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(JAVA_METHODHANDLENATIVES_RESOLVE,                   ALGO_JAVA_METHODHANDLENATIVES_RESOLVE);
+            addMetaOverridden(JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET,         ALGO_JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET);
             addMetaOverridden(JAVA_OBJECT_CLONE,                                  ALGO_JAVA_OBJECT_CLONE);
             addMetaOverridden(JAVA_OBJECT_GETCLASS,                               ALGO_JAVA_OBJECT_GETCLASS);
             addMetaOverridden(JAVA_OBJECT_HASHCODE,                               ALGO_JAVA_OBJECT_HASHCODE);
@@ -1018,6 +1026,7 @@ public final class ExecutionContext {
         className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
         className.equals(JAVA_VOID) || 
         className.equals(JAVA_ZIPFILE) || 
+        className.equals(JDK_TYPE) || 
         className.equals(SUN_ASCIICASEINSENSITIVECOMPARATOR) ||
         className.equals(SUN_JARINDEX) ||
         className.equals(SUN_PERF) ||
@@ -1025,9 +1034,11 @@ public final class ExecutionContext {
         className.equals(SUN_PERFCOUNTER_CORECOUNTERS) ||
         className.equals(SUN_URLCLASSPATH_JARLOADER) ||
         className.equals(SUN_VERIFYACCESS) ||
+        className.equals(SUN_VERIFYTYPE) ||
         className.equals(SUN_WRAPPER_FORMAT) ||
         //TODO move initialization of these unpure classes (old code):
         className.equals(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE) || //necessary for method handles
+        className.equals(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_FACTORY) || //necessary for method handles; apparently the only field that is unpure is CLASS_CACHE, a cache field
         className.equals(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIESDATA) || //necessary for method handles
         className.equals(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIES_L) || //necessary for method handles
         className.equals(jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE) || //wouldn't manage method handles otherwise
