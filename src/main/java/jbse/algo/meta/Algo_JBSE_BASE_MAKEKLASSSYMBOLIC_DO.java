@@ -243,6 +243,7 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
                     }
                 } else if (fieldValue instanceof ReferenceSymbolic) {
                     //makes the new value of the field
+                    //TODO fix the generic signature
                     final ReferenceSymbolic newFieldValue = (ReferenceSymbolic) state.createSymbolMemberField(fieldType, fieldType, currentObjekt.getOrigin(), fieldName, fieldClass);
 
                     //sets the field
@@ -298,7 +299,8 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
 
                         if (entryValue instanceof ReferenceConcrete) {							
                             //makes the new value of the entry
-                            final ReferenceSymbolic newEntryValue = (ReferenceSymbolic) state.createSymbolMemberArray(currentArrayMemberType, currentArray.getOrigin(), indexActual);
+                            //TODO fix the generic signature
+                            final ReferenceSymbolic newEntryValue = (ReferenceSymbolic) state.createSymbolMemberArray(currentArrayMemberType, currentArrayMemberType, currentArray.getOrigin(), indexActual);
 
                             //sets the entry
                             entryCast.setValue(newEntryValue);
@@ -338,7 +340,8 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
                             }
                         } else if (entryValue instanceof ReferenceSymbolic) {
                             //makes the new value of the field
-                            final ReferenceSymbolic newEntryValue = (ReferenceSymbolic) state.createSymbolMemberArray(currentArrayMemberType, currentArray.getOrigin(), indexActual);
+                            //TODO fix the generic signature
+                            final ReferenceSymbolic newEntryValue = (ReferenceSymbolic) state.createSymbolMemberArray(currentArrayMemberType, currentArrayMemberType, currentArray.getOrigin(), indexActual);
 
                             //sets the entry
                             entryCast.setValue(newEntryValue);
