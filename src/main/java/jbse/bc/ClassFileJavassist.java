@@ -9,14 +9,19 @@ import static javassist.bytecode.AccessFlag.STATIC;
 import static javassist.bytecode.AccessFlag.SUPER;
 import static jbse.bc.ClassLoaders.CLASSLOADER_NONE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE;
+import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.SIGNATURE_POLYMORPHIC_DESCRIPTOR;
 import static jbse.bc.Signatures.SUN_CALLERSENSITIVE;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.internalClassName;
+import static jbse.common.Type.classNameContained;
+import static jbse.common.Type.classNameContainer;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -24,6 +29,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -40,6 +46,7 @@ import javassist.bytecode.FieldInfo;
 import javassist.bytecode.InnerClassesAttribute;
 import javassist.bytecode.LineNumberAttribute;
 import javassist.bytecode.LocalVariableAttribute;
+import javassist.bytecode.LocalVariableTypeAttribute;
 import javassist.bytecode.MethodInfo;
 import javassist.bytecode.SignatureAttribute;
 import javassist.bytecode.annotation.Annotation;
@@ -52,6 +59,7 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -65,13 +73,13 @@ public class ClassFileJavassist extends ClassFile {
     private final boolean isAnonymousUnregistered;
     private final int definingClassLoader;
     private final javassist.bytecode.ClassFile cf;
-    private final String className;
     private final ConstPool cp;
-    private final byte[] bytecode; //only for dummy classes
     private final ClassFile superClass;
     private final ClassFile[] superInterfaces;
     private final ConstantPoolValue[] cpPatches;
     private final ClassFile hostClass;
+    private String className; //nonfinal because of classfile renaming
+    private byte[] bytecode; //only for dummy classes, nonfinal because of classfile renaming
     private ArrayList<Signature> fieldsStatic; //lazily initialized, but actually final
     private ArrayList<Signature> fieldsObject; //lazily initialized, but actually final
     private ArrayList<Signature> methods; //lazily initialized, but actually final
@@ -148,28 +156,38 @@ public class ClassFileJavassist extends ClassFile {
      * Constructor for anonymous (unregistered) classes.
      * 
      * @param bytecode a {@code byte[]}, the bytecode of the class.
+     * @param cfJAVA_OBJECT a {@link ClassFile} for {@code java.lang.Object}.
+     *        It can be {@code null} for <em>dummy</em>, i.e., incomplete 
+     *        classfiles that are created to access the bytecode conveniently.
      * @param cpPatches a {@link ConstantPoolValue}{@code []}; The i-th element of this
      *        array patches the i-th element in the constant pool defined
      *        by the {@code bytecode}. Note that {@code cpPatches[0]} and all the
      *        {@code cpPatches[i]} with {@code i} equal or greater than the size
-     *        of the constant pool in {@code classFile} are ignored. It can be {@code null} for
-     *        <em>dummy</em>, i.e., incomplete classfiles that are created to access
-     *        the bytecode conveniently.
+     *        of the constant pool in {@code classFile} are ignored. It can be 
+     *        {@code null} for <em>dummy</em>, i.e., incomplete classfiles 
+     *        that are created to access the bytecode conveniently.
      * @param hostClass a {@link ClassFile}, the host class for the anonymous class. 
      *        It must be {@code null} for <em>dummy</em>, i.e., incomplete classfiles 
      *        that are created to access the bytecode conveniently.
      * @throws ClassFileIllFormedException if the {@code bytecode} 
      *         is ill-formed.
      * @throws InvalidInputException if {@code cpPatches} does not agree with {@code bytecode},
-     *         or {@code bytecode == null}.
+     *         or {@code bytecode == null} or {@code cf_JAVA_OBJECT != null} and {@code cf_JAVA_OBJECT}
+     *         is not a classfile for {@code java.lang.Object}.
      */
-    ClassFileJavassist(byte[] bytecode, ConstantPoolValue[] cpPatches, ClassFile hostClass) 
+    ClassFileJavassist(byte[] bytecode, ClassFile cfJAVA_OBJECT, ConstantPoolValue[] cpPatches, ClassFile hostClass) 
     throws ClassFileIllFormedException, InvalidInputException {
         try {
             //checks
             if (bytecode == null) {
-                throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with bytecode parameters whose value is null.");
+                throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with bytecode parameter whose value is null.");
             }
+            if (cfJAVA_OBJECT != null && !JAVA_OBJECT.equals(cfJAVA_OBJECT.getClassName())) {
+                throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with cf_JAVA_OBJECT parameter whose value is a classfile for class " + cfJAVA_OBJECT.getClassName() + ".");
+            }
+            
+            //determines if it is dummy
+            final boolean isDummy = (hostClass == null);
             
             //reads and patches the bytecode
             this.cf = new javassist.bytecode.ClassFile(new DataInputStream(new ByteArrayInputStream(bytecode)));
@@ -183,12 +201,12 @@ public class ClassFileJavassist extends ClassFile {
             
             //inits
             this.isAnonymousUnregistered = true;
-            this.definingClassLoader = CLASSLOADER_NONE;  //the classloader context is taken from the host class
+            this.definingClassLoader = (isDummy ? CLASSLOADER_NONE : hostClass.getDefiningClassLoader());
             this.className = internalClassName(this.cf.getName());
             this.cp = this.cf.getConstPool();
-            this.bytecode = (hostClass == null ? bytecode : null); //only dummy anonymous classfiles (without a host class) cache their bytecode
-            this.superClass = null;      //TODO is it ok to impose that anonymous classfiles have no superclass?
-            this.superInterfaces = null; //TODO is it ok to impose that anonymous classfiles have no superinterfaces?
+            this.bytecode = (isDummy ? bytecode : null); //only dummy anonymous classfiles (without a host class) cache their bytecode
+            this.superClass = cfJAVA_OBJECT;
+            this.superInterfaces = new ClassFile[0];
             this.cpPatches = (cpPatches == null ? null : cpPatches.clone());
             this.hostClass = hostClass;
             this.fieldsStatic = this.fieldsObject = this.constructors = null;
@@ -345,8 +363,57 @@ public class ClassFileJavassist extends ClassFile {
     }
 
     @Override
+    public String getPackageName() {
+        final String className = getClassName();
+        final int lastDollar = className.lastIndexOf('$');
+        final String prefix = (lastDollar == -1 ? className : className.substring(0, lastDollar));
+        final int lastSlash = prefix.lastIndexOf('/');
+        if (lastSlash == -1) {
+            return "";
+        } else {
+            return prefix.substring(0, lastSlash);
+        }
+    }
+    
+    @Override
     public String getClassName() {
         return this.className;
+    }
+    
+    @Override
+    public void rename(String classNameNew) throws RenameUnsupportedException {
+    	final HashMap<String, String> renames = new HashMap<>();
+    	renames.put(this.className, classNameNew);
+        final InnerClassesAttribute ica = 
+                (InnerClassesAttribute) this.cf.getAttribute(InnerClassesAttribute.tag);
+        if (ica != null) {
+        	final String fromContainer = classNameContainer(this.className);
+        	final String toContainer = classNameContainer(classNameNew);
+            final int n = ica.tableLength();
+            for (int i = 0; i < n; ++i) {
+            	final String innerClassName = internalClassName(ica.innerClass(i));
+            	if (fromContainer.equals(classNameContainer(innerClassName)) &&
+            		!renames.containsKey(innerClassName)) {
+            		renames.put(innerClassName, toContainer + classNameContained(innerClassName));
+            	}
+                final String outerClassName = internalClassName(ica.outerClass(i));
+                if (outerClassName != null && fromContainer.equals(classNameContainer(outerClassName)) &&
+                	!renames.containsKey(outerClassName)) {
+                	renames.put(outerClassName, toContainer + classNameContained(outerClassName));
+                }
+            }
+        }
+        this.cf.renameClass(renames);
+        this.cf.compact();
+        this.className = internalClassName(this.cf.getName());
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+			this.cf.write(new DataOutputStream(baos));
+		} catch (IOException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
+        this.bytecode = baos.toByteArray();
     }
     
     @Override
@@ -363,6 +430,12 @@ public class ClassFileJavassist extends ClassFile {
             throw new InvalidIndexException(entryInvalidMessage(classIndex));
         }
         return internalClassName(this.cp.getClassInfo(classIndex));
+    }
+    
+    @Override
+    public String getGenericSignatureType() {
+    	final SignatureAttribute sa = (SignatureAttribute) this.cf.getAttribute(SignatureAttribute.tag);
+    	return sa == null ? null : sa.getSignature();    
     }
     
     @Override
@@ -468,12 +541,14 @@ public class ClassFileJavassist extends ClassFile {
         if (lastDollarSignIndex == -1) {
             return false; //not a nested class
         }
-        for (int i = lastDollarSignIndex + 1; i < className.length(); ++i) {
-            if (!isAsciiDigit(className.charAt(i))) {
-                return false;
-            }
+        boolean hasNumericCode; 
+        try {
+        	Integer.parseInt(className.substring(lastDollarSignIndex + 1));
+        	hasNumericCode = true;
+        } catch (NumberFormatException e) {
+        	hasNumericCode = false;
         }
-        return true;
+        return hasNumericCode;
     }
     
     @Override
@@ -520,7 +595,6 @@ public class ClassFileJavassist extends ClassFile {
     private ArrayList<Signature> getDeclaredFields(boolean areStatic) {
         if ((areStatic ? this.fieldsStatic : this.fieldsObject) == null) {
             final ArrayList<Signature> fields = new ArrayList<Signature>();
-            @SuppressWarnings("unchecked")
             final List<FieldInfo> fieldsJA = this.cf.getFields();
             for (FieldInfo fld : fieldsJA) {
                 if (Modifier.isStatic(AccessFlag.toModifier(fld.getAccessFlags())) == areStatic) {
@@ -588,7 +662,6 @@ public class ClassFileJavassist extends ClassFile {
             return this.cf.getStaticInitializer();
         }
 
-        @SuppressWarnings("unchecked")
         final List<MethodInfo> ms = this.cf.getMethods();
         for (MethodInfo m : ms) {
             final String internalName = m.getName();
@@ -643,18 +716,38 @@ public class ClassFileJavassist extends ClassFile {
     public LocalVariableTable getLocalVariableTable(Signature methodSignature) 
     throws MethodNotFoundException, MethodCodeNotFoundException  {
         final CodeAttribute ca = getMethodCodeAttribute(methodSignature);
-        final LocalVariableAttribute lvtJA = (LocalVariableAttribute) ca.getAttribute("LocalVariableTable");
+        final LocalVariableAttribute lvtJA = (LocalVariableAttribute) ca.getAttribute(LocalVariableAttribute.tag);
 
         if (lvtJA == null) {
-            return this.defaultLocalVariableTable(methodSignature);
+            return defaultLocalVariableTable(methodSignature);
         }
 
         //builds the local variable table from the LocalVariableTable attribute 
         //information; this has always success
         final LocalVariableTable lvt = new LocalVariableTable(ca.getMaxLocals());
         for (int i = 0; i < lvtJA.tableLength(); ++i) {
-            lvt.setEntry(lvtJA.index(i), lvtJA.descriptor(i), 
+            lvt.addRow(lvtJA.index(i), lvtJA.descriptor(i), 
                          lvtJA.variableName(i), lvtJA.startPc(i),  lvtJA.codeLength(i));
+        }
+        return lvt;
+    }
+    
+    @Override
+    public LocalVariableTable getLocalVariableTypeTable(Signature methodSignature)
+    throws MethodNotFoundException, MethodCodeNotFoundException {
+        final CodeAttribute ca = getMethodCodeAttribute(methodSignature);
+        final LocalVariableTypeAttribute lvttJA = (LocalVariableTypeAttribute) ca.getAttribute(LocalVariableTypeAttribute.tag);
+
+        if (lvttJA == null) {
+            return new LocalVariableTable(0);
+        }
+
+        //builds the local variable type table from the LocalVariableTypeTable attribute 
+        //information; this has always success
+        final LocalVariableTable lvt = new LocalVariableTable(ca.getMaxLocals());
+        for (int i = 0; i < lvttJA.tableLength(); ++i) {
+            lvt.addRow(lvttJA.index(i), lvttJA.signature(i), 
+                         lvttJA.variableName(i), lvttJA.startPc(i),  lvttJA.codeLength(i));
         }
         return lvt;
     }
@@ -748,7 +841,6 @@ public class ClassFileJavassist extends ClassFile {
     }
     
     private MethodInfo findUniqueMethodDeclarationWithName(String methodName) {
-        @SuppressWarnings("unchecked")
         final List<MethodInfo> ms = this.cf.getMethods();
         MethodInfo retVal = null;
         for (MethodInfo m : ms) {
@@ -801,6 +893,11 @@ public class ClassFileJavassist extends ClassFile {
     @Override
     public boolean isAbstract() {
         return Modifier.isAbstract(AccessFlag.toModifier(this.cf.getAccessFlags()));
+    }
+    
+    @Override
+    public boolean isFinal() {
+        return Modifier.isFinal(AccessFlag.toModifier(this.cf.getAccessFlags()));
     }
 
     @Override
@@ -1174,7 +1271,6 @@ public class ClassFileJavassist extends ClassFile {
     }
 
     private FieldInfo findField(Signature fieldSignature) {
-        @SuppressWarnings("unchecked")
         final List<FieldInfo> fieldsJA = this.cf.getFields();
         for (FieldInfo fld : fieldsJA) {
             if (fld.getDescriptor().equals(fieldSignature.getDescriptor()) && 
@@ -1188,7 +1284,6 @@ public class ClassFileJavassist extends ClassFile {
     private void fillMethodsAndConstructors() {
         this.methods = new ArrayList<>();
         this.constructors = new ArrayList<>();
-        @SuppressWarnings("unchecked")
         final List<MethodInfo> ms = this.cf.getMethods();
         for (MethodInfo m : ms) {
             final Signature sig = new Signature(getClassName(), m.getDescriptor(), m.getName());
@@ -1221,16 +1316,16 @@ public class ClassFileJavassist extends ClassFile {
         final String name = getClassName();
         final int n = ica.tableLength();
         for (int i = 0; i < n; ++i)
-            if (name.equals(ica.innerClass(i))) {
+            if (name.equals(internalClassName(ica.innerClass(i)))) {
                 final String outName = ica.outerClass(i);
                 if (outName != null) {
-                    return outName;                    
+                    return internalClassName(outName);                    
                 } else {
                     // maybe anonymous or local class.
                     final EnclosingMethodAttribute ema =
-                        (EnclosingMethodAttribute)cf.getAttribute(EnclosingMethodAttribute.tag);
+                        (EnclosingMethodAttribute) this.cf.getAttribute(EnclosingMethodAttribute.tag);
                     if (ema != null) {
-                        return ema.className();
+                        return internalClassName(ema.className()); //filtering through internalClassName is for safety (it is unclear what Javassist returns)
                     }
                 }
             }

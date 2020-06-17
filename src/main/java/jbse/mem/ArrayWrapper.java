@@ -61,10 +61,10 @@ final class ArrayWrapper extends HeapObjektWrapper<ArrayImpl> implements Array {
     public boolean isSimple() {
         return getDelegate().isSimple();
     }
-
+    
     @Override
-    public boolean isInitial() {
-        return getDelegate().isInitial();
+    public void makeInitial() throws InvalidInputException {
+    	throw new InvalidInputException("Attempted to makeInitial an array: Arrays can only be made initial through their constructors.");
     }
 
     @Override

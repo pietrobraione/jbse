@@ -6,7 +6,10 @@ import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
-import static jbse.algo.meta.Util.CALLER_SENSITIVE;
+import static jbse.algo.meta.Util.FAIL_JBSE;
+import static jbse.algo.meta.Util.getInstance;
+import static jbse.algo.meta.Util.getMemberNameFlagsMethod;
+import static jbse.algo.meta.Util.INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION;
 import static jbse.algo.meta.Util.isConstructor;
 import static jbse.algo.meta.Util.isField;
 import static jbse.algo.meta.Util.isInvokeInterface;
@@ -14,15 +17,11 @@ import static jbse.algo.meta.Util.isMethod;
 import static jbse.algo.meta.Util.isSetter;
 import static jbse.algo.meta.Util.isSignaturePolymorphicMethodIntrinsic;
 import static jbse.algo.meta.Util.JVM_RECOGNIZED_FIELD_MODIFIERS;
-import static jbse.algo.meta.Util.JVM_RECOGNIZED_METHOD_MODIFIERS;
-import static jbse.algo.meta.Util.IS_CONSTRUCTOR;
 import static jbse.algo.meta.Util.IS_FIELD;
-import static jbse.algo.meta.Util.IS_METHOD;
+import static jbse.algo.meta.Util.OK;
 import static jbse.algo.meta.Util.REFERENCE_KIND_SHIFT;
 import static jbse.algo.meta.Util.REF_getField;
 import static jbse.algo.meta.Util.REF_getStatic;
-import static jbse.algo.meta.Util.REF_invokeSpecial;
-import static jbse.algo.meta.Util.REF_invokeStatic;
 import static jbse.algo.meta.Util.REF_invokeVirtual;
 import static jbse.algo.meta.Util.REF_putField;
 import static jbse.bc.Signatures.ILLEGAL_ARGUMENT_EXCEPTION;
@@ -65,6 +64,7 @@ import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
+import jbse.algo.meta.Util.ErrorAction;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.bc.Snippet;
@@ -78,10 +78,10 @@ import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
-import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Array;
 import jbse.mem.Instance;
 import jbse.mem.Instance_JAVA_CLASS;
@@ -96,7 +96,6 @@ import jbse.val.Calculator;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Simplex;
-import jbse.val.Value;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -111,7 +110,6 @@ import jbse.val.exc.InvalidTypeException;
  * easiest one and modify + return the received MemberName. 
  */
 public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA_Nonbranching {
-    private Instance memberNameObject; //set by cookMore
     private ClassFile resolvedClass; //set by cookMore
     private Signature resolvedSignature; //set by cookMore
     private Signature polymorphicMethodSignature; //set by cookMore
@@ -123,26 +121,19 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
         return () -> 2;
     }
     
-    @FunctionalInterface
-    private interface ErrorAction {
-        void doIt(String s) throws InterruptException, SymbolicValueNotAllowedException, ClasspathException;
-    }
-    
     @Override
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, InterruptException, UndefinedResultException, 
-    SymbolicValueNotAllowedException, ClasspathException, InvalidInputException {
+    SymbolicValueNotAllowedException, ClasspathException, InvalidInputException, 
+    RenameUnsupportedException {
     	final Calculator calc = this.ctx.getCalculator();
     	
-        final ErrorAction OK                                         = msg -> { };
-        final ErrorAction FAIL_JBSE                                  = msg -> { throw new UnexpectedInternalException(msg); };
-        final ErrorAction THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION      = msg -> { throwNew(state, calc, ILLEGAL_ARGUMENT_EXCEPTION); exitFromAlgorithm(); };
-        final ErrorAction THROW_JAVA_INTERNAL_ERROR                  = msg -> { throwNew(state, calc, INTERNAL_ERROR); exitFromAlgorithm(); };
-        final ErrorAction THROW_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION = msg -> { throw new SymbolicValueNotAllowedException(msg); };
+        final ErrorAction THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION = msg -> { throwNew(state, calc, ILLEGAL_ARGUMENT_EXCEPTION); exitFromAlgorithm(); };
+        final ErrorAction THROW_JAVA_INTERNAL_ERROR             = msg -> { throwNew(state, calc, INTERNAL_ERROR); exitFromAlgorithm(); };
  
         try {
             //gets the first parameter (the MemberName)
-            this.memberNameObject = getInstance(state, this.data.operand(0), "MemberName self", FAIL_JBSE, THROW_JAVA_INTERNAL_ERROR, THROW_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
+            final Instance memberNameObject = getInstance(state, this.data.operand(0), "MemberName self", FAIL_JBSE, THROW_JAVA_INTERNAL_ERROR, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
 
             //now we will get all the fields of the MemberName; in the case these fields
             //are null we throw IllegalArgumentException as Hotspot does, see 
@@ -153,11 +144,11 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             
             //gets the container class of the MemberName
             final Instance_JAVA_CLASS memberNameContainerClassObject = 
-                (Instance_JAVA_CLASS) getInstance(state, this.memberNameObject.getFieldValue(JAVA_MEMBERNAME_CLAZZ), "Class self.clazz", FAIL_JBSE /* TODO is it ok? */, THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION, THROW_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
+                (Instance_JAVA_CLASS) getInstance(state, memberNameObject.getFieldValue(JAVA_MEMBERNAME_CLAZZ), "Class self.clazz", FAIL_JBSE /* TODO is it ok? */, THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
             final ClassFile memberNameContainerClass = memberNameContainerClassObject.representedClass();
 
             //gets the descriptor of the MemberName (field type)
-            final Instance memberNameDescriptorObject = getInstance(state, this.memberNameObject.getFieldValue(JAVA_MEMBERNAME_TYPE), "Object self.type", FAIL_JBSE /* TODO is it ok? */, THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION, THROW_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
+            final Instance memberNameDescriptorObject = getInstance(state, memberNameObject.getFieldValue(JAVA_MEMBERNAME_TYPE), "Object self.type", FAIL_JBSE /* TODO is it ok? */, THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
             //From the source code of java.lang.invoke.MemberName the type field of a MemberName is either null 
             //(if the field is not initialized), or a MethodType (if the MemberName is a method call), or a
             //Class (if the MemberName is a field get/set or a type), or a String (all cases, if the field is 
@@ -169,19 +160,19 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             //hotspot:/src/share/vm/prims/methodHandles.cpp line 654 and the invoked MethodHandles::lookup_signature, 
             //line 392.
 
-            //gets the field name of the MemberName
-            final Instance memberNameNameObject = getInstance(state, this.memberNameObject.getFieldValue(JAVA_MEMBERNAME_NAME), "String self.name", FAIL_JBSE /* TODO is it ok? */, THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION, THROW_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
+            //gets the name of the MemberName (field name)
+            final Instance memberNameNameObject = getInstance(state, memberNameObject.getFieldValue(JAVA_MEMBERNAME_NAME), "String self.name", FAIL_JBSE /* TODO is it ok? */, THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
             final String memberNameName = valueString(state, memberNameNameObject);
             if (memberNameName == null) {
                 //TODO who is to blame?
                 failExecution("Unexpected null value while accessing to String self.name parameter to java.lang.invoke.MethodHandleNatives.resolve (nonconcrete string or missing field).");
             }
 
-            //gets the field flags of the MemberName
-            final int memberNameFlags = ((Integer) ((Simplex) this.memberNameObject.getFieldValue(JAVA_MEMBERNAME_FLAGS)).getActualValue()).intValue();
+            //gets the flags of the MemberName (field flags)
+            final int memberNameFlags = ((Integer) ((Simplex) memberNameObject.getFieldValue(JAVA_MEMBERNAME_FLAGS)).getActualValue()).intValue();
 
             //gets the second parameter (the Class of the member accessor)
-            final Instance_JAVA_CLASS accessorClassInstance = (Instance_JAVA_CLASS) getInstance(state, this.data.operand(1), "Class caller", FAIL_JBSE, OK, THROW_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
+            final Instance_JAVA_CLASS accessorClassInstance = (Instance_JAVA_CLASS) getInstance(state, this.data.operand(1), "Class caller", FAIL_JBSE, OK, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
             final ClassFile accessorClass = (accessorClassInstance == null ? memberNameContainerClass : accessorClassInstance.representedClass());
             
             //performs resolution based on memberNameFlags
@@ -194,7 +185,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 //gets the descriptor
                 final String memberNameDescriptor;
                 if (JAVA_METHODTYPE.equals(memberNameDescriptorObject.getType().getClassName())) {
-                    memberNameDescriptor = getDescriptorFromMethodType(state, memberNameDescriptorObject);
+                    memberNameDescriptor = getDescriptorFromMethodType(state, memberNameObject, memberNameDescriptorObject);
                 } else if (JAVA_STRING.equals(memberNameDescriptorObject.getType().getClassName())) {
                     //memberNameDescriptorObject is an Instance of java.lang.String:
                     //gets its String value and puts it in memberNameDescriptor
@@ -215,7 +206,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
 
                 //performs resolution
                 final boolean isInterface = isInvokeInterface(memberNameFlags);
-                this.resolvedClass = state.getClassHierarchy().resolveMethod(accessorClass, methodToResolve, isInterface, state.bypassStandardLoading());
+                this.resolvedClass = state.getClassHierarchy().resolveMethod(accessorClass, methodToResolve, isInterface, state.bypassStandardLoading(), memberNameContainerClass);
                 
                 final boolean methodIsSignaturePolymorphic = !isInterface && this.resolvedClass.hasOneSignaturePolymorphicMethodDeclaration(methodToResolve.getName());
                 final boolean methodIsSignaturePolymorphicNonIntrinsic = methodIsSignaturePolymorphic && !isSignaturePolymorphicMethodIntrinsic(methodToResolve.getName());
@@ -238,7 +229,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                     final Instance invoker = getInstance(state, state.getAdapter(this.polymorphicMethodSignature), "invoker for the (signature polymorphic) MemberName self", FAIL_JBSE, FAIL_JBSE, FAIL_JBSE);
                     final String invokerName = valueString(state, (Reference) invoker.getFieldValue(JAVA_MEMBERNAME_NAME));
                     final Instance invokerMethodType = (Instance) state.getObject((Reference) invoker.getFieldValue(JAVA_MEMBERNAME_TYPE));
-                    final String invokerDescriptor = getDescriptorFromMethodType(state, invokerMethodType);
+                    final String invokerDescriptor = getDescriptorFromMethodType(state, memberNameObject, invokerMethodType);
                     final Reference invokerClassRef = (Reference) invoker.getFieldValue(JAVA_MEMBERNAME_CLAZZ);
                     final ClassFile invokerClass = ((Instance_JAVA_CLASS) state.getObject(invokerClassRef)).representedClass();
                     this.resolvedClass = invokerClass;
@@ -261,27 +252,22 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 if (JAVA_CLASS.equals(memberNameDescriptorObject.getType().getClassName())) {
                     //memberNameDescriptorObject is an Instance of java.lang.Class:
                     //gets the name of the represented class and puts it in memberNameType
-                    memberNameType = ((Instance_JAVA_CLASS) memberNameDescriptorObject).representedClass().getClassName();
+                    memberNameType = "" + REFERENCE + ((Instance_JAVA_CLASS) memberNameDescriptorObject).representedClass().getClassName() + TYPEEND;
                 } else if (JAVA_STRING.equals(memberNameDescriptorObject.getType().getClassName())) {
                     //memberNameDescriptorObject is an Instance of java.lang.String:
                     //gets its String value and puts it in memberNameDescriptor
-                    memberNameType = valueString(state, memberNameDescriptorObject);
+                    memberNameType = "" + REFERENCE + valueString(state, memberNameDescriptorObject) + TYPEEND;
                 } else {
                     //memberNameDescriptorObject is neither a Class nor a String:
                     //just fails
                     throw new UndefinedResultException("The MemberName self parameter to java.lang.invoke.MethodHandleNatives.resolve represents a field access, but self.type is neither a Class nor a String.");
-                }
-                if (memberNameType == null) {
-                    //TODO who is to blame?
-                    throwVerifyError(state, calc);
-                    exitFromAlgorithm();
                 }
 
                 //builds the signature of the field to resolve
                 final Signature fieldToResolve = new Signature(memberNameContainerClass.getClassName(), memberNameType, memberNameName);
 
                 //performs resolution
-                this.resolvedClass = state.getClassHierarchy().resolveField(accessorClass, fieldToResolve, state.bypassStandardLoading());
+                this.resolvedClass = state.getClassHierarchy().resolveField(accessorClass, fieldToResolve, state.bypassStandardLoading(), memberNameContainerClass);
                 this.resolvedSignature = new Signature(this.resolvedClass.getClassName(), fieldToResolve.getDescriptor(), fieldToResolve.getName());
             } else { //the member name is a type declaration, or the flags field is ill-formed
                 //see hotspot:/src/share/vm/prims/methodHandles.cpp lines 658-730
@@ -331,31 +317,14 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
         }
     }
     
-    private static Instance getInstance(State state, Value ref, String paramName, 
-                                        ErrorAction whenNoRef, ErrorAction whenNull, ErrorAction whenUnresolved)
-    throws InterruptException, SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
-        if (ref == null) {
-            whenNoRef.doIt("Unexpected null value while accessing " + paramName + ".");
-            return null;
-        }
-        final Reference theReference = (Reference) ref;
-        if (state.isNull(theReference)) {
-            whenNull.doIt("The " + paramName + " parameter to java.lang.invoke.MethodHandleNatives.resolve was null.");
-            return null;
-        }
-        final Instance theInstance = (Instance) state.getObject(theReference);
-        if (theInstance == null) {
-            whenUnresolved.doIt("The " + paramName + " parameter to java.lang.invoke.MethodHandleNatives.resolve was an unresolved symbolic reference on the operand stack.");
-        }
-        return theInstance;
-    }
-    
     /**
      * Gets the {@code methodDescriptor} field from an {@link Instance} of
      * {@code java.lang.invoke.MethodType}, possibly populating the field if
      * it is still {@code null}.
      * 
      * @param state a {@link State}.
+     * @param memberNameObject an {@link Instance}. It must be of class
+     *        {@code java.lang.invoke.MemberName}.
      * @param methodType an {@link Instance}. It must be of class
      *        {@code java.lang.invoke.MethodType}.
      * @return the {@link String} value of the {@code methodDescriptor} field
@@ -364,7 +333,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
      * @throws InterruptException if the execution of this {@link Algorithm} must be interrupted.
      * @throws FrozenStateException if {@code state} is frozen.
      */
-    private String getDescriptorFromMethodType(State state, Instance methodType) 
+    private String getDescriptorFromMethodType(State state, Instance memberNameObject, Instance methodType) 
     throws ThreadStackEmptyException, InterruptException, FrozenStateException {
         //gets the methodDescriptor field
         final Reference memberNameDescriptorStringReference = (Reference) methodType.getFieldValue(JAVA_METHODTYPE_METHODDESCRIPTOR);
@@ -378,7 +347,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
         //to fill it, and then repeat this bytecode
         if (state.isNull(memberNameDescriptorStringReference)) {
             try {
-                state.pushOperand(this.memberNameObject.getFieldValue(JAVA_MEMBERNAME_TYPE));
+                state.pushOperand(memberNameObject.getFieldValue(JAVA_MEMBERNAME_TYPE));
                 final Snippet snippet = state.snippetFactoryWrap()
                     .op_invokevirtual(JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING)
                     .op_pop() //we cannot use the return value so we need to clean the stack
@@ -399,8 +368,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
     
     private ClassFile resolveTypeNameReturn(State state, ClassFile accessor, String returnTypeName) 
     throws InvalidInputException, ClassFileNotFoundException, IncompatibleClassFileException, 
-    ClassFileIllFormedException, BadClassFileVersionException, WrongClassNameException, 
-    ClassFileNotAccessibleException, PleaseLoadClassException {
+    ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, 
+    WrongClassNameException, ClassFileNotAccessibleException, PleaseLoadClassException {
         final ClassFile retVal;
         if (isPrimitive(returnTypeName) || isVoid(returnTypeName)) {
             retVal = state.getClassHierarchy().getClassFilePrimitiveOrVoid(toPrimitiveOrVoidCanonicalName(returnTypeName));
@@ -414,8 +383,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
     
     private ClassFile resolveTypeNameParameter(State state, ClassFile accessor, String parameterTypeName) 
     throws InvalidInputException, ClassFileNotFoundException, IncompatibleClassFileException, 
-    ClassFileIllFormedException, BadClassFileVersionException, WrongClassNameException, 
-    ClassFileNotAccessibleException, PleaseLoadClassException {
+    ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, 
+    WrongClassNameException, ClassFileNotAccessibleException, PleaseLoadClassException {
         final ClassFile retVal;
         if (isPrimitive(parameterTypeName)) {
             retVal = state.getClassHierarchy().getClassFilePrimitiveOrVoid(toPrimitiveOrVoidCanonicalName(parameterTypeName));
@@ -458,7 +427,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
      */
     private ReferenceConcrete findMethodType(State state, Calculator calc, ClassFile accessor, String descriptor) 
     throws PleaseLoadClassException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, 
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, IncompatibleClassFileException, 
     ClassFileNotAccessibleException, HeapMemoryExhaustedException, InterruptException, ThreadStackEmptyException {
         //fast track: the MethodType already exists in the state's cache
         if (state.hasInstance_JAVA_METHODTYPE(descriptor)) {
@@ -559,7 +528,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
     private void linkMethod(State state, Calculator calc, ClassFile accessor, String polymorphicMethodDescriptor) 
     throws PleaseLoadClassException, ClassFileNotFoundException, ClassFileIllFormedException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException, HeapMemoryExhaustedException, 
-    ThreadStackEmptyException, InterruptException, InvalidInputException, BadClassFileVersionException, WrongClassNameException {
+    ThreadStackEmptyException, InterruptException, InvalidInputException, BadClassFileVersionException, 
+    RenameUnsupportedException, WrongClassNameException {
         if (state.isMethodLinked(this.polymorphicMethodSignature)) {
             //already linked
             return;
@@ -639,12 +609,13 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
         return (state, alt) -> {
         	final Calculator calc = this.ctx.getCalculator();
             try {
+                final Instance memberNameObject = getInstance(state, this.data.operand(0), "MemberName self", FAIL_JBSE, FAIL_JBSE, FAIL_JBSE);
+                
                 //updates the MemberName: first, sets the clazz field...
                 state.ensureInstance_JAVA_CLASS(calc, this.resolvedClass);
-                this.memberNameObject.setFieldValue(JAVA_MEMBERNAME_CLAZZ, state.referenceToInstance_JAVA_CLASS(this.resolvedClass));
+                memberNameObject.setFieldValue(JAVA_MEMBERNAME_CLAZZ, state.referenceToInstance_JAVA_CLASS(this.resolvedClass));
 
                 //...then sets the flags field
-                final String resolvedName = this.resolvedSignature.getName();
                 int flags;
                 if (this.isMethod) {
                     //determines the flags based on the kind of invocation, 
@@ -653,17 +624,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                     //that it is always the case that info.call_kind() == CallInfo::direct_call, see
                     //hotspot:/src/share/vm/interpreter/linkResolver.cpp line 88, method
                     //CallInfo::set_handle
-                    flags = (short) (((short) this.resolvedClass.getMethodModifiers(this.polymorphicMethodSignature)) & JVM_RECOGNIZED_METHOD_MODIFIERS);
-                    if (this.resolvedClass.isMethodStatic(this.polymorphicMethodSignature)) {
-                        flags |= IS_METHOD      | (REF_invokeStatic  << REFERENCE_KIND_SHIFT);
-                    } else if ("<init>".equals(resolvedName) || "<clinit>".equals(resolvedName)) {
-                        flags |= IS_CONSTRUCTOR | (REF_invokeSpecial << REFERENCE_KIND_SHIFT);
-                    } else {
-                        flags |= IS_METHOD      | (REF_invokeSpecial << REFERENCE_KIND_SHIFT);
-                    }
-                    if (this.resolvedClass.isMethodCallerSensitive(this.polymorphicMethodSignature)) {
-                        flags |= CALLER_SENSITIVE;
-                    }
+                	flags = getMemberNameFlagsMethod(this.resolvedClass, this.polymorphicMethodSignature);
                 } else {
                     //update the MemberName with field information,
                     //see hotspot:/src/share/vm/prims/methodHandles.cpp line 276 
@@ -674,7 +635,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                         flags += ((REF_putField - REF_getField) << REFERENCE_KIND_SHIFT);
                     }
                 }
-                this.memberNameObject.setFieldValue(JAVA_MEMBERNAME_FLAGS, calc.valInt(flags));
+                memberNameObject.setFieldValue(JAVA_MEMBERNAME_FLAGS, calc.valInt(flags));
             } catch (HeapMemoryExhaustedException e) {
                 throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();

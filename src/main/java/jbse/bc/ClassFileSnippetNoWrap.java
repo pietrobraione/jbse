@@ -12,6 +12,7 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.RenameUnsupportedException;
 
 /**
  * A {@link ClassFile} that can be created on-the-fly for code
@@ -64,8 +65,18 @@ public class ClassFileSnippetNoWrap extends ClassFile {
     }
     
     @Override
+    public String getPackageName() {
+    	return this.packageName;
+    }
+    
+    @Override
     public String getClassName() {
         return this.packageName + "/" + this.className;
+    }
+    
+    @Override
+    public void rename(String classNameNew) throws RenameUnsupportedException {
+    	throw new RenameUnsupportedException();
     }
     
     @Override
@@ -78,6 +89,11 @@ public class ClassFileSnippetNoWrap extends ClassFile {
         return this.definingClassLoader;
     }
 
+    @Override
+    public String getGenericSignatureType() {
+    	return null;
+    }
+    
     @Override
     public int getModifiers() {
         return getAccessFlags();
@@ -115,6 +131,11 @@ public class ClassFileSnippetNoWrap extends ClassFile {
 
     @Override
     public boolean isAbstract() {
+        return true;
+    }
+
+    @Override
+    public boolean isFinal() {
         return true;
     }
 
@@ -302,6 +323,12 @@ public class ClassFileSnippetNoWrap extends ClassFile {
 
     @Override
     public LocalVariableTable getLocalVariableTable(Signature methodSignature)
+    throws MethodNotFoundException, MethodCodeNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+
+    @Override
+    public LocalVariableTable getLocalVariableTypeTable(Signature methodSignature)
     throws MethodNotFoundException, MethodCodeNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
     }

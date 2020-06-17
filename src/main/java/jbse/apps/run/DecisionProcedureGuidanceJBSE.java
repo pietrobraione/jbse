@@ -136,8 +136,8 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
                 }
 
                 @Override
-                public boolean atTraceEnd() {
-                    //trace ended before meeting the stop method
+                public boolean atPathEnd() {
+                    //path ended before meeting the stop method
                     JVMJBSE.this.failedConcrete = true;
                     return true;
                 }

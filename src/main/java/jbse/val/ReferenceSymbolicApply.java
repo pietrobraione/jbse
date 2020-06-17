@@ -42,7 +42,7 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 	 * 
      * @param staticType a {@link String}, the static type of the
      *        reference (taken from bytecode).
-     * @param historyPoint the current  {@link HistoryPoint}.
+     * @param historyPoint the current {@link HistoryPoint}.
      * @param operator the name of the function.
      * @param args the {@link Value} arguments to which the function is applied.
 	 * @throws InvalidOperandException if any of {@code args} is null. 

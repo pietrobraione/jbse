@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -24,6 +24,7 @@ import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.InvalidInputException;
 import jbse.rewr.CalculatorRewriting;
@@ -39,10 +40,10 @@ public class InstanceTest {
         //environment
         final ArrayList<Path> userPath = new ArrayList<>();
         userPath.add(Paths.get("src/test/resources/jbse/bc/testdata"));
-        final Classpath env = new Classpath(Paths.get(System.getProperty("java.home", "")), new ArrayList<>(), userPath);
+        final Classpath env = new Classpath(Paths.get("."), Paths.get(System.getProperty("java.home", "")), Collections.emptyList(), userPath);
 
         //class hierarchy
-        this.hier = new ClassHierarchy(env, ClassFileFactoryJavassist.class, new HashMap<>());
+        this.hier = new ClassHierarchy(env, ClassFileFactoryJavassist.class, Collections.emptyMap(), Collections.emptyMap());
         
         //calculator
         this.calc = new CalculatorRewriting();
@@ -51,11 +52,11 @@ public class InstanceTest {
     @Test
     public void testInstanceGetFieldValue1() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, 
     BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, 
-    PleaseLoadClassException, InvalidTypeException {
+    PleaseLoadClassException, InvalidTypeException, RenameUnsupportedException {
         final String className = "tsafe/main/SimpleCalculator";
         final ClassFile classFile = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
-        final int numOfStaticFields = this.hier.numOfStaticFields(classFile);
-        final Signature[] fieldsSignatures = this.hier.getAllFields(classFile);
+        final int numOfStaticFields = classFile.numOfStaticFields();
+        final Signature[] fieldsSignatures = classFile.getAllFields();
         final Instance i = new InstanceImpl_DEFAULT(this.calc, false, classFile, null, null, numOfStaticFields, fieldsSignatures);
         final Signature sigMinLat = new Signature(className, "D", "minLat");
         final Value valMinLat = i.getFieldValue(sigMinLat);
@@ -65,11 +66,11 @@ public class InstanceTest {
     @Test
     public void testInstanceGetFieldValue2() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, 
     BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, 
-    PleaseLoadClassException, InvalidTypeException {
+    PleaseLoadClassException, InvalidTypeException, RenameUnsupportedException {
         final String className = "tsafe/main/SimpleCalculator";
         final ClassFile classFile = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
-        final int numOfStaticFields = this.hier.numOfStaticFields(classFile);
-        final Signature[] fieldsSignatures = this.hier.getAllFields(classFile);
+        final int numOfStaticFields = classFile.numOfStaticFields();
+        final Signature[] fieldsSignatures = classFile.getAllFields();
         final Instance i = new InstanceImpl_DEFAULT(this.calc, false, classFile, null, null, numOfStaticFields, fieldsSignatures);
         final Signature sigMinLat = new Signature(className, "D", "minLat");
         final Value valMinLat = i.getFieldValue(sigMinLat);
@@ -80,11 +81,11 @@ public class InstanceTest {
     @Test
     public void testInstanceSetFieldValue() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, 
     BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, 
-    PleaseLoadClassException, InvalidTypeException {
+    PleaseLoadClassException, InvalidTypeException, RenameUnsupportedException {
         final String className = "tsafe/main/SimpleCalculator";
         final ClassFile classFile = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
-        final int numOfStaticFields = this.hier.numOfStaticFields(classFile);
-        final Signature[] fieldsSignatures = this.hier.getAllFields(classFile);
+        final int numOfStaticFields = classFile.numOfStaticFields();
+        final Signature[] fieldsSignatures = classFile.getAllFields();
         final Instance i = new InstanceImpl_DEFAULT(this.calc, false, classFile, null, null, numOfStaticFields, fieldsSignatures);
         final Signature sigMinLat = new Signature(className, "D", "minLat");
         i.setFieldValue(sigMinLat, this.calc.valDouble(1.0d));
@@ -95,11 +96,11 @@ public class InstanceTest {
     @Test
     public void testInstanceClone() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, 
     BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, 
-    PleaseLoadClassException, InvalidTypeException {
+    PleaseLoadClassException, InvalidTypeException, RenameUnsupportedException {
         final String className = "tsafe/main/SimpleCalculator";
         final ClassFile classFile = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
-        final int numOfStaticFields = this.hier.numOfStaticFields(classFile);
-        final Signature[] fieldsSignatures = this.hier.getAllFields(classFile);
+        final int numOfStaticFields = classFile.numOfStaticFields();
+        final Signature[] fieldsSignatures = classFile.getAllFields();
         final Instance i = new InstanceImpl_DEFAULT(this.calc, false, classFile, null, null, numOfStaticFields, fieldsSignatures);
         final Instance iClone = i.clone();
         final Signature sigMinLat = new Signature(className, "D", "minLat");

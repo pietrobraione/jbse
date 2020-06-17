@@ -79,6 +79,7 @@ import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -338,9 +339,9 @@ public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKE
                     break;
                 }
             } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
-                     WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException | 
-                     PleaseLoadClassException | NullMethodReceiverException | MethodNotFoundException | 
-                     MethodCodeNotFoundException | InvalidSlotException | InvalidProgramCounterException e) {
+                     RenameUnsupportedException | WrongClassNameException | IncompatibleClassFileException | 
+                     ClassFileNotAccessibleException | PleaseLoadClassException | NullMethodReceiverException | 
+                     MethodNotFoundException | MethodCodeNotFoundException | InvalidSlotException | InvalidProgramCounterException e) {
                 //this should never happen
                 //TODO really?
                 failExecution(e);

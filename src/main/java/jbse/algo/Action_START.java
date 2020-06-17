@@ -86,6 +86,7 @@ import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -127,18 +128,20 @@ public final class Action_START {
 
     public void exec(ExecutionContext ctx) 
     throws DecisionException, InitializationException, 
-    InvalidClassFileFactoryClassException, ClasspathException, 
-    ContradictionException, InvalidInputException {
+    InvalidClassFileFactoryClassException, 
+    ClasspathException, ContradictionException, InvalidInputException {
         //TODO do checks and possibly raise exceptions
 
         //gets or creates the starting state
         State state = ctx.getStateStart();
+        boolean userProvidedStartState = true;
         if (state == null) {
             state = createStateStart(ctx);
+            userProvidedStartState = false;
         }
 
         //adds the state to the state tree
-        ctx.stateTree.addStateStart(state);
+        ctx.stateTree.addStateStart(state, userProvidedStartState);
     }
 
     private State createStateStart(ExecutionContext ctx) 
@@ -326,7 +329,7 @@ public final class Action_START {
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
                  WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
             throw new ClasspathException(e);
-        } catch (InvalidInputException | PleaseLoadClassException e) {
+        } catch (RenameUnsupportedException | InvalidInputException | PleaseLoadClassException e) {
             //this should never happen
             failExecution(e);
         }
@@ -352,7 +355,7 @@ public final class Action_START {
                     //nothing to do: fall through
                 }
             }
-        } catch (HeapMemoryExhaustedException e) {
+        } catch (HeapMemoryExhaustedException | RenameUnsupportedException e) {
             throw new InitializationException(e);
         } catch (InvalidInputException | ClassFileNotFoundException | ClassFileIllFormedException |
                  BadClassFileVersionException | WrongClassNameException | IncompatibleClassFileException | 
@@ -371,7 +374,7 @@ public final class Action_START {
             ensureClassInitialized(state, classFile, ctx, this.doNotInitialize);
         } catch (InterruptException e) {
             //nothing to do: fall through
-        } catch (HeapMemoryExhaustedException e) {
+        } catch (HeapMemoryExhaustedException | RenameUnsupportedException e) {
             throw new InitializationException(e);
         } catch (InvalidInputException | ClassFileNotFoundException | ClassFileIllFormedException | 
                  BadClassFileVersionException | WrongClassNameException | IncompatibleClassFileException | 
@@ -403,8 +406,8 @@ public final class Action_START {
         } catch (NullMethodReceiverException | MethodNotFoundException | MethodCodeNotFoundException | 
                  InvalidSlotException | InvalidProgramCounterException | InvalidTypeException | 
                  ThreadStackEmptyException | ClassFileNotFoundException | BadClassFileVersionException |
-                 WrongClassNameException | IncompatibleClassFileException | ClassFileIllFormedException | 
-                 ClassFileNotAccessibleException | InvalidInputException e) {
+                 RenameUnsupportedException | WrongClassNameException | IncompatibleClassFileException | 
+                 ClassFileIllFormedException | ClassFileNotAccessibleException | InvalidInputException e) {
             //this should not happen now
             failExecution(e);
         }
@@ -440,10 +443,11 @@ public final class Action_START {
             throw new InitializationException(e);
         } catch (MethodNotFoundException | MethodCodeNotFoundException e) {
             throw new ClasspathException(e);
-        } catch (ClassFileNotFoundException | BadClassFileVersionException | WrongClassNameException | 
-                 IncompatibleClassFileException | ClassFileNotAccessibleException | ClassFileIllFormedException | 
-                 NullMethodReceiverException | InvalidSlotException | InvalidProgramCounterException | 
-                 InvalidInputException | InvalidTypeException | ThreadStackEmptyException e) {
+        } catch (ClassFileNotFoundException | BadClassFileVersionException | RenameUnsupportedException | 
+        		 WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException | 
+        		 ClassFileIllFormedException | NullMethodReceiverException | InvalidSlotException | 
+        		 InvalidProgramCounterException | InvalidInputException | InvalidTypeException | 
+        		 ThreadStackEmptyException e) {
             //this should never happen
             failExecution(e);
         }

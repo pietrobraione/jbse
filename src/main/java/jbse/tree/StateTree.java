@@ -49,7 +49,7 @@ public class StateTree {
          * identifier reflecting the decision which generated it.
          * This identification may be complex and not exec-faithful, 
          * but univocally identifies symbolic execution
-         * traces up to target code recompilation.
+         * paths up to target code recompilation.
          */
         LONG;
     };
@@ -147,8 +147,10 @@ public class StateTree {
      * since the last inspection by invocation of {@link #createdBranch()}.
      */
     private boolean createdBranch = false;
-
     
+    /** Flag indicating whether the next state is a user-provided start state. */
+    private boolean userProvidedStartState = false;
+
     /**
      * Constructor.
      */
@@ -180,12 +182,15 @@ public class StateTree {
      * Adds a starting state to the tree. The tree must be empty.
      * 
      * @param s the {@link State} to be added.
+     * @param userProvidedStartState a {@code boolean}. If {@code true} the
+     *        start state is user-provided.
      * @throws InvalidInputException if the tree is not empty.
      */
-    public void addStateStart(State s) throws InvalidInputException {
+    public void addStateStart(State s, boolean userProvidedStartState) throws InvalidInputException {
         if (hasStates()) {
             throw new InvalidInputException("Invoked " + StateTree.class.getName() + ".addStateStart() on a nonempty tree.");
         }
+        this.userProvidedStartState = userProvidedStartState;
         addBranchPoint();
         add(s);
     }
@@ -210,6 +215,7 @@ public class StateTree {
     	} else { //(phase == Phase.PRE_INITIAL || phase == Phase.POST_INITIAL)
     	    throw new InvalidInputException("Invoked " + StateTree.class.getName() + ".addStateInitial() with argument a pre- or post-initial state.");
     	}
+        this.userProvidedStartState = false;
     }
 
     /**
@@ -239,6 +245,7 @@ public class StateTree {
         } else {  //phase == Phase.PRE_INITIAL || phase == Phase.INITIAL
             throw new InvalidInputException("Tried to add a " + (s.phase() == Phase.PRE_INITIAL ? "pre-" : "") + "initial state to a state tree branch.");
         }
+        this.userProvidedStartState = false;
     }
 
     /**
@@ -269,16 +276,16 @@ public class StateTree {
     }
 
     /**
-     * Returns the number of states that remain to be explored
-     * at a given branch.
+     * Returns a state at a given branch.
      * 
      * @param bp a {@link BranchPoint}.
-     * @return the number of states at the branch identified by {@code bp} 
-     *         that must be emitted.
-     * @throws InvalidInputException if
+     * @param index an {@code int}. It must be between 0 and {@link #getNumOfStatesAtBranch(BranchPoint) getNumOfStatesAtBranch}{@code (bp) - 1}.
+     * @return the {@link State} at the branch identified by {@code bp} 
+     *         that is the next {@code index}-th to be emitted.
+     * @throws InvalidInputException if {@code index < 0 || index >= }{@link #getNumOfStatesAtBranch(BranchPoint) getNumOfStatesAtBranch}{@code (bp)}.
      */
     public State getStateAtBranch(BranchPoint bp, int index) throws InvalidInputException {
-    	if (index < 0 || index > getNumOfStatesAtBranch(bp)) {
+    	if (index < 0 || index >= getNumOfStatesAtBranch(bp)) {
     		throw new InvalidInputException("Tried to get state at branch " + bp + " with index " + index + " (total number of states at branch is " + getNumOfStatesAtBranch(bp) + ").");
     	}
     	int position = 0;
@@ -312,9 +319,10 @@ public class StateTree {
             this.branchList.removeFirst();
         }
         
-        if (this.stateIdMode == StateIdentificationMode.COMPACT && s.phase() == Phase.POST_INITIAL) {
+        if (!this.userProvidedStartState && this.stateIdMode == StateIdentificationMode.COMPACT && s.phase() == Phase.POST_INITIAL) {
             s.addBranchToHistoryPoint(String.valueOf(b.emittedStates));
         } //else, the history point was already set by addState
+        this.userProvidedStartState = false;
 
         return s;
     }    

@@ -286,6 +286,7 @@ public final class Base {
         putSafe(p, "user.timezone",              USER_TIMEZONE);
         putSafe(p, "user.dir",                   USER_DIR);
         putSafe(p, "sun.desktop",                SUN_DESKTOP);
+        
         return p;
     }
     

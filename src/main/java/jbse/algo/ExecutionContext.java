@@ -38,7 +38,10 @@ import static jbse.algo.Overrides.ALGO_JAVA_FILEINPUTSTREAM_OPEN0;
 import static jbse.algo.Overrides.ALGO_JAVA_FILEINPUTSTREAM_READBYTES;
 import static jbse.algo.Overrides.ALGO_JAVA_FILEOUTPUTSTREAM_WRITEBYTES;
 import static jbse.algo.Overrides.ALGO_JAVA_JARFILE_GETMETAINFENTRYNAMES;
+import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_INIT;
+import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET;
 import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_RESOLVE;
+import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_CLONE;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_GETCLASS;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_HASHCODE;
@@ -90,6 +93,10 @@ import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISSYMBOLIC;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SUCCEED;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SYMBOLNAME;
 import static jbse.algo.Overrides.ALGO_JBSE_BASE_MAKEKLASSSYMBOLIC_DO;
+import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_MAKEINITIAL;
+import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION;
+import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH;
+import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH;
 import static jbse.algo.Overrides.ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
 import static jbse.algo.Overrides.ALGO_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0;
 import static jbse.algo.Overrides.ALGO_SUN_PERF_CREATELONG;
@@ -211,8 +218,11 @@ import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
 import static jbse.bc.Signatures.JAVA_MAPPEDBYTEBUFFER;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_GETCONSTANT;
+import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_INIT;
+import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_RESOLVE;
+import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET;
 import static jbse.bc.Signatures.JAVA_METHODTYPEFORM;
 import static jbse.bc.Signatures.JAVA_OBJECT_CLONE;
 import static jbse.bc.Signatures.JAVA_OBJECT_GETCLASS;
@@ -223,6 +233,7 @@ import static jbse.bc.Signatures.JAVA_OPTIONAL;
 import static jbse.bc.Signatures.JAVA_PACKAGE_GETSYSTEMPACKAGE0;
 import static jbse.bc.Signatures.JAVA_REFLECT_ARRAY_NEWARRAY;
 import static jbse.bc.Signatures.JAVA_RUNTIME_AVAILABLEPROCESSORS;
+import static jbse.bc.Signatures.JAVA_SHORT;
 import static jbse.bc.Signatures.JAVA_SHORT_SHORTCACHE;
 import static jbse.bc.Signatures.JAVA_STANDARDCHARSETS;
 import static jbse.bc.Signatures.JAVA_STRICTMATH_ACOS;
@@ -334,6 +345,11 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_LONG;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_OBJECT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_SHORT;
 import static jbse.bc.Signatures.JBSE_BASE_MAKEKLASSSYMBOLIC_DO;
+import static jbse.bc.Signatures.JBSE_JAVA_MAP_MAKEINITIAL;
+import static jbse.bc.Signatures.JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION;
+import static jbse.bc.Signatures.JBSE_JAVA_MAP_REFINEONKEYANDBRANCH;
+import static jbse.bc.Signatures.JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH;
+import static jbse.bc.Signatures.JDK_TYPE;
 import static jbse.bc.Signatures.SUN_ASCIICASEINSENSITIVECOMPARATOR;
 import static jbse.bc.Signatures.SUN_JARINDEX;
 import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
@@ -371,6 +387,7 @@ import static jbse.bc.Signatures.SUN_UNSAFE_SHOULDBEINITIALIZED;
 import static jbse.bc.Signatures.SUN_URLCLASSPATH_GETLOOKUPCACHEURLS;
 import static jbse.bc.Signatures.SUN_URLCLASSPATH_JARLOADER;
 import static jbse.bc.Signatures.SUN_VERIFYACCESS;
+import static jbse.bc.Signatures.SUN_VERIFYTYPE;
 import static jbse.bc.Signatures.SUN_VM_INITIALIZE;
 import static jbse.bc.Signatures.SUN_WIN32ERRORMODE_SETERRORMODE;
 import static jbse.bc.Signatures.SUN_WRAPPER_FORMAT;
@@ -453,6 +470,12 @@ public final class ExecutionContext {
      * used to expand references. Used during initialization.
      */
     private final Map<String, Set<String>> expansionBackdoor;
+    
+    /**
+     * Associates class names to the class names of the corresponding 
+     * model classes that replace them. It is not mutated.
+     */
+    private final HashMap<String, String> modelClassSubstitutions;
 
     /** The {@link Calculator}. Used during initialization. */
     private final Calculator calc;
@@ -496,7 +519,7 @@ public final class ExecutionContext {
     /**
      * Constructor.
      * 
-     * @param startingState the starting {@code State} of symbolic execution, 
+     * @param stateStart the starting {@code State} of symbolic execution, 
      *        or {@code null} if no starting state is provided externally. 
      * @param bypassStandardLoading a {@code boolean}, {@code true} iff the bootstrap 
      *        classloader should also load the classed defined by the extensions 
@@ -518,6 +541,10 @@ public final class ExecutionContext {
      *        associating class names to sets of names of their subclasses. It 
      *        is used in place of the class hierarchy to perform reference expansion.
      *        Ignored when {@code initialState != null}.
+     * @param modelClassSubstitutions a 
+     *        {@link Map}{@code <}{@link String}{@code , }{@link String}{@code >}
+     *        associating class names to the class names of the corresponding 
+     *        model classes that replace them. 
      * @param calc a {@link Calculator}. Ignored when {@code initialState != null}.
      * @param comparators a {@link DecisionAlternativeComparators} which
      *        will be used to establish the order of exploration
@@ -531,7 +558,7 @@ public final class ExecutionContext {
      * @param nativeInvoker a {@link NativeInvoker} which will be used
      *        to execute native methods.
      */
-    public ExecutionContext(State startingState,
+    public ExecutionContext(State stateStart,
                             boolean bypassStandardLoading,
                             int maxSimpleArrayLength,
                             long maxHeapSize,
@@ -539,6 +566,7 @@ public final class ExecutionContext {
                             Classpath classpath,
                             Class<? extends ClassFileFactory> classFileFactoryClass,
                             Map<String, Set<String>> expansionBackdoor, 
+                            Map<String, String> modelClassSubstitutions,
                             Calculator calc,
                             DecisionAlternativeComparators comparators,
                             Signature rootMethodSignature,
@@ -546,7 +574,7 @@ public final class ExecutionContext {
                             StateIdentificationMode stateIdentificationMode,
                             BreadthMode breadthMode,
                             TriggerRulesRepo rulesTrigger) {
-        this.stateStart = startingState;
+        this.stateStart = stateStart;
         this.bypassStandardLoading = bypassStandardLoading;
         this.maxSimpleArrayLength = maxSimpleArrayLength;
         this.maxHeapSize = maxHeapSize;
@@ -554,6 +582,7 @@ public final class ExecutionContext {
         this.classpath = classpath;
         this.classFileFactoryClass = classFileFactoryClass;
         this.expansionBackdoor = new HashMap<>(expansionBackdoor);      //safety copy
+        this.modelClassSubstitutions = new HashMap<>(modelClassSubstitutions); //safety copy
         this.calc = calc;
         this.comparators = comparators;
         this.rootMethodSignature = rootMethodSignature;
@@ -621,8 +650,11 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_INFLATER_SETDICTIONARY,                        ALGO_JAVA_INFLATER_SETDICTIONARY);
             addMetaOverridden(JAVA_JARFILE_GETMETAINFENTRYNAMES,                  ALGO_JAVA_JARFILE_GETMETAINFENTRYNAMES);
             addBaseOverridden(JAVA_METHODHANDLENATIVES_GETCONSTANT,               BASE_JAVA_METHODHANDLENATIVES_GETCONSTANT);
+            addMetaOverridden(JAVA_METHODHANDLENATIVES_INIT,                      ALGO_JAVA_METHODHANDLENATIVES_INIT);
+            addMetaOverridden(JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET,         ALGO_JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET);
             addMetaOverridden(JAVA_METHODHANDLENATIVES_REGISTERNATIVES,           ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(JAVA_METHODHANDLENATIVES_RESOLVE,                   ALGO_JAVA_METHODHANDLENATIVES_RESOLVE);
+            addMetaOverridden(JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET,         ALGO_JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET);
             addMetaOverridden(JAVA_OBJECT_CLONE,                                  ALGO_JAVA_OBJECT_CLONE);
             addMetaOverridden(JAVA_OBJECT_GETCLASS,                               ALGO_JAVA_OBJECT_GETCLASS);
             addMetaOverridden(JAVA_OBJECT_HASHCODE,                               ALGO_JAVA_OBJECT_HASHCODE);
@@ -773,6 +805,12 @@ public final class ExecutionContext {
             //jbse.base.Base methods
             addMetaOverridden(JBSE_BASE_MAKEKLASSSYMBOLIC_DO,          ALGO_JBSE_BASE_MAKEKLASSSYMBOLIC_DO);
             
+            //jbse.base.JAVA_MAP methods (actually remapped to java.util.HashMap)
+            addMetaOverridden(JBSE_JAVA_MAP_MAKEINITIAL,                          ALGO_JBSE_JAVA_MAP_MAKEINITIAL);
+            addMetaOverridden(JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION, ALGO_JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION);
+            addMetaOverridden(JBSE_JAVA_MAP_REFINEONKEYANDBRANCH,                 ALGO_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH);
+            addMetaOverridden(JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH,     ALGO_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH);
+            
             //jbse classless (pseudo)methods
             addMetaOverridden(noclass_REGISTERLOADEDCLASS,          ALGO_noclass_REGISTERLOADEDCLASS);
             addMetaOverridden(noclass_REGISTERMETHODTYPE,           ALGO_noclass_REGISTERMETHODTYPE);
@@ -826,7 +864,7 @@ public final class ExecutionContext {
      */
     public State createStateVirginPreInitial() throws InvalidClassFileFactoryClassException {
         try {
-			return new State(this.bypassStandardLoading, this.stateTree.getPreInitialHistoryPoint(), this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.symbolFactory);
+			return new State(this.bypassStandardLoading, this.stateTree.getPreInitialHistoryPoint(), this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.modelClassSubstitutions, this.symbolFactory);
 		} catch (InvalidInputException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
@@ -981,12 +1019,14 @@ public final class ExecutionContext {
         className.equals(JAVA_MAPPEDBYTEBUFFER) || 
         className.equals(JAVA_METHODTYPEFORM) || 
         className.equals(JAVA_OPTIONAL) || 
+        className.equals(JAVA_SHORT) || 
         className.equals(JAVA_SHORT_SHORTCACHE) || 
         className.equals(JAVA_STANDARDCHARSETS) || 
         className.equals(JAVA_TREESET) ||
         className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
         className.equals(JAVA_VOID) || 
         className.equals(JAVA_ZIPFILE) || 
+        className.equals(JDK_TYPE) || 
         className.equals(SUN_ASCIICASEINSENSITIVECOMPARATOR) ||
         className.equals(SUN_JARINDEX) ||
         className.equals(SUN_PERF) ||
@@ -994,14 +1034,17 @@ public final class ExecutionContext {
         className.equals(SUN_PERFCOUNTER_CORECOUNTERS) ||
         className.equals(SUN_URLCLASSPATH_JARLOADER) ||
         className.equals(SUN_VERIFYACCESS) ||
+        className.equals(SUN_VERIFYTYPE) ||
         className.equals(SUN_WRAPPER_FORMAT) ||
         //TODO move initialization of these unpure classes (old code):
         className.equals(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE) || //necessary for method handles
+        className.equals(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_FACTORY) || //necessary for method handles; apparently the only field that is unpure is CLASS_CACHE, a cache field
         className.equals(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIESDATA) || //necessary for method handles
         className.equals(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIES_L) || //necessary for method handles
         className.equals(jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE) || //wouldn't manage method handles otherwise
         className.equals(jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_LAZY) || //wouldn't manage method handles otherwise
-        //className.equals(jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR) || //the only nonfinal static field STATICALLY_INVOCABLE_PACKAGES is never modified
+        className.equals(jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR) || //the only nonfinal static field STATICALLY_INVOCABLE_PACKAGES is never modified
+        className.equals(jbse.bc.Signatures.JAVA_LAMBDAFORM_NAMEDFUNCTION) || //not really, but necessary to bootstrap lambda forms (apparently most static fields are caches, but it is too complex to analyze) 
         className.equals(jbse.bc.Signatures.JAVA_METHODHANDLES) || //not really, but can be considered as it were (all final except ZERO_MHS and IDENTITY_MHS that are caches) 
         className.equals(jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP) || //not really, but can be considered as it were (all final including PUBLIC_LOOKUP and IMPL_LOOKUP that are instances of Lookup - that is immutable - and except LOOKASIDE_TABLE, that seems to be a sort of cache) 
         className.equals(jbse.bc.Signatures.JAVA_METHODTYPE) || //not really, but can be considered as it were (all final except internTable and objectOnlyTypes that are caches) 

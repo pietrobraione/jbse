@@ -22,6 +22,7 @@ import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -49,7 +50,7 @@ public final class Algo_SUN_UNIXNATIVEDISPATCHER_GETCWD extends Algo_INVOKEMETA_
 	
 	@Override
 	protected void cookMore(State state) throws InvalidInputException, InvalidTypeException, 
-	ClasspathException, InterruptException {
+	ClasspathException, InterruptException, RenameUnsupportedException {
         final Calculator calc = this.ctx.getCalculator();
 		try {
 			final Class<?> class_SUN_UNIXNATIVEDISPATCHER = Class.forName(binaryClassName(SUN_UNIXNATIVEDISPATCHER));

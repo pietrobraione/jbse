@@ -5,6 +5,7 @@ import static jbse.bc.Offsets.offsetInvoke;
 import java.util.function.Supplier;
 
 import jbse.algo.exc.CannotManageStateException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms;
@@ -44,7 +45,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, DecisionException, ClasspathException, 
     CannotManageStateException, InterruptException, InvalidInputException, 
-    ContradictionException, InvalidTypeException, InvalidOperandException {
+    ContradictionException, InvalidTypeException, InvalidOperandException, 
+    RenameUnsupportedException {
         //the default implementation does nothing
     }
 

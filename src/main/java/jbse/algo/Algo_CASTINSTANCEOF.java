@@ -1,6 +1,7 @@
 package jbse.algo;
 
 import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
@@ -19,6 +20,7 @@ import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.Objekt;
@@ -96,6 +98,9 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             } catch (ClassCastException | ClassFileIllFormedException e) {
                 throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
+            } catch (RenameUnsupportedException e) {
+            	//this should never happen
+            	failExecution(e);
             }
         };
     }

@@ -24,6 +24,7 @@ import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -51,7 +52,8 @@ public final class Algo_JAVA_CLASS_GETDECLARINGCLASS0 extends Algo_INVOKEMETA_No
 
     @Override
     protected void cookMore(State state)
-    throws ThreadStackEmptyException, InterruptException, ClasspathException, InvalidInputException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException, 
+    InvalidInputException, RenameUnsupportedException {
     	final Calculator calc = this.ctx.getCalculator();
         //There are four kind of classes:
         //

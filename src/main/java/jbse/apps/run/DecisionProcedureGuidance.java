@@ -16,6 +16,7 @@ import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -252,7 +253,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     @Override
     protected final Outcome resolve_XLOAD_GETX_Unresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
     throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    BadClassFileVersionException, WrongClassNameException, 
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException {
         updateExpansionBackdoor(state, refToLoad);
         final Outcome retVal = super.resolve_XLOAD_GETX_Unresolved(state, refToLoad, result);
@@ -286,7 +287,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     @Override
     protected final Outcome resolve_XALOAD_Unresolved(State state, ArrayAccessInfo arrayAccessInfo, SortedSet<DecisionAlternative_XALOAD> result)
     throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    BadClassFileVersionException, WrongClassNameException, 
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException {
         final ReferenceSymbolic readReference = (ReferenceSymbolic) arrayAccessInfo.readValue;
         updateExpansionBackdoor(state, readReference);
@@ -318,7 +319,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                      ClassFileNotAccessibleException | IncompatibleClassFileException | 
                      BadClassFileVersionException | WrongClassNameException e) {
                 throw new GuidanceException(e);
-            } catch (InvalidInputException | PleaseLoadClassException e) {
+            } catch (InvalidInputException | RenameUnsupportedException | PleaseLoadClassException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             }

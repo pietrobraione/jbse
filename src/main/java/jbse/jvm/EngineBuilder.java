@@ -84,6 +84,7 @@ public class EngineBuilder {
 	                               parameters.getClasspath(),
 	                               ClassFileFactoryJavassist.class,          //default
 	                               parameters.getExpansionBackdoor(), 
+	                               parameters.getModelClassSubstitutions(),
 	                               parameters.getCalculator(),
 	                               new DecisionAlternativeComparators(),     //default 
 	                               parameters.getMethodSignature(),

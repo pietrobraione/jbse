@@ -322,7 +322,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                         UW = asUnsignedByte(f.getInstruction(1));
                     }
                     final ConstantPoolValue cpVal = 
-                        f.getCurrentClass().getValueFromConstantPool(UW);
+                        f.getMethodClass().getValueFromConstantPool(UW);
                     final Object val = cpVal.getValue();
 
                     if (val instanceof Integer) {
@@ -369,7 +369,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                 String retVal = DispatchStrategyFormat1CL.this.text + " ";
                 try {
                     final int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
-                    final String sig = f.getCurrentClass().getClassSignature(UW);
+                    final String sig = f.getMethodClass().getClassSignature(UW);
                     retVal += sig;
                 } catch (InvalidProgramCounterException | InvalidIndexException |
                          UnexpectedInternalException e) {
@@ -399,7 +399,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                 String retVal = DispatchStrategyFormat1FI.this.text + " ";
                 try {
                     final int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
-                    final Signature sig = f.getCurrentClass().getFieldSignature(UW);
+                    final Signature sig = f.getMethodClass().getFieldSignature(UW);
                     retVal += sig.getClassName() + Signature.SIGNATURE_SEPARATOR + sig.getName() + " [" + UW + "]";
                 } catch (InvalidProgramCounterException | InvalidIndexException |
                          UnexpectedInternalException e) {
@@ -433,9 +433,9 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                     final int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
                     final Signature sig;
                     if (DispatchStrategyFormat1ME.this.isInterface) {
-                        sig = f.getCurrentClass().getInterfaceMethodSignature(UW);
+                        sig = f.getMethodClass().getInterfaceMethodSignature(UW);
                     } else {
-                        sig = f.getCurrentClass().getMethodSignature(UW);
+                        sig = f.getMethodClass().getMethodSignature(UW);
                     }
                     retVal += sig + " [" + UW + "]";
                 } catch (InvalidProgramCounterException | InvalidIndexException |
@@ -468,7 +468,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                 try {
                     final int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
                     final short UB = f.getInstruction(3);
-                    final String sig = f.getCurrentClass().getClassSignature(UW);
+                    final String sig = f.getMethodClass().getClassSignature(UW);
                     retVal += sig + " " + UB + " [" + UW + "]";
                 } catch (InvalidProgramCounterException | InvalidIndexException |
                          UnexpectedInternalException e) {

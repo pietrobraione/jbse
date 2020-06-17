@@ -8,6 +8,8 @@ import static jbse.common.Type.className;
 import static jbse.common.Type.isCat_1;
 import static jbse.common.Type.splitParametersDescriptors;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -20,6 +22,7 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -81,6 +84,16 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     public abstract String getClassName();
     
     /**
+     * Renames this class.
+     * 
+     * @param classNameNew a {@link String}, the new name
+     *        for this class.
+     * @throws RenameUnsupportedException if the class cannot
+     *         be renamed.
+     */
+    public abstract void rename(String classNameNew) throws RenameUnsupportedException;
+    
+    /**
      * Returns the internal type name for 
      * this class.
      * 
@@ -102,15 +115,14 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * 
      * @return the package name of this class as a {@link String}.
      */
-    public String getPackageName() {
-        final String className = getClassName();
-        int lastSlash = className.lastIndexOf('/');
-        if (lastSlash == -1) {
-            return "";
-        } else {
-            return className.substring(0, lastSlash);
-        }
-    }
+    public abstract String getPackageName();
+    
+    /**
+     * Returns the generic signature (type) of this class.
+     * 
+     * @return a {@link String} or {@code null} if the class has not a generic signature.
+     */
+    public abstract String getGenericSignatureType();
     
     /**
      * Returns the modifiers of the class.
@@ -185,6 +197,13 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * @return {@code true} iff the class is abstract.
      */
     public abstract boolean isAbstract();
+
+    /**
+     * Tests whether the class is final.
+     * 
+     * @return {@code true} iff the class is final.
+     */
+    public abstract boolean isFinal();
 
     /**
      * Tests whether the class has public visibility.
@@ -614,11 +633,26 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * Given the signature of a method, returns a local variable table for that method.
      * 
      * @param methodSignature the structure that contains the signature of a method.
-     * @return a {@link LocalVariableTable} for the method.
+     * @return a {@link LocalVariableTable} for the method containing the local variable table
+     *         of the method. If no LocalVariableTable attribute is found, the method returns 
+     *         a default {@link LocalVariableTable} that is built from {@code methodSignature}.
      * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
      * @throws MethodCodeNotFoundException iff the method has not the Code attribute.
      */
     public abstract LocalVariableTable getLocalVariableTable(Signature methodSignature) 
+    throws MethodNotFoundException, MethodCodeNotFoundException;    
+
+    /**
+     * Given the signature of a method, returns a local variable type table for that method.
+     * 
+     * @param methodSignature the structure that contains the signature of a method.
+     * @return a {@link LocalVariableTable} for the method containing the local variable type table
+     *         of the method. If no LocalVariableTypeTable attribute is found, the method returns
+     *         an empty {@link LocalVariableTable}.
+     * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
+     * @throws MethodCodeNotFoundException iff the method has not the Code attribute.
+     */
+    public abstract LocalVariableTable getLocalVariableTypeTable(Signature methodSignature) 
     throws MethodNotFoundException, MethodCodeNotFoundException;    
 
     /**
@@ -846,6 +880,16 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     public abstract Signature[] getDeclaredFieldsStatic();
 
     /**
+     * Returns the number of static fields of this class.
+     * 
+     * @return an {@code int}, the number of static fields
+     *         declared by this class.
+     */
+    public final int numOfStaticFields() {
+        return getDeclaredFieldsStatic().length;
+    }
+    
+    /**
      * Gets all the fields declared by this class 
      * (not by its superclasses), both static and not.
      *  
@@ -858,6 +902,52 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      *         to {@link #getDeclaredFieldsNonStatic()}.
      */
     public abstract Signature[] getDeclaredFields();
+
+    /**
+     * Returns all the fields known to an object of 
+     * this class. 
+     * 
+     * @return a {@link Signature}{@code []}. It will contain all the 
+     *         {@link Signature}s of the class' static fields, followed
+     *         by all the {@link Signature}s of the class' object (nonstatic) 
+     *         fields, followed by all the {@link Signature}s of the object 
+     *         fields of the superclass, the superclass' superclass, etc.
+     */	
+    public final Signature[] getAllFields() {
+    	final ArrayList<Signature> signatures = new ArrayList<>(0);
+    	boolean isStartClass = true;
+    	for (ClassFile c : superclasses()) {
+    		if (isStartClass) {
+    			signatures.addAll(Arrays.asList(c.getDeclaredFieldsStatic()));
+    			isStartClass = false;
+    		}
+    		final Signature[] fields = c.getDeclaredFieldsNonStatic();
+    		signatures.addAll(Arrays.asList(fields));
+    	}
+        final Signature[] retVal = signatures.toArray(SIGNATURE_ARRAY);
+        return retVal;
+    }
+    
+    /**
+     * Gets the offset of a field.
+     * 
+     * @param fieldSignature a {@link Signature}.
+     * @return a nonnegative {@code int}, the offset of the field
+     *         with signature {@code sig}, or {@code -1} if an 
+     *         instance of this class has no field with signature
+     *         {@code fieldSignature}.
+     */
+    public final int getFieldOffset(Signature fieldSignature) {
+        final Signature[] allFields = getAllFields();
+        for (int _ofst = 0; _ofst < allFields.length; ++_ofst) {
+            if (allFields[allFields.length - 1 - _ofst].equals(fieldSignature)) {
+            	return _ofst;
+            }
+        }
+        return -1;
+    }
+
+    private static final Signature[] SIGNATURE_ARRAY = new Signature[0];
 
     /**
      * Given an index of the constant pool of CONSTANT_FieldRef type, returns the signature of the field.
@@ -1216,12 +1306,12 @@ public abstract class ClassFile implements Comparable<ClassFile> {
         int i = 0;
         short slot = 0;
         if (!isStatic) {
-            lvt.setEntry(slot, REFERENCE + this.getClassName() + TYPEEND, 
+            lvt.addRow(slot, REFERENCE + this.getClassName() + TYPEEND, 
                          "this", 0, this.getCodeLength(methodSignature));
             ++i; ++slot;
         }
         for (String descriptor : parDescList) {
-            lvt.setEntry(slot, descriptor, 
+            lvt.addRow(slot, descriptor, 
                          "__PARAM[" + i + "]", 0, this.getCodeLength(methodSignature));
             ++i; ++slot;
             if (!isCat_1(descriptor.charAt(0))) {

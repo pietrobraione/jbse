@@ -69,7 +69,7 @@ public final class MethodFrame extends Frame implements Cloneable {
     }
     
     @Override
-    public Signature getCurrentMethodSignature() {
+    public Signature getMethodSignature() {
         return this.methodSignature;
     }
 

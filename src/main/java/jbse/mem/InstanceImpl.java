@@ -4,6 +4,7 @@ import java.util.Map;
 
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.common.exc.InvalidInputException;
 import jbse.val.Calculator;
 import jbse.val.HistoryPoint;
 import jbse.val.ReferenceSymbolic;
@@ -13,6 +14,8 @@ import jbse.val.exc.InvalidTypeException;
  * Abstract superclass for the implementation of all kind of {@link Instance}s.
  */
 public abstract class InstanceImpl extends HeapObjektImpl implements Instance {
+	private boolean initial;
+	
     /**
      * Constructor.
      * 
@@ -43,7 +46,20 @@ public abstract class InstanceImpl extends HeapObjektImpl implements Instance {
 
 	@Override
 	abstract InstanceWrapper<? extends InstanceImpl> makeWrapper(Heap destinationHeap, long destinationPosition);
-    
+	
+	@Override
+	public final boolean isInitial() {
+		return this.initial;
+	}
+	
+	@Override
+	public final void makeInitial() throws InvalidInputException {
+		if (!isSymbolic()) {
+			throw new InvalidInputException("Tried to invoke makeInitial() on an Instance that is not symbolic.");
+		}
+		this.initial = true;
+	}
+	
     @Override
     public final String toString() {
         final StringBuilder buf = new StringBuilder();
