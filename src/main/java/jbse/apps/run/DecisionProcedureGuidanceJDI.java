@@ -1,6 +1,5 @@
 package jbse.apps.run;
 
-import static jbse.common.Type.INT;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.binaryClassName;
@@ -16,9 +15,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -68,7 +64,6 @@ import com.sun.jdi.request.ClassPrepareRequest;
 import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.MethodExitRequest;
-import com.sun.jdi.request.StepRequest;
 
 import jbse.bc.Offsets;
 import jbse.bc.Signature;
@@ -81,7 +76,6 @@ import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Calculator;
 import jbse.val.KlassPseudoReference;
-import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.PrimitiveSymbolicHashCode;
 import jbse.val.PrimitiveSymbolicMemberArrayLength;
@@ -143,7 +137,6 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
 	private static class JVMJDI extends JVM {
 		private static final String ERROR_BAD_PATH = "Failed accessing through a memory access path: ";
-		private static final String[] EXCLUDES = {"java.*", "javax.*", "sun.*", "com.sun.*"};
 
 		StreamRedirectThread outThread = null; 
 		StreamRedirectThread errThread = null; 
@@ -630,94 +623,6 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			}
 		}
 		
-		private final static short JDWP_INVALID_SLOT = (short) 35;
-
-		/*
-		 * Code taken from JetBrains IntelliJ source code, 
-		 * https://github.com/JetBrains/intellij-community/blob/master/java/debugger/impl/src/com/intellij/debugger/jdi/LocalVariablesUtil.java
-		 */ //TODO: check if needed here or have to move to stepping
-		private Primitive readLocalVariable(int localVariableIndex) throws GuidanceException {
-			//Uses JDWP to take the value of a local variable (works even if debug info is missing)
-			try {
-				final String getValuesClassName = "com.sun.tools.jdi.JDWP$StackFrame$GetValues";
-				final Class<?> ourSlotInfoClass = Class.forName(getValuesClassName + "$SlotInfo");
-				final Constructor<?> slotInfoConstructor = ourSlotInfoClass.getDeclaredConstructor(int.class, byte.class);
-				slotInfoConstructor.setAccessible(true);
-
-				final Class<?> ourGetValuesClass = Class.forName(getValuesClassName);
-				final java.lang.reflect.Method ourEnqueueMethod = getDeclaredMethodByName(ourGetValuesClass, "enqueueCommand");
-				final java.lang.reflect.Method ourWaitForReplyMethod = getDeclaredMethodByName(ourGetValuesClass, "waitForReply");
-
-				final StackFrame frame = getCurrentThread().frame(0);
-
-				final java.lang.reflect.Field frameIdField = frame.getClass().getDeclaredField("id");
-				frameIdField.setAccessible(true);
-				final Long frameId = frameIdField.getLong(frame);
-				final VirtualMachine vm = frame.virtualMachine();
-				final java.lang.reflect.Method stateMethod = vm.getClass().getDeclaredMethod("state");
-				stateMethod.setAccessible(true);
-
-				final Object slotInfoArray = Array.newInstance(ourSlotInfoClass, 1);
-				final Object info = slotInfoConstructor.newInstance(localVariableIndex, (byte) INT);
-				Array.set(slotInfoArray, 0, info);
-				Object ps;
-				final Object vmState = stateMethod.invoke(vm);
-				synchronized(vmState) {
-					ps = ourEnqueueMethod.invoke(null, vm, frame.thread(), frameId, slotInfoArray);
-				}
-
-				final Object reply;
-				try {
-					reply = ourWaitForReplyMethod.invoke(null, vm, ps);
-				} catch (InvocationTargetException e) {
-					final String jdwpExceptionClassName = "com.sun.tools.jdi.JDWPException";
-					if (jdwpExceptionClassName.equals(e.getTargetException().getClass().getName())) {
-						final Class<?> jdwpExceptionClass = Class.forName(jdwpExceptionClassName);
-						final java.lang.reflect.Field errorCodeField = jdwpExceptionClass.getDeclaredField("errorCode");
-						errorCodeField.setAccessible(true);
-						final short errorCode = errorCodeField.getShort(e.getTargetException());
-						if (errorCode == JDWP_INVALID_SLOT) {
-							return null; //give up
-						}
-					}
-					throw new GuidanceException(e);
-				}
-				final java.lang.reflect.Field replyValuesField = reply.getClass().getDeclaredField("values");
-				replyValuesField.setAccessible(true);
-				final com.sun.jdi.Value[] values = (com.sun.jdi.Value[]) replyValuesField.get(reply);
-				if (values.length != 1) {
-					throw new GuidanceException("Wrong number of values returned from target VM");
-				}
-				com.sun.jdi.Value jdiIndex = values[0];
-
-				return this.calc.valInt(((IntegerValue) jdiIndex).intValue());
-			} catch (IncompatibleThreadStateException | IndexOutOfBoundsException | ClassCastException e) {
-				throw new GuidanceException(e);
-			} catch (ClassNotFoundException | NoSuchMethodException | SecurityException | NoSuchFieldException | 
-					IllegalArgumentException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
-				//this should never happen
-				throw new UnexpectedInternalException(e);
-			}
-		}
-
-		/*
-		 * Code taken from JetBrains IntelliJ source code, 
-		 * https://github.com/JetBrains/intellij-community/blob/master/platform/util/src/com/intellij/util/ReflectionUtil.java
-		 */
-		private static java.lang.reflect.Method getDeclaredMethodByName(Class<?> aClass, String methodName) throws NoSuchMethodException {
-			for (java.lang.reflect.Method method : aClass.getDeclaredMethods()) {
-				if (methodName.equals(method.getName())) {
-					method.setAccessible(true);
-					return method;
-				}
-			}
-			throw new NoSuchMethodException(aClass.getName() + "." + methodName);
-		}
-
-		public byte[] getCurrentBytecode() throws GuidanceException {
-			return getCurrentLocation().method().bytecodes();        		
-		}
-
 		public int getCurrentCodeIndex() throws GuidanceException {
 			return (int) getCurrentLocation().codeIndex();
 		}

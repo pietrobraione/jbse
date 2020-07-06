@@ -211,7 +211,7 @@ public class Engine implements AutoCloseable {
     
     /** 
      * Checks whether the current state is the initial
-     * state, i.e., the first state of the post-initial phase.
+     * state, i.e., the first state after the pre-initial phase.
      * 
      * @return a {@code boolean}.
      */
