@@ -321,7 +321,8 @@ public final class Util {
      * @return a {@link String} corresponding to the value of 
      *         the string {@link Instance} referred by {@code ref}, 
      *         or {@code null} if {@code ref} does not refer an {@link Instance} 
-     *         in {@code s}, or if it refers an {@link Instance} but its 
+     *         in {@code s} (also when {@code ref} is {@link Null}), or 
+     *         if it refers an {@link Instance} but its 
      *         {@link Instance#getType() type} is not the 
      *         {@code java.lang.String} class, or if its type is the 
      *         {@code java.lang.String} but its value field
@@ -335,6 +336,9 @@ public final class Util {
         } catch (ClassCastException e) {
             return null;
         }
+        if (i == null) {
+        	return null;
+        }
         return valueString(s, i);
     }
     
@@ -343,7 +347,7 @@ public final class Util {
      * into a (meta-level) string.
      * 
      * @param s a {@link State}.
-     * @param i an {@link Instance}.
+     * @param i an {@link Instance}. It must not be {@code null}. 
      * @return a {@link String} corresponding to the {@code value} of 
      *         the {@code i}, 
      *         or {@code null} if such {@link Instance}'s 
@@ -998,7 +1002,7 @@ public final class Util {
                 //a symbolic or concrete Klass object should be created
                 //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. Withdraw this assumption and branch.
                 final ClassHierarchy hier = this.s.getClassHierarchy();
-                final boolean pure = classFile.isPure() || this.ctx.hasClassAPureInitializer(hier, classFile);
+                final boolean pure = classFile.isPure() || this.ctx.classHasAPureInitializer(hier, classFile) || this.ctx.classInvariantAfterInitialization(classFile);
                 final boolean assumeInitialized;
                 final boolean createSymbolicKlass;
                 //invariant: if assumeInitialized == false, then also createSymbolicKlass == false

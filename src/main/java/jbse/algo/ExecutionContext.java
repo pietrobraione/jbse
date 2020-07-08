@@ -398,6 +398,7 @@ import static jbse.bc.Signatures.noclass_STORELINKEDMETHODANDAPPENDIX;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -500,6 +501,9 @@ public final class ExecutionContext {
      * and executes triggers. 
      */
     public final TriggerManager triggerManager;
+    
+    /** The classes that did not change their state after initialization. */
+    private final HashSet<String> postInitInvariantClasses;
 
     /** The {@link DispatcherBytecodeAlgorithm}. */
     public final DispatcherBytecodeAlgorithm dispatcher = new DispatcherBytecodeAlgorithm();
@@ -573,7 +577,8 @@ public final class ExecutionContext {
                             DecisionProcedureAlgorithms decisionProcedure, 
                             StateIdentificationMode stateIdentificationMode,
                             BreadthMode breadthMode,
-                            TriggerRulesRepo rulesTrigger) {
+                            TriggerRulesRepo rulesTrigger, 
+                            Set<String> postInitInvariantClasses) {
         this.stateStart = stateStart;
         this.bypassStandardLoading = bypassStandardLoading;
         this.maxSimpleArrayLength = maxSimpleArrayLength;
@@ -590,6 +595,8 @@ public final class ExecutionContext {
         this.symbolFactory = new SymbolFactory();
         this.stateTree = new StateTree(stateIdentificationMode, breadthMode);
         this.triggerManager = new TriggerManager(rulesTrigger.clone()); //safety copy
+        this.postInitInvariantClasses = new HashSet<>(postInitInvariantClasses); //safety copy
+        addBasicPostInitInvariantClasses();
 
         //defaults
         try {
@@ -993,9 +1000,9 @@ public final class ExecutionContext {
      * @return {@code true} iff the class has a pure static initializer.
      * @throws InvalidInputException if any parameter is {@code null}.
      */
-    public boolean hasClassAPureInitializer(ClassHierarchy hier, ClassFile classFile) throws InvalidInputException {
+    public boolean classHasAPureInitializer(ClassHierarchy hier, ClassFile classFile) throws InvalidInputException {
     	if (hier == null || classFile == null) {
-    		throw new InvalidInputException("Invoked " + getClass().getName() + ".hasClassAPureInitializer with a null parameter.");
+    		throw new InvalidInputException("Invoked " + getClass().getName() + ".classHasAPureInitializer with a null parameter.");
     	}
         final String className = classFile.getClassName();
         return (
@@ -1036,22 +1043,34 @@ public final class ExecutionContext {
         className.equals(SUN_VERIFYACCESS) ||
         className.equals(SUN_VERIFYTYPE) ||
         className.equals(SUN_WRAPPER_FORMAT) ||
-        //TODO move initialization of these unpure classes (old code):
-        className.equals(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE) || //necessary for method handles
-        className.equals(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_FACTORY) || //necessary for method handles; apparently the only field that is unpure is CLASS_CACHE, a cache field
-        className.equals(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIESDATA) || //necessary for method handles
-        className.equals(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIES_L) || //necessary for method handles
-        className.equals(jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE) || //wouldn't manage method handles otherwise
-        className.equals(jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_LAZY) || //wouldn't manage method handles otherwise
-        className.equals(jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR) || //the only nonfinal static field STATICALLY_INVOCABLE_PACKAGES is never modified
-        className.equals(jbse.bc.Signatures.JAVA_LAMBDAFORM_NAMEDFUNCTION) || //not really, but necessary to bootstrap lambda forms (apparently most static fields are caches, but it is too complex to analyze) 
-        className.equals(jbse.bc.Signatures.JAVA_METHODHANDLES) || //not really, but can be considered as it were (all final except ZERO_MHS and IDENTITY_MHS that are caches) 
-        className.equals(jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP) || //not really, but can be considered as it were (all final including PUBLIC_LOOKUP and IMPL_LOOKUP that are instances of Lookup - that is immutable - and except LOOKASIDE_TABLE, that seems to be a sort of cache) 
-        className.equals(jbse.bc.Signatures.JAVA_METHODTYPE) || //not really, but can be considered as it were (all final except internTable and objectOnlyTypes that are caches) 
-        className.equals(jbse.bc.Signatures.JAVA_SIMPLEMETHODHANDLE) || //necessary for method handles
-        //className.equals(jbse.bc.Signatures.SUN_LAUNCHERHELPER) || //necessary to JVM bootstrap (is it really?)
         
         classFile.isSubclass(hier.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_ENUM)));
+    }
+    
+    private void addBasicPostInitInvariantClasses() { 
+    	//these are some classes that we need to assume to be in post-initialization-invariant state
+    	//to simplify the execution mostly of method handles
+    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE); //necessary for method handles
+    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_FACTORY); //necessary for method handles; apparently the only field that is unpure is CLASS_CACHE, a cache field
+    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIESDATA); //necessary for method handles
+    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIES_L); //necessary for method handles
+    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE); //wouldn't manage method handles otherwise
+    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_LAZY); //wouldn't manage method handles otherwise
+    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR); //the only nonfinal static field STATICALLY_INVOCABLE_PACKAGES is never modified
+    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_LAMBDAFORM_NAMEDFUNCTION); //necessary to bootstrap lambda forms (apparently most static fields are caches, but it is too complex to analyze) 
+    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_METHODHANDLES); //can be considered as it were pure (all final except ZERO_MHS and IDENTITY_MHS that are caches) 
+    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP); //can be considered as it were pure (all final including PUBLIC_LOOKUP and IMPL_LOOKUP that are instances of Lookup - that is immutable - and except LOOKASIDE_TABLE, that seems to be a sort of cache) 
+    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_METHODTYPE); //can be considered as it were pure (all final except internTable and objectOnlyTypes that are caches) 
+    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_SIMPLEMETHODHANDLE); //necessary for method handles
+        //this.postInitInvariantClasses.add(jbse.bc.Signatures.SUN_LAUNCHERHELPER); //necessary to JVM bootstrap (is it really?)
+    }
+    
+    public boolean classInvariantAfterInitialization(ClassFile classFile) throws InvalidInputException {
+    	if (classFile == null) {
+    		throw new InvalidInputException("Invoked " + getClass().getName() + ".classInvariantAfterInitialization with a null classFile parameter.");
+    	}
+        final String className = classFile.getClassName();
+        return this.postInitInvariantClasses.contains(className);
     }
 
     public <R extends DecisionAlternative> 

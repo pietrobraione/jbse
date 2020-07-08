@@ -91,7 +91,8 @@ public class EngineBuilder {
 	                               parameters.getDecisionProcedure(),
 	                               parameters.getStateIdentificationMode().toInternal(), 
 	                               parameters.getBreadthMode().toInternal(),
-	                               parameters.getTriggerRulesRepo());
+	                               parameters.getTriggerRulesRepo(),
+	                               parameters.getClassInvariantAfterInitialization());
 	
 	        //sets the meta-level directives
 	        setOverrides(ctx, parameters);
