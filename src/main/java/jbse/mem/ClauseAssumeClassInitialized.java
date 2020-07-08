@@ -1,6 +1,7 @@
 package jbse.mem;
 
 import jbse.bc.ClassFile;
+import jbse.common.exc.InvalidInputException;
 
 /**
  * A path condition {@link Clause}, an assumption 
@@ -17,14 +18,19 @@ public class ClauseAssumeClassInitialized implements Clause {
     /**
      * Constructor.
      * 
-     * @param classFile a {@code ClassFile}, class.
+     * @param classFile a {@code ClassFile}.
      *        It must not be {@code null}.
-     * @param k the symbolic {@link Klass} corresponding to {@code classFile},
-     *        or {@code null} if the initial class was not symbolic.
+     * @param k the symbolic or concrete initial {@link Klass} corresponding to 
+     *        {@code classFile}. In the latter case, {@code k} is zeroed.
+     *        It must not be {@code null}.  
+     * @throws InvalidInputException if {@code classFile == null || k == null}.
      */
-    public ClauseAssumeClassInitialized(ClassFile classFile, Klass k) { 
+    public ClauseAssumeClassInitialized(ClassFile classFile, Klass k) throws InvalidInputException {
+        if (classFile == null || k == null) {
+            throw new InvalidInputException("Tried to build a ClauseAssumeClassInitialized with null classFile or k parameter.");
+        }
         this.classFile = classFile; 
-        this.k = (k == null ? null : k.clone()); //safety copy
+        this.k = k.clone(); //safety copy
     }
 
     /**
@@ -32,7 +38,19 @@ public class ClauseAssumeClassInitialized implements Clause {
      * 
      * @return a {@link ClassFile}, the class assumed initialized.
      */
-    public ClassFile getClassFile() { return this.classFile; }	
+    public ClassFile getClassFile() { 
+        return this.classFile;
+    }
+    
+    /**
+     * Checks whether the initial {@link Klass} is
+     * symbolic.
+     * 
+     * @return {@code true} iff it is symbolic.
+     */
+    public boolean isSymbolic() {
+        return this.k.isSymbolic();
+    }
 
     Klass getKlass() { 
         return (this.k == null ? null : this.k.clone()); //preserves the safety copy

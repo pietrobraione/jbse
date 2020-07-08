@@ -37,6 +37,11 @@ public class ClauseAssumeExpands extends ClauseAssumeReferenceSymbolic {
 		return this.heapPosition;
 	}
 
+	/**
+	 * Returns the expansion {@link HeapObjekt}.
+	 * 
+	 * @return a {@link HeapObjekt}.
+	 */
 	public HeapObjekt getObjekt() { 
 		return this.object.clone(); //preserves the safety copy 
 	}

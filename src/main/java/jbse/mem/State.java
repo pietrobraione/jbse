@@ -1001,7 +1001,7 @@ public final class State implements Cloneable {
      * Gets a symbolic object as it was initially in this state.
      * 
      * @param origin a {@link ReferenceSymbolic}.
-     * @return the symbolic {@link Objekt} whose origin is {@code origin} 
+     * @return the symbolic {@link HeapObjekt} whose origin is {@code origin} 
      *         in the state it was at its epoch (equivalently, at the
      *         moment of its assumption), or 
      *         {@code null} if {@code origin} does not refer to 
@@ -1010,7 +1010,7 @@ public final class State implements Cloneable {
      * @throws FrozenStateException if the state is frozen.
      */
     //TODO eliminate this method!!!
-    private Objekt getObjectInitial(ReferenceSymbolic origin) throws FrozenStateException {
+    private HeapObjekt getObjectInitial(ReferenceSymbolic origin) throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
@@ -3190,7 +3190,8 @@ public final class State implements Cloneable {
     /**
      * Assumes the expansion of a symbolic reference to a fresh object of some
      * class, where the symbolic object is already present in the heap. Note that
-     * this method does <em>not</em> check that another symbolic reference
+     * this method does <em>not</em> check that no other symbolic reference exists 
+     * that expands to the referred symbolic object.
      * 
      * @param referenceSymbolic the {@link ReferenceSymbolic} which is resolved. It 
      *        must be {@code referenceSymbolic != null} and {@code referenceSymbolic} 
@@ -3198,7 +3199,7 @@ public final class State implements Cloneable {
      * @param freshObjectPosition a {@code long}, the position of the symbolic object in 
      *        the heap to which {@code referenceSymbolic} is expanded. Note that
      *        this method does <em>not</em> check that no other symbolic reference
-     *        exists that is expanded to the object at {@code freshObjectPosition}!
+     *        exists that expands to the object at {@code freshObjectPosition}!
      * @throws InvalidInputException if either {@code referenceSymbolic} is {@code null}, 
      *         or no symbolic object is stored at {@code freshObjectPosition}, or the 
      *         state is frozen.
@@ -3256,7 +3257,7 @@ public final class State implements Cloneable {
         if (resolved(referenceSymbolic)) {
             throw new ContradictionException("Attempted to invoke State.assumeAliases with an already resolved referenceSymbolic.");
         }
-        final Objekt aliasObject = getObjectInitial(aliasOrigin);
+        final HeapObjekt aliasObject = getObjectInitial(aliasOrigin);
         if (aliasObject == null) {
             throw new InvalidInputException("Attempted to invoke State.assumeAliases with an aliasOrigin that does not refer to any initial object.");
         }
@@ -3302,18 +3303,18 @@ public final class State implements Cloneable {
      * @param classFile the {@link ClassFile} for the class that
      *        is assumed to be initialized. 
      *        It must be {@code classFile != null}.
-     * @param klass the symbolic {@link Klass} for {@code classFile}, 
-     *        or {@code null} if the initial class is not symbolic. 
+     * @param klass the symbolic or concrete {@link Klass} for {@code classFile}. 
+     *        It must not be {@code null}. 
      * @throws InvalidInputException if {@code classFile == null}, or
-     *         the state is frozen.
+     *         {@code klass == null}, or the state is frozen.
      */
     public void assumeClassInitialized(ClassFile classFile, Klass klass) 
     throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (classFile == null) {
-            throw new InvalidInputException("Attempted to invoke State.assumeClassInitialized with a null classFile.");
+        if (classFile == null || klass == null) {
+            throw new InvalidInputException("Attempted to invoke State.assumeClassInitialized with a null classFile or klass parameter.");
         }
         
     	possiblyReset();
@@ -3695,8 +3696,8 @@ public final class State implements Cloneable {
      * refines (i.e., comes temporally later than) this state.
      *
      * @param stateRefining another {@link State}; it must refine this state, 
-     *        meaning that this state's identifier and path condition must be prefixes 
-     *        of {@code stateRefining}'s identifier and path condition.
+     *        meaning that this state's history point and path condition must be prefixes 
+     *        of {@code stateRefining}'s history point and path condition.
      * @throws CannotRefineException when {@code stateRefining} does not refine 
      *         {@code this}.
      * @throws FrozenStateException if the state is frozen.

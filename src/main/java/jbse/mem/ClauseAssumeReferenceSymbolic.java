@@ -17,14 +17,18 @@ public abstract class ClauseAssumeReferenceSymbolic implements Clause {
 	 * 
 	 * @param r a {@link ReferenceSymbolic}.
 	 */
-	protected ClauseAssumeReferenceSymbolic(ReferenceSymbolic r) { this.r = r; }
+	protected ClauseAssumeReferenceSymbolic(ReferenceSymbolic r) { 
+	    this.r = r; 
+	}
 
 	/**
 	 * Returns the reference that is the subject of this clause.
 	 * 
 	 * @return A {@link ReferenceSymbolic}.
 	 */
-	public ReferenceSymbolic getReference() { return this.r; }
+	public ReferenceSymbolic getReference() { 
+	    return this.r; 
+	}
 
 	@Override
 	public int hashCode() {

@@ -93,11 +93,11 @@ final class PathCondition implements Cloneable {
      * @param reference the {@link ReferenceSymbolic} which is resolved. 
      * @param heapPosition the position in the heap of the object to 
      *        which {@code reference} is resolved.
-     * @param object the {@link Objekt} at position {@code heapPosition}
+     * @param object the {@link HeapObjekt} at position {@code heapPosition}
      *        as it was at the beginning of symbolic execution, or equivalently 
      *        at the time of its assumption.
      */
-    void addClauseAssumeAliases(ReferenceSymbolic reference, long heapPosition, Objekt object) {
+    void addClauseAssumeAliases(ReferenceSymbolic reference, long heapPosition, HeapObjekt object) {
         this.clauses.add(new ClauseAssumeAliases(reference, heapPosition, object));
         this.referenceResolutionMap.put(reference, heapPosition);
     }
@@ -117,11 +117,13 @@ final class PathCondition implements Cloneable {
      * Adds a clause to the path condition. The clause is the resolution of a 
      * class by assuming it loaded and initialized.
      *   
-     * @param classFile a {@link ClassFile}.
-     * @param klass the symbolic {@link Klass} object to which {@code classFile}
-     *        is resolved, or {@code null} if the initial class was not symbolic.
+     * @param classFile a {@link ClassFile}. It must not be {@code null}.
+     * @param klass the symbolic or concrete {@link Klass} object to which 
+     *        {@code classFile} is resolved. In the latter case the object
+     *        is zeroed.  It must not be {@code null}.
+     * @throws InvalidInputException if {@code classFile == null || klass == null}.
      */
-    void addClauseAssumeClassInitialized(ClassFile classFile, Klass klass) {
+    void addClauseAssumeClassInitialized(ClassFile classFile, Klass klass) throws InvalidInputException {
         this.clauses.add(new ClauseAssumeClassInitialized(classFile, klass));
     }
 
@@ -241,7 +243,7 @@ final class PathCondition implements Cloneable {
         }
 
         //does a deep copy
-        o.clauses = new ArrayList<Clause>(this.clauses);
+        o.clauses = new ArrayList<>(this.clauses);
         o.referenceResolutionMap = new HashMap<>(this.referenceResolutionMap);
         o.objectCounters = new HashMap<>(this.objectCounters);
 

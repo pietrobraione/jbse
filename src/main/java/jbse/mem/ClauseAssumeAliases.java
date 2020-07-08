@@ -12,7 +12,7 @@ import jbse.val.ReferenceSymbolic;
  */
 public class ClauseAssumeAliases extends ClauseAssumeReferenceSymbolic {
 	private final long heapPosition;
-	private final Objekt object;
+	private final HeapObjekt object;
 	
 	/**
 	 * Constructor.
@@ -20,11 +20,11 @@ public class ClauseAssumeAliases extends ClauseAssumeReferenceSymbolic {
 	 * @param r a {@link ReferenceSymbolic}.
 	 * @param heapPosition a {@code long}, the heap position. It must be 
 	 *        the position of an object assumed by a previous expansion. 
-	 * @param object the {@link Objekt} at position {@code heapPosition}, 
+	 * @param object the {@link HeapObjekt} at position {@code heapPosition}, 
 	 *        as it was at the beginning of symbolic execution (equivalently, 
 	 *        as it was when it was assumed).
 	 */
-	public ClauseAssumeAliases(ReferenceSymbolic r, long heapPosition, Objekt object) { 
+	public ClauseAssumeAliases(ReferenceSymbolic r, long heapPosition, HeapObjekt object) { 
 		super(r);
 		this.heapPosition = heapPosition;
 		this.object = object;
@@ -40,11 +40,11 @@ public class ClauseAssumeAliases extends ClauseAssumeReferenceSymbolic {
 	}
 	
 	/**
-	 * Returns the aliased {@link Objekt}.
+	 * Returns the aliased {@link HeapObjekt}.
 	 * 
-	 * @return an {@link Objekt}.
+	 * @return a {@link HeapObjekt}.
 	 */
-	public Objekt getObjekt() {
+	public HeapObjekt getObjekt() {
 		return this.object;
 	}
 	
