@@ -297,13 +297,14 @@ public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKE
 
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
-    	final Calculator calc = this.ctx.getCalculator();
         return (state, alt) -> {
+        	final Calculator calc = this.ctx.getCalculator();
+            final ClassHierarchy hier = state.getClassHierarchy();
             try {
                 //pushes the frame for the method that boxes 
                 //the exceptions raised by the method to be
                 //invoked
-                final ClassFile cf_JBSE_BASE = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, JBSE_BASE, state.bypassStandardLoading());
+                final ClassFile cf_JBSE_BASE = hier.loadCreateClass(CLASSLOADER_APP, JBSE_BASE, state.bypassStandardLoading());
                 final char returnType = splitReturnValueDescriptor(this.methodSignature.getDescriptor()).charAt(0);
                 switch (returnType) {
                 case ARRAYOF:
@@ -353,7 +354,6 @@ public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKE
             try {
                 final Signature methodSignatureOverriding = lookupMethodImplOverriding(state, this.ctx, this.methodClassFile, this.methodSignature, this.isInterface, this.isSpecial, this.isStatic, this.isNative);
                 if (methodSignatureOverriding != null) {
-                    final ClassHierarchy hier = state.getClassHierarchy();
                     final ClassFile classFileMethodOverriding = hier.getClassFileClassArray(CLASSLOADER_APP, methodSignatureOverriding.getClassName());
                     checkOverridingMethodFits(state, this.methodClassFile, this.methodSignature, classFileMethodOverriding, methodSignatureOverriding);
                     this.methodClassFile = classFileMethodOverriding;
