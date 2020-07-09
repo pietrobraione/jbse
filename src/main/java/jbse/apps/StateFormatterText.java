@@ -290,11 +290,13 @@ public final class StateFormatterText implements Formatter {
         int j = 0;
         for (Map.Entry<Long, Objekt> e : entries) {
             Objekt o = e.getValue();
-            sb.append("Object["); sb.append(e.getKey()); sb.append("]: "); sb.append("{");
-            formatObject(s, sb, o, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep);
-            sb.append(indentCurrent); sb.append("}");
-            if (j < heapSize - 1) {
-                sb.append(lineSep); sb.append(indentCurrent);
+            if (o != null) {
+            	sb.append("Object["); sb.append(e.getKey()); sb.append("]: "); sb.append("{");
+            	formatObject(s, sb, o, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep);
+            	sb.append(indentCurrent); sb.append("}");
+            	if (j < heapSize - 1) {
+            		sb.append(lineSep); sb.append(indentCurrent);
+            	}
             }
             j++;
         }

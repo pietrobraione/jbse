@@ -89,7 +89,7 @@ final class Heap implements Cloneable {
      * 
      * @param ref a {@code long}, the location where the instance
      *        must be stored.
-     * @param item the {@link Instance} to stored at {@code pos}.
+     * @param item the {@link HeapObjekt} to stored at {@code pos}.
      */
     void set(long pos, HeapObjekt item) {
         this.objects.put(pos, item);
@@ -100,7 +100,7 @@ final class Heap implements Cloneable {
      * 
      * @param pos a {@code long}, the location where the object
      *        must be stored.
-     * @return the {@link Instance} at position {@code pos}, or 
+     * @return the {@link HeapObjekt} at position {@code pos}, or 
      *         {@code null} if nothing is stored at {@code pos}.
      */
     HeapObjekt getObject(long pos) {

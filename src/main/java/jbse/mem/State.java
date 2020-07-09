@@ -2909,7 +2909,7 @@ public final class State implements Cloneable {
      * Returns a copy of the state's heap.
      * 
      * @return a copy the state's heap as a 
-     * {@link SortedMap}{@code <}{@link Integer}{@code , }{@link Objekt}{@code >}
+     * {@link SortedMap}{@code <}{@link Long}{@code , }{@link Objekt}{@code >}
      * mapping heap positions to the {@link Objekt}s stored 
      * at them.
      * @throws FrozenStateException if the state is frozen.
