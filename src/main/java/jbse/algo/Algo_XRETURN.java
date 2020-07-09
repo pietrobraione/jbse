@@ -197,7 +197,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             	}
             } else {
                 state.pushOperand(this.valueToReturn);
-                this.pcReturn = state.getReturnPC();
+                this.pcReturn = state.getReturnProgramCounter();
             }
         };
     }

@@ -1702,7 +1702,7 @@ public final class State implements Cloneable {
     
     private InstanceImpl doCreateInstance(Calculator calc, ClassFile classFile) {
         final int numOfStaticFields = classFile.numOfStaticFields();
-        final Signature[] fieldsSignatures = classFile.getAllFields();
+        final Signature[] fieldsSignatures = classFile.getObjectFields();
         final ClassFile cf_JAVA_CLASSLOADER;
         final ClassFile cf_JAVA_THREAD;
         try {
@@ -1748,7 +1748,7 @@ public final class State implements Cloneable {
                 throw new UnexpectedInternalException("Could not find the classfile for java.lang.Class.");
             }
             final int numOfStaticFields = cf_JAVA_CLASS.numOfStaticFields();
-            final Signature[] fieldsSignatures = cf_JAVA_CLASS.getAllFields();
+            final Signature[] fieldsSignatures = cf_JAVA_CLASS.getObjectFields();
             final InstanceImpl_JAVA_CLASS myObj = new InstanceImpl_JAVA_CLASS(calc, cf_JAVA_CLASS, null, this.historyPoint, representedClass, numOfStaticFields, fieldsSignatures);
             final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
             
@@ -1808,7 +1808,7 @@ public final class State implements Cloneable {
             return;
         }
         final int numOfStaticFields = classFile.numOfStaticFields();
-        final Signature[] fieldsSignatures = classFile.getAllFields();
+        final Signature[] fieldsSignatures = classFile.getObjectFields();
         final KlassImpl k = new KlassImpl(calc, false, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
         k.setIdentityHashCode(calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(classFile, k);
@@ -1843,7 +1843,7 @@ public final class State implements Cloneable {
             return;
         }
         final int numOfStaticFields = classFile.numOfStaticFields();
-        final Signature[] fieldsSignatures = classFile.getAllFields();
+        final Signature[] fieldsSignatures = classFile.getObjectFields();
         final KlassImpl k = new KlassImpl(calc, true, createSymbolKlassPseudoReference(this.lastPreInitialHistoryPoint, classFile), this.lastPreInitialHistoryPoint, numOfStaticFields, fieldsSignatures);
         try {
         	initWithSymbolicValues(k, classFile);
@@ -1955,7 +1955,7 @@ public final class State implements Cloneable {
             throw new CannotAssumeSymbolicObjectException("JBSE does not allow to execute symbolically the methods of class " + classFile.getClassName() + ".");
         }
         final int numOfStaticFields = classFile.numOfStaticFields();
-        final Signature[] fieldsSignatures = classFile.getAllFields();
+        final Signature[] fieldsSignatures = classFile.getObjectFields();
         final InstanceImpl_DEFAULT obj = new InstanceImpl_DEFAULT(calc, true, classFile, origin, origin.historyPoint(), numOfStaticFields, fieldsSignatures);
         try {
         	initWithSymbolicValues(obj, classFile);
@@ -2825,24 +2825,6 @@ public final class State implements Cloneable {
     }
 
     /**
-     * Sets the return program counter of the current frame.
-     * 
-     * @param returnPCOffset the offset of the return program counter 
-     *        w.r.t. the current program counter.
-     * @throws InvalidProgramCounterException iff current + offset program counter
-     *        yield an invalid offset.
-     * @throws ThreadStackEmptyException if the thread stack is empty.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public void setReturnProgramCounter(int returnPCOffset) 
-    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        getCurrentFrame().setReturnProgramCounter(returnPCOffset);
-    }
-
-    /**
      * Removes the current {@link Frame} from the thread stack.
      * 
      * @return the popped {@link Frame}.
@@ -3076,13 +3058,31 @@ public final class State implements Cloneable {
     }
 
     /**
+     * Sets the return program counter of the current frame.
+     * 
+     * @param returnPCOffset the offset of the return program counter 
+     *        w.r.t. the current program counter.
+     * @throws InvalidProgramCounterException iff current + offset program counter
+     *        yield an invalid offset.
+     * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public void setReturnProgramCounter(int returnPCOffset) 
+    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        getCurrentFrame().setReturnProgramCounter(returnPCOffset);
+    }
+
+    /**
      * Returns the return program counter of the caller frame
      * stored for a return bytecode.
      * 
      * @return an {@code int}, the return program counter.
      * @throws ThreadStackEmptyException  if the thread stack is empty.
      */
-    public int getReturnPC() throws ThreadStackEmptyException {
+    public int getReturnProgramCounter() throws ThreadStackEmptyException {
         return this.stack.currentFrame().getReturnProgramCounter();
     }
 

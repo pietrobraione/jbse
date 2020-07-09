@@ -890,6 +890,16 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     }
     
     /**
+     * Returns the number of nonstatic fields of this class.
+     * 
+     * @return an {@code int}, the number of nonstatic fields
+     *         declared by this class.
+     */
+    public final int numOfNonStaticFields() {
+        return getDeclaredFieldsNonStatic().length;
+    }
+    
+    /**
      * Gets all the fields declared by this class 
      * (not by its superclasses), both static and not.
      *  
@@ -913,7 +923,7 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      *         fields, followed by all the {@link Signature}s of the object 
      *         fields of the superclass, the superclass' superclass, etc.
      */	
-    public final Signature[] getAllFields() {
+    public final Signature[] getObjectFields() {
     	final ArrayList<Signature> signatures = new ArrayList<>(0);
     	boolean isStartClass = true;
     	for (ClassFile c : superclasses()) {
@@ -938,7 +948,7 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      *         {@code fieldSignature}.
      */
     public final int getFieldOffset(Signature fieldSignature) {
-        final Signature[] allFields = getAllFields();
+        final Signature[] allFields = getObjectFields();
         for (int _ofst = 0; _ofst < allFields.length; ++_ofst) {
             if (allFields[allFields.length - 1 - _ofst].equals(fieldSignature)) {
             	return _ofst;
