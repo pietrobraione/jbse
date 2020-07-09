@@ -133,7 +133,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
  
         try {
             //gets the first parameter (the MemberName)
-            final Instance memberNameObject = getInstance(state, this.data.operand(0), "MemberName self", FAIL_JBSE, THROW_JAVA_INTERNAL_ERROR, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
+            final Instance memberNameObject = getInstance(state, this.data.operand(0), "java.lang.invoke.MethodHandleNatives.resolve", "MemberName self", FAIL_JBSE, THROW_JAVA_INTERNAL_ERROR, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
 
             //now we will get all the fields of the MemberName; in the case these fields
             //are null we throw IllegalArgumentException as Hotspot does, see 
@@ -144,11 +144,11 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             
             //gets the container class of the MemberName
             final Instance_JAVA_CLASS memberNameContainerClassObject = 
-                (Instance_JAVA_CLASS) getInstance(state, memberNameObject.getFieldValue(JAVA_MEMBERNAME_CLAZZ), "Class self.clazz", FAIL_JBSE /* TODO is it ok? */, THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
+                (Instance_JAVA_CLASS) getInstance(state, memberNameObject.getFieldValue(JAVA_MEMBERNAME_CLAZZ), "java.lang.invoke.MethodHandleNatives.resolve", "Class self.clazz", FAIL_JBSE /* TODO is it ok? */, THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
             final ClassFile memberNameContainerClass = memberNameContainerClassObject.representedClass();
 
             //gets the descriptor of the MemberName (field type)
-            final Instance memberNameDescriptorObject = getInstance(state, memberNameObject.getFieldValue(JAVA_MEMBERNAME_TYPE), "Object self.type", FAIL_JBSE /* TODO is it ok? */, THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
+            final Instance memberNameDescriptorObject = getInstance(state, memberNameObject.getFieldValue(JAVA_MEMBERNAME_TYPE), "java.lang.invoke.MethodHandleNatives.resolve", "Object self.type", FAIL_JBSE /* TODO is it ok? */, THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
             //From the source code of java.lang.invoke.MemberName the type field of a MemberName is either null 
             //(if the field is not initialized), or a MethodType (if the MemberName is a method call), or a
             //Class (if the MemberName is a field get/set or a type), or a String (all cases, if the field is 
@@ -161,7 +161,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             //line 392.
 
             //gets the name of the MemberName (field name)
-            final Instance memberNameNameObject = getInstance(state, memberNameObject.getFieldValue(JAVA_MEMBERNAME_NAME), "String self.name", FAIL_JBSE /* TODO is it ok? */, THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
+            final Instance memberNameNameObject = getInstance(state, memberNameObject.getFieldValue(JAVA_MEMBERNAME_NAME), "java.lang.invoke.MethodHandleNatives.resolve", "String self.name", FAIL_JBSE /* TODO is it ok? */, THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
             final String memberNameName = valueString(state, memberNameNameObject);
             if (memberNameName == null) {
                 //TODO who is to blame?
@@ -172,7 +172,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             final int memberNameFlags = ((Integer) ((Simplex) memberNameObject.getFieldValue(JAVA_MEMBERNAME_FLAGS)).getActualValue()).intValue();
 
             //gets the second parameter (the Class of the member accessor)
-            final Instance_JAVA_CLASS accessorClassInstance = (Instance_JAVA_CLASS) getInstance(state, this.data.operand(1), "Class caller", FAIL_JBSE, OK, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
+            final Instance_JAVA_CLASS accessorClassInstance = (Instance_JAVA_CLASS) getInstance(state, this.data.operand(1), "java.lang.invoke.MethodHandleNatives.resolve", "Class caller", FAIL_JBSE, OK, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
             final ClassFile accessorClass = (accessorClassInstance == null ? memberNameContainerClass : accessorClassInstance.representedClass());
             
             //performs resolution based on memberNameFlags
@@ -226,7 +226,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                     
                     //returns the adapter instead of the resolved method
                     //TODO is it correct?
-                    final Instance invoker = getInstance(state, state.getAdapter(this.polymorphicMethodSignature), "invoker for the (signature polymorphic) MemberName self", FAIL_JBSE, FAIL_JBSE, FAIL_JBSE);
+                    final Instance invoker = getInstance(state, state.getAdapter(this.polymorphicMethodSignature), "java.lang.invoke.MethodHandleNatives.resolve", "invoker for the (signature polymorphic) MemberName self", FAIL_JBSE, FAIL_JBSE, FAIL_JBSE);
                     final String invokerName = valueString(state, (Reference) invoker.getFieldValue(JAVA_MEMBERNAME_NAME));
                     final Instance invokerMethodType = (Instance) state.getObject((Reference) invoker.getFieldValue(JAVA_MEMBERNAME_TYPE));
                     final String invokerDescriptor = getDescriptorFromMethodType(state, memberNameObject, invokerMethodType);
@@ -609,7 +609,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
         return (state, alt) -> {
         	final Calculator calc = this.ctx.getCalculator();
             try {
-                final Instance memberNameObject = getInstance(state, this.data.operand(0), "MemberName self", FAIL_JBSE, FAIL_JBSE, FAIL_JBSE);
+                final Instance memberNameObject = getInstance(state, this.data.operand(0), "java.lang.invoke.MethodHandleNatives.resolve", "MemberName self", FAIL_JBSE, FAIL_JBSE, FAIL_JBSE);
                 
                 //updates the MemberName: first, sets the clazz field...
                 state.ensureInstance_JAVA_CLASS(calc, this.resolvedClass);

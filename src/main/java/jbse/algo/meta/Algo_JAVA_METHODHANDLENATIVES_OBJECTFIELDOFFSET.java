@@ -7,6 +7,6 @@ package jbse.algo.meta;
  */
 public final class Algo_JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET extends Algo_JAVA_METHODHANDLENATIVES_ABSTRACTFIELDOFFSET {
 	public Algo_JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET() {
-		super(false);
+		super("java.lang.invoke.MethodHandleNatives.objectFieldOffset", false);
 	}
 }

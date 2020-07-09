@@ -42,11 +42,13 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  */
 abstract class Algo_JAVA_METHODHANDLENATIVES_ABSTRACTFIELDOFFSET extends Algo_INVOKEMETA_Nonbranching {
-	private final boolean must_be_static;
+	private final String methodName;
+	private final boolean mustBeStatic;
 	private Simplex ofst; //set by cookMore
 	
-	protected Algo_JAVA_METHODHANDLENATIVES_ABSTRACTFIELDOFFSET(boolean must_be_static) {
-		this.must_be_static = must_be_static;
+	protected Algo_JAVA_METHODHANDLENATIVES_ABSTRACTFIELDOFFSET(String methodName, boolean mustBeStatic) {
+		this.methodName = methodName;
+		this.mustBeStatic = mustBeStatic;
 	}
 	
 	@Override
@@ -61,7 +63,7 @@ abstract class Algo_JAVA_METHODHANDLENATIVES_ABSTRACTFIELDOFFSET extends Algo_IN
 		final ErrorAction THROW_JAVA_INTERNAL_ERROR = msg -> { throwNew(state, this.ctx.getCalculator(), INTERNAL_ERROR); exitFromAlgorithm(); };
 
 		//checks the first parameter (the MemberName)
-		final Instance memberNameObject = getInstance(state, this.data.operand(0), "MemberName self", FAIL_JBSE, THROW_JAVA_INTERNAL_ERROR, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
+		final Instance memberNameObject = getInstance(state, this.data.operand(0), this.methodName, "MemberName self", FAIL_JBSE, THROW_JAVA_INTERNAL_ERROR, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
 		
 		//gets the container class of the member
 		final Reference clazzReference = (Reference) memberNameObject.getFieldValue(JAVA_MEMBERNAME_CLAZZ);
@@ -75,7 +77,7 @@ abstract class Algo_JAVA_METHODHANDLENATIVES_ABSTRACTFIELDOFFSET extends Algo_IN
 
 		//checks if the member is an instance field
 		final int fieldFlags = ((Integer) ((Simplex) memberNameObject.getFieldValue(JAVA_MEMBERNAME_FLAGS)).getActualValue()).intValue();
-		if ((fieldFlags & IS_FIELD) == 0 || (this.must_be_static ? ((fieldFlags & Modifier.STATIC) == 0) : ((fieldFlags & Modifier.STATIC) != 0))) {
+		if ((fieldFlags & IS_FIELD) == 0 || (this.mustBeStatic ? ((fieldFlags & Modifier.STATIC) == 0) : ((fieldFlags & Modifier.STATIC) != 0))) {
 			//not an instance field
 			throwNew(state, this.ctx.getCalculator(), INTERNAL_ERROR);
 			exitFromAlgorithm();

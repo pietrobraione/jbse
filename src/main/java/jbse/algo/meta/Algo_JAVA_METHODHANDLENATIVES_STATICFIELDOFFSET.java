@@ -7,6 +7,6 @@ package jbse.algo.meta;
  */
 public final class Algo_JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET extends Algo_JAVA_METHODHANDLENATIVES_ABSTRACTFIELDOFFSET {
 	public Algo_JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET() {
-		super(true);
+		super("java.lang.invoke.MethodHandleNatives.staticFieldOffset", true);
 	}
 }

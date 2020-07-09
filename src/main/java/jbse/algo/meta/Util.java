@@ -6,6 +6,7 @@ import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOINTERFACE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOSPECIAL;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOSTATIC;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOVIRTUAL;
+import static jbse.common.Type.INT;
 
 import java.lang.reflect.Modifier;
 
@@ -15,9 +16,11 @@ import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.common.exc.ClasspathException;
+import jbse.mem.Array;
 import jbse.mem.Instance;
 import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
+import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Value;
 
@@ -63,9 +66,12 @@ class Util {
     static final int  IS_METHOD            = 0x00010000; // method (not constructor)
     static final int  IS_CONSTRUCTOR       = 0x00020000; // constructor
     static final int  IS_FIELD             = 0x00040000; // field
+    static final int  IS_TYPE              = 0x00080000; // nested type
     static final int  CALLER_SENSITIVE     = 0x00100000; // @CallerSensitive annotation detected
     static final int  REFERENCE_KIND_SHIFT = 24; // refKind
     static final int  REFERENCE_KIND_MASK  = 0x0F000000 >> REFERENCE_KIND_SHIFT;
+    static final int  SEARCH_SUPERCLASSES  = 0x00100000;
+    static final int  SEARCH_INTERFACES    = 0x00200000;
     static final byte REF_getField         = 1;
     static final byte REF_getStatic        = 2;
     static final byte REF_putField         = 3;
@@ -172,23 +178,74 @@ class Util {
 	static final ErrorAction FAIL_JBSE                                      = msg -> { failExecution(msg); };
 	static final ErrorAction INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION = msg -> { throw new SymbolicValueNotAllowedException(msg); };
 
-	static Instance getInstance(State state, Value ref, String paramName, 
+	static Instance getInstance(State state, Value ref, String methodName, String paramName, 
 	ErrorAction whenNoRef, ErrorAction whenNull, ErrorAction whenUnresolved)
 	throws InterruptException, SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
+		//TODO handle cast errors
 		if (ref == null) {
-			whenNoRef.doIt("Unexpected null value while accessing " + paramName + ".");
+			whenNoRef.doIt("Unexpected null value while accessing " + paramName + " parameter to " + methodName + ".");
 			return null;
 		}
 		final Reference theReference = (Reference) ref;
 		if (state.isNull(theReference)) {
-			whenNull.doIt("The " + paramName + " parameter to java.lang.invoke.MethodHandleNatives.resolve was null.");
+			whenNull.doIt("The " + paramName + " parameter to " + methodName + " was null.");
 			return null;
 		}
 		final Instance theInstance = (Instance) state.getObject(theReference);
 		if (theInstance == null) {
-			whenUnresolved.doIt("The " + paramName + " parameter to java.lang.invoke.MethodHandleNatives.resolve was an unresolved symbolic reference on the operand stack.");
+			whenUnresolved.doIt("The " + paramName + " parameter to " + methodName + " was an unresolved symbolic reference on the operand stack.");
+			return null;
 		}
 		return theInstance;
+	}
+
+	static Array getArray(State state, Value ref, String methodName, String paramName, 
+	ErrorAction whenNoRef, ErrorAction whenNull, ErrorAction whenUnresolved, 
+	ErrorAction whenNotSimple)
+	throws InterruptException, SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
+		//TODO handle cast errors
+		if (ref == null) {
+			whenNoRef.doIt("Unexpected null value while accessing " + paramName + " parameter to " + methodName + ".");
+			return null;
+		}
+		final Reference theReference = (Reference) ref;
+		if (state.isNull(theReference)) {
+			whenNull.doIt("The " + paramName + " parameter to " + methodName + " was null.");
+			return null;
+		}
+		final Array theArray = (Array) state.getObject(theReference);
+		if (theArray == null) {
+			whenUnresolved.doIt("The " + paramName + " parameter to " + methodName + " was an unresolved symbolic reference on the operand stack.");
+			return null;
+		}
+		if (!theArray.isSimple()) {
+			whenNotSimple.doIt("The " + paramName + " parameter to " + methodName + " was not a simple array.");
+		}
+		return theArray;
+	}
+	
+	static Primitive getInteger(State state, Value intVal, String methodName, String paramName, 
+	ErrorAction whenNull, ErrorAction whenNotPrimitiveInteger, ErrorAction whenSymbolic) 
+	throws SymbolicValueNotAllowedException, InterruptException, ClasspathException, FrozenStateException {
+		if (intVal == null) {
+			whenNull.doIt("Unexpected null value while accessing " + paramName + " parameter to " + methodName + ".");
+			return null;
+		}
+		if (!(intVal instanceof Primitive)) {
+			whenNotPrimitiveInteger.doIt("The " + paramName + " parameter to " + methodName + " was not a primitive or an integer value.");
+			return null;
+		}
+		final Primitive thePrimitive = (Primitive) intVal;
+		if (thePrimitive.getType() != INT) {
+			whenNotPrimitiveInteger.doIt("The " + paramName + " parameter to " + methodName + " was not a primitive or an integer value.");
+			return null;
+		}
+		
+		if (thePrimitive.isSymbolic()) {
+			whenSymbolic.doIt("The " + paramName + " parameter to " + methodName + " was not a concrete integer value.");
+		}
+		
+		return thePrimitive;
 	}
 
     //do not instantiate!

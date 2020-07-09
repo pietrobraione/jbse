@@ -83,10 +83,10 @@ public final class Algo_JAVA_METHODHANDLENATIVES_INIT extends Algo_INVOKEMETA_No
 		final ErrorAction THROW_JAVA_INTERNAL_ERROR = msg -> { throwNew(state, this.ctx.getCalculator(), INTERNAL_ERROR); exitFromAlgorithm(); };
 
 		//checks the first parameter (the MemberName)
-		getInstance(state, this.data.operand(0), "MemberName self", FAIL_JBSE, THROW_JAVA_INTERNAL_ERROR, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
+		getInstance(state, this.data.operand(0), "java.lang.invoke.MethodHandleNatives.init", "MemberName self", FAIL_JBSE, THROW_JAVA_INTERNAL_ERROR, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
 
 		//checks the second parameter (the Target)
-		getInstance(state, this.data.operand(1), "Object ref", FAIL_JBSE, THROW_JAVA_INTERNAL_ERROR, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
+		getInstance(state, this.data.operand(1), "java.lang.invoke.MethodHandleNatives.init", "Object ref", FAIL_JBSE, THROW_JAVA_INTERNAL_ERROR, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
 
 		//gets some standard classes
 		final ClassHierarchy hier = state.getClassHierarchy();
@@ -109,10 +109,10 @@ public final class Algo_JAVA_METHODHANDLENATIVES_INIT extends Algo_INVOKEMETA_No
 				final Calculator calc = this.ctx.getCalculator();
 
 				//gets the first parameter (the MemberName)
-				final Instance memberNameObject = getInstance(state, this.data.operand(0), "MemberName self", FAIL_JBSE, FAIL_JBSE, FAIL_JBSE);
+				final Instance memberNameObject = getInstance(state, this.data.operand(0), "java.lang.invoke.MethodHandleNatives.init", "MemberName self", FAIL_JBSE, FAIL_JBSE, FAIL_JBSE);
 
 				//gets the second parameter (the Target)
-				final Instance targetObject = getInstance(state, this.data.operand(1), "Object ref", FAIL_JBSE, FAIL_JBSE, FAIL_JBSE);
+				final Instance targetObject = getInstance(state, this.data.operand(1), "java.lang.invoke.MethodHandleNatives.init", "Object ref", FAIL_JBSE, FAIL_JBSE, FAIL_JBSE);
 
 				//gets the class of the target
 				final ClassFile targetClass = targetObject.getType();
