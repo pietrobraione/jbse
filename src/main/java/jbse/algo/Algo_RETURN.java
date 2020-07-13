@@ -74,7 +74,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             }
             if (poppedFrame instanceof MethodFrame && "<clinit>".equals(returnedMethod.getName())) {
                 final Klass k = state.getKlass(returnedCurrentClass);
-                k.setInitialized();
+                k.setInitializationCompleted();
             }
         };
     }

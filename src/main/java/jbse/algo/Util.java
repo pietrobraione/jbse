@@ -66,6 +66,9 @@ import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.DecisionProcedureAlgorithms.ArrayAccessInfo;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
+import jbse.mem.Clause;
+import jbse.mem.ClauseAssumeClassInitialized;
+import jbse.mem.ClauseAssumeClassNotInitialized;
 import jbse.mem.Frame;
 import jbse.mem.Instance;
 import jbse.mem.Klass;
@@ -911,6 +914,7 @@ public final class Util {
                 revert();
                 return true;
             }
+            phase4();
             return false;
         }
         
@@ -978,19 +982,26 @@ public final class Util {
          */
         private void phase1(ClassFile classFile, boolean recurSuperinterfaces)
         throws InvalidInputException, DecisionException, ContradictionException {
-            //if there is a Klass object for className (means 
-            //initialization in progress or already initialized), 
-            //or if className is in the skip set, there is 
-            //nothing to do
-            if (this.s.existsKlass(classFile) || this.skip.contains(classFile.getClassName())) {
-                //if classFile was already in this.classesToPushClinit
-                //we must reschedule it to respect the visiting order
-                //of JVMS v8 section 5.5, point 7
-                if (this.classesForPhase3.contains(classFile)) {
-                    this.classesForPhase3.remove(classFile);
-                    this.classesForPhase3.add(classFile);
-                }
+            //if classFile is already in this.classesForPhase3
+            //we must reschedule it to respect the visiting order
+            //of JVMS v8 section 5.5, point 7
+            if (this.classesForPhase3.contains(classFile)) {
+                this.classesForPhase3.remove(classFile);
+                this.classesForPhase3.add(classFile);
                 return;
+            }
+            
+            //if classFile is in the skip set, skip it 
+            if (this.skip.contains(classFile.getClassName())) {
+            	return;
+            }
+            
+            //if there is a Klass object for classFile in the state, 
+            //and is in the "initialization started" status (means 
+            //initialization in progress or already initialized),
+            //skip it
+            if (this.s.existsKlass(classFile) && this.s.getKlass(classFile).initializationStarted()) {
+            	return;
             }
 
             //saves classFile in the list of the newly
@@ -998,29 +1009,54 @@ public final class Util {
             this.classesForPhase2.add(classFile);
             
             try {
-                //decides whether the class is pre-initialized and whether
+                //decides whether the class is assumed pre-initialized and whether
                 //a symbolic or concrete Klass object should be created
                 //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. Withdraw this assumption and branch.
                 final ClassHierarchy hier = this.s.getClassHierarchy();
-                final boolean pure = classFile.isPure() || this.ctx.classHasAPureInitializer(hier, classFile) || this.ctx.classInvariantAfterInitialization(classFile);
-                final boolean assumeInitialized;
-                final boolean createSymbolicKlass;
-                //invariant: if assumeInitialized == false, then also createSymbolicKlass == false
-                if (this.s.phase() == Phase.PRE_INITIAL) {
-                    assumeInitialized = true; //all pre-initial class are assumed to be pre-initialized...
-                    createSymbolicKlass = false; //...and they are also assumed to be pure (or unmodified since their initialization)
-                } else if (this.ctx.decisionProcedure.isSatInitialized(classFile)) { 
-                    assumeInitialized = true;
-                    createSymbolicKlass = !pure; //if pure, the static initializer will be executed; if unpure, the klass will be filled by symbols
+                final boolean klassAlreadyExists = this.s.existsKlass(classFile);
+                final boolean symbolicKlass;
+                boolean assumeInitialized = false; //bogus initialization to keep the compiler happy
+                //invariant: symbolicKlass implies assumeInitialized
+                if (klassAlreadyExists) {
+                	symbolicKlass = this.s.getKlass(classFile).isSymbolic();
+                	//search assumeInitialized in the path condition - if there is a 
+                	//Klass in the state there must also be a path condition clause
+                	boolean found = false;
+                	for (Clause c : this.s.getPathCondition()) {
+                		if (c instanceof ClauseAssumeClassInitialized) {
+                			if (((ClauseAssumeClassInitialized) c).getClassFile().equals(classFile)) {
+                				found = true;
+                				assumeInitialized = true;
+                			}
+                		} else if (c instanceof ClauseAssumeClassNotInitialized) {
+                			if (((ClauseAssumeClassNotInitialized) c).getClassFile().equals(classFile)) {
+                				found = true;
+                				assumeInitialized = false;
+                			}
+                		}
+                	}
+                	if (!found) {
+                		throw new UnexpectedInternalException("Ill-formed state: Klass present in the static store but ClassFile not present in the path condition.");
+                	}
                 } else {
-                    createSymbolicKlass = false;
-                    assumeInitialized = false;
+                	if (this.s.phase() == Phase.PRE_INITIAL) {
+                		symbolicKlass = false; //...and they are also assumed to be pure (or unmodified since their initialization)
+                		assumeInitialized = true; //all pre-initial class are assumed to be pre-initialized...
+                	} else if (this.ctx.decisionProcedure.isSatInitialized(classFile)) { 
+                		final boolean shallRunStaticInitializer = classFile.isPure() || this.ctx.classHasAPureInitializer(hier, classFile) || this.ctx.classInvariantAfterInitialization(classFile);
+                		symbolicKlass = !shallRunStaticInitializer;
+                		assumeInitialized = true;
+                	} else {
+                		symbolicKlass = false;
+                		assumeInitialized = false;
+                	}
                 }
                 
                 //creates the Klass object
-                if (createSymbolicKlass) {
+                if (symbolicKlass) {
                     //creates a symbolic Klass
                     this.s.ensureKlassSymbolic(this.ctx.getCalculator(), classFile);
+                    this.s.getKlass(classFile).setInitializationCompleted(); //nothing else to do
                 } else {
                     //creates a concrete Klass and schedules it for phase 3
                     this.s.ensureKlass(this.ctx.getCalculator(), classFile);
@@ -1032,18 +1068,20 @@ public final class Util {
                 }
                 
                 //pushes the assumption
-                if (assumeInitialized) {
-                    final Klass k = this.s.getKlass(classFile);
-                    this.s.assumeClassInitialized(classFile, k);
-                } else {
-                    this.s.assumeClassNotInitialized(classFile);
+                if (!klassAlreadyExists) { //if klassAlreadyExists, the clause is already present
+                	if (assumeInitialized) { 
+                		final Klass k = this.s.getKlass(classFile);
+                		this.s.assumeClassInitialized(classFile, k);
+                	} else {
+                		this.s.assumeClassNotInitialized(classFile);
+                	}
                 }
 
                 //if the created Klass is concrete but 
                 //the class is assumed to be pre-initialized, 
                 //schedules the Klass to become symbolic (if
                 //the corresponding flag is active)
-                if (!createSymbolicKlass && assumeInitialized && this.makePreInitClassesSymbolic
+                if (!symbolicKlass && assumeInitialized && this.makePreInitClassesSymbolic
                     && !JBSE_BASE.equals(classFile.getClassName()) /* HACK */) {
                     this.preInitializedClasses.add(classFile);
                 }
@@ -1139,17 +1177,17 @@ public final class Util {
                     final Signature sigClinit = new Signature(classFile.getClassName(), "()" + Type.VOID, "<clinit>");
                     if (classFile.hasMethodImplementation(sigClinit)) {
                     	try {
-                    	if (this.preInitializedClasses.contains(classFile)) {
-                    		this.s.ensureStringLiteral(this.ctx.getCalculator(), classFile.getClassName());
-                    		this.s.pushFrame(this.ctx.getCalculator(), this.cf_JBSE_BASE, JBSE_BASE_MAKEKLASSSYMBOLIC, root(), 0, this.ctx.getCalculator().valInt(classFile.getDefiningClassLoader()), this.s.referenceToStringLiteral(classFile.getClassName()));
-                                ++this.createdFrames;
-                    	}
-                        if (this.boxExceptionMethodSignature != null && exceptionBoxFrameYetToPush) {
-                            this.s.pushFrame(this.ctx.getCalculator(), this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);                    
-                            ++this.createdFrames;
-                        }
-                        this.s.pushFrame(this.ctx.getCalculator(), classFile, sigClinit, root(), 0);
-                        ++this.createdFrames;
+                    		if (this.preInitializedClasses.contains(classFile)) {
+                    			this.s.ensureStringLiteral(this.ctx.getCalculator(), classFile.getClassName());
+                    			this.s.pushFrame(this.ctx.getCalculator(), this.cf_JBSE_BASE, JBSE_BASE_MAKEKLASSSYMBOLIC, root(), 0, this.ctx.getCalculator().valInt(classFile.getDefiningClassLoader()), this.s.referenceToStringLiteral(classFile.getClassName()));
+                    			++this.createdFrames;
+                    		}
+                    		if (this.boxExceptionMethodSignature != null && exceptionBoxFrameYetToPush) {
+                    			this.s.pushFrame(this.ctx.getCalculator(), this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);                    
+                    			++this.createdFrames;
+                    		}
+                    		this.s.pushFrame(this.ctx.getCalculator(), classFile, sigClinit, root(), 0);
+                    		++this.createdFrames;
                     	} catch (InvalidInputException e) {
                             //this should never happen
                             failExecution("Could not find the classfile for " + classFile.getClassName() + " or for jbse/base/Base.");
@@ -1193,6 +1231,35 @@ public final class Util {
                 //this should never happen
                 failExecution(e);
             } 
+        }
+        
+        /**
+         * Phase 4 sets all the created {@link Klass}es with a pushed
+         * <clinit> frame to the "initialization started" status and 
+         * all the {@link Klass}es without a pushed <clinit> frame to
+         * the "intialization completed" status.
+         * @throws FrozenStateException if {@code this.s} is frozen.
+         */
+        private void phase4() throws FrozenStateException {
+            for (ClassFile classFile : this.classesForPhase3) {
+                final Signature sigClinit = new Signature(classFile.getClassName(), "()" + Type.VOID, "<clinit>");
+                if (classFile.hasMethodImplementation(sigClinit)) {
+                    this.s.getKlass(classFile).setInitializationStarted();
+                } else {
+                    this.s.getKlass(classFile).setInitializationCompleted(); //nothing else to do
+                }
+            }
+            if (this.pushClinitFor_JAVA_OBJECT) {
+				try {
+					final ClassFile cf_JAVA_OBJECT = this.s.getClassHierarchy().loadCreateClass(JAVA_OBJECT);
+					this.s.getKlass(cf_JAVA_OBJECT).setInitializationStarted();
+				} catch (InvalidInputException | ClassFileNotFoundException | ClassFileIllFormedException
+						| ClassFileNotAccessibleException | IncompatibleClassFileException
+						| BadClassFileVersionException | RenameUnsupportedException | WrongClassNameException e) {
+	                //this should never happen
+	                failExecution(e);
+				}
+            }
         }
 
         private void revert() throws ClasspathException, FrozenStateException {

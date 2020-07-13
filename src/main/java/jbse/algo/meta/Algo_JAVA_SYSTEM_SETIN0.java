@@ -41,7 +41,7 @@ public final class Algo_JAVA_SYSTEM_SETIN0 extends Algo_INVOKEMETA_Nonbranching 
         try {
             final ClassFile cf_JAVA_SYSTEM = state.getClassHierarchy().loadCreateClass(JAVA_SYSTEM);
             this.k = state.getKlass(cf_JAVA_SYSTEM);
-            if (this.k == null || !this.k.isInitialized()) {
+            if (this.k == null || !this.k.initializationCompleted()) {
                 throw new UndefinedResultException("Invoked java.lang.System.setIn0 before initialization of class java.lang.System.");
             }
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |

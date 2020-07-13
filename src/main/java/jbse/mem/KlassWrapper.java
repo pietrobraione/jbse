@@ -39,14 +39,25 @@ final class KlassWrapper extends ObjektWrapper<KlassImpl> implements Klass {
     }
 
 	@Override
-	public boolean isInitialized() {
-		return getDelegate().isInitialized();
+	public boolean initializationStarted() {
+		return getDelegate().initializationStarted();
 	}
 
 	@Override
-	public void setInitialized() {
+	public boolean initializationCompleted() {
+		return getDelegate().initializationCompleted();
+	}
+
+	@Override
+	public void setInitializationStarted() {
 		possiblyCloneDelegate();
-		getDelegate().setInitialized();
+		getDelegate().setInitializationStarted();
+	}
+
+	@Override
+	public void setInitializationCompleted() {
+		possiblyCloneDelegate();
+		getDelegate().setInitializationCompleted();
 	}
     
 	@Override

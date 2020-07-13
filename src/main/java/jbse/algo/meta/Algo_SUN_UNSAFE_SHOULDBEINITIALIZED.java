@@ -36,7 +36,7 @@ public final class Algo_SUN_UNSAFE_SHOULDBEINITIALIZED extends Algo_INVOKEMETA_N
             final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject(refParam);
             final ClassFile classFile = clazz.representedClass();
             final Klass k = state.getKlass(classFile);
-            this.shouldBeInitialized = (k == null || !k.isInitialized());
+            this.shouldBeInitialized = (k == null || !k.initializationCompleted());
         } catch (ClassCastException | NullPointerException e) {
             //this should never happen
             failExecution(e);

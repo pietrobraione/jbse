@@ -11,7 +11,8 @@ import jbse.val.KlassPseudoReference;
  * in the static method area, i.e., its static fields.
  */
 public final class KlassImpl extends ObjektImpl implements Klass {
-    private boolean initialized;
+    private boolean initializationStarted;
+    private boolean initializationCompleted;
 
     /**
      * Constructor.
@@ -29,7 +30,8 @@ public final class KlassImpl extends ObjektImpl implements Klass {
      */
     KlassImpl(Calculator calc, boolean symbolic, KlassPseudoReference origin, HistoryPoint epoch, int numOfStaticFields, Signature... fieldSignatures) {
         super(calc, symbolic, null, origin, epoch, true, numOfStaticFields, fieldSignatures);
-        this.initialized = false;
+        this.initializationStarted = false;
+        this.initializationCompleted = false;
     }
 
 	KlassWrapper makeWrapper(StaticMethodArea destinationStaticArea, ClassFile classFile) {
@@ -37,13 +39,24 @@ public final class KlassImpl extends ObjektImpl implements Klass {
 	}
 
     @Override
-    public boolean isInitialized() {
-        return this.initialized;
+    public boolean initializationStarted() {
+        return this.initializationStarted;
     }
 
     @Override
-    public void setInitialized() {
-        this.initialized = true;
+    public boolean initializationCompleted() {
+        return this.initializationCompleted;
+    }
+
+    @Override
+    public void setInitializationStarted() {
+        this.initializationStarted = true;
+    }
+
+    @Override
+    public void setInitializationCompleted() {
+        this.initializationStarted = true;
+        this.initializationCompleted = true;
     }
 
     @Override
