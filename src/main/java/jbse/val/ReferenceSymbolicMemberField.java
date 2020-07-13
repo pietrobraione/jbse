@@ -81,6 +81,11 @@ public final class ReferenceSymbolicMemberField extends ReferenceSymbolicMember 
     public String asOriginString() {
         return this.asOriginString;
     }
+    
+    @Override
+    public void accept(ReferenceVisitor v) throws Exception {
+    	v.visitReferenceSymbolicMemberField(this);
+    }
 
     @Override
     public int hashCode() {

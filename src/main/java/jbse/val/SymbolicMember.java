@@ -25,10 +25,10 @@ public interface SymbolicMember extends SymbolicAtomic {
     }
     
     @Override
-    default boolean hasContainer(Symbolic r) {
-		if (r == null) {
+    default boolean hasContainer(Symbolic s) {
+		if (s == null) {
 			throw new NullPointerException();
 		}
-		return (r.equals(this) || getContainer().hasContainer(r));
+		return (s.equals(this) || getContainer().hasContainer(s));
     }
 }

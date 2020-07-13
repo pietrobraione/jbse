@@ -102,6 +102,11 @@ public final class ReferenceArrayImmaterial extends Reference {
             return null;
         }
     }
+    
+    @Override
+    public void accept(ReferenceVisitor v) throws Exception {
+    	v.visitReferenceArrayImmaterial(this);
+    }
 
     @Override
     public boolean isSymbolic() {

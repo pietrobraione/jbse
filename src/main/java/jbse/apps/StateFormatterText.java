@@ -25,6 +25,7 @@ import jbse.mem.ClauseAssume;
 import jbse.mem.ClauseAssumeClassInitialized;
 import jbse.mem.ClauseAssumeReferenceSymbolic;
 import jbse.mem.Frame;
+import jbse.mem.HeapObjekt;
 import jbse.mem.Instance;
 import jbse.mem.Klass;
 import jbse.mem.Objekt;
@@ -34,17 +35,28 @@ import jbse.mem.State;
 import jbse.mem.Variable;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Any;
+import jbse.val.DefaultValue;
 import jbse.val.Expression;
+import jbse.val.KlassPseudoReference;
 import jbse.val.NarrowingConversion;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.PrimitiveSymbolicAtomic;
+import jbse.val.ReferenceArrayImmaterial;
+import jbse.val.ReferenceConcrete;
 import jbse.val.Primitive;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.ReferenceSymbolicApply;
 import jbse.val.ReferenceSymbolicAtomic;
+import jbse.val.ReferenceSymbolicLocalVariable;
+import jbse.val.ReferenceSymbolicMemberArray;
+import jbse.val.ReferenceSymbolicMemberField;
+import jbse.val.ReferenceSymbolicMemberMapValue;
 import jbse.val.Simplex;
 import jbse.val.Symbolic;
+import jbse.val.Term;
 import jbse.val.Value;
+import jbse.val.ValueVisitor;
 import jbse.val.WideningConversion;
 
 /**
@@ -54,9 +66,10 @@ import jbse.val.WideningConversion;
  * @author Pietro Braione
  */
 public final class StateFormatterText implements Formatter {
-    private final List<Path> srcPath;
+	private final List<Path> srcPath;
     private final boolean fullPrint;
     private StringBuilder output = new StringBuilder();
+
 
     public StateFormatterText(List<Path> srcPath, boolean fullPrint) {
         this.srcPath = new ArrayList<>(srcPath);
@@ -66,7 +79,8 @@ public final class StateFormatterText implements Formatter {
     @Override
     public void formatState(State s) {
         try {
-			formatState(s, this.output, this.srcPath, this.fullPrint, true, "\t", "");
+        	final Set<Long> reachable = (this.fullPrint ? null : new ReachableObjectsCollector().reachable(s, false));
+			formatState(s, this.output, this.srcPath, this.fullPrint, reachable, true, "\t", "");
 		} catch (FrozenStateException e) {
 			this.output.delete(0, this.output.length());
 		}
@@ -82,7 +96,7 @@ public final class StateFormatterText implements Formatter {
         this.output = new StringBuilder();
     }
 
-    private static void formatState(State state, StringBuilder sb, List<Path> srcPath, boolean fullPrint, boolean breakLines, String indentTxt, String indentCurrent) 
+    private static void formatState(State state, StringBuilder sb, List<Path> srcPath, boolean fullPrint, Set<Long> reachable, boolean breakLines, String indentTxt, String indentCurrent) 
     throws FrozenStateException {
         final String lineSep = (breakLines ? LINE_SEP : "");
         sb.append(state.getBranchIdentifier()); sb.append("["); sb.append(state.getSequenceNumber()); sb.append("] "); sb.append(lineSep);
@@ -109,10 +123,8 @@ public final class StateFormatterText implements Formatter {
             }
         }
         sb.append("Path condition: "); formatPathCondition(state, sb, fullPrint, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep);
-        if (fullPrint) {
-            sb.append("Static store: {"); sb.append(lineSep); formatStaticMethodArea(state, sb, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append("}"); sb.append(lineSep);
-        }
-        sb.append("Heap: {"); sb.append(lineSep); formatHeap(state, sb, fullPrint, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append("}"); sb.append(lineSep);
+        sb.append("Static store: {"); sb.append(lineSep); formatStaticMethodArea(state, sb, fullPrint, reachable, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append("}"); sb.append(lineSep);
+        sb.append("Heap: {"); sb.append(lineSep); formatHeap(state, sb, fullPrint, reachable, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append("}"); sb.append(lineSep);
         if (state.getStackSize() > 0) {
             sb.append("Stack: {"); sb.append(lineSep); formatStack(state, sb, srcPath, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append("}");
         }
@@ -272,7 +284,7 @@ public final class StateFormatterText implements Formatter {
     }
 
 
-    private static void formatHeap(State s, StringBuilder sb, boolean fullPrint, boolean breakLines, String indentTxt, String indentCurrent) 
+    private static void formatHeap(State s, StringBuilder sb, boolean fullPrint, Set<Long> reachable, boolean breakLines, String indentTxt, String indentCurrent) 
     throws FrozenStateException {
         final String lineSep = (breakLines ? LINE_SEP : "");
         final Map<Long, Objekt> h = s.getHeap();
@@ -280,7 +292,6 @@ public final class StateFormatterText implements Formatter {
         if (fullPrint) {
             entries = h.entrySet();
         } else {
-            final Set<Long> reachable = new ReachableObjectsCollector().reachable(s, false);
             entries = h.entrySet().stream()
                       .filter(e -> reachable.contains(e.getKey()))
                       .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue(), throwingMerger(), TreeMap::new)).entrySet();
@@ -301,14 +312,208 @@ public final class StateFormatterText implements Formatter {
             j++;
         }
     }
+    
+    private static class ValueClassMentionDetector implements ValueVisitor {
+    	private Map.Entry<ClassFile, Klass> e;
+    	private boolean mentionsClass;
+    	
+    	ValueClassMentionDetector(Map.Entry<ClassFile, Klass> e) {
+    		this.e = e;
+    	}
+    	
+    	boolean mentionsClass() {
+    		return this.mentionsClass;
+    	}
 
-    private static void formatStaticMethodArea(State state, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent) 
+    	@Override
+    	public void visitAny(Any x) {
+    		this.mentionsClass = false;
+    	}
+
+    	@Override
+    	public void visitExpression(Expression e) {
+    		try {
+    			if (e.isUnary()) {
+    				e.getOperand().accept(this);
+    			} else {
+    				e.getFirstOperand().accept(this);
+    				if (!this.mentionsClass) {
+    					e.getSecondOperand().accept(this);
+    				}
+    			}
+    		} catch (RuntimeException exc) {
+    			throw exc;
+    		} catch (Exception exc) {
+    			//cannot happen;
+    		}
+    	}
+
+    	@Override
+    	public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) {
+    		try {
+    			for (Value v : x.getArgs()) {
+    				v.accept(this);
+    				if (this.mentionsClass) {
+    					return;
+    				}
+    			}
+    		} catch (RuntimeException exc) {
+    			throw exc;
+    		} catch (Exception exc) {
+    			//cannot happen;
+    		}
+    	}
+
+    	@Override
+    	public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) {
+    		// TODO Auto-generated method stub
+    		
+    	}
+
+    	@Override
+    	public void visitSimplex(Simplex x) {
+    		this.mentionsClass = false;
+    	}
+
+    	@Override
+    	public void visitTerm(Term x) throws Exception {
+    		this.mentionsClass = false;
+    	}
+
+    	@Override
+    	public void visitNarrowingConversion(NarrowingConversion x) {
+    		try {
+    			x.getArg().accept(this);
+    		} catch (RuntimeException exc) {
+    			throw exc;
+    		} catch (Exception exc) {
+    			//cannot happen;
+    		}
+    	}
+
+    	@Override
+    	public void visitWideningConversion(WideningConversion x) {
+    		try {
+    			x.getArg().accept(this);
+    		} catch (RuntimeException exc) {
+    			throw exc;
+    		} catch (Exception exc) {
+    			//cannot happen;
+    		}
+    	}
+
+    	@Override
+    	public void visitReferenceArrayImmaterial(ReferenceArrayImmaterial x) {
+    		//the class of the immaterial reference is not displayed, but we
+    		//save it nevertheless
+    		this.mentionsClass = (x.getArrayType().equals(this.e.getKey())); 
+    	}
+
+    	@Override
+    	public void visitReferenceConcrete(ReferenceConcrete x) {
+    		this.mentionsClass = false;
+    	}
+
+    	@Override
+    	public void visitKlassPseudoReference(KlassPseudoReference x) {
+    		this.mentionsClass = (x.getClassFile().equals(this.e.getKey())); 
+    	}
+
+    	@Override
+    	public void visitReferenceSymbolicApply(ReferenceSymbolicApply x) {
+    		try {
+    			for (Value v : x.getArgs()) {
+    				v.accept(this);
+    				if (this.mentionsClass) {
+    					return;
+    				}
+    			}
+    		} catch (RuntimeException exc) {
+    			throw exc;
+    		} catch (Exception exc) {
+    			//cannot happen;
+    		}
+    	}
+
+    	@Override
+    	public void visitReferenceSymbolicLocalVariable(ReferenceSymbolicLocalVariable x) {
+    		this.mentionsClass = false;
+    	}
+
+    	@Override
+    	public void visitReferenceSymbolicMemberArray(ReferenceSymbolicMemberArray x) {
+    		try {
+    			x.getContainer().accept(this);
+    		} catch (RuntimeException exc) {
+    			throw exc;
+    		} catch (Exception exc) {
+    			//cannot happen;
+    		}
+    	}
+
+    	@Override
+    	public void visitReferenceSymbolicMemberField(ReferenceSymbolicMemberField x) {
+    		try {
+    			x.getContainer().accept(this);
+    		} catch (RuntimeException exc) {
+    			throw exc;
+    		} catch (Exception exc) {
+    			//cannot happen;
+    		}
+    	}
+
+    	@Override
+    	public void visitReferenceSymbolicMemberMapValue(ReferenceSymbolicMemberMapValue x) {
+    		try {
+    			x.getContainer().accept(this);
+    		} catch (RuntimeException exc) {
+    			throw exc;
+    		} catch (Exception exc) {
+    			//cannot happen;
+    		}
+    	}
+
+    	@Override
+    	public void visitDefaultValue(DefaultValue x) {
+    		this.mentionsClass = false;
+    	}            	        				  
+    }
+
+    private static void formatStaticMethodArea(State state, StringBuilder sb, boolean fullPrint, Set<Long> reachable, boolean breakLines, String indentTxt, String indentCurrent) 
     throws FrozenStateException {
         final String lineSep = (breakLines ? LINE_SEP : "");
         final Map<ClassFile, Klass> a = state.getStaticMethodArea();
+        final Set<Map.Entry<ClassFile, Klass>> entries;
+        if (fullPrint) {
+            entries = a.entrySet();
+        } else {
+        	entries = a.entrySet().stream()
+        	          .filter(e -> {
+        	        	  try {
+        	        		  for (long pos : reachable) {
+        	        			  final HeapObjekt ho = state.getObject(new ReferenceConcrete(pos));
+        	        			  if (ho.getType().equals(e.getKey())) {
+        	        				  return true;
+        	        			  }
+        	        			  for (Variable var : ho.fields().values()) {
+        	        				  final ValueClassMentionDetector v = new ValueClassMentionDetector(e);
+        	        				  var.getValue().accept(v);
+        	        				  if (v.mentionsClass()) {
+        	        					  return true;
+        	        				  }
+        	        			  }
+        	        		  }
+        	        	  } catch (RuntimeException exc) {
+        	        		  throw exc;
+        	        	  } catch (Exception exc) {
+        	        		  throw new RuntimeException(exc);
+        	        	  }
+        	        	  return false;
+        	          }).collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue(), throwingMerger(), TreeMap::new)).entrySet();
+        }
         sb.append(indentCurrent);
         boolean doneFirst = false;
-        for (Map.Entry<ClassFile, Klass> ee : a.entrySet()) {
+        for (Map.Entry<ClassFile, Klass> ee : entries) {
             final Klass k = ee.getValue();
             if (k.getStoredFieldSignatures().size() > 0) { //only klasses with fields will be printed
                 if (doneFirst) {

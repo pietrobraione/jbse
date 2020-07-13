@@ -21,6 +21,12 @@ public abstract class Primitive extends Value implements Cloneable {
         }
     }
 
+    @Override   
+    public final void accept(ValueVisitor v) throws Exception {
+    	final PrimitiveVisitor pv = (PrimitiveVisitor) v;
+    	accept(pv);
+    }
+
     /**
      * Accepts a {@link PrimitiveVisitor}.
      * 

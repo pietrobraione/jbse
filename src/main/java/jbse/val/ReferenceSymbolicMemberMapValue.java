@@ -82,6 +82,11 @@ public final class ReferenceSymbolicMemberMapValue extends ReferenceSymbolicMemb
     }
     
     @Override
+    public void accept(ReferenceVisitor v) throws Exception {
+    	v.visitReferenceSymbolicMemberMapValue(this);
+    }
+    
+    @Override
     public int hashCode() {
     	return this.hashCode;
     }

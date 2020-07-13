@@ -74,6 +74,11 @@ public final class ReferenceSymbolicLocalVariable extends ReferenceSymbolicAtomi
 		}
 		return equals(s);
     }
+    
+    @Override
+    public void accept(ReferenceVisitor v) throws Exception {
+    	v.visitReferenceSymbolicLocalVariable(this);
+    }
 
     @Override
 	public int hashCode() {

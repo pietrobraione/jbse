@@ -21,13 +21,13 @@ public final class DefaultValue extends Value {
     }
 
     @Override
-    public boolean equals(Object o) {
-        return (o == instance);
+    public boolean isSymbolic() {
+        return true;
     }
-
+    
     @Override
-    public int hashCode() {
-        return toString().hashCode();
+    public void accept(ValueVisitor v) throws Exception {
+    	v.visitDefaultValue(this);
     }
 
     @Override
@@ -36,7 +36,13 @@ public final class DefaultValue extends Value {
     }
 
     @Override
-    public boolean isSymbolic() {
-        return true;
+    public boolean equals(Object o) {
+        return (o == instance);
+    }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
     }
 }
+

@@ -5,7 +5,6 @@ import static jbse.val.HistoryPoint.unknown;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
-import jbse.val.PrimitiveSymbolic;
 import jbse.val.exc.InvalidTypeException;
 
 /**

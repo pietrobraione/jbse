@@ -63,6 +63,11 @@ public final class ReferenceSymbolicMemberArray extends ReferenceSymbolicMember 
     public String asOriginString() {
         return this.asOriginString;
     }
+    
+    @Override
+    public void accept(ReferenceVisitor v) throws Exception {
+    	v.visitReferenceSymbolicMemberArray(this);
+    }
 
 	@Override
 	public int hashCode() {

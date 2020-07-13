@@ -4,7 +4,8 @@ import jbse.common.exc.InvalidInputException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Class that represent a symbolic value. 
+ * Abstract base class for all {@link Primitive} {@link Symbolic} values
+ * (except terms). 
  */
 public abstract class PrimitiveSymbolic extends Primitive implements Symbolic {
     /** The creation history point of this symbol. */

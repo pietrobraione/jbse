@@ -1,6 +1,10 @@
 package jbse.val;
 
-
+/**
+ * A Visitor for {@link Primitive} values.
+ * 
+ * @author Pietro Braione
+ */
 public interface PrimitiveVisitor {
 	void visitAny(Any x) throws Exception;
 	void visitExpression(Expression e) throws Exception;

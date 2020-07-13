@@ -3,7 +3,7 @@ package jbse.val;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * An arbitrary {@link Primitive} value, on which 
+ * An arbitrary {@link Symbolic} {@link Primitive} value, on which 
  * assumptions can be made. Terms serve essentially two purposes: They
  * are used to represent internal or bound variables, which are not 
  * meant to be used externally but rather replaced by some other

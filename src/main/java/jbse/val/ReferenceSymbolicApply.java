@@ -146,6 +146,11 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 		}
 		return equals(s);
 	}
+    
+    @Override
+    public void accept(ReferenceVisitor v) throws Exception {
+    	v.visitReferenceSymbolicApply(this);
+    }
 	
 	@Override
 	public String toString() {

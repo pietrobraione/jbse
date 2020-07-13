@@ -47,11 +47,11 @@ public interface Symbolic {
      * Checks whether another {@link Symbolic} is a 
      * container for this {@link Symbolic}.
      * 
-     * @param r a {@link Symbolic}. It must not be {@code null}.
+     * @param s a {@link Symbolic}. It must not be {@code null}.
      * @return {@code true} iff {@code s} (recursively) is a container
      *         for this {@link Symbolic}. Note that 
-     *         {@code s.isContainer(s) == true}.
-     * @throws NullPointerException if {@code r == null}. 
+     *         {@code s.hasContainer(s) == true}.
+     * @throws NullPointerException if {@code s == null}. 
      */
     boolean hasContainer(Symbolic s);
 }

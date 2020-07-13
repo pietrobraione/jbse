@@ -33,7 +33,7 @@ public class ReferenceConcrete extends Reference {
      * 
      * @return {@code true} iff {@code this} denotes {@code null}.
      */
-    public boolean isNull() {
+    public final boolean isNull() {
         return (this.pos == Util.POS_NULL);
     }
 
@@ -42,12 +42,17 @@ public class ReferenceConcrete extends Reference {
      * 
      * @return a {@code long}, the heap position.
      */
-    public long getHeapPosition() {
+    public final long getHeapPosition() {
         return this.pos;
+    }
+    
+    @Override
+    public final void accept(ReferenceVisitor v) throws Exception {
+    	v.visitReferenceConcrete(this);
     }
 
     @Override
-    public boolean isSymbolic() {
+    public final boolean isSymbolic() {
         return false;
     }
 
@@ -72,7 +77,7 @@ public class ReferenceConcrete extends Reference {
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return (int) this.pos;
     }
 }

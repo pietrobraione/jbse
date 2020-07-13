@@ -51,6 +51,11 @@ public final class KlassPseudoReference extends ReferenceSymbolic {
     }
     
     @Override
+    public void accept(ReferenceVisitor v) throws Exception {
+    	v.visitKlassPseudoReference(this);
+    }
+    
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
