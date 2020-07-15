@@ -1828,11 +1828,9 @@ public final class State implements Cloneable {
      *        not for its superclasses in the hierarchy.
      * @throws FrozenStateException if the state is frozen.
      * @throws InvalidInputException if {@code calc == null || classFile == null}.
-     * @throws InvalidIndexException if the access to the class 
-     *         constant pool fails.
      */
     public void ensureKlassSymbolic(Calculator calc, ClassFile classFile) 
-    throws FrozenStateException, InvalidInputException, InvalidIndexException {
+    throws FrozenStateException, InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
@@ -1852,6 +1850,7 @@ public final class State implements Cloneable {
         	throw new UnexpectedInternalException(e);
         }
         k.setIdentityHashCode(calc.valInt(0)); //doesn't care because it is not used
+        k.setInitializationCompleted(); //nothing else to do
         this.staticMethodArea.set(classFile, k);
     }
 

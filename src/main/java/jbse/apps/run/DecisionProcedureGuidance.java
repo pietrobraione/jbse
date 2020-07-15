@@ -27,6 +27,7 @@ import jbse.jvm.RunnerParameters;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssumeClassInitialized;
 import jbse.mem.ClauseAssumeExpands;
+import jbse.mem.Klass;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
 import jbse.mem.State.Phase;
@@ -314,7 +315,9 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             state.getClassHierarchy().addToExpansionBackdoor(refType, objType);
             try {
                 final ClassFile cf = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, objType, true);
-                super.pushAssumption(new ClauseAssumeClassInitialized(cf, null));
+                state.ensureKlassSymbolic(this.calc, cf);
+                final Klass k = state.getKlass(cf);
+                super.pushAssumption(new ClauseAssumeClassInitialized(cf, k));
             } catch (DecisionException | ClassFileNotFoundException | ClassFileIllFormedException | 
                      ClassFileNotAccessibleException | IncompatibleClassFileException | 
                      BadClassFileVersionException | WrongClassNameException e) {

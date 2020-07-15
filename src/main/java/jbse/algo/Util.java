@@ -1008,87 +1008,80 @@ public final class Util {
             //created Klasses
             this.classesForPhase2.add(classFile);
             
-            try {
-                //decides whether the class is assumed pre-initialized and whether
-                //a symbolic or concrete Klass object should be created
-                //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. Withdraw this assumption and branch.
-                final ClassHierarchy hier = this.s.getClassHierarchy();
-                final boolean klassAlreadyExists = this.s.existsKlass(classFile);
-                final boolean symbolicKlass;
-                boolean assumeInitialized = false; //bogus initialization to keep the compiler happy
-                //invariant: symbolicKlass implies assumeInitialized
-                if (klassAlreadyExists) {
-                	symbolicKlass = this.s.getKlass(classFile).isSymbolic();
-                	//search assumeInitialized in the path condition - if there is a 
-                	//Klass in the state there must also be a path condition clause
-                	boolean found = false;
-                	for (Clause c : this.s.getPathCondition()) {
-                		if (c instanceof ClauseAssumeClassInitialized) {
-                			if (((ClauseAssumeClassInitialized) c).getClassFile().equals(classFile)) {
-                				found = true;
-                				assumeInitialized = true;
-                			}
-                		} else if (c instanceof ClauseAssumeClassNotInitialized) {
-                			if (((ClauseAssumeClassNotInitialized) c).getClassFile().equals(classFile)) {
-                				found = true;
-                				assumeInitialized = false;
-                			}
-                		}
-                	}
-                	if (!found) {
-                		throw new UnexpectedInternalException("Ill-formed state: Klass present in the static store but ClassFile not present in the path condition.");
-                	}
-                } else {
-                	if (this.s.phase() == Phase.PRE_INITIAL) {
-                		symbolicKlass = false; //...and they are also assumed to be pure (or unmodified since their initialization)
-                		assumeInitialized = true; //all pre-initial class are assumed to be pre-initialized...
-                	} else if (this.ctx.decisionProcedure.isSatInitialized(classFile)) { 
-                		final boolean shallRunStaticInitializer = classFile.isPure() || this.ctx.classHasAPureInitializer(hier, classFile) || this.ctx.classInvariantAfterInitialization(classFile);
-                		symbolicKlass = !shallRunStaticInitializer;
-                		assumeInitialized = true;
-                	} else {
-                		symbolicKlass = false;
-                		assumeInitialized = false;
-                	}
-                }
-                
-                //creates the Klass object
-                if (symbolicKlass) {
-                    //creates a symbolic Klass
-                    this.s.ensureKlassSymbolic(this.ctx.getCalculator(), classFile);
-                    this.s.getKlass(classFile).setInitializationCompleted(); //nothing else to do
-                } else {
-                    //creates a concrete Klass and schedules it for phase 3
-                    this.s.ensureKlass(this.ctx.getCalculator(), classFile);
-                    if (JAVA_OBJECT.equals(classFile.getClassName())) {
-                        this.pushClinitFor_JAVA_OBJECT = true;
-                    } else {
-                        this.classesForPhase3.add(classFile);
+            //decides whether the class is assumed pre-initialized and whether
+            //a symbolic or concrete Klass object should be created
+            //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. Withdraw this assumption and branch.
+            final ClassHierarchy hier = this.s.getClassHierarchy();
+            final boolean klassAlreadyExists = this.s.existsKlass(classFile);
+            final boolean symbolicKlass;
+            boolean assumeInitialized = false; //bogus initialization to keep the compiler happy
+            //invariant: symbolicKlass implies assumeInitialized
+            if (klassAlreadyExists) {
+                symbolicKlass = this.s.getKlass(classFile).isSymbolic();
+                //search assumeInitialized in the path condition - if there is a 
+                //Klass in the state there must also be a path condition clause
+                boolean found = false;
+                for (Clause c : this.s.getPathCondition()) {
+                    if (c instanceof ClauseAssumeClassInitialized) {
+                        if (((ClauseAssumeClassInitialized) c).getClassFile().equals(classFile)) {
+                            found = true;
+                            assumeInitialized = true;
+                        }
+                    } else if (c instanceof ClauseAssumeClassNotInitialized) {
+                        if (((ClauseAssumeClassNotInitialized) c).getClassFile().equals(classFile)) {
+                            found = true;
+                            assumeInitialized = false;
+                        }
                     }
                 }
-                
-                //pushes the assumption
-                if (!klassAlreadyExists) { //if klassAlreadyExists, the clause is already present
-                	if (assumeInitialized) { 
-                		final Klass k = this.s.getKlass(classFile);
-                		this.s.assumeClassInitialized(classFile, k);
-                	} else {
-                		this.s.assumeClassNotInitialized(classFile);
-                	}
+                if (!found) {
+                    throw new UnexpectedInternalException("Ill-formed state: Klass present in the static store but ClassFile not present in the path condition.");
                 }
+            } else {
+                if (this.s.phase() == Phase.PRE_INITIAL) {
+                    symbolicKlass = false; //...and they are also assumed to be pure (or unmodified since their initialization)
+                    assumeInitialized = true; //all pre-initial class are assumed to be pre-initialized...
+                } else if (this.ctx.decisionProcedure.isSatInitialized(classFile)) { 
+                    final boolean shallRunStaticInitializer = classFile.isPure() || this.ctx.classHasAPureInitializer(hier, classFile) || this.ctx.classInvariantAfterInitialization(classFile);
+                    symbolicKlass = !shallRunStaticInitializer;
+                    assumeInitialized = true;
+                } else {
+                    symbolicKlass = false;
+                    assumeInitialized = false;
+                }
+            }
 
-                //if the created Klass is concrete but 
-                //the class is assumed to be pre-initialized, 
-                //schedules the Klass to become symbolic (if
-                //the corresponding flag is active)
-                if (!symbolicKlass && assumeInitialized && this.makePreInitClassesSymbolic
-                    && !JBSE_BASE.equals(classFile.getClassName()) /* HACK */) {
-                    this.preInitializedClasses.add(classFile);
+            //creates the Klass object
+            if (symbolicKlass) {
+                //creates a symbolic Klass
+                this.s.ensureKlassSymbolic(this.ctx.getCalculator(), classFile);
+            } else {
+                //creates a concrete Klass and schedules it for phase 3
+                this.s.ensureKlass(this.ctx.getCalculator(), classFile);
+                if (JAVA_OBJECT.equals(classFile.getClassName())) {
+                    this.pushClinitFor_JAVA_OBJECT = true;
+                } else {
+                    this.classesForPhase3.add(classFile);
                 }
-            } catch (InvalidIndexException e) {
-                this.failed = true;
-                this.failure = VERIFY_ERROR;
-                return;
+            }
+
+            //pushes the assumption
+            if (!klassAlreadyExists) { //if klassAlreadyExists, the clause is already present
+                if (assumeInitialized) { 
+                    final Klass k = this.s.getKlass(classFile);
+                    this.s.assumeClassInitialized(classFile, k);
+                } else {
+                    this.s.assumeClassNotInitialized(classFile);
+                }
+            }
+
+            //if the created Klass is concrete but 
+            //the class is assumed to be pre-initialized, 
+            //schedules the Klass to become symbolic (if
+            //the corresponding flag is active)
+            if (!symbolicKlass && assumeInitialized && this.makePreInitClassesSymbolic
+            && !JBSE_BASE.equals(classFile.getClassName()) /* HACK */) {
+                this.preInitializedClasses.add(classFile);
             }
 
             //if classFile denotes a class rather than an interface
