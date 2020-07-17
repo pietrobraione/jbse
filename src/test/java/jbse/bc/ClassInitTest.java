@@ -15,7 +15,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 
 import org.junit.Before;
@@ -64,7 +63,7 @@ public class ClassInitTest {
         final CalculatorRewriting calc = new CalculatorRewriting();
         calc.addRewriter(new RewriterOperationOnSimplex());
         final DecisionProcedureAlgorithms dec = new DecisionProcedureAlgorithms(new DecisionProcedureClassInit(new DecisionProcedureAlwSat(calc), new ClassInitRulesRepo()));
-        this.ctx = new ExecutionContext(null, true, 20, 20, true, cp, ClassFileFactoryJavassist.class, Collections.emptyMap(), Collections.emptyMap(), calc, new DecisionAlternativeComparators(), new Signature("hier/A", "()V", "a"), dec, null, null, new TriggerRulesRepo(), new HashSet<String>());
+        this.ctx = new ExecutionContext(null, true, 20, 20, true, cp, ClassFileFactoryJavassist.class, Collections.emptyMap(), Collections.emptyMap(), calc, new DecisionAlternativeComparators(), new Signature("hier/A", "()V", "a"), dec, null, null, new TriggerRulesRepo(), new ArrayList<String>());
         this.state = this.ctx.createStateVirginPreInitial();
         this.state.getClassHierarchy().loadCreateClass(CLASSLOADER_BOOT, JAVA_CLONEABLE, true); //necessary when creating string literals
         this.state.getClassHierarchy().loadCreateClass(CLASSLOADER_BOOT, JAVA_SERIALIZABLE, true); //necessary when creating string literals

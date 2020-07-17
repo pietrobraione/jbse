@@ -396,9 +396,10 @@ import static jbse.bc.Signatures.noclass_REGISTERMETHODTYPE;
 import static jbse.bc.Signatures.noclass_SETSTANDARDCLASSLOADERSREADY;
 import static jbse.bc.Signatures.noclass_STORELINKEDMETHODANDAPPENDIX;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -503,7 +504,7 @@ public final class ExecutionContext {
     public final TriggerManager triggerManager;
     
     /** The classes that did not change their state after initialization. */
-    private final HashSet<String> postInitInvariantClasses;
+    private final ArrayList<String> postInitInvariantClasses;
 
     /** The {@link DispatcherBytecodeAlgorithm}. */
     public final DispatcherBytecodeAlgorithm dispatcher = new DispatcherBytecodeAlgorithm();
@@ -578,7 +579,7 @@ public final class ExecutionContext {
                             StateIdentificationMode stateIdentificationMode,
                             BreadthMode breadthMode,
                             TriggerRulesRepo rulesTrigger, 
-                            Set<String> postInitInvariantClasses) {
+                            List<String> postInitInvariantClasses) {
         this.stateStart = stateStart;
         this.bypassStandardLoading = bypassStandardLoading;
         this.maxSimpleArrayLength = maxSimpleArrayLength;
@@ -595,7 +596,7 @@ public final class ExecutionContext {
         this.symbolFactory = new SymbolFactory();
         this.stateTree = new StateTree(stateIdentificationMode, breadthMode);
         this.triggerManager = new TriggerManager(rulesTrigger.clone()); //safety copy
-        this.postInitInvariantClasses = new HashSet<>(postInitInvariantClasses); //safety copy
+        this.postInitInvariantClasses = new ArrayList<>(postInitInvariantClasses); //safety copy
         addBasicPostInitInvariantClasses();
 
         //defaults
@@ -1067,10 +1068,15 @@ public final class ExecutionContext {
     
     public boolean classInvariantAfterInitialization(ClassFile classFile) throws InvalidInputException {
     	if (classFile == null) {
-    		throw new InvalidInputException("Invoked " + getClass().getName() + ".classInvariantAfterInitialization with a null classFile parameter.");
+    	    throw new InvalidInputException("Invoked " + getClass().getName() + ".classInvariantAfterInitialization with a null classFile parameter.");
     	}
         final String className = classFile.getClassName();
-        return this.postInitInvariantClasses.contains(className);
+        for (String pattern : this.postInitInvariantClasses) {
+            if (className.matches(pattern)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public <R extends DecisionAlternative> 

@@ -211,7 +211,12 @@ public final class EngineParameters implements Cloneable {
     /** The {@link TriggerRulesRepo}, containing all the trigger rules. */
     private TriggerRulesRepo triggerRulesRepo = new TriggerRulesRepo();
     
-    private HashSet<String> postInitInvariantClasses = new HashSet<>();
+    /** 
+     * The patterns of the class names whose states did not change 
+     * after their class initialization, up to the beginning of 
+     * symbolic execution. 
+     */
+    private ArrayList<String> postInitInvariantClasses = new ArrayList<>();
 
     /** The expansion backdoor. */
     private HashMap<String, Set<String>> expansionBackdoor = new HashMap<>();
@@ -681,30 +686,30 @@ public final class EngineParameters implements Cloneable {
     }
     
     /**
-     * Adds the name of a class whose state did not change
-     * after its class initialization, up to the beginning 
-     * of symbolic execution. Upon its first access its 
-     * class initializer will be executed.
+     * Adds a regular expression pattern of class names whose 
+     * state did not change after their class initialization, 
+     * up to the beginning of symbolic execution. Upon their 
+     * first access their class initializers will be executed.
      *  
-     * @param className a {@link String}. The {@code null} 
+     * @param classPattern a {@link String}. The {@code null} 
      *        value will be ignored.
      */
-    public void addClassInvariantAfterInitialization(String className) {
-    	if (className == null) {
+    public void addClassInvariantAfterInitializationPattern(String classPattern) {
+    	if (classPattern == null) {
     		return;
     	}
-    	this.postInitInvariantClasses.add(className);
+    	this.postInitInvariantClasses.add(classPattern);
     }
     
     /**
-     * Returns the set of the name of the classes whose state 
-     * did not change after its class initialization, up to 
-     * the beginning of symbolic execution.
+     * Returns the list of the patterns of class names whose 
+     * states did not change after their class initialization, 
+     * up to the beginning of symbolic execution.
      *  
-     * @return a {@link Set}{@code <}{@link String}{@code >}.
+     * @return a {@link List}{@code <}{@link String}{@code >}.
      */
-    public Set<String> getClassInvariantAfterInitialization() {
-    	return new HashSet<>(this.postInitInvariantClasses);
+    public List<String> getClassInvariantAfterInitialization() {
+    	return new ArrayList<>(this.postInitInvariantClasses);
     }
 
     /**

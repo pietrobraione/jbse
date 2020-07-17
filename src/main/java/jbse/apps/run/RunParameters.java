@@ -780,16 +780,16 @@ public final class RunParameters implements Cloneable {
     }
     
     /**
-     * Adds the name of a class whose state did not change
-     * after its class initialization, up to the beginning 
-     * of symbolic execution. Upon its first access its 
-     * class initializer will be executed.
+     * Adds a regular expression pattern of class names whose 
+     * state did not change after their class initialization, 
+     * up to the beginning of symbolic execution. Upon their 
+     * first access their class initializers will be executed.
      *  
-     * @param className a {@link String}. The {@code null} 
+     * @param classPattern a {@link String}. The {@code null} 
      *        value will be ignored.
      */
-    public void addClassInvariantAfterInitialization(String className) {
-    	this.runnerParameters.addClassInvariantAfterInitialization(className);
+    public void addClassInvariantAfterInitializationPattern(String classPattern) {
+    	this.runnerParameters.addClassInvariantAfterInitializationPattern(classPattern);
     }
  
     /**
