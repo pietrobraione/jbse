@@ -3705,7 +3705,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        //TODO this method doesn't work with arrays!!!
+        //TODO this method doesn't work with arrays and maps!!!
         final HistoryPoint refiningHistoryPoint = stateRefining.historyPoint;
         final PathCondition refiningPathCondition = stateRefining.pathCondition;
 
