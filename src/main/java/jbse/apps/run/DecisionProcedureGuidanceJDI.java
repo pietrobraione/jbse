@@ -158,12 +158,12 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		private Map<String, Integer> symbolicApplyOperatorOccurrences = new HashMap<>();		
 		
 		public JVMJDI(Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits) 
-				throws GuidanceException {
+		throws GuidanceException {
 			super(calc, runnerParameters, stopSignature, numberOfHits);
 			this.runnerParameters = runnerParameters;
 			this.stopSignature = stopSignature;
 			this.stopSignatureNumberOfHits = numberOfHits;
-			this.vm = createVM(runnerParameters);
+			this.vm = createVM();
 			this.goToBreakpoint(stopSignature, 0, numberOfHits);
 			try 	{
 				this.numOfFramesAtMethodEntry = getCurrentThread().frameCount();
@@ -234,16 +234,16 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		}
 
 
-		private VirtualMachine createVM(RunnerParameters runnerParameters) 
+		private VirtualMachine createVM() 
 				throws GuidanceException {
 			try {
-				final Iterable<Path> classPath = runnerParameters.getClasspath().classPath();
+				final Iterable<Path> classPath = this.runnerParameters.getClasspath().classPath();
 				final ArrayList<String> listClassPath = new ArrayList<>();
 				classPath.forEach(p -> listClassPath.add(p.toString()));
 				final String stringClassPath = String.join(File.pathSeparator, listClassPath.toArray(new String[0]));
 				final String mainClass = DecisionProcedureGuidanceJDILauncher.class.getName();
-				final String targetClass = binaryClassName(runnerParameters.getMethodSignature().getClassName());
-				final String startMethodName = runnerParameters.getMethodSignature().getName();
+				final String targetClass = binaryClassName(this.runnerParameters.getMethodSignature().getClassName());
+				final String startMethodName = this.runnerParameters.getMethodSignature().getName();
 				return launchTarget("-classpath \"" + stringClassPath + "\" " + mainClass + " " + targetClass + " " + startMethodName);
 			} catch (IOException e) {
 				throw new GuidanceException(e);
@@ -548,20 +548,20 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			 * However, this can become expensive if there are many invocations of ReferenceSymbolicApply 
 			 * uninterpreted functions. 			  
 			 */
-			String op = symbolicApply.getOperator();
-			int numberOfHits;
-			if (!symbolicApplyOperatorOccurrences.containsKey(op)) {
-				numberOfHits = 1;
+			final String op = symbolicApply.getOperator();
+			final int numberOfHits;
+			if (this.symbolicApplyOperatorOccurrences.containsKey(op)) {
+                            numberOfHits = this.symbolicApplyOperatorOccurrences.get(op) + 1;
 			} else {
-				numberOfHits = symbolicApplyOperatorOccurrences.get(op) + 1;
+                            numberOfHits = 1;
 			}
-			symbolicApplyOperatorOccurrences.put(op, numberOfHits);
-			SymbolicApplyJVMJDI symbolicApplyVm = new SymbolicApplyJVMJDI(calc, runnerParameters, stopSignature, stopSignatureNumberOfHits, symbolicApply, numberOfHits);
+			this.symbolicApplyOperatorOccurrences.put(op, numberOfHits);
+			final SymbolicApplyJVMJDI symbolicApplyVm = new SymbolicApplyJVMJDI(this.calc, this.runnerParameters, this.stopSignature, this.stopSignatureNumberOfHits, symbolicApply, numberOfHits);
 			return symbolicApplyVm;
 		}
 
 		private com.sun.jdi.Value getJDIValueLocalVariable(String var) 
-				throws GuidanceException, IncompatibleThreadStateException, AbsentInformationException {
+		throws GuidanceException, IncompatibleThreadStateException, AbsentInformationException {
 			final com.sun.jdi.Value val;
 			if ("this".equals(var)) {
 				val = rootFrameConcrete().thisObject();
@@ -576,7 +576,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		}
 
 		private com.sun.jdi.ReferenceType getJDIObjectStatic(String className) 
-				throws GuidanceException, IncompatibleThreadStateException, AbsentInformationException {
+		throws GuidanceException, IncompatibleThreadStateException, AbsentInformationException {
 			final List<ReferenceType> classes = this.vm.classesByName(className);
 			if (classes.size() == 1) {
 				return classes.get(0);
@@ -586,7 +586,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		}
 
 		private com.sun.jdi.Value getJDIValueField(SymbolicMemberField origin, Object o) 
-				throws GuidanceException {
+		throws GuidanceException {
 			final String fieldName = origin.getFieldName();
 			if (o instanceof com.sun.jdi.ReferenceType) {
 				//the field is static
@@ -710,7 +710,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		private final BreakpointRequest targetMethodExitedBreakpoint;
 
 		public SymbolicApplyJVMJDI(Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits, SymbolicApply symbolicApply, int symbolicApplyNumberOfHits) 
-				throws GuidanceException {
+		throws GuidanceException {
 			super(calc, runnerParameters, stopSignature, numberOfHits);			
 
 			/* We set up a control breakpoint to check if, at any next step, JDI erroneously returns from the method under analysis */
@@ -740,7 +740,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
 		@Override
 		protected boolean handleBreakpointEvents(Event event, int numberOfHits) throws GuidanceException {
-			if (event.request().equals(targetMethodExitedBreakpoint)) {
+			if (event.request().equals(this.targetMethodExitedBreakpoint)) {
 				try { //Did we exited from target method? Should not happen 
 					if (numFramesFromRootFrameConcrete() < 0) {
 						throw new UnexpectedInternalException("Exited from target method, while looking for breakpoint");
@@ -753,7 +753,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		}
 		
 		private void eval_INVOKEX(SymbolicApply symbolicApply, int numberOfHits) throws GuidanceException {
-			String operator = symbolicApply.getOperator();
+			final String operator = symbolicApply.getOperator();
 			goToBreakpoint(signatureOf(operator), 0, numberOfHits);
 			
 			//steps and decides
@@ -761,12 +761,12 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		}
 
 		private static Signature signatureOf(String unintFuncOperator) {
-			String[] parts = unintFuncOperator.split(":");
+			final String[] parts = unintFuncOperator.split(":");
 			return new Signature(parts[0], parts[1], parts[2]);
 		}
 
 		private Value stepUpToMethodExit() throws GuidanceException {
-			int currFrames;
+			final int currFrames;
 			try {
 				currFrames = getCurrentThread().frameCount();
 			} catch (IncompatibleThreadStateException e) {
@@ -788,7 +788,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 					final EventSet eventSet = queue.remove();
 					final EventIterator it = eventSet.eventIterator();
 					while (!exitFound && it.hasNext()) {
-						Event event = it.nextEvent();
+						final Event event = it.nextEvent();
 
 						if (event instanceof MethodExitEvent) {
 							mthdExitEvent = (MethodExitEvent) event;
