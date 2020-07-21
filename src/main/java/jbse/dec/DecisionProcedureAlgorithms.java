@@ -74,6 +74,8 @@ import jbse.val.ReferenceSymbolic;
 import jbse.val.ReferenceSymbolicApply;
 import jbse.val.ReferenceSymbolicAtomic;
 import jbse.val.ReferenceSymbolicMember;
+import jbse.val.ReferenceSymbolicMemberArray;
+import jbse.val.ReferenceSymbolicMemberMapValue;
 import jbse.val.Simplex;
 import jbse.val.Term;
 import jbse.val.Value;
@@ -1241,7 +1243,15 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
         	//gets the container reference, where the type parameter is 
         	//instantiated, and its class, where the type parameter is declared
         	final ReferenceSymbolicMember refMember = (ReferenceSymbolicMember) ref;
-    		final ReferenceSymbolic containerRef = refMember.getContainer(); //TODO does it work correctly for MemberArrays, MemberKeys and MemberValues?
+    		final ReferenceSymbolic containerRef;
+    		{
+    			final ReferenceSymbolic containerRefPre = refMember.getContainer();
+    			if (containerRefPre instanceof ReferenceSymbolicMemberArray || containerRefPre instanceof ReferenceSymbolicMemberMapValue) {
+    				containerRef = ((ReferenceSymbolicMember) containerRefPre).getContainer();
+    			} else {
+    				containerRef = containerRefPre;
+    			}
+    		}
         	final ClassFile containerRefClass;
     		try {
     			containerRefClass = hier.loadCreateClass(CLASSLOADER_APP, className(containerRef.getStaticType()), true);
