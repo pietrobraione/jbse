@@ -337,6 +337,11 @@ public final class Signatures {
                       "findMethodHandleType");
     public static final Signature JAVA_METHODHANDLENATIVES_GETCONSTANT =
         new Signature(JAVA_METHODHANDLENATIVES, "(" + INT + ")" + INT, "getConstant");
+    public static final Signature JAVA_METHODHANDLENATIVES_GETMEMBERS =
+        new Signature(JAVA_METHODHANDLENATIVES, 
+        		      "(" + REFERENCE + JAVA_CLASS + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + 
+        		       REFERENCE + JAVA_STRING + TYPEEND + INT + REFERENCE + JAVA_CLASS + TYPEEND + 
+        		       INT + ARRAYOF +  REFERENCE + JAVA_MEMBERNAME + TYPEEND + ")" + INT, "getMembers");
     public static final Signature JAVA_METHODHANDLENATIVES_INIT =
         new Signature(JAVA_METHODHANDLENATIVES, 
                       "(" + REFERENCE + JAVA_MEMBERNAME + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, 

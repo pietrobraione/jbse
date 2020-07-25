@@ -38,6 +38,7 @@ import static jbse.algo.Overrides.ALGO_JAVA_FILEINPUTSTREAM_OPEN0;
 import static jbse.algo.Overrides.ALGO_JAVA_FILEINPUTSTREAM_READBYTES;
 import static jbse.algo.Overrides.ALGO_JAVA_FILEOUTPUTSTREAM_WRITEBYTES;
 import static jbse.algo.Overrides.ALGO_JAVA_JARFILE_GETMETAINFENTRYNAMES;
+import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_GETMEMBERS;
 import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_INIT;
 import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET;
 import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_RESOLVE;
@@ -186,6 +187,7 @@ import static jbse.bc.Signatures.JAVA_CLASSLOADER_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_CRC32_UPDATEBYTES;
 import static jbse.bc.Signatures.JAVA_DIRECTBYTEBUFFER;
 import static jbse.bc.Signatures.JAVA_DIRECTLONGBUFFERU;
+import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_LAZY;
 import static jbse.bc.Signatures.JAVA_DOUBLE_DOUBLETORAWLONGBITS;
 import static jbse.bc.Signatures.JAVA_DOUBLE_LONGBITSTODOUBLE;
 import static jbse.bc.Signatures.JAVA_ENUM;
@@ -218,6 +220,7 @@ import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
 import static jbse.bc.Signatures.JAVA_MAPPEDBYTEBUFFER;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_GETCONSTANT;
+import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_GETMEMBERS;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_INIT;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_REGISTERNATIVES;
@@ -503,8 +506,8 @@ public final class ExecutionContext {
      */
     public final TriggerManager triggerManager;
     
-    /** The classes that did not change their state after initialization. */
-    private final ArrayList<String> postInitInvariantClasses;
+    /** The patterns of classes that did not change their state after initialization. */
+    private final ArrayList<String> postInitInvariantClassPatterns;
 
     /** The {@link DispatcherBytecodeAlgorithm}. */
     public final DispatcherBytecodeAlgorithm dispatcher = new DispatcherBytecodeAlgorithm();
@@ -560,8 +563,12 @@ public final class ExecutionContext {
      * @param stateIdentificationMode a {@link StateIdentificationMode}.
      * @param breadthMode a {@link BreadthMode}.
      * @param rulesTrigger a {@link TriggerRulesRepo}.
-     * @param nativeInvoker a {@link NativeInvoker} which will be used
-     *        to execute native methods.
+     * @param postInitInvariantClassPatterns a {@link List}{@code <}{@link String}{@code >}, 
+     *        a list of patterns of class names. The matching classes will be assumed
+     *        (when assumed pre-initialized) not to have changed their state from the 
+     *        pre-init phase up to the first post-init moment they are accessed, and 
+     *        therefore their static initializer will be executed upon first post-init
+     *        access. 
      */
     public ExecutionContext(State stateStart,
                             boolean bypassStandardLoading,
@@ -579,7 +586,7 @@ public final class ExecutionContext {
                             StateIdentificationMode stateIdentificationMode,
                             BreadthMode breadthMode,
                             TriggerRulesRepo rulesTrigger, 
-                            List<String> postInitInvariantClasses) {
+                            List<String> postInitInvariantClassPatterns) {
         this.stateStart = stateStart;
         this.bypassStandardLoading = bypassStandardLoading;
         this.maxSimpleArrayLength = maxSimpleArrayLength;
@@ -596,7 +603,7 @@ public final class ExecutionContext {
         this.symbolFactory = new SymbolFactory();
         this.stateTree = new StateTree(stateIdentificationMode, breadthMode);
         this.triggerManager = new TriggerManager(rulesTrigger.clone()); //safety copy
-        this.postInitInvariantClasses = new ArrayList<>(postInitInvariantClasses); //safety copy
+        this.postInitInvariantClassPatterns = new ArrayList<>(postInitInvariantClassPatterns); //safety copy
         addBasicPostInitInvariantClasses();
 
         //defaults
@@ -658,6 +665,7 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_INFLATER_SETDICTIONARY,                        ALGO_JAVA_INFLATER_SETDICTIONARY);
             addMetaOverridden(JAVA_JARFILE_GETMETAINFENTRYNAMES,                  ALGO_JAVA_JARFILE_GETMETAINFENTRYNAMES);
             addBaseOverridden(JAVA_METHODHANDLENATIVES_GETCONSTANT,               BASE_JAVA_METHODHANDLENATIVES_GETCONSTANT);
+            addMetaOverridden(JAVA_METHODHANDLENATIVES_GETMEMBERS,                ALGO_JAVA_METHODHANDLENATIVES_GETMEMBERS);
             addMetaOverridden(JAVA_METHODHANDLENATIVES_INIT,                      ALGO_JAVA_METHODHANDLENATIVES_INIT);
             addMetaOverridden(JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET,         ALGO_JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET);
             addMetaOverridden(JAVA_METHODHANDLENATIVES_REGISTERNATIVES,           ALGO_INVOKEMETA_METACIRCULAR);
@@ -1013,7 +1021,8 @@ public final class ExecutionContext {
         className.equals(JAVA_BYTE_BYTECACHE) ||
         className.equals(JAVA_CHARACTER_CHARACTERCACHE) ||
         className.equals(JAVA_CHARSET_EXTENDEDPROVIDERHOLDER) ||
-        className.equals(JAVA_DIRECTBYTEBUFFER) || 
+        className.equals(JAVA_DIRECTBYTEBUFFER) ||
+        className.equals(JAVA_DIRECTMETHODHANDLE_LAZY) || //apparently
         className.equals(JAVA_DIRECTLONGBUFFERU) || 
         className.equals(JAVA_IDENTITYHASHMAP) || 
         className.equals(JAVA_INFLATER) ||
@@ -1051,19 +1060,23 @@ public final class ExecutionContext {
     private void addBasicPostInitInvariantClasses() { 
     	//these are some classes that we need to assume to be in post-initialization-invariant state
     	//to simplify the execution mostly of method handles
-    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE); //necessary for method handles
-    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_FACTORY); //necessary for method handles; apparently the only field that is unpure is CLASS_CACHE, a cache field
-    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIESDATA); //necessary for method handles
-    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIES_L); //necessary for method handles
-    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE); //wouldn't manage method handles otherwise
-    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_LAZY); //wouldn't manage method handles otherwise
-    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR); //the only nonfinal static field STATICALLY_INVOCABLE_PACKAGES is never modified
-    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_LAMBDAFORM_NAMEDFUNCTION); //necessary to bootstrap lambda forms (apparently most static fields are caches, but it is too complex to analyze) 
-    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_METHODHANDLES); //can be considered as it were pure (all final except ZERO_MHS and IDENTITY_MHS that are caches) 
-    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP); //can be considered as it were pure (all final including PUBLIC_LOOKUP and IMPL_LOOKUP that are instances of Lookup - that is immutable - and except LOOKASIDE_TABLE, that seems to be a sort of cache) 
-    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_METHODTYPE); //can be considered as it were pure (all final except internTable and objectOnlyTypes that are caches) 
-    	this.postInitInvariantClasses.add(jbse.bc.Signatures.JAVA_SIMPLEMETHODHANDLE); //necessary for method handles
-        //this.postInitInvariantClasses.add(jbse.bc.Signatures.SUN_LAUNCHERHELPER); //necessary to JVM bootstrap (is it really?)
+    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE); //necessary for method handles
+    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_FACTORY); //necessary for method handles; apparently the only field that is unpure is CLASS_CACHE, a cache field
+    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIESDATA); //necessary for method handles
+    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIES_L); //necessary for method handles
+    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE); //wouldn't manage method handles otherwise
+    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_LAZY); //wouldn't manage method handles otherwise
+    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR); //the only nonfinal static field STATICALLY_INVOCABLE_PACKAGES is never modified
+    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_LAMBDAFORM_NAMEDFUNCTION); //necessary to bootstrap lambda forms (apparently most static fields are caches, but it is too complex to analyze) 
+    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_METHODHANDLES); //can be considered as it were pure (all final except ZERO_MHS and IDENTITY_MHS that are caches) 
+    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP); //can be considered as it were pure (all final including PUBLIC_LOOKUP and IMPL_LOOKUP that are instances of Lookup - that is immutable - and except LOOKASIDE_TABLE, that seems to be a sort of cache) 
+    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_METHODTYPE); //can be considered as it were pure (all final except internTable and objectOnlyTypes that are caches) 
+    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_SIMPLEMETHODHANDLE); //necessary for method handles
+        //addPostInitInvariantClassName(jbse.bc.Signatures.SUN_LAUNCHERHELPER); //necessary to JVM bootstrap (is it really?)
+    }
+    
+    private void addPostInitInvariantClassName(String className) {
+    	this.postInitInvariantClassPatterns.add(className.replace("$", "\\$"));
     }
     
     public boolean classInvariantAfterInitialization(ClassFile classFile) throws InvalidInputException {
@@ -1071,7 +1084,7 @@ public final class ExecutionContext {
     	    throw new InvalidInputException("Invoked " + getClass().getName() + ".classInvariantAfterInitialization with a null classFile parameter.");
     	}
         final String className = classFile.getClassName();
-        for (String pattern : this.postInitInvariantClasses) {
+        for (String pattern : this.postInitInvariantClassPatterns) {
             if (className.matches(pattern)) {
                 return true;
             }
