@@ -577,7 +577,9 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * @return {@code true} iff the method is signature polymorphic.
      * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
      */
-    public abstract boolean isMethodSignaturePolymorphic(Signature methodSignature) throws MethodNotFoundException;
+    public final boolean isMethodSignaturePolymorphic(Signature methodSignature) throws MethodNotFoundException {
+        return hasOneSignaturePolymorphicMethodDeclaration(methodSignature.getName());
+    }
     
     /**
      * Tests whether a method in the class is caller sensitive.

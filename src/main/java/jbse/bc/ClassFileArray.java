@@ -393,15 +393,6 @@ public final class ClassFileArray extends ClassFile {
     }
     
     @Override
-    public boolean isMethodSignaturePolymorphic(Signature methodSignature) 
-    throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return false;
-        }
-        throw new MethodNotFoundException(methodSignature.toString());
-    }
-    
-    @Override
     public boolean isMethodCallerSensitive(Signature methodSignature) 
     throws MethodNotFoundException {
         if (isMethodClone(methodSignature)) {

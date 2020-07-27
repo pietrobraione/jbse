@@ -13,7 +13,7 @@ import jbse.mem.exc.ThreadStackEmptyException;
  *
  */
 public class BytecodeFormatter {
-    private DispatcherBytecodeFormatter bdf = new DispatcherBytecodeFormatter();
+    private DispatcherBytecodeFormatter dbf = new DispatcherBytecodeFormatter();
 
     /**
      * Disassemble the current bytecode in a frame.
@@ -24,7 +24,7 @@ public class BytecodeFormatter {
      *         of {@code f}.
      */
     public String format(Frame f, ClassHierarchy cfi) {
-        return this.bdf.select(f.getInstruction()).apply(f, cfi);
+        return this.dbf.select(f.getInstruction()).apply(f, cfi);
     }
 
     /**

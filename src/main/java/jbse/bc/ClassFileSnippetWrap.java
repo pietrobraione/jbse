@@ -276,11 +276,6 @@ public class ClassFileSnippetWrap extends ClassFile {
     }
 
     @Override
-    public boolean isMethodSignaturePolymorphic(Signature methodSignature) throws MethodNotFoundException {
-    	return this.component.isMethodSignaturePolymorphic(methodSignature);
-    }
-    
-    @Override
     public boolean isMethodCallerSensitive(Signature methodSignature) throws MethodNotFoundException {
     	return this.component.isMethodCallerSensitive(methodSignature);
     }

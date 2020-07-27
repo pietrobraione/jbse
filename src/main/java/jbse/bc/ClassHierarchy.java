@@ -1600,93 +1600,99 @@ public final class ClassHierarchy implements Cloneable {
      *        must be looked up.
      * @return the {@link ClassFile} which contains the implementation of 
      *         {@code methodSignature}.
+     * @throws MethodNotFoundException if no declaration of {@code methodSignature} is found in 
+     *         {@code resolutionClass}. 
      * @throws MethodAbstractException if lookup fails and {@link java.lang.AbstractMethodError} should be thrown.
      * @throws IncompatibleClassFileException if lookup fails and {@link java.lang.IncompatibleClassChangeError} should be thrown.
      * @throws InvalidInputException if {@code resolutionClass == null}, or if a virtual ("super")
      *         call semantics is required and {@code currentClass} has not a superclass.
      */
     public ClassFile lookupMethodImplSpecial(ClassFile currentClass, ClassFile resolutionClass, Signature methodSignature) 
-    throws MethodAbstractException, IncompatibleClassFileException, InvalidInputException {
+    throws MethodNotFoundException, MethodAbstractException, IncompatibleClassFileException, InvalidInputException {
     	if (resolutionClass == null) {
     		throw new InvalidInputException("Invoked " + this.getClass().getName() + ".lookupMethodImplSpecial with a null resolutionClass.");
     	}
-        //determines whether should start looking for the implementation in 
-        //the superclass of the current class (virtual semantics, for super 
-        //calls) or in the class of the resolved method (nonvirtual semantics, 
-        //for <init> and private methods)
-        final boolean useVirtualSemantics = 
-            (!"<init>".equals(methodSignature.getName()) &&
-            (resolutionClass.isInterface() || (currentClass.getSuperclass() != null && currentClass.getSuperclass().isSubclass(resolutionClass))) && 
-             currentClass.isSuperInvoke());
-        final ClassFile c = (useVirtualSemantics ? currentClass.getSuperclass() : resolutionClass);
-        if (c == null) {
-        	throw new InvalidInputException("Invoked " + this.getClass().getName() + ".lookupMethodImplSpecial with a virtual invocation semantics (\"super\") but currentClass has not a superclass.");
+        if (resolutionClass.isMethodSignaturePolymorphic(methodSignature)) {
+            return resolutionClass;
+        } else {
+        	//determines whether should start looking for the implementation in 
+        	//the superclass of the current class (virtual semantics, for super 
+        	//calls) or in the class of the resolved method (nonvirtual semantics, 
+        	//for <init> and private methods)
+        	final boolean useVirtualSemantics = 
+        			(!"<init>".equals(methodSignature.getName()) &&
+        					(resolutionClass.isInterface() || (currentClass.getSuperclass() != null && currentClass.getSuperclass().isSubclass(resolutionClass))) && 
+        					currentClass.isSuperInvoke());
+        	final ClassFile c = (useVirtualSemantics ? currentClass.getSuperclass() : resolutionClass);
+        	if (c == null) {
+        		throw new InvalidInputException("Invoked " + this.getClass().getName() + ".lookupMethodImplSpecial with a virtual invocation semantics (\"super\") but currentClass has not a superclass.");
+        	}
+
+        	//applies lookup
+        	ClassFile retVal = null;
+        	try {
+        		//step 1
+        		if (c.hasMethodDeclaration(methodSignature) && 
+        				!c.isMethodStatic(methodSignature)) {
+        			retVal = c;
+        			//third run-time exception
+        			if (retVal.isMethodAbstract(methodSignature)) {
+        				throw new MethodAbstractException(methodSignature.toString());
+        			}
+        		} 
+
+        		//step 2
+        		if (retVal == null && !c.isInterface() && c.getSuperclass() != null) {
+        			for (ClassFile f : c.getSuperclass().superclasses()) {
+        				if (f.hasMethodDeclaration(methodSignature)) {
+        					retVal = f;
+        					//third run-time exception
+        					if (retVal.isMethodAbstract(methodSignature)) {
+        						throw new MethodAbstractException(methodSignature.toString());
+        					}
+        					break;
+        				}
+        			}
+        		}
+
+        		//step 3
+        		if (retVal == null && c.isInterface()) {
+        			final ClassFile cf_JAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT);
+        			if (cf_JAVA_OBJECT == null) {
+        				throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".lookupMethodImplSpecial was unable to find standard class java.lang.Object.");
+        			}
+        			if (c.hasMethodDeclaration(methodSignature) && 
+        					!c.isMethodStatic(methodSignature) && 
+        					c.isMethodPublic(methodSignature)) {
+        				retVal = cf_JAVA_OBJECT;
+        				//third run-time exception
+        				if (retVal.isMethodAbstract(methodSignature)) {
+        					throw new MethodAbstractException(methodSignature.toString());
+        				}
+        			}
+        		}
+
+        		//step 4
+        		if (retVal == null) {
+        			final Set<ClassFile> nonabstractMaxSpecMethods = 
+        					maximallySpecificSuperinterfaceMethods(resolutionClass, methodSignature, true);
+        			if (nonabstractMaxSpecMethods.size() == 0) {
+        				//sixth run-time exception
+        				throw new MethodAbstractException(methodSignature.toString());
+        			} else if (nonabstractMaxSpecMethods.size() == 1) {
+        				retVal = nonabstractMaxSpecMethods.iterator().next();
+        			} else { //nonabstractMaxSpecMethods.size() > 1
+        				//fifth run-time exception
+        				throw new IncompatibleClassFileException(methodSignature.toString());
+        			}
+        		}
+        	} catch (MethodNotFoundException e) {
+        		//this should never happen
+        		throw new UnexpectedInternalException(e);
+        	}
+
+        	return retVal;
         }
-        
-        //applies lookup
-        ClassFile retVal = null;
-        try {
-            //step 1
-            if (c.hasMethodDeclaration(methodSignature) && 
-                !c.isMethodStatic(methodSignature)) {
-                retVal = c;
-                //third run-time exception
-                if (retVal.isMethodAbstract(methodSignature)) {
-                    throw new MethodAbstractException(methodSignature.toString());
-                }
-            } 
-
-            //step 2
-            if (retVal == null && !c.isInterface() && c.getSuperclass() != null) {
-                for (ClassFile f : c.getSuperclass().superclasses()) {
-                    if (f.hasMethodDeclaration(methodSignature)) {
-                        retVal = f;
-                        //third run-time exception
-                        if (retVal.isMethodAbstract(methodSignature)) {
-                            throw new MethodAbstractException(methodSignature.toString());
-                        }
-                        break;
-                    }
-                }
-            }
-
-            //step 3
-            if (retVal == null && c.isInterface()) {
-                final ClassFile cf_JAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT);
-                if (cf_JAVA_OBJECT == null) {
-                    throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".lookupMethodImplSpecial was unable to find standard class java.lang.Object.");
-                }
-                if (c.hasMethodDeclaration(methodSignature) && 
-                    !c.isMethodStatic(methodSignature) && 
-                    c.isMethodPublic(methodSignature)) {
-                    retVal = cf_JAVA_OBJECT;
-                    //third run-time exception
-                    if (retVal.isMethodAbstract(methodSignature)) {
-                        throw new MethodAbstractException(methodSignature.toString());
-                    }
-                }
-            }
-
-            //step 4
-            if (retVal == null) {
-                final Set<ClassFile> nonabstractMaxSpecMethods = 
-                    maximallySpecificSuperinterfaceMethods(resolutionClass, methodSignature, true);
-                if (nonabstractMaxSpecMethods.size() == 0) {
-                    //sixth run-time exception
-                    throw new MethodAbstractException(methodSignature.toString());
-                } else if (nonabstractMaxSpecMethods.size() == 1) {
-                    retVal = nonabstractMaxSpecMethods.iterator().next();
-                } else { //nonabstractMaxSpecMethods.size() > 1
-                    //fifth run-time exception
-                    throw new IncompatibleClassFileException(methodSignature.toString());
-                }
-            }
-        } catch (MethodNotFoundException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
-
-        return retVal;
     }
 
     /**

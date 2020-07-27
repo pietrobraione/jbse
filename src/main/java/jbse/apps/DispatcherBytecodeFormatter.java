@@ -769,7 +769,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
         setCase(OP_MONITORENTER,    new DispatchStrategyFormat0(opcodeName(OP_MONITORENTER)));
         setCase(OP_MONITOREXIT,     new DispatchStrategyFormat0(opcodeName(OP_MONITOREXIT)));
         setCase(OP_BREAKPOINT,      new DispatchStrategyFormat0(opcodeName(OP_BREAKPOINT)));
-        setCase(OP_INVOKEHANDLE,    new DispatchStrategyFormat0(opcodeName(OP_INVOKEHANDLE)));
+        setCase(OP_INVOKEHANDLE,    new DispatchStrategyFormat1ME(opcodeName(OP_INVOKEHANDLE), false));
         setCase(OP_IMPDEP1,         new DispatchStrategyFormat0(opcodeName(OP_IMPDEP1)));
         setCase(OP_IMPDEP2,         new DispatchStrategyFormat0(opcodeName(OP_IMPDEP2)));
     }

@@ -153,6 +153,10 @@ import static jbse.bc.Signatures.JAVA_ARRAYDEQUE;
 import static jbse.bc.Signatures.JAVA_ARRAYLIST;
 import static jbse.bc.Signatures.JAVA_ATOMICLONG_VMSUPPORTSCS8;
 import static jbse.bc.Signatures.JAVA_ATTRIBUTES_NAME;
+import static jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE;
+import static jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_FACTORY;
+import static jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIESDATA;
+import static jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIES_L;
 import static jbse.bc.Signatures.JAVA_BYTE_BYTECACHE;
 import static jbse.bc.Signatures.JAVA_CHARACTER_CHARACTERCACHE;
 import static jbse.bc.Signatures.JAVA_CHARSET_EXTENDEDPROVIDERHOLDER;
@@ -187,6 +191,7 @@ import static jbse.bc.Signatures.JAVA_CLASSLOADER_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_CRC32_UPDATEBYTES;
 import static jbse.bc.Signatures.JAVA_DIRECTBYTEBUFFER;
 import static jbse.bc.Signatures.JAVA_DIRECTLONGBUFFERU;
+import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE;
 import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_LAZY;
 import static jbse.bc.Signatures.JAVA_DOUBLE_DOUBLETORAWLONGBITS;
 import static jbse.bc.Signatures.JAVA_DOUBLE_LONGBITSTODOUBLE;
@@ -210,12 +215,15 @@ import static jbse.bc.Signatures.JAVA_INFLATER_INIT;
 import static jbse.bc.Signatures.JAVA_INFLATER_INITIDS;
 import static jbse.bc.Signatures.JAVA_INFLATER_RESET;
 import static jbse.bc.Signatures.JAVA_INFLATER_SETDICTIONARY;
+import static jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR;
 import static jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR_2;
+import static jbse.bc.Signatures.JAVA_INVOKERS;
 import static jbse.bc.Signatures.JAVA_JARFILE;
 import static jbse.bc.Signatures.JAVA_JARFILE_GETMETAINFENTRYNAMES;
 import static jbse.bc.Signatures.JAVA_JARVERIFIER;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM_NAME;
+import static jbse.bc.Signatures.JAVA_LAMBDAFORM_NAMEDFUNCTION;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
 import static jbse.bc.Signatures.JAVA_MAPPEDBYTEBUFFER;
@@ -226,6 +234,9 @@ import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_RESOLVE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET;
+import static jbse.bc.Signatures.JAVA_METHODHANDLES;
+import static jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP;
+import static jbse.bc.Signatures.JAVA_METHODTYPE;
 import static jbse.bc.Signatures.JAVA_METHODTYPEFORM;
 import static jbse.bc.Signatures.JAVA_OBJECT_CLONE;
 import static jbse.bc.Signatures.JAVA_OBJECT_GETCLASS;
@@ -238,6 +249,7 @@ import static jbse.bc.Signatures.JAVA_REFLECT_ARRAY_NEWARRAY;
 import static jbse.bc.Signatures.JAVA_RUNTIME_AVAILABLEPROCESSORS;
 import static jbse.bc.Signatures.JAVA_SHORT;
 import static jbse.bc.Signatures.JAVA_SHORT_SHORTCACHE;
+import static jbse.bc.Signatures.JAVA_SIMPLEMETHODHANDLE;
 import static jbse.bc.Signatures.JAVA_STANDARDCHARSETS;
 import static jbse.bc.Signatures.JAVA_STRICTMATH_ACOS;
 import static jbse.bc.Signatures.JAVA_STRICTMATH_ASIN;
@@ -1060,19 +1072,20 @@ public final class ExecutionContext {
     private void addBasicPostInitInvariantClasses() { 
     	//these are some classes that we need to assume to be in post-initialization-invariant state
     	//to simplify the execution mostly of method handles
-    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE); //necessary for method handles
-    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_FACTORY); //necessary for method handles; apparently the only field that is unpure is CLASS_CACHE, a cache field
-    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIESDATA); //necessary for method handles
-    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIES_L); //necessary for method handles
-    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE); //wouldn't manage method handles otherwise
-    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_LAZY); //wouldn't manage method handles otherwise
-    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR); //the only nonfinal static field STATICALLY_INVOCABLE_PACKAGES is never modified
-    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_LAMBDAFORM_NAMEDFUNCTION); //necessary to bootstrap lambda forms (apparently most static fields are caches, but it is too complex to analyze) 
-    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_METHODHANDLES); //can be considered as it were pure (all final except ZERO_MHS and IDENTITY_MHS that are caches) 
-    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP); //can be considered as it were pure (all final including PUBLIC_LOOKUP and IMPL_LOOKUP that are instances of Lookup - that is immutable - and except LOOKASIDE_TABLE, that seems to be a sort of cache) 
-    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_METHODTYPE); //can be considered as it were pure (all final except internTable and objectOnlyTypes that are caches) 
-    	addPostInitInvariantClassName(jbse.bc.Signatures.JAVA_SIMPLEMETHODHANDLE); //necessary for method handles
-        //addPostInitInvariantClassName(jbse.bc.Signatures.SUN_LAUNCHERHELPER); //necessary to JVM bootstrap (is it really?)
+    	addPostInitInvariantClassName(JAVA_BOUNDMETHODHANDLE); //necessary for method handles
+    	addPostInitInvariantClassName(JAVA_BOUNDMETHODHANDLE_FACTORY); //necessary for method handles; apparently the only field that is unpure is CLASS_CACHE, a cache field
+    	addPostInitInvariantClassName(JAVA_BOUNDMETHODHANDLE_SPECIESDATA); //necessary for method handles
+    	addPostInitInvariantClassName(JAVA_BOUNDMETHODHANDLE_SPECIES_L); //necessary for method handles
+    	addPostInitInvariantClassName(JAVA_DIRECTMETHODHANDLE); //wouldn't manage method handles otherwise
+    	addPostInitInvariantClassName(JAVA_DIRECTMETHODHANDLE_LAZY); //wouldn't manage method handles otherwise
+    	addPostInitInvariantClassName(JAVA_INVOKERBYTECODEGENERATOR); //the only nonfinal static field STATICALLY_INVOCABLE_PACKAGES is never modified
+    	addPostInitInvariantClassName(JAVA_INVOKERS); //lots of caches; very complex
+    	addPostInitInvariantClassName(JAVA_LAMBDAFORM_NAMEDFUNCTION); //necessary to bootstrap lambda forms (apparently most static fields are caches, but it is too complex to analyze) 
+    	addPostInitInvariantClassName(JAVA_METHODHANDLES); //can be considered as it were pure (all final except ZERO_MHS and IDENTITY_MHS that are caches) 
+    	addPostInitInvariantClassName(JAVA_METHODHANDLES_LOOKUP); //can be considered as it were pure (all final including PUBLIC_LOOKUP and IMPL_LOOKUP that are instances of Lookup - that is immutable - and except LOOKASIDE_TABLE, that seems to be a sort of cache) 
+    	addPostInitInvariantClassName(JAVA_METHODTYPE); //can be considered as it were pure (all final except internTable and objectOnlyTypes that are caches) 
+    	addPostInitInvariantClassName(JAVA_SIMPLEMETHODHANDLE); //necessary for method handles
+        //addPostInitInvariantClassName(SUN_LAUNCHERHELPER); //necessary to JVM bootstrap (is it really?)
     }
     
     private void addPostInitInvariantClassName(String className) {

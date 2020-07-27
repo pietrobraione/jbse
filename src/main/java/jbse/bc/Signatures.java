@@ -74,6 +74,7 @@ public final class Signatures {
     public static final String JAVA_INTEGER                  = "java/lang/Integer";
     public static final String JAVA_INVOKERBYTECODEGENERATOR = "java/lang/invoke/InvokerBytecodeGenerator";
     public static final String JAVA_INVOKERBYTECODEGENERATOR_2 = "java/lang/invoke/InvokerBytecodeGenerator$2";
+    public static final String JAVA_INVOKERS                 = "java/lang/invoke/Invokers";
     public static final String JAVA_JARFILE                  = "java/util/jar/JarFile";
     public static final String JAVA_JARVERIFIER              = "java/util/jar/JarVerifier";
     public static final String JAVA_LAMBDAFORM               = "java/lang/invoke/LambdaForm";
@@ -830,6 +831,8 @@ public final class Signatures {
         new Signature(JAVA_INFLATER, "" + REFERENCE + JAVA_ZSTREAMREF + TYPEEND, "zsRef");
     public static final Signature JAVA_INTEGER_VALUE = 
         new Signature(JAVA_INTEGER, "" + INT, "value");
+    public static final Signature JAVA_LAMBDAFORM_VMENTRY = 
+    	new Signature(JAVA_LAMBDAFORM, "" + REFERENCE + JAVA_MEMBERNAME + TYPEEND, "vmentry");
     public static final Signature JAVA_LONG_VALUE = 
         new Signature(JAVA_LONG, "" + LONG, "value");
     public static final Signature JAVA_MEMBERNAME_CLAZZ = 
@@ -858,6 +861,8 @@ public final class Signatures {
         new Signature(JAVA_METHOD, "" + REFERENCE + JAVA_STRING + TYPEEND, "signature");
     public static final Signature JAVA_METHOD_SLOT = 
         new Signature(JAVA_METHOD, "" + INT, "slot");
+    public static final Signature JAVA_METHODHANDLE_FORM = 
+        new Signature(JAVA_METHODHANDLE, "" + REFERENCE + JAVA_LAMBDAFORM + TYPEEND, "form");
     public static final Signature JAVA_METHODTYPE_METHODDESCRIPTOR = 
         new Signature(JAVA_METHODTYPE, "" + REFERENCE + JAVA_STRING + TYPEEND, "methodDescriptor");
     public static final Signature JAVA_SHORT_VALUE = 

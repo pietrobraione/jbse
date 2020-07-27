@@ -3,7 +3,18 @@ package jbse.algo;
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Offsets.offsetInvoke;
+import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_LOADCLASS;
+import static jbse.bc.Signatures.JAVA_MEMBERNAME_GETTYPE;
+import static jbse.bc.Signatures.JAVA_METHODHANDLE;
+import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_FINDMETHODHANDLETYPE;
+import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_LINKMETHOD;
+import static jbse.bc.Signatures.JAVA_METHODHANDLE_INVOKEBASIC;
+import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOINTERFACE;
+import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOSPECIAL;
+import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOSTATIC;
+import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOVIRTUAL;
+import static jbse.bc.Signatures.JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_STACKTRACEELEMENT;
 import static jbse.bc.Signatures.JAVA_STACKTRACEELEMENT_DECLARINGCLASS;
@@ -19,11 +30,22 @@ import static jbse.bc.Signatures.JBSE_BASE_MAKEKLASSSYMBOLIC;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.VERIFY_ERROR;
 import static jbse.bc.Signatures.noclass_REGISTERLOADEDCLASS;
+import static jbse.bc.Signatures.noclass_REGISTERMETHODTYPE;
+import static jbse.bc.Signatures.noclass_STORELINKEDMETHODANDAPPENDIX;
 import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.binaryClassName;
+import static jbse.common.Type.className;
+import static jbse.common.Type.isArray;
+import static jbse.common.Type.isPrimitive;
+import static jbse.common.Type.isReference;
+import static jbse.common.Type.isVoid;
+import static jbse.common.Type.splitParametersDescriptors;
+import static jbse.common.Type.splitReturnValueDescriptor;
+import static jbse.common.Type.toPrimitiveOrVoidCanonicalName;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -71,6 +93,7 @@ import jbse.mem.ClauseAssumeClassInitialized;
 import jbse.mem.ClauseAssumeClassNotInitialized;
 import jbse.mem.Frame;
 import jbse.mem.Instance;
+import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.Klass;
 import jbse.mem.SnippetFrameNoWrap;
 import jbse.mem.State;
@@ -95,6 +118,131 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 public final class Util {
+    //taken from java.lang.reflect.Modifier
+    public static final short BRIDGE    = 0x0040;
+    public static final short VARARGS   = 0x0080;
+    public static final short SYNTHETIC = 0x1000;
+    public static final short ENUM      = 0x4000;
+    
+    //taken from hotspot:/src/share/vm/prims/jvm.h, lines 1216-1237
+    public static final short JVM_RECOGNIZED_FIELD_MODIFIERS = 
+        Modifier.PUBLIC    | Modifier.PRIVATE | Modifier.PROTECTED | 
+        Modifier.STATIC    | Modifier.FINAL   | Modifier.VOLATILE  | 
+        Modifier.TRANSIENT | ENUM             | SYNTHETIC;
+
+    public static final short JVM_RECOGNIZED_METHOD_MODIFIERS =
+        Modifier.PUBLIC    | Modifier.PRIVATE | Modifier.PROTECTED    | 
+        Modifier.STATIC    | Modifier.FINAL   | Modifier.SYNCHRONIZED | 
+        BRIDGE             | VARARGS          | Modifier.NATIVE       |
+        Modifier.ABSTRACT  | Modifier.STRICT  | SYNTHETIC;
+
+    //taken from java.lang.invoke.MethodHandleNatives.Constants
+    public static final int  IS_METHOD            = 0x00010000; // method (not constructor)
+    public static final int  IS_CONSTRUCTOR       = 0x00020000; // constructor
+    public static final int  IS_FIELD             = 0x00040000; // field
+    public static final int  IS_TYPE              = 0x00080000; // nested type
+    public static final int  CALLER_SENSITIVE     = 0x00100000; // @CallerSensitive annotation detected
+    public static final int  REFERENCE_KIND_SHIFT = 24; // refKind
+    public static final int  REFERENCE_KIND_MASK  = 0x0F000000 >> REFERENCE_KIND_SHIFT;
+    public static final int  SEARCH_SUPERCLASSES  = 0x00100000;
+    public static final int  SEARCH_INTERFACES    = 0x00200000;
+    public static final byte REF_getField         = 1;
+    public static final byte REF_getStatic        = 2;
+    public static final byte REF_putField         = 3;
+    public static final byte REF_invokeVirtual    = 5;
+    public static final byte REF_invokeStatic     = 6;
+    public static final byte REF_invokeSpecial    = 7;
+    public static final byte REF_invokeInterface  = 9;
+
+    //taken from java.lang.invoke.MemberName
+    public static boolean isMethod(int flags) {
+        return (flags & IS_METHOD) == IS_METHOD;
+    }
+
+    //taken from java.lang.invoke.MemberName
+    public static boolean isConstructor(int flags) {
+        return (flags & IS_CONSTRUCTOR) == IS_CONSTRUCTOR;
+    }
+
+    //taken from java.lang.invoke.MemberName
+    public static boolean isField(int flags) {
+        return (flags & IS_FIELD) == IS_FIELD;
+    }
+    
+    //taken from java.lang.invoke.MemberName
+    public static boolean isStatic(int flags) {
+        return Modifier.isStatic(flags);
+    }
+
+    //taken from java.lang.invoke.MemberName.getReferenceKind
+    public static boolean isInvokeInterface(int flags) {
+        return ((byte) ((flags >>> REFERENCE_KIND_SHIFT) & REFERENCE_KIND_MASK)) == REF_invokeInterface;
+    }
+
+    //taken from java.lang.invoke.MemberName.getReferenceKind
+    public static boolean isSetter(int flags) {
+        return ((byte) ((flags >>> REFERENCE_KIND_SHIFT) & REFERENCE_KIND_MASK)) > REF_getStatic;
+    }
+    
+	//The check has some code taken from CallInfo::CallInfo(Method*, Klass*)
+	//for unreflecting the method, see hotspot:/src/share/vm/interpreter/linkResolver.cpp,
+	//that is invoked by MethodHandles::init_MemberName at row 169, 
+	//hotspot:/src/share/vm/prims/methodHandles.cpp (note that we skip
+	//the case miranda+default because they seem specific to the
+	//Hotspot case)
+    public static int getMemberNameFlagsMethod(ClassFile cfMethod, Signature methodSignature) throws MethodNotFoundException {
+		int flags = (short) (((short) cfMethod.getMethodModifiers(methodSignature)) & JVM_RECOGNIZED_METHOD_MODIFIERS);
+		if (canBeStaticallyBound(cfMethod, methodSignature)) {
+			if (cfMethod.isMethodStatic(methodSignature)) {
+				flags |= IS_METHOD      | (REF_invokeStatic  << REFERENCE_KIND_SHIFT);
+			} else if ("<init>".equals(methodSignature.getName()) || "<clinit>".equals(methodSignature.getName())) {
+				flags |= IS_CONSTRUCTOR | (REF_invokeSpecial << REFERENCE_KIND_SHIFT);
+			} else { //it is private (invokespecial) or is final (invokevirtual)
+				flags |= IS_METHOD      | (REF_invokeSpecial << REFERENCE_KIND_SHIFT);
+			}
+		} else if (cfMethod.isInterface()) {
+			flags |= IS_METHOD | (REF_invokeInterface << REFERENCE_KIND_SHIFT);
+		} else {
+			flags |= IS_METHOD | (REF_invokeVirtual << REFERENCE_KIND_SHIFT);
+		}
+		
+        if (cfMethod.isMethodCallerSensitive(methodSignature)) {
+            flags |= CALLER_SENSITIVE;
+        }
+        
+        return flags;
+    }
+    	
+	private static boolean canBeStaticallyBound(ClassFile cfMethod, Signature methodSignature) throws MethodNotFoundException {
+		//a default method cannot be statically bound
+		if (cfMethod.isInterface() && !cfMethod.isMethodAbstract(methodSignature)) {
+			return false;
+		}
+		
+		//a final method can be statically bound
+		if (cfMethod.isMethodFinal(methodSignature) || cfMethod.isFinal()) {
+			return true;
+		}
+		
+		//a static method is statically bound (invokestatic)
+		if (cfMethod.isMethodStatic(methodSignature)) {
+			return true;
+		}
+		
+		//a constructor is statically bound (invokespecial)
+		if ("<init>".equals(methodSignature.getName()) || "<clinit>".equals(methodSignature.getName())) {
+			return true;
+		}
+		
+		//a private method is statically bound (invokespecial)
+		if (cfMethod.isMethodPrivate(methodSignature)) {
+			return true;
+		}
+		
+		//no other method can be statically bound
+		return false;
+	}
+	
     /**
      * Abruptly interrupts the execution of JBSE
      * in the case of an unexpected internal error.
@@ -147,6 +295,264 @@ public final class Util {
         continuation.setProgramCounterOffset(offsetInvoke(isInterface));
         continuation.shouldFindImplementation();
         continueWith(continuation);
+    }
+    
+    /**
+     * Links a method in the case the method is signature polymorphic nonintrinsic. 
+     * This is done by upcalling {@code java.lang.invoke.MethodHandleNatives.linkMethod} 
+     * (see hotspot:/src/share/vm/prims/systemDictionary.cpp, lines 2377-2394). Finally, 
+     * stores the link to the accessor invoker and the appendix in the {@link State}.
+     * 
+     * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
+     * @param accessorJavaClass the {@link Reference} to the {@link Instance_JAVA_CLASS} of the accessor.
+     *        It can be a {@link jbse.val.Null Null} reference (e.g., {@code null} is allowed as second 
+     *        parameter of a {@link java.lang.invoke.MethodHandleNatives#resolve(java.lang.invoke.MemberName, Class) resolve} call), 
+     *        but when it is not it must represent the {@code accessor} parameter.
+     * @param accessor a {@link ClassFile}, the accessor class invoking the signature-polymorphic 
+     *        method.
+     * @param polymorphicMethodSignatureSpecialized the {@link Signature} of the signature-polymorphic method, with 
+     *        the descriptor as declared in the member name (i.e., specialized on the actual arguments).
+     * @throws PleaseLoadClassException if the execution of this {@link Algorithm} must be interrupted 
+     *         because a class referred in {@code resolved} must be loaded by a user-defined classloader.
+     * @throws ClassFileNotFoundException if the bytecode for any 
+     *         class referred in {@code polymorphicMethodDescriptor} is not found in the classpath.
+     * @throws ClassFileIllFormedException if the bytecode for any 
+     *         class referred in {@code polymorphicMethodDescriptor} is ill-formed.
+     * @throws BadClassFileVersionException if the bytecode for any 
+     *         class referred in {@code polymorphicMethodDescriptor} has a version number
+     *         that is unsupported by the current version of JBSE.
+     * @throws WrongClassNameException if the name of any 
+     *         class referred in {@code polymorphicMethodDescriptor} is wrong.
+     * @throws IncompatibleClassFileException if the superclass of any 
+     *         class referred in {@code polymorphicMethodDescriptor} is resolved to an 
+     *         interface type, or any superinterface is resolved to an object type.
+     * @throws ClassFileNotAccessibleException if the classfile for any 
+     *         class referred in {@code polymorphicMethodDescriptor} is not accessible by {@code accessor}.
+     * @throws HeapMemoryExhaustedException if {@code state}'s heap memory ends.
+     * @throws ThreadStackEmptyException if {@code state}'s thread stack is empty (should never happen).
+     * @throws InterruptException always thrown at the end of the method, to interrupt the execution of 
+     *         this {@link Algorithm} and perform the upcall.
+     * @throws InvalidInputException if an invalid input is used by some method call. 
+     */
+    public static void linkMethod(State state, Calculator calc, Reference accessorJavaClass, ClassFile accessor, Signature polymorphicMethodSignatureSpecialized) 
+    throws PleaseLoadClassException, ClassFileNotFoundException, ClassFileIllFormedException, 
+    IncompatibleClassFileException, ClassFileNotAccessibleException, HeapMemoryExhaustedException, 
+    ThreadStackEmptyException, InterruptException, InvalidInputException, BadClassFileVersionException, 
+    RenameUnsupportedException, WrongClassNameException {
+        if (state.isMethodLinked(polymorphicMethodSignatureSpecialized)) {
+            //already linked
+            return;
+        }
+        final String polymorphicMethodName = polymorphicMethodSignatureSpecialized.getName();
+        
+        try {
+            //upcalls java.lang.invoke.MethodHandleNatives.linkMethod
+            //and stores the link, see hotspot:/src/share/vm/prims/systemDictionary.cpp 
+            //lines 2377-2394        
+
+            //prepares the parameters for the upcall:
+
+            //1- instance of java.lang.Class<java.lang.invoke.MethodHandle>
+            ClassFile cf_JAVA_METHODHANDLE = null; //to keep the compiler happy
+            try {
+                cf_JAVA_METHODHANDLE = state.getClassHierarchy().loadCreateClass(JAVA_METHODHANDLE);
+            } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                     BadClassFileVersionException | WrongClassNameException | ClassFileNotAccessibleException e) {
+                //this should never happen
+                failExecution(e);
+            }
+            state.ensureInstance_JAVA_CLASS(calc, cf_JAVA_METHODHANDLE);
+            final ReferenceConcrete mhClassRef = state.referenceToInstance_JAVA_CLASS(cf_JAVA_METHODHANDLE);
+
+            //2- the name of the resolved method 
+            state.ensureStringLiteral(calc, polymorphicMethodName);
+            final ReferenceConcrete mhNameRef = state.referenceToStringLiteral(polymorphicMethodName);
+
+            //3- a java.lang.invoke.MethodType for its descriptor
+            final ReferenceConcrete mtRef = findMethodType(state, calc, accessor, polymorphicMethodSignatureSpecialized.getDescriptor());
+
+            //4- an array with length 1 to host the returned appendix (if any)
+            ClassFile cf_arrayOfJAVA_OBJECT = null; //to keep the compiler happy
+            try {
+                cf_arrayOfJAVA_OBJECT = state.getClassHierarchy().loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND);
+            } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                    BadClassFileVersionException | WrongClassNameException | ClassFileNotAccessibleException e) {
+                //this should never happen
+                failExecution(e);
+            }
+            final ReferenceConcrete appendixBox = state.createArray(calc, null, calc.valInt(1), cf_arrayOfJAVA_OBJECT);
+
+            //upcalls
+            final Snippet snippet = state.snippetFactoryNoWrap()
+                //parameters for the upcall to noclass_STORELINKEDMETHODANDAPPENDIX
+            	.addArg(mhNameRef) //name of the method, either invoke or invokeExact
+            	.addArg(mtRef) //java.lang.invoke.MethodType instance for the method's descriptor
+            	.addArg(appendixBox) //appendix
+                //parameters for the upcall to JAVA_METHODHANDLENATIVES_LINKMETHOD                    
+            	.addArg(accessorJavaClass)
+            	.addArg(calc.valInt(REF_invokeVirtual)) //kind (MUST be REF_invokeVirtual)
+            	.addArg(mhClassRef) //class where the method is defined (MUST be java.lang.invoke.MethodHandle)
+            	.addArg(mhNameRef) //name of the method, either invoke or invokeExact
+            	.addArg(mtRef) //java.lang.invoke.MethodType instance for the method's descriptor
+            	.addArg(appendixBox) //appendix
+            	//pushes everything
+				.op_aload((byte) 0)
+				.op_aload((byte) 1)
+				.op_aload((byte) 2)
+				.op_aload((byte) 3)
+				.op_iload((byte) 4)
+				.op_aload((byte) 5)
+				.op_aload((byte) 6)
+				.op_aload((byte) 7)
+				.op_aload((byte) 8)
+                .op_invokestatic(JAVA_METHODHANDLENATIVES_LINKMETHOD)
+                //the next call to getType ensures that the returned MemberName 
+                //is normalized, so that its type field is a MethodType
+                .op_dup()
+                .op_invokevirtual(JAVA_MEMBERNAME_GETTYPE)
+                .op_pop() //we care only of the side effect
+                //stores the linked method and the appendix in the state
+                .op_invokestatic(noclass_STORELINKEDMETHODANDAPPENDIX)
+                .op_return()
+                .mk();
+            state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang/invoke");  //zero offset so that upon return from the snippet will reexecute the current algorithm
+            exitFromAlgorithm();
+        } catch (InvalidProgramCounterException e) {
+            //this should never happen
+            failExecution(e);
+        }
+    }
+    
+    /**
+     * Finds a {@code java.lang.invoke.MethodType} for a method
+     * descriptor.
+     * 
+     * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
+     * @param accessor a {@link ClassFile}, the accessor class.
+     * @param descriptor a {@link String}, the method descriptor.
+     * @return a {@link ReferenceConcrete} to an {@link Instance} of 
+     *         {@code java.lang.invoke.MethodType} for {@code descriptor}.
+     * @throws PleaseLoadClassException if the execution of this {@link Algorithm} must be interrupted 
+     *         because a class referred in {@code resolved} must be loaded by a user-defined classloader.
+     * @throws ClassFileNotFoundException if any class referred in {@code resolved} 
+     *         does not exist.
+     * @throws ClassFileIllFormedException if any class referred in {@code resolved} 
+     *         is ill-formed.
+     * @throws BadClassFileVersionException if any class referred in {@code resolved}
+     *         has a version number that is unsupported by the current version of JBSE.
+     * @throws WrongClassNameException if the bytecode of any class referred in {@code resolved}
+     *         has a name that is different from what expected (the corresponding name in 
+     *         {@code resolved}).
+     * @throws IncompatibleClassFileException if the superclass of any class referred in {@code resolved}
+     *         is resolved to an interface type, or a superinterface is resolved to an object type.
+     * @throws ClassFileNotAccessibleException if any class referred in {@code resolved} 
+     *         is not accessible by {@code accessor}.
+     * @throws HeapMemoryExhaustedException if {@code state}'s heap memory ends.
+     * @throws InterruptException if the execution of this {@link Algorithm} must be interrupted.
+     * @throws ThreadStackEmptyException if the thread stack is empty.
+     */
+    private static ReferenceConcrete findMethodType(State state, Calculator calc, ClassFile accessor, String descriptor) 
+    throws PleaseLoadClassException, ClassFileNotFoundException, ClassFileIllFormedException, 
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, IncompatibleClassFileException, 
+    ClassFileNotAccessibleException, HeapMemoryExhaustedException, InterruptException, ThreadStackEmptyException {
+        //fast track: the MethodType already exists in the state's cache
+        if (state.hasInstance_JAVA_METHODTYPE(descriptor)) {
+            return state.referenceToInstance_JAVA_METHODTYPE(descriptor);
+        }
+        
+        //in the case the state does not cache the MethodType
+        //we upcall java.lang.invoke.MethodHandleNatives.findMethodHandleType,
+        //see hotspot:/src/share/vm/classfile/systemDictionary.cpp 
+        //lines 2419-2507, function SystemDictionary::find_method_handle_type;
+        //then upcalls the internal (pseudo)method noclass_REGISTERMETHODTYPE
+        //to store the returned method handle in the state's cache
+        try {
+            //prepares the parameters to upcalls: 
+            
+            //1-the return type
+            final String returnTypeName = splitReturnValueDescriptor(descriptor);
+            final ClassFile returnType = resolveTypeNameReturn(state, accessor, returnTypeName);
+            state.ensureInstance_JAVA_CLASS(calc, returnType);
+            final ReferenceConcrete rtype = state.referenceToInstance_JAVA_CLASS(returnType);
+            
+            //2-the parameter types
+            final String[] parameterTypeNames = splitParametersDescriptors(descriptor);
+            final ClassFile cf_arrayOfJAVA_CLASS = state.getClassHierarchy().loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND);
+            final ReferenceConcrete ptypes = state.createArray(calc, null, calc.valInt(parameterTypeNames.length), cf_arrayOfJAVA_CLASS);
+            final Array ptypesArray = (Array) state.getObject(ptypes);
+            int i = 0;
+            for (String parameterTypeName : parameterTypeNames) {
+                final ClassFile parameterType = resolveTypeNameParameter(state, accessor, parameterTypeName);
+                state.ensureInstance_JAVA_CLASS(calc, parameterType);
+                ptypesArray.setFast(calc.valInt(i), state.referenceToInstance_JAVA_CLASS(parameterType));
+                ++i;
+            }
+            
+            //3-the descriptor itself
+            state.ensureStringLiteral(calc, descriptor);
+            final ReferenceConcrete descr = state.referenceToStringLiteral(descriptor);
+
+            //upcalls
+            final Snippet snippet = state.snippetFactoryNoWrap()
+            	//parameters for noclass_REGISTERMETHODTYPE
+            	.addArg(descr)
+            	//parameters for JAVA_METHODHANDLENATIVES_FINDMETHODHANDLETYPE
+            	.addArg(rtype)
+            	.addArg(ptypes)
+            	//pushes everything
+				.op_aload((byte) 0)
+				.op_aload((byte) 1)
+				.op_aload((byte) 2)
+                .op_invokestatic(JAVA_METHODHANDLENATIVES_FINDMETHODHANDLETYPE)
+                //let's populate the descriptor now
+                .op_dup()
+                .op_invokevirtual(JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING)
+                .op_pop() //we care only of the side effect
+                //finally we register the method type
+                .op_invokestatic(noclass_REGISTERMETHODTYPE)
+                .op_return()
+                .mk();
+            state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang/invoke"); //zero offset so that upon return from the snippet will repeat the invocation of java.lang.invoke.MethodHandleNatives.resolve and reexecute this bytecode 
+            exitFromAlgorithm();
+        } catch (InvalidInputException | InvalidTypeException | 
+        		 FastArrayAccessNotAllowedException | InvalidProgramCounterException e) {
+            //this should never happen
+            failExecution(e);
+        }
+        
+        return null; //unreachable, to keep the compiler happy
+    }
+    
+    private static ClassFile resolveTypeNameReturn(State state, ClassFile accessor, String returnTypeName) 
+    throws InvalidInputException, ClassFileNotFoundException, IncompatibleClassFileException, 
+    ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, 
+    WrongClassNameException, ClassFileNotAccessibleException, PleaseLoadClassException {
+        final ClassFile retVal;
+        if (isPrimitive(returnTypeName) || isVoid(returnTypeName)) {
+            retVal = state.getClassHierarchy().getClassFilePrimitiveOrVoid(toPrimitiveOrVoidCanonicalName(returnTypeName));
+        } else if (isArray(returnTypeName) || isReference(returnTypeName)) {
+            retVal = state.getClassHierarchy().resolveClass(accessor, className(returnTypeName), state.bypassStandardLoading());
+        } else {
+            throw new InvalidInputException("Wrong return type name " + returnTypeName + ".");
+        }
+        return retVal;
+    }
+    
+    private static ClassFile resolveTypeNameParameter(State state, ClassFile accessor, String parameterTypeName) 
+    throws InvalidInputException, ClassFileNotFoundException, IncompatibleClassFileException, 
+    ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, 
+    WrongClassNameException, ClassFileNotAccessibleException, PleaseLoadClassException {
+        final ClassFile retVal;
+        if (isPrimitive(parameterTypeName)) {
+            retVal = state.getClassHierarchy().getClassFilePrimitiveOrVoid(toPrimitiveOrVoidCanonicalName(parameterTypeName));
+        } else if (isArray(parameterTypeName) || isReference(parameterTypeName)) {
+            retVal = state.getClassHierarchy().resolveClass(accessor, className(parameterTypeName), state.bypassStandardLoading());
+        } else {
+            throw new InvalidInputException("Wrong parameter type name " + parameterTypeName + ".");
+        }
+        return retVal;
     }
 
     /**
@@ -315,6 +721,42 @@ public final class Util {
         return "(" + REFERENCE + sig.getClassName() + TYPEEND + sig.getDescriptor().substring(1);
     }
 
+	
+    /**
+     * Checks if a method name is the name of a static signature polymorphic
+     * method.
+     * 
+     * @param methodName a {@link String}.
+     * @return {@code true} if {@code methodName} is one of  
+     *         {@code linkToInterface}, {@code linkToSpecial}, {@code linkToStatic},
+     *         or {@code linkToVirtual}. 
+     */
+    public static boolean isSignaturePolymorphicMethodStatic(String methodName) {
+        return 
+        (JAVA_METHODHANDLE_LINKTOINTERFACE.getName().equals(methodName) ||
+        JAVA_METHODHANDLE_LINKTOSPECIAL.getName().equals(methodName) ||
+        JAVA_METHODHANDLE_LINKTOSTATIC.getName().equals(methodName) ||
+        JAVA_METHODHANDLE_LINKTOVIRTUAL.getName().equals(methodName));
+    }
+	
+    /**
+     * Checks if a method name is the name of an intrinsic signature polymorphic
+     * method.
+     * 
+     * @param methodName a {@link String}.
+     * @return {@code true} if {@code methodName} is one of {@code invokeBasic}, 
+     *         {@code linkToInterface}, {@code linkToSpecial}, {@code linkToStatic},
+     *         or {@code linkToVirtual}. 
+     */
+    public static boolean isSignaturePolymorphicMethodIntrinsic(String methodName) {
+        return 
+        (JAVA_METHODHANDLE_INVOKEBASIC.getName().equals(methodName) ||
+        JAVA_METHODHANDLE_LINKTOINTERFACE.getName().equals(methodName) ||
+        JAVA_METHODHANDLE_LINKTOSPECIAL.getName().equals(methodName) ||
+        JAVA_METHODHANDLE_LINKTOSTATIC.getName().equals(methodName) ||
+        JAVA_METHODHANDLE_LINKTOVIRTUAL.getName().equals(methodName));
+    }
+    
     /**
      * Converts a {@code java.lang.String} {@link Instance}
      * into a (meta-level) string.

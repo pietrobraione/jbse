@@ -38,7 +38,7 @@ public final class Algo_JAVA_CLASS_GETMODIFIERS extends Algo_INVOKEMETA_Nonbranc
             final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject((Reference) this.data.operand(0));
             if (clazz == null) {
                 //this should never happen
-                failExecution("violated invariant (unexpected heap access with symbolic unresolved reference)");
+                failExecution("Violated invariant (unexpected heap access with symbolic unresolved reference).");
             }
             final ClassFile cf = clazz.representedClass();
             this.modifiers = this.ctx.getCalculator().valInt(cf.getModifiers());

@@ -956,26 +956,6 @@ public class ClassFileJavassist extends ClassFile {
     }
     
     @Override
-    public boolean isMethodSignaturePolymorphic(Signature methodSignature) throws MethodNotFoundException {
-        //cannot be signature polymorphic if it is not in JAVA_METHODHANDLE
-        if (!JAVA_METHODHANDLE.equals(getClassName())) {
-            return false;
-        }
-        
-        //cannot be signature polymorphic if it has wrong descriptor
-        if (!SIGNATURE_POLYMORPHIC_DESCRIPTOR.equals(methodSignature.getDescriptor())) {
-            return false;
-        }
-        
-        //cannot be signature polymorphic if is not (native | varargs)
-        if (!isMethodNative(methodSignature) || !isMethodVarargs(methodSignature)) {
-            return false;
-        }
-        
-        return true;
-    }
-    
-    @Override
     public boolean isMethodCallerSensitive(Signature methodSignature) 
     throws MethodNotFoundException {
         final String[] annotations;
