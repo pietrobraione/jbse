@@ -12,6 +12,8 @@ import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Offsets.offsetInvoke;
+import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_CLAZZ;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_NAME;
@@ -22,7 +24,9 @@ import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOSTATIC;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOVIRTUAL;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_STRING;
+import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
+import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
 import static jbse.common.Type.parametersNumber;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.splitParametersDescriptors;
@@ -139,25 +143,27 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 		            invokeClassLoaderLoadClass(state, this.ctx.getCalculator(), e);
 		            exitFromAlgorithm();
 				} catch (ClassFileNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ClassFileIllFormedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IncompatibleClassFileException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ClassFileNotAccessibleException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+		            //TODO should this exception wrap a ClassNotFoundException?
+		            throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR);
+		            exitFromAlgorithm();
 				} catch (BadClassFileVersionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+		            throwNew(state, this.ctx.getCalculator(), UNSUPPORTED_CLASS_VERSION_ERROR);
+		            exitFromAlgorithm();
 				} catch (WrongClassNameException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+		            throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+		            exitFromAlgorithm();
+		        } catch (IncompatibleClassFileException e) {
+		            throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
+		            exitFromAlgorithm();
+				} catch (ClassFileNotAccessibleException e) {
+		            throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
+		            exitFromAlgorithm();
 				} catch (HeapMemoryExhaustedException e) {
 		            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
+		            exitFromAlgorithm();
+		        } catch (ClassFileIllFormedException e) {
+		            //TODO is it ok?
+		            throwVerifyError(state, this.ctx.getCalculator());
 		            exitFromAlgorithm();
 				}
 	        	//gets the adapter

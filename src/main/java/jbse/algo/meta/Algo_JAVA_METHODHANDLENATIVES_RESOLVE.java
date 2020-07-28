@@ -25,7 +25,9 @@ import static jbse.algo.meta.Util.getInstance;
 import static jbse.algo.meta.Util.INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION;
 import static jbse.algo.meta.Util.OK;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
+import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.ILLEGAL_ARGUMENT_EXCEPTION;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.INTERNAL_ERROR;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_CLAZZ;
@@ -36,8 +38,12 @@ import static jbse.bc.Signatures.JAVA_METHODTYPE;
 import static jbse.bc.Signatures.JAVA_METHODTYPE_METHODDESCRIPTOR;
 import static jbse.bc.Signatures.JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING;
 import static jbse.bc.Signatures.JAVA_STRING;
+import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
+import static jbse.bc.Signatures.NO_SUCH_FIELD_ERROR;
+import static jbse.bc.Signatures.NO_SUCH_METHOD_ERROR;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.SIGNATURE_POLYMORPHIC_DESCRIPTOR;
+import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 
@@ -266,37 +272,33 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             invokeClassLoaderLoadClass(state, calc, e);
             exitFromAlgorithm();
         } catch (ClassFileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (ClassFileIllFormedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            //TODO should this exception wrap a ClassNotFoundException?
+            throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR);
+            exitFromAlgorithm();
         } catch (BadClassFileVersionException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throwNew(state, this.ctx.getCalculator(), UNSUPPORTED_CLASS_VERSION_ERROR);
+            exitFromAlgorithm();
         } catch (WrongClassNameException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+            exitFromAlgorithm();
         } catch (IncompatibleClassFileException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            exitFromAlgorithm();
         } catch (MethodNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (MethodNotAccessibleException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throwNew(state, this.ctx.getCalculator(), NO_SUCH_METHOD_ERROR);
+            exitFromAlgorithm();
+        } catch (ClassFileNotAccessibleException | MethodNotAccessibleException | FieldNotAccessibleException e) {
+            throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
+            exitFromAlgorithm();
         } catch (FieldNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (ClassFileNotAccessibleException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (FieldNotAccessibleException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throwNew(state, this.ctx.getCalculator(), NO_SUCH_FIELD_ERROR);
+            exitFromAlgorithm();
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, calc, OUT_OF_MEMORY_ERROR);
+            exitFromAlgorithm();
+        } catch (ClassFileIllFormedException e) {
+            //TODO is it ok?
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         } catch (ClassCastException e) {
             //TODO is it ok?
