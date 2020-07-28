@@ -29,6 +29,7 @@ import static jbse.common.Type.splitParametersDescriptors;
 import static jbse.common.Type.splitReturnValueDescriptor;
 import static jbse.common.Type.TYPEEND;
 
+import java.util.Arrays;
 import java.util.function.Supplier;
 
 import jbse.algo.BytecodeData_1KME.Kind;
@@ -224,7 +225,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 		        final String splitReturnValueDescriptorSignature = splitReturnValueDescriptor(this.data.signature().getDescriptor());
 		        final String descriptor = "(" + 
 		        		REFERENCE + JAVA_OBJECT + TYPEEND +  //the form to invoke
-		        		String.join("", splitParametersDescriptorSignature) +
+		        		String.join("", Arrays.stream(splitParametersDescriptorSignature).map(jbse.common.Type::simplifyType).toArray(String[]::new)) +
 		        		(hasAppendix ? (REFERENCE + JAVA_OBJECT + TYPEEND ) : "") + 
 		        		")" + splitReturnValueDescriptorSignature;
 		        this.adapterSignature = new Signature(this.clazz.getClassName(), descriptor, name);

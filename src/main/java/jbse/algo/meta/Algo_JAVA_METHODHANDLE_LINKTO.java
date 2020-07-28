@@ -169,10 +169,10 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
 	        final Signature signatureToInvoke = new Signature(clazz.getClassName(), descriptor, name);
 
 	        //performs method lookup
-            final boolean isVirtualInterface = !this.isStatic && !this.isSpecial;
+            final boolean isVirtualInterface = !this.isLinkStatic && !this.isLinkSpecial;
             final ClassFile receiverClass;
             if (isVirtualInterface) {
-                final Reference thisRef = state.peekReceiverArg(this.data.signature());
+                final Reference thisRef = (Reference) this.data.operand(0);
                 receiverClass = state.getObject(thisRef).getType();
             } else {
                 receiverClass = null;

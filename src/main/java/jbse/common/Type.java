@@ -851,6 +851,31 @@ public final class Type {
         } 
         return BOOLEAN; //firstType == BOOLEAN && secondType == BOOLEAN
     }
+    
+    /**
+     * Returns the simplified type as used 
+     * in lambda forms corresponding to a type.
+     * 
+     * @param type a {@link String} representing a type.
+     * @return the corresponding simplified type.
+     */
+    public static String simplifyType(String type) {
+    	if (isPrimitiveIntegral(type.charAt(0))) {
+    		if (isCat_1(type.charAt(0))) {
+    			return "" + INT;
+    		} else {
+    			return "" + LONG;
+    		}
+    	} else if (isPrimitiveFloating(type.charAt(0))) {
+    		if (isCat_1(type.charAt(0))) {
+    			return "" + FLOAT;
+    		} else {
+    			return "" + DOUBLE;
+    		}
+    	} else {
+    		return "" + REFERENCE + "java/lang/Object" + TYPEEND;
+    	}
+    }
 
     /**
      * Do not instantiate it!

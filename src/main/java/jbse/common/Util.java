@@ -89,7 +89,7 @@ public final class Util {
 	public static boolean isJarFile(Path path) {
 		return Files.exists(path) && !Files.isDirectory(path) && JAR_EXTENSION.matches(path);
 	}
-	
+
     /**
      * Do not instantiate it!
      */

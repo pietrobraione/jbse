@@ -20,6 +20,7 @@ import static jbse.common.Type.parametersNumber;
 import static jbse.common.Type.splitParametersDescriptors;
 import static jbse.common.Type.splitReturnValueDescriptor;
 
+import java.util.Arrays;
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
@@ -137,7 +138,7 @@ public final class Algo_JAVA_METHODHANDLE_INVOKEBASIC extends Algo_INVOKEMETA_No
 	        final String splitReturnValueDescriptorSignature = splitReturnValueDescriptor(this.data.signature().getDescriptor());
 	        final String descriptor = "(" + 
 	        		REFERENCE + JAVA_OBJECT + TYPEEND +  //the form to invoke
-	        		String.join("", splitParametersDescriptorSignature) +
+	        		String.join("", Arrays.stream(splitParametersDescriptorSignature).map(jbse.common.Type::simplifyType).toArray(String[]::new)) +
 	        		")" + splitReturnValueDescriptorSignature;
 			this.adapterSignature = new Signature(this.clazz.getClassName(), descriptor, name);
 		} catch (ClassCastException e) {
