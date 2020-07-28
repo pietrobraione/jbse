@@ -1,8 +1,7 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.storeInArray;
-import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.common.Type.INT;
 
@@ -16,7 +15,6 @@ import jbse.algo.StrategyUpdate;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
-import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
@@ -34,16 +32,16 @@ import jbse.val.exc.InvalidTypeException;
  * 
  * @author Pietro Braione
  */
-public final class Algo_SUN_UNSAFE_PUTOBJECTVOLATILE_Array extends Algo_INVOKEMETA<
+public final class Algo_SUN_UNSAFE_PUTOBJECT_O_Array extends Algo_INVOKEMETA<
 DecisionAlternative_XASTORE,
 StrategyDecide<DecisionAlternative_XASTORE>, 
 StrategyRefine<DecisionAlternative_XASTORE>, 
 StrategyUpdate<DecisionAlternative_XASTORE>> {
 
-    private Reference arrayReference; //produced by the cooker
-    private Simplex index; //produced by the cooker
-    private Primitive inRange, outOfRange; //produced by the cooker
-    private Value valueToStore; //produced by the cooker
+    private Reference arrayReference; //set by cooker
+    private Simplex index; //set by cooker
+    private Value valueToStore; //set by cooker
+    private Primitive inRange, outOfRange; //set by cooker
     
     @Override
     protected Supplier<Integer> numOperands() {
@@ -52,59 +50,32 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
     
     @Override
     protected BytecodeCooker bytecodeCooker() {
-        //copied from Algo_XASTORE
         return (state) -> { 
         	final Calculator calc = this.ctx.getCalculator();
             try {
                 this.arrayReference = (Reference) this.data.operand(1);
-            } catch (ClassCastException e) {
-                throwVerifyError(state, calc);
-                exitFromAlgorithm();
-            }
-            try {
-                this.index = (Simplex) calc.push((Simplex) this.data.operand(2)).narrow(INT).pop();
-            } catch (ClassCastException | InvalidTypeException e) {
-                throwVerifyError(state, calc);
-                exitFromAlgorithm();
-            }
-            
-            final Value value = this.data.operand(3);
-            
-            //no null check
-
-            //creates the Values that check whether the index
-            //is in range or out of range w.r.t. the array
-            //moreover, converts the value in case of [b/c/s]astore
-            try {
+                this.index = (Simplex) calc.push((Simplex) this.data.operand(2)).narrow(INT).pop();            
+                this.valueToStore = this.data.operand(3);
                 final Array array = (Array) state.getObject(this.arrayReference);
                 this.inRange = array.inRange(calc, this.index);
                 this.outOfRange = array.outOfRange(calc, this.index);
+
+                //checks
                 final ClassFile arrayMemberType = array.getType().getMemberClass();
                 if (arrayMemberType.isReference() || arrayMemberType.isArray()) {
-                    if (!(value instanceof Reference)) {
-                        throwVerifyError(state, calc);
-                        exitFromAlgorithm();
-                    }
-                    final Reference valueToStoreRef = (Reference) value;
+                    final Reference valueToStoreRef = (Reference) this.valueToStore;
                     final Objekt o = state.getObject(valueToStoreRef);
                     final ClassHierarchy hier = state.getClassHierarchy();
-                    if (state.isNull(valueToStoreRef) ||
-                        hier.isAssignmentCompatible(o.getType(), arrayMemberType)) {
-                        this.valueToStore = value;
-                    } else {
-                        throw new UndefinedResultException("The Object x parameter to sun.misc.Unsafe.putObjectVolatile was not assignment-compatible with the Object o (array) parameter.");
+                    if (!state.isNull(valueToStoreRef) &&
+                        !hier.isAssignmentCompatible(o.getType(), arrayMemberType)) {
+                        throw new UndefinedResultException("The Object x parameter to sun.misc.Unsafe.putObjectXxxx was not assignment-compatible with the Object o (array) parameter.");
                     }
                 } else {
-                    throw new UndefinedResultException("The Object o parameter to sun.misc.Unsafe.putObjectVolatile was an array whose member type is not a reference.");
+                    throw new UndefinedResultException("The Object o parameter to sun.misc.Unsafe.putObjectXxxx was an array whose member type is not a reference.");
                 }
-            } catch (InvalidInputException | InvalidTypeException | 
-                     ClassCastException e) {
-                //index is bad, or the reference does not point to an array,
-                //or the class/superclasses of the array component, or of 
-                //the value to store, are not in the classpath or are incompatible
-                //with JBSE
-                throwVerifyError(state, calc); //TODO is it ok?
-                exitFromAlgorithm();
+            } catch (ClassCastException | InvalidTypeException e) {
+                //this should never happen now
+                failExecution(e);
             }
         };
     }
@@ -135,7 +106,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
             if (alt.isInRange()) {
                 storeInArray(state, this.ctx, this.arrayReference, this.index, this.valueToStore);
             } else {
-                throw new UndefinedResultException("The long offset parameter to sun.misc.Unsafe.putObjectVolatile was out of range w.r.t. the Object o (array) parameter.");
+                throw new UndefinedResultException("The long offset parameter to sun.misc.Unsafe.putObjectXxxx was out of range w.r.t. the Object o (array) parameter.");
             }
         };
     }

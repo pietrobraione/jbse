@@ -34,8 +34,8 @@ import jbse.val.Value;
  * @author Pietro Braione
  */
 //TODO refactor together with Algo_SUN_UNSAFE_GETINTVOLATILE
-public final class Algo_SUN_UNSAFE_GETOBJECTVOLATILE extends Algo_INVOKEMETA_Nonbranching {
-    private final Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array algoArray = new Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array();
+public final class Algo_SUN_UNSAFE_GETOBJECT_O extends Algo_INVOKEMETA_Nonbranching {
+    private final Algo_SUN_UNSAFE_GETOBJECT_O_Array algoArray = new Algo_SUN_UNSAFE_GETOBJECT_O_Array();
     private Value read; //set by cookMore
 
     @Override

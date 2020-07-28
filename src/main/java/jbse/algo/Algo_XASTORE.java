@@ -41,8 +41,8 @@ StrategyDecide<DecisionAlternative_XASTORE>,
 StrategyRefine<DecisionAlternative_XASTORE>, 
 StrategyUpdate<DecisionAlternative_XASTORE>> {
 
-    Primitive inRange, outOfRange; //produced by the cooker
-    Value valueToStore; //produced by the cooker
+    private Primitive inRange, outOfRange; //set by cooker
+    private Value valueToStore; //set by cooker
 
     @Override
     protected Supplier<Integer> numOperands() {

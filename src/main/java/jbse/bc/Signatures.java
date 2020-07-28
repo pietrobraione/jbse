@@ -718,16 +718,26 @@ public final class Signatures {
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + VOID, "ensureClassInitialized");
     public static final Signature SUN_UNSAFE_GETBYTE = 
         new Signature(SUN_UNSAFE, "(" + LONG + ")" + BYTE, "getByte");
+    public static final Signature SUN_UNSAFE_GETINT = 
+        new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + ")" + INT, "getInt");
     public static final Signature SUN_UNSAFE_GETINTVOLATILE = 
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + ")" + INT, "getIntVolatile");
     public static final Signature SUN_UNSAFE_GETLONG = 
         new Signature(SUN_UNSAFE, "(" + LONG + ")" + LONG, "getLong");
+    public static final Signature SUN_UNSAFE_GETOBJECT = 
+        new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "getObject");
     public static final Signature SUN_UNSAFE_GETOBJECTVOLATILE = 
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "getObjectVolatile");
     public static final Signature SUN_UNSAFE_OBJECTFIELDOFFSET = 
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_FIELD + TYPEEND + ")" + LONG, "objectFieldOffset");
+    public static final Signature SUN_UNSAFE_PUTINT = 
+        new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + INT + ")" + VOID, "putInt");
+    public static final Signature SUN_UNSAFE_PUTINTVOLATILE = 
+        new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + INT + ")" + VOID, "putIntVolatile");
     public static final Signature SUN_UNSAFE_PUTLONG = 
         new Signature(SUN_UNSAFE, "(" + LONG + LONG + ")" + VOID, "putLong");
+    public static final Signature SUN_UNSAFE_PUTOBJECT = 
+        new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "putObject");
     public static final Signature SUN_UNSAFE_PUTOBJECTVOLATILE = 
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "putObjectVolatile");
     public static final Signature SUN_UNSAFE_REGISTERNATIVES =

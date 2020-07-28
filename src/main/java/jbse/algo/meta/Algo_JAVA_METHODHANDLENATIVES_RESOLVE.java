@@ -44,8 +44,7 @@ import static jbse.bc.Signatures.NO_SUCH_METHOD_ERROR;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.SIGNATURE_POLYMORPHIC_DESCRIPTOR;
 import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
-import static jbse.common.Type.REFERENCE;
-import static jbse.common.Type.TYPEEND;
+import static jbse.common.Type.toInternalName;
 
 import java.util.function.Supplier;
 
@@ -246,11 +245,11 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 if (JAVA_CLASS.equals(memberNameDescriptorObject.getType().getClassName())) {
                     //memberNameDescriptorObject is an Instance of java.lang.Class:
                     //gets the name of the represented class and puts it in memberNameType
-                    memberNameType = "" + REFERENCE + ((Instance_JAVA_CLASS) memberNameDescriptorObject).representedClass().getClassName() + TYPEEND;
+                    memberNameType = toInternalName(((Instance_JAVA_CLASS) memberNameDescriptorObject).representedClass().getClassName());
                 } else if (JAVA_STRING.equals(memberNameDescriptorObject.getType().getClassName())) {
                     //memberNameDescriptorObject is an Instance of java.lang.String:
                     //gets its String value and puts it in memberNameDescriptor
-                    memberNameType = "" + REFERENCE + valueString(state, memberNameDescriptorObject) + TYPEEND;
+                    memberNameType = toInternalName(valueString(state, memberNameDescriptorObject)); //TODO shall we replace . with / in class names???
                 } else {
                     //memberNameDescriptorObject is neither a Class nor a String:
                     //just fails

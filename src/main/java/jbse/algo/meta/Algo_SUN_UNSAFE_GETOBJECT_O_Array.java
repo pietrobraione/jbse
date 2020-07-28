@@ -19,6 +19,7 @@ import static jbse.common.Type.isPrimitiveOpStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA;
@@ -65,14 +66,14 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Meta-level implementation of {@link sun.misc.Unsafe#getIntVolatile(Object, long)} 
- * in the case the object to read into is an array.
+ * Meta-level implementation of {@link sun.misc.Unsafe#getObjectVolatile(Object, long)} in 
+ * the case the object to read into is an array.
  * 
  * @author Pietro Braione
  */
 //TODO heavily copied from Algo_XALOAD and Algo_XYLOAD_GETX: Refactor and merge 
-//TODO refactor together with Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array
-public final class Algo_SUN_UNSAFE_GETINTVOLATILE_Array extends Algo_INVOKEMETA<
+//TODO refactor together with Algo_SUN_UNSAFE_GETINTVOLATILE_Array
+public final class Algo_SUN_UNSAFE_GETOBJECT_O_Array extends Algo_INVOKEMETA<
 DecisionAlternative_XALOAD,
 StrategyDecide<DecisionAlternative_XALOAD>, 
 StrategyRefine<DecisionAlternative_XALOAD>, 
@@ -89,10 +90,9 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
-        	final Calculator calc = this.ctx.getCalculator();
             try {
                 this.myObjectRef = (Reference) this.data.operand(1);
-                this.index = (Simplex) calc.push((Simplex) this.data.operand(2)).narrow(INT).pop();
+                this.index = (Simplex) this.ctx.getCalculator().push((Simplex) this.data.operand(2)).narrow(INT).pop();
             } catch (ClassCastException | InvalidTypeException e) {
                 //this should never happen now
                 failExecution(e);
@@ -101,9 +101,9 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             Array array = null;
             try {
                 array = (Array) state.getObject(this.myObjectRef);
-                final ClassFile arrayType = array.getType();
-                if (!arrayType.getMemberClass().getClassName().equals("int")) {
-                    throw new UndefinedResultException("The Object o parameter to sun.misc.Unsafe.getIntVolatile was an array whose member type is not int");
+                final ClassFile arrayMemberType = array.getType().getMemberClass();
+                if (!arrayMemberType.isReference() && !arrayMemberType.isArray()) {
+                    throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getObjectVolatile was an array whose member type is not a reference type.");
                 }
             } catch (ClassCastException e) {
                 //this should never happen now
@@ -119,7 +119,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
 
     @Override
     protected StrategyDecide<DecisionAlternative_XALOAD> decider() {
-        //TODO unify with Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array
+        //TODO unify with Algo_SUN_UNSAFE_GETINTVOLATILE_Array
         return (state, result) -> { 
             //builds the ArrayAccessInfos by reading the array
             final List<ArrayAccessInfo> arrayAccessInfos = getFromArray(state, this.ctx.getCalculator(), this.myObjectRef, this.index);
@@ -196,7 +196,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 //augments the path condition
             	final Expression accessExpression = altResolved.getArrayAccessExpressionSimplified();
             	if (accessExpression != null) {
-            		state.assume(Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.ctx.getCalculator().simplify(Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.ctx.decisionProcedure.simplify(accessExpression)));
+            		state.assume(Algo_SUN_UNSAFE_GETOBJECT_O_Array.this.ctx.getCalculator().simplify(Algo_SUN_UNSAFE_GETOBJECT_O_Array.this.ctx.decisionProcedure.simplify(accessExpression)));
             	}
 
                 //if the value is fresh, it writes it back in the array
@@ -214,7 +214,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 try {
                 	final Expression accessExpression = altOut.getArrayAccessExpressionSimplified();
                 	if (accessExpression != null) {
-                		state.assume(Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.ctx.getCalculator().simplify(Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.ctx.decisionProcedure.simplify(accessExpression)));
+                		state.assume(Algo_SUN_UNSAFE_GETOBJECT_O_Array.this.ctx.getCalculator().simplify(Algo_SUN_UNSAFE_GETOBJECT_O_Array.this.ctx.decisionProcedure.simplify(accessExpression)));
                 	}
 				} catch (DecisionException e) { //TODO propagate exception (...and replace with a better exception)
 					//this should never happen
@@ -229,8 +229,9 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             @Override
             public void updateResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved) 
             throws DecisionException, InterruptException, MissingTriggerParameterException, 
-            ClasspathException, NotYetImplementedException, InvalidOperandException, InvalidInputException {
-            	final Calculator calc = Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.ctx.getCalculator();
+            ClasspathException, NotYetImplementedException, NoSuchElementException, InvalidOperandException, InvalidInputException {
+            	final Calculator calc = Algo_SUN_UNSAFE_GETOBJECT_O_Array.this.ctx.getCalculator();
+            	
                 //possibly materializes the value
                 final Value val = altResolved.getValueToLoad();
                 final Value valMaterialized = possiblyMaterialize(state, val);
@@ -239,6 +240,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 //pushes the value
                 try {
                     final Value valToPush;
+                    //in the next if only the else branch is taken, but we keep it to highlight the fact that it can be refactored together with other Algo_SUN_UNSAFE_GETX_Array 
                     if (isPrimitive(valMaterializedType) && !isPrimitiveOpStack(valMaterializedType)) {
                         valToPush = calc.push((Primitive) valMaterialized).widen(INT).pop();
                     } else {
@@ -246,7 +248,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                     }
                     state.pushOperand(valToPush);
                 } catch (ClassCastException | InvalidTypeException | 
-                         ThreadStackEmptyException e) {
+                         ThreadStackEmptyException e) { //TODO propagate exceptions
                     //this should not happen
                     failExecution(e);
                 }
@@ -254,11 +256,11 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 //manages triggers
                 try {
                     final boolean someTriggerFrameLoaded = 
-                        Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.ctx.triggerManager.loadTriggerFrames(state, calc, altResolved, Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.programCounterUpdate.get());
+                        Algo_SUN_UNSAFE_GETOBJECT_O_Array.this.ctx.triggerManager.loadTriggerFrames(state, calc, altResolved, Algo_SUN_UNSAFE_GETOBJECT_O_Array.this.programCounterUpdate.get());
                     if (someTriggerFrameLoaded) {
                         exitFromAlgorithm();
                     }
-                } catch (InvalidProgramCounterException e) {
+                } catch (InvalidProgramCounterException e) { //TODO propagate exceptions?
                     throwVerifyError(state, calc);
                     exitFromAlgorithm();
                 } catch (ThreadStackEmptyException e) {
@@ -270,7 +272,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             @Override
             public void updateOut(State s, DecisionAlternative_XALOAD_Out dao) 
             throws UndefinedResultException {
-                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getIntVolatile was not a correct index for the object (array) parameter");
+                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getObjectVolatile was not a correct index for the object (array) parameter");
             }
         };
     }

@@ -33,8 +33,8 @@ import jbse.val.Value;
  * @author Pietro Braione
  */
 //TODO refactor together with Algo_SUN_UNSAFE_GETOBJECTVOLATILE
-public final class Algo_SUN_UNSAFE_GETINTVOLATILE extends Algo_INVOKEMETA_Nonbranching {
-    private final Algo_SUN_UNSAFE_GETINTVOLATILE_Array algoArray = new Algo_SUN_UNSAFE_GETINTVOLATILE_Array();
+public final class Algo_SUN_UNSAFE_GETINT_O extends Algo_INVOKEMETA_Nonbranching {
+    private final Algo_SUN_UNSAFE_GETINT_O_Array algoArray = new Algo_SUN_UNSAFE_GETINT_O_Array();
     private Value read; //set by cookMore
 
     @Override
@@ -53,7 +53,7 @@ public final class Algo_SUN_UNSAFE_GETINTVOLATILE extends Algo_INVOKEMETA_Nonbra
                 throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getIntVolatile was null.");
             }
             final Objekt obj = state.getObject(objRef); //TODO objRef from getStaticFieldBase
-            if (objRef == null) {
+            if (obj == null) {
                 throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.getIntVolatile.");
             }
 
@@ -74,12 +74,12 @@ public final class Algo_SUN_UNSAFE_GETINTVOLATILE extends Algo_INVOKEMETA_Nonbra
             if (obj.hasOffset(ofst)) {
                 this.read = obj.getFieldValue(ofst);
             } else {
-                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getIntVolatile was not a slot number of the object parameter");
+                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getIntVolatile was not a slot number of the object parameter.");
             }
             
             //checks the value
             if (this.read.getType() != INT) {
-                throw new UndefinedResultException("The value read by sun.misc.Unsafe.getIntVolatile was not an int");
+                throw new UndefinedResultException("The value read by sun.misc.Unsafe.getIntVolatile was not an int.");
             }
         } catch (ClassCastException e) {
             throwVerifyError(state, this.ctx.getCalculator());

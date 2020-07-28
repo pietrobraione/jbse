@@ -8,11 +8,14 @@ import static jbse.algo.meta.Util.FAIL_JBSE;
 import static jbse.algo.meta.Util.getInstance;
 import static jbse.algo.meta.Util.INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION;
 import static jbse.bc.Signatures.INTERNAL_ERROR;
+import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.common.Type.LONG;
+import static jbse.common.Type.toInternalName;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_CLAZZ;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_FLAGS;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_NAME;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_TYPE;
+import static jbse.bc.Signatures.JAVA_STRING;
 
 import java.lang.reflect.Modifier;
 import java.util.NoSuchElementException;
@@ -23,6 +26,7 @@ import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.Util.ErrorAction;
+import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.common.exc.ClasspathException;
@@ -59,7 +63,7 @@ abstract class Algo_JAVA_METHODHANDLENATIVES_ABSTRACTFIELDOFFSET extends Algo_IN
 	@Override
 	protected void cookMore(State state) 
 	throws InterruptException, SymbolicValueNotAllowedException, ClasspathException, 
-	InvalidInputException, NoSuchElementException, InvalidTypeException {
+	InvalidInputException, NoSuchElementException, InvalidTypeException, UndefinedResultException {
 		final ErrorAction THROW_JAVA_INTERNAL_ERROR = msg -> { throwNew(state, this.ctx.getCalculator(), INTERNAL_ERROR); exitFromAlgorithm(); };
 
 		//checks the first parameter (the MemberName)
@@ -83,8 +87,27 @@ abstract class Algo_JAVA_METHODHANDLENATIVES_ABSTRACTFIELDOFFSET extends Algo_IN
 			exitFromAlgorithm();
 		}
 		
+        //gets the type of the MemberName as a string
+		final Instance memberNameDescriptorObject = (Instance) state.getObject((Reference) memberNameObject.getFieldValue(JAVA_MEMBERNAME_TYPE));
+        final String memberNameType;
+        if (JAVA_CLASS.equals(memberNameDescriptorObject.getType().getClassName())) {
+            //memberNameDescriptorObject is an Instance of java.lang.Class:
+            //gets the name of the represented class and puts it in memberNameType
+            memberNameType = toInternalName(((Instance_JAVA_CLASS) memberNameDescriptorObject).representedClass().getClassName());
+        } else if (JAVA_STRING.equals(memberNameDescriptorObject.getType().getClassName())) {
+            //memberNameDescriptorObject is an Instance of java.lang.String:
+            //gets its String value and puts it in memberNameDescriptor
+            memberNameType = toInternalName(valueString(state, memberNameDescriptorObject)); //TODO shall we replace . with / in class names???
+        } else {
+            //memberNameDescriptorObject is neither a Class nor a String:
+            //just fails
+            throw new UndefinedResultException("The MemberName self parameter to java.lang.invoke.MethodHandleNatives.xxxFieldOffset represents a field access, but self.type is neither a Class nor a String.");
+        }
+
 		//gets the offset
-		final Signature fieldSignature = new Signature(containerClass.getClassName(), valueString(state, (Reference) memberNameObject.getFieldValue(JAVA_MEMBERNAME_TYPE)), valueString(state, (Reference) memberNameObject.getFieldValue(JAVA_MEMBERNAME_NAME)));
+		final Signature fieldSignature = 
+				new Signature(containerClass.getClassName(), memberNameType, 
+				              valueString(state, (Reference) memberNameObject.getFieldValue(JAVA_MEMBERNAME_NAME)));
 		final int _ofst = containerClass.getFieldOffset(fieldSignature);
 		this.ofst = (Simplex) this.ctx.getCalculator().pushInt(_ofst).to(LONG).pop();
 	}

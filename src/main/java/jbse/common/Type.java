@@ -405,6 +405,33 @@ public final class Type {
             return ERROR;
         }
     }
+    
+    /**
+     * Converts the canonical name of a type or void to its 
+     * corresponding internal name.
+     * @param typeCanonical a {@link String}, the canonical
+     *        name of a primitive type or void.
+     * @return a {@link String}, the internal name for
+     *         {@code typeCanonical}.
+     */
+    public static String toInternalName(String typeCanonical) {
+    	final StringBuilder retVal = new StringBuilder();
+    	String currentType = typeCanonical;
+    	while (true) {
+    		if (currentType.endsWith("[]")) {
+    			retVal.append(ARRAYOF);
+    			currentType = currentType.substring(0, currentType.length() - 2);
+    		} else if (isPrimitiveOrVoidCanonicalName(currentType)) {
+    			retVal.append(toPrimitiveOrVoidInternalName(currentType));
+    			return retVal.toString();
+    		} else {
+    			retVal.append(REFERENCE);
+    			retVal.append(currentType);
+    			retVal.append(TYPEEND);
+    			return retVal.toString();
+    		}
+    	}
+    }
 
     /**
      * Checks whether a primitive type is a category 1
