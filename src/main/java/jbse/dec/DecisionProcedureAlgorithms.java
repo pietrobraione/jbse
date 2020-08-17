@@ -56,6 +56,7 @@ import jbse.tree.DecisionAlternative_XCMPY.Values;
 import jbse.tree.DecisionAlternative_IFX;
 import jbse.tree.DecisionAlternative_IFX_False;
 import jbse.tree.DecisionAlternative_IFX_True;
+import jbse.tree.DecisionAlternative_JAVA_MAP;
 import jbse.tree.DecisionAlternative_XLOAD_GETX;
 import jbse.tree.DecisionAlternative_XLOAD_GETX_Expands;
 import jbse.tree.DecisionAlternative_XLOAD_GETX_Resolved;
@@ -472,34 +473,30 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 
     private void decide_XSWITCH_Concrete(Simplex selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) {
         final int opValue = (Integer) selector.getActualValue();
-        int branchCounter = 1;
         for (int i : tab) {
             if (i == opValue) { 
-                result.add(DecisionAlternative_XSWITCH.toConcrete(i, branchCounter));
+                result.add(DecisionAlternative_XSWITCH.toConcrete(i));
                 return;
             }
-            ++branchCounter;
         }
         //not found
-        result.add(DecisionAlternative_XSWITCH.toConcreteDefault(branchCounter));
+        result.add(DecisionAlternative_XSWITCH.toConcreteDefault());
     }
 
     protected Outcome decide_XSWITCH_Nonconcrete(Primitive selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) 
     throws DecisionException {
         try {
             final boolean isAny = isAny(selector);
-            int branchCounter = 1;
             boolean noEntryIsSat = true; //allows to skip the last sat check
             for (int i : tab) {
                 final Expression exp = (isAny ? null : (Expression) this.calc.push(selector).eq(this.calc.valInt(i)).pop());
                 if (isAny || isSat(exp)) { 
-                    result.add(DecisionAlternative_XSWITCH.toNonconcrete(i, branchCounter));
+                    result.add(DecisionAlternative_XSWITCH.toNonconcrete(i));
                     noEntryIsSat = false;
                 }
-                ++branchCounter;
             }
             if (isAny || noEntryIsSat || isSat(tab.getDefaultClause(this.calc, selector))) { 
-                result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault(branchCounter));
+                result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault());
             }
             final boolean shouldRefine = (!isAny && (result.size() > 1));
             return Outcome.val(shouldRefine, true);
@@ -653,6 +650,58 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 
         }
         return Outcome.val(shouldRefine, true);
+    }
+    
+    public Outcome decide_JAVA_MAP(Primitive[] predicates, SortedSet<DecisionAlternative_JAVA_MAP> result) 
+    throws InvalidInputException, DecisionException {
+    	if (predicates == null || result == null) {
+            throw new InvalidInputException("decide_JAVA_MAP invoked with a null parameter.");
+    	}
+    	boolean allSimplex = true;
+    	for (Primitive predicate : predicates) {
+    		if (predicate == null) {
+                throw new InvalidInputException("decide_JAVA_MAP invoked with a null element in the parameter Primitive[] predicates.");
+    		}
+    		if (predicate instanceof Simplex) {
+    			//do nothing
+    		} else {
+    			allSimplex = false;
+    			break;
+    		}
+    	}
+    	
+    	if (allSimplex) {
+    		final Simplex[] conditions = new Simplex[predicates.length];
+    		for (int i = 0; i < predicates.length; ++i) {
+    			conditions[i] = (Simplex) predicates[i];
+    		}
+    		decide_JAVA_MAP_Concrete(conditions, result);
+    		return Outcome.val(false, result.size() > 1);
+    	} else {
+    		return decide_JAVA_MAP_Nonconcrete(predicates, result);
+    	}
+    }
+    
+    private void decide_JAVA_MAP_Concrete(Simplex[] conditions, SortedSet<DecisionAlternative_JAVA_MAP> result) 
+    throws InvalidInputException {
+    	final Simplex valTrue = this.calc.valBoolean(true);
+		for (int i = 0; i < conditions.length; ++i) {
+			if (conditions[i].surelyTrue()) {
+				result.add(new DecisionAlternative_JAVA_MAP(valTrue, i));
+			}
+		}
+    }
+    
+    protected Outcome decide_JAVA_MAP_Nonconcrete(Primitive[] predicates, SortedSet<DecisionAlternative_JAVA_MAP> result) 
+    throws InvalidInputException, DecisionException {
+		for (int i = 0; i < predicates.length; ++i) {
+			//we assume that predicates contains only Expressions
+			final Expression exp = (Expression) predicates[i];
+			if (isSat(exp)) {
+				result.add(new DecisionAlternative_JAVA_MAP(exp, i));
+			}
+		}
+		return Outcome.val(true, result.size() > 1);
     }
 
     /**

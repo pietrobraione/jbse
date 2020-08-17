@@ -25,7 +25,7 @@ import jbse.mem.Instance;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
-import jbse.tree.DecisionAlternative_XSWITCH;
+import jbse.tree.DecisionAlternative_JAVA_MAP;
 import jbse.val.Calculator;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -41,10 +41,10 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  */
 public final class Algo_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH extends Algo_INVOKEMETA<
-DecisionAlternative_XSWITCH,
-StrategyDecide<DecisionAlternative_XSWITCH>, 
-StrategyRefine<DecisionAlternative_XSWITCH>, 
-StrategyUpdate<DecisionAlternative_XSWITCH>> {
+DecisionAlternative_JAVA_MAP,
+StrategyDecide<DecisionAlternative_JAVA_MAP>, 
+StrategyRefine<DecisionAlternative_JAVA_MAP>, 
+StrategyUpdate<DecisionAlternative_JAVA_MAP>> {
 	private ReferenceSymbolic thisReference;
 	private Reference keysReference;
 	private Instance map;
@@ -123,29 +123,25 @@ StrategyUpdate<DecisionAlternative_XSWITCH>> {
     } 
 
     @Override
-    protected Class<DecisionAlternative_XSWITCH> classDecisionAlternative() {
-        return DecisionAlternative_XSWITCH.class;
+    protected Class<DecisionAlternative_JAVA_MAP> classDecisionAlternative() {
+        return DecisionAlternative_JAVA_MAP.class;
     }
 
     @Override
-    protected StrategyDecide<DecisionAlternative_XSWITCH> decider() {
+    protected StrategyDecide<DecisionAlternative_JAVA_MAP> decider() {
         return (state, result) -> {
-        	//adds all combinations
-        	for (int i = 0; i < this.keyPredicates.length; ++i) {
-        		result.add(DecisionAlternative_XSWITCH.toNonconcrete(i, i));
-        	}
-            final Outcome o = Outcome.val(true, true);
+            final Outcome o = this.ctx.decisionProcedure.decide_JAVA_MAP(this.keyPredicates, result);
             return o;
         };
     }
 
     @Override
-    protected StrategyRefine<DecisionAlternative_XSWITCH> refiner() {
+    protected StrategyRefine<DecisionAlternative_JAVA_MAP> refiner() {
         return (state, alt) -> {
-            state.assume(this.keyPredicates[alt.value()]);
+            state.assume(this.keyPredicates[alt.getBranchNumber()]);
             
     		try {
-            	int z = alt.value();
+            	int z = alt.getBranchNumber();
                 final Calculator calc = this.ctx.getCalculator();
                 final Array keysArray = (Array) state.getObject(this.keysReference);
             	for (int k = 0; k < this.numKeys; ++k) {
@@ -181,7 +177,7 @@ StrategyUpdate<DecisionAlternative_XSWITCH>> {
     }
 
     @Override
-    protected StrategyUpdate<DecisionAlternative_XSWITCH> updater() {
+    protected StrategyUpdate<DecisionAlternative_JAVA_MAP> updater() {
         return (state, alt) -> {
         	//nothing to do
         };
