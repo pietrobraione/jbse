@@ -3,6 +3,7 @@ package jbse.bc;
 import java.util.List;
 
 import jbse.bc.exc.AttributeNotFoundException;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
@@ -336,7 +337,8 @@ public class ClassFileSnippetWrap extends ClassFile {
     }
 
     @Override
-    public ConstantPoolValue getValueFromConstantPool(int index) throws InvalidIndexException {
+    public ConstantPoolValue getValueFromConstantPool(int index) 
+    throws InvalidIndexException, ClassFileIllFormedException {
     	if (this.snippet.containsValueFromConstantPool(index)) {
     		try {
     			return this.snippet.getValueFromConstantPool(index);

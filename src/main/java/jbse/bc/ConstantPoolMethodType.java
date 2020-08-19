@@ -1,19 +1,19 @@
 package jbse.bc;
 
 /**
- * A {@link ConstantPoolValue} representing a symbolic reference to a class from 
+ * A {@link ConstantPoolValue} representing a symbolic reference to a method type from 
  * the constant pool. 
  * 
  * @author Pietro Braione
  *
  */
-public final class ConstantPoolClass extends ConstantPoolValue {
+public final class ConstantPoolMethodType extends ConstantPoolValue {
     private final String value;
     private final int hashCode;
 
-    public ConstantPoolClass(String value) { 
+    public ConstantPoolMethodType(String value) { 
         this.value = value; 
-        final int prime = 21;
+        final int prime = 29;
         int result = 1;
         result = prime * result + ((value == null) ? 0 : value.hashCode());
         this.hashCode = result;
@@ -40,7 +40,7 @@ public final class ConstantPoolClass extends ConstantPoolValue {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final ConstantPoolClass other = (ConstantPoolClass) obj;
+        final ConstantPoolMethodType other = (ConstantPoolMethodType) obj;
         if (this.value == null) {
             if (other.value != null) {
                 return false;

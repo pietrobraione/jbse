@@ -13,7 +13,7 @@ public final class ConstantPoolPrimitive extends ConstantPoolValue {
 
     private ConstantPoolPrimitive(Number number) {
         this.number = number;
-        final int prime = 11;
+        final int prime = 13;
         int result = 1;
         result = prime * result + ((number == null) ? 0 : number.hashCode());
         this.hashCode = result;

@@ -1576,9 +1576,9 @@ public final class Util {
                             } else { //should never happen
                                 /* 
                                  * TODO is it true that it should never happen? Especially, 
-                                 * what about ConstantPoolClass values? Give another look at the 
-                                 * JVMS and determine whether other kind of constant static fields
-                                 * may be present.
+                                 * what about ConstantPoolClass/MethodType/MethodHandle values? 
+                                 * Give another look at the JVMS and determine whether other kind 
+                                 * of constant static fields may be present.
                                  */
                                 failExecution("Unexpected constant from constant pool (neither primitive nor String)."); 
                                 //TODO put string in constant or throw better exception
@@ -1586,7 +1586,7 @@ public final class Util {
                             k.setFieldValue(sig, v);
                         }
                     } catch (FieldNotFoundException | AttributeNotFoundException | 
-                    		 InvalidIndexException | InvalidInputException e) {
+                    		 InvalidIndexException | InvalidInputException | ClassFileIllFormedException e) {
                         //this should never happen
                         failExecution(e);
                     }

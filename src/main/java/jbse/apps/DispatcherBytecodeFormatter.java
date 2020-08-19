@@ -11,6 +11,7 @@ import jbse.bc.ConstantPoolString;
 import jbse.bc.ConstantPoolValue;
 import jbse.bc.Dispatcher;
 import jbse.bc.Signature;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.common.Type;
 import jbse.common.Util;
@@ -341,7 +342,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                         retVal += UNRECOGNIZED_BYTECODE;
                     }
                 } catch (InvalidProgramCounterException | InvalidIndexException |
-                         UnexpectedInternalException e) {
+                         ClassFileIllFormedException | UnexpectedInternalException e) {
                     //unrecognized bytecode
                     retVal += UNRECOGNIZED_BYTECODE;
                 }

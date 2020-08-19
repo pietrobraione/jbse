@@ -18,6 +18,7 @@ import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 import jbse.bc.exc.AttributeNotFoundException;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
@@ -879,8 +880,10 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * @throws InvalidIndexException iff the constant pool has less entries than {@code index}, or
      *         {@code index} does not refer to a CONSTANT_Integer, CONSTANT_Long, CONSTANT_Float,
      *         CONSTANT_Double, CONSTANT_Utf8, CONSTANT_String, or CONSTANT_Class.
+     * @throws ClassFileIllFormedException if the class file is ill formed.
      */
-    public abstract ConstantPoolValue getValueFromConstantPool(int index) throws InvalidIndexException;
+    public abstract ConstantPoolValue getValueFromConstantPool(int index) 
+    throws InvalidIndexException, ClassFileIllFormedException;
 
     /**
      * Checks whether the class declares a field.
@@ -1006,14 +1009,13 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
      * @throws AttributeNotFoundException iff {@link #hasFieldConstantValue}{@code (fieldSignature) == false}.
      * @throws InvalidIndexException iff the access to the constant pool fails.
+     * @throws ClassFileIllFormedException iff the class file is ill-formed.
      */
     public final ConstantPoolValue fieldConstantValue(Signature fieldSignature) 
-    throws FieldNotFoundException, AttributeNotFoundException, InvalidIndexException {
+    throws FieldNotFoundException, AttributeNotFoundException, InvalidIndexException, 
+    ClassFileIllFormedException {
         final int index = fieldConstantValueIndex(fieldSignature);
         final ConstantPoolValue retVal = getValueFromConstantPool(index);
-        if (retVal instanceof ConstantPoolClass) {
-            throw new InvalidIndexException(entryInvalidMessage(index));
-        }
         return retVal;
     }
 
