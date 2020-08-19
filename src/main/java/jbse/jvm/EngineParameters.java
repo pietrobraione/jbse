@@ -684,6 +684,10 @@ public final class EngineParameters implements Cloneable {
         }
         return retVal;
     }
+
+    public TriggerRulesRepo getTriggerRulesRepoRaw() {
+	return this.triggerRulesRepo;
+    }
     
     /**
      * Adds a regular expression pattern of class names whose 
