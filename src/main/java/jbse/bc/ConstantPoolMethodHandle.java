@@ -7,7 +7,7 @@ package jbse.bc;
  * @author Pietro Braione
  *
  */
-abstract class ConstantPoolMethodHandle extends ConstantPoolValue {
+public abstract class ConstantPoolMethodHandle extends ConstantPoolValue {
     private final Signature value;
     private final int hashCode;
 

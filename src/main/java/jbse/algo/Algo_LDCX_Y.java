@@ -1,5 +1,6 @@
 package jbse.algo;
 
+import static jbse.algo.Util.ensureInstance_JAVA_METHODTYPE;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.invokeClassLoaderLoadClass;
@@ -18,6 +19,8 @@ import java.util.function.Supplier;
 
 import jbse.bc.ClassFile;
 import jbse.bc.ConstantPoolClass;
+import jbse.bc.ConstantPoolMethodHandle;
+import jbse.bc.ConstantPoolMethodType;
 import jbse.bc.ConstantPoolPrimitive;
 import jbse.bc.ConstantPoolString;
 import jbse.bc.ConstantPoolValue;
@@ -99,6 +102,13 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     final ClassFile resolvedClass = state.getClassHierarchy().resolveClass(currentClass, classSignature, state.bypassStandardLoading());
                     state.ensureInstance_JAVA_CLASS(calc, resolvedClass);
                     this.val = state.referenceToInstance_JAVA_CLASS(resolvedClass);
+                } else if (cpv instanceof ConstantPoolMethodType) {
+                	final String methodDescriptor = ((ConstantPoolMethodType) cpv).getValue();
+                	final ClassFile[] descriptorResolved = state.getClassHierarchy().resolveMethodType(currentClass, methodDescriptor, state.bypassStandardLoading());
+                	ensureInstance_JAVA_METHODTYPE(state, calc, descriptorResolved);
+                	this.val = state.referenceToInstance_JAVA_METHODTYPE(descriptorResolved);
+                } else if (cpv instanceof ConstantPoolMethodHandle) {
+                	//TODO
                 } else if (cpv instanceof ConstantPoolObject) {
                     this.val = ((ConstantPoolObject) cpv).getValue();
                 } else {

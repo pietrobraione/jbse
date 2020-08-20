@@ -21,7 +21,7 @@ public interface Objekt extends Cloneable {
      * 
      * @return a {@link ClassFile} or {@code null}
      *         if this object has no class (i.e., it is
-     *         in the static store).
+     *         in the static store or is a meta level box).
      */
     ClassFile getType();
 

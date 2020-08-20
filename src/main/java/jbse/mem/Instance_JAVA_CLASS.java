@@ -1,6 +1,5 @@
 package jbse.mem;
 
-
 import jbse.bc.ClassFile;
 import jbse.common.exc.InvalidInputException;
 import jbse.val.ReferenceConcrete;

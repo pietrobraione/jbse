@@ -29,6 +29,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -319,7 +320,7 @@ public final class State implements Cloneable {
     private boolean standardClassLoadersNotReady = true;
     
     /** The {@link ReferenceConcrete}s to {@link Instance}s of {@code java.lang.invoke.MethodType}s. */
-    private HashMap<String, ReferenceConcrete> methodTypes = new HashMap<>();
+    private HashMap<List<ClassFile>, ReferenceConcrete> methodTypes = new HashMap<>();
     
     /** Maps file descriptors/handles to (meta-level) open files. */
     private HashMap<Long, Object> files = new HashMap<>();
@@ -1657,8 +1658,8 @@ public final class State implements Cloneable {
      * was exhausted. Use it only to throw critical errors.
      * 
      * @param calc a {@link Calculator}. It must not be {@code null}.
-     * @param classFile the {@link ClassFile} for the class of the new object.
-     * @return a {@link ReferenceConcrete} to the newly created object.
+     * @param classFile the {@link ClassFile} for the class of the new {@link Instance}.
+     * @return a {@link ReferenceConcrete} to the newly created {@link Instance}.
      * @throws FrozenStateException if the state is frozen.
      * @throws InvalidInputException if {@code calc == null || classFile == null} 
      *         or if {@code classFile} is invalid, i.e., is the classfile for 
@@ -1915,6 +1916,36 @@ public final class State implements Cloneable {
             //this should never happen
             throw new UnexpectedInternalException(e);
 		}
+    }
+    
+    /**
+     * Creates a new {@link Instance_METALEVELBOX} in the heap 
+     * of the state and injects a content in it.
+     * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param content an {@link Object}.
+     * @return a {@link ReferenceConcrete} to the newly created object.
+     * @throws FrozenStateException if the state is frozen.
+     * @throws InvalidInputException if {@code calc == null}.
+     * @throws HeapMemoryExhaustedException if the heap is full.
+     */
+    public ReferenceConcrete createMetaLevelBox(Calculator calc, Object content) 
+    throws FrozenStateException, InvalidInputException, HeapMemoryExhaustedException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        if (calc == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".createMetaLevelBox with null Calculator calc parameter.");
+        }
+        try { 
+        	final InstanceImpl_METALEVELBOX myObj = new InstanceImpl_METALEVELBOX(calc, this.historyPoint, content);
+        	final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
+        	initIdentityHashCodeConcrete(calc, myObj, retVal);
+        	return retVal;
+        } catch (InvalidTypeException e) {
+        	//this should never happen
+        	throw new UnexpectedInternalException(e);
+        }
     }
     
     /**
@@ -2348,47 +2379,51 @@ public final class State implements Cloneable {
      * Checks if there is an {@link Instance} of {@code java.lang.invoke.MethodHandle} 
      * in this state's heap for some descriptor.
      * 
-     * @param descriptor a {@link String} representing a descriptor. It is
-     *        not checked.
-     * @return {@code true} iff there is a {@link Instance} in this state's {@link Heap} associated to {@code descriptor}
-     *         by a previous call to {@link #setReferenceToInstance_JAVA_METHODTYPE(String, ReferenceConcrete)}.
+     * @param descriptorResolved a {@link ClassFile}{@code []} representing a resolved 
+     *        method descriptor (the {@link ClassFile} for the return value 
+     *        comes last).
+     * @return {@code true} iff there is a {@link Instance} in this state's {@link Heap} 
+     *         associated to {@code descriptorResolved} by a previous call to 
+     *         {@link #setReferenceToInstance_JAVA_METHODTYPE(ClassFile[], ReferenceConcrete)}.
      */
-    public boolean hasInstance_JAVA_METHODTYPE(String descriptor) {
-        return this.methodTypes.containsKey(descriptor);
+    public boolean hasInstance_JAVA_METHODTYPE(ClassFile[] descriptorResolved) {
+        return this.methodTypes.containsKey(Arrays.asList(descriptorResolved));
     }
     
     /**
      * Returns a {@link ReferenceConcrete} to an {@link Instance} 
      * of {@code java.lang.invoke.MethodHandle} representing a descriptor. 
      * 
-     * @param descriptor a {@link String} representing a descriptor. It is
-     *        not checked.
+     * @param descriptorResolved a {@link ClassFile}{@code []} representing a resolved 
+     *        method descriptor (the {@link ClassFile} for the return value 
+     *        comes last).
      * @return a {@link ReferenceConcrete} to the {@link Instance} 
-     *         in this state's {@link Heap} associated to {@code descriptor}
-     *         by a previous call to {@link #setReferenceToInstance_JAVA_METHODTYPE(String, ReferenceConcrete)},
+     *         in this state's {@link Heap} associated to {@code descriptorResolved}
+     *         by a previous call to {@link #setReferenceToInstance_JAVA_METHODTYPE(ClassFile[], ReferenceConcrete)},
      *         or {@code null} if there is not.
      */
-    public ReferenceConcrete referenceToInstance_JAVA_METHODTYPE(String descriptor) {
-        return this.methodTypes.get(descriptor);
+    public ReferenceConcrete referenceToInstance_JAVA_METHODTYPE(ClassFile[] descriptorResolved) {
+        return this.methodTypes.get(Arrays.asList(descriptorResolved));
     }
     
     /**
      * Associates a descriptor to a {@link ReferenceConcrete} to an {@link Instance} 
      * of {@code java.lang.invoke.MethodType} representing it. 
      * 
-     * @param descriptor a {@link String} representing a descriptor. It is
-     *        not checked.
+     * @param descriptorResolved a {@link ClassFile}{@code []} representing a resolved 
+     *        method descriptor (the {@link ClassFile} for the return value 
+     *        comes last).
      * @return a {@link ReferenceConcrete}. It should refer an {@link Instance}
      *         of {@code java.lang.invoke.MethodType} 
      *         in this state's {@link Heap} that is semantically equivalent to
-     *         {@code descriptor}, but this is not checked.
+     *         {@code descriptorResolved}, but this is not checked.
      * @throws FrozenStateException if the state is frozen.
      */
-    public void setReferenceToInstance_JAVA_METHODTYPE(String descriptor, ReferenceConcrete ref) throws FrozenStateException {
+    public void setReferenceToInstance_JAVA_METHODTYPE(ClassFile[] descriptorResolved, ReferenceConcrete ref) throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        this.methodTypes.put(descriptor, ref);
+        this.methodTypes.put(Collections.unmodifiableList(Arrays.asList(descriptorResolved)), ref);
     }
 
     /**

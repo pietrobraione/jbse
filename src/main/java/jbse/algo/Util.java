@@ -14,6 +14,7 @@ import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOINTERFACE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOSPECIAL;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOSTATIC;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOVIRTUAL;
+import static jbse.bc.Signatures.JAVA_METHODTYPE_METHODTYPE;
 import static jbse.bc.Signatures.JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_STACKTRACEELEMENT;
@@ -36,14 +37,6 @@ import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.binaryClassName;
-import static jbse.common.Type.className;
-import static jbse.common.Type.isArray;
-import static jbse.common.Type.isPrimitive;
-import static jbse.common.Type.isReference;
-import static jbse.common.Type.isVoid;
-import static jbse.common.Type.splitParametersDescriptors;
-import static jbse.common.Type.splitReturnValueDescriptor;
-import static jbse.common.Type.toPrimitiveOrVoidCanonicalName;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -457,42 +450,40 @@ public final class Util {
     throws PleaseLoadClassException, ClassFileNotFoundException, ClassFileIllFormedException, 
     BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, IncompatibleClassFileException, 
     ClassFileNotAccessibleException, HeapMemoryExhaustedException, InterruptException, ThreadStackEmptyException {
-        //fast track: the MethodType already exists in the state's cache
-        if (state.hasInstance_JAVA_METHODTYPE(descriptor)) {
-            return state.referenceToInstance_JAVA_METHODTYPE(descriptor);
-        }
-        
-        //in the case the state does not cache the MethodType
-        //we upcall java.lang.invoke.MethodHandleNatives.findMethodHandleType,
-        //see hotspot:/src/share/vm/classfile/systemDictionary.cpp 
-        //lines 2419-2507, function SystemDictionary::find_method_handle_type;
-        //then upcalls the internal (pseudo)method noclass_REGISTERMETHODTYPE
-        //to store the returned method handle in the state's cache
         try {
+        	final ClassFile[] descriptorResolved = state.getClassHierarchy().resolveMethodType(accessor, descriptor, state.bypassStandardLoading());
+        	
+            //fast track: the MethodType already exists in the state's cache
+            if (state.hasInstance_JAVA_METHODTYPE(descriptorResolved)) {
+                return state.referenceToInstance_JAVA_METHODTYPE(descriptorResolved);
+            }
+            
+            //in the case the state does not cache the MethodType
+            //we upcall java.lang.invoke.MethodHandleNatives.findMethodHandleType,
+            //see hotspot:/src/share/vm/classfile/systemDictionary.cpp 
+            //lines 2419-2507, function SystemDictionary::find_method_handle_type;
+            //then upcalls the internal (pseudo)method noclass_REGISTERMETHODTYPE
+            //to store the returned method type in the state's cache
+        	
             //prepares the parameters to upcalls: 
             
             //1-the return type
-            final String returnTypeName = splitReturnValueDescriptor(descriptor);
-            final ClassFile returnType = resolveTypeNameReturn(state, accessor, returnTypeName);
+            final ClassFile returnType = descriptorResolved[descriptorResolved.length - 1];
             state.ensureInstance_JAVA_CLASS(calc, returnType);
             final ReferenceConcrete rtype = state.referenceToInstance_JAVA_CLASS(returnType);
             
             //2-the parameter types
-            final String[] parameterTypeNames = splitParametersDescriptors(descriptor);
             final ClassFile cf_arrayOfJAVA_CLASS = state.getClassHierarchy().loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND);
-            final ReferenceConcrete ptypes = state.createArray(calc, null, calc.valInt(parameterTypeNames.length), cf_arrayOfJAVA_CLASS);
+            final ReferenceConcrete ptypes = state.createArray(calc, null, calc.valInt(descriptorResolved.length - 1), cf_arrayOfJAVA_CLASS);
             final Array ptypesArray = (Array) state.getObject(ptypes);
-            int i = 0;
-            for (String parameterTypeName : parameterTypeNames) {
-                final ClassFile parameterType = resolveTypeNameParameter(state, accessor, parameterTypeName);
+            for (int i = 0; i < descriptorResolved.length - 1; ++i) {
+                final ClassFile parameterType = descriptorResolved[i];
                 state.ensureInstance_JAVA_CLASS(calc, parameterType);
                 ptypesArray.setFast(calc.valInt(i), state.referenceToInstance_JAVA_CLASS(parameterType));
-                ++i;
             }
             
-            //3-the descriptor itself
-            state.ensureStringLiteral(calc, descriptor);
-            final ReferenceConcrete descr = state.referenceToStringLiteral(descriptor);
+            //3-the descriptorResolved itself
+            final ReferenceConcrete descr = state.createMetaLevelBox(calc, descriptorResolved);
 
             //upcalls
             final Snippet snippet = state.snippetFactoryNoWrap()
@@ -525,36 +516,70 @@ public final class Util {
         return null; //unreachable, to keep the compiler happy
     }
     
-    private static ClassFile resolveTypeNameReturn(State state, ClassFile accessor, String returnTypeName) 
-    throws InvalidInputException, ClassFileNotFoundException, IncompatibleClassFileException, 
-    ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, 
-    WrongClassNameException, ClassFileNotAccessibleException, PleaseLoadClassException {
-        final ClassFile retVal;
-        if (isPrimitive(returnTypeName) || isVoid(returnTypeName)) {
-            retVal = state.getClassHierarchy().getClassFilePrimitiveOrVoid(toPrimitiveOrVoidCanonicalName(returnTypeName));
-        } else if (isArray(returnTypeName) || isReference(returnTypeName)) {
-            retVal = state.getClassHierarchy().resolveClass(accessor, className(returnTypeName), state.bypassStandardLoading());
-        } else {
-            throw new InvalidInputException("Wrong return type name " + returnTypeName + ".");
-        }
-        return retVal;
+    public static void ensureInstance_JAVA_METHODTYPE(State state, Calculator calc, ClassFile[] descriptorResolved) 
+    throws FrozenStateException, HeapMemoryExhaustedException, ClassFileNotFoundException, 
+    ClassFileIllFormedException, ClassFileNotAccessibleException, IncompatibleClassFileException, 
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, ThreadStackEmptyException, InterruptException {
+        try {
+        	//fast track: the MethodType already exists in the state's cache
+        	if (state.hasInstance_JAVA_METHODTYPE(descriptorResolved)) {
+        		return;
+        	}
+
+        	//in the case the state does not cache the MethodType
+        	//we upcall java.lang.invoke.MethodType.methodType(Class, Class[]);
+        	//then upcalls the internal (pseudo)method noclass_REGISTERMETHODTYPE
+        	//to store the returned method type in the state's cache
+
+        	//prepares the parameters to upcalls: 
+
+        	//1-the return type
+        	final ClassFile returnType = descriptorResolved[descriptorResolved.length - 1];
+        	state.ensureInstance_JAVA_CLASS(calc, returnType);
+        	final ReferenceConcrete rtype = state.referenceToInstance_JAVA_CLASS(returnType);
+
+        	//2-the parameter types
+        	final ClassFile cf_arrayOfJAVA_CLASS = state.getClassHierarchy().loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND);
+        	final ReferenceConcrete ptypes = state.createArray(calc, null, calc.valInt(descriptorResolved.length - 1), cf_arrayOfJAVA_CLASS);
+        	final Array ptypesArray = (Array) state.getObject(ptypes);
+        	for (int i = 0; i < descriptorResolved.length - 1; ++i) {
+        		final ClassFile parameterType = descriptorResolved[i];
+        		state.ensureInstance_JAVA_CLASS(calc, parameterType);
+        		ptypesArray.setFast(calc.valInt(i), state.referenceToInstance_JAVA_CLASS(parameterType));
+        	}
+
+        	//3-the descriptorResolved itself
+        	final ReferenceConcrete descr = state.createMetaLevelBox(calc, descriptorResolved);
+
+        	//upcalls
+            final Snippet snippet = state.snippetFactoryNoWrap()
+            	//parameters for noclass_REGISTERMETHODTYPE
+            	.addArg(descr)
+            	//parameters for JAVA_METHODHANDLENATIVES_FINDMETHODHANDLETYPE
+            	.addArg(rtype)
+            	.addArg(ptypes)
+            	//pushes everything
+				.op_aload((byte) 0)
+				.op_aload((byte) 1)
+				.op_aload((byte) 2)
+                .op_invokestatic(JAVA_METHODTYPE_METHODTYPE)
+                //let's populate the descriptor now
+                .op_dup()
+                .op_invokevirtual(JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING)
+                .op_pop() //we care only of the side effect
+                //finally we register the method type
+                .op_invokestatic(noclass_REGISTERMETHODTYPE)
+                .op_return()
+                .mk();
+            state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang/invoke"); //zero offset so that upon return from the snippet will reexecute the invoking bytecode 
+            exitFromAlgorithm();
+        } catch (InvalidInputException | InvalidTypeException | 
+       		 FastArrayAccessNotAllowedException | InvalidProgramCounterException e) {
+           //this should never happen
+           failExecution(e);
+       }
     }
     
-    private static ClassFile resolveTypeNameParameter(State state, ClassFile accessor, String parameterTypeName) 
-    throws InvalidInputException, ClassFileNotFoundException, IncompatibleClassFileException, 
-    ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, 
-    WrongClassNameException, ClassFileNotAccessibleException, PleaseLoadClassException {
-        final ClassFile retVal;
-        if (isPrimitive(parameterTypeName)) {
-            retVal = state.getClassHierarchy().getClassFilePrimitiveOrVoid(toPrimitiveOrVoidCanonicalName(parameterTypeName));
-        } else if (isArray(parameterTypeName) || isReference(parameterTypeName)) {
-            retVal = state.getClassHierarchy().resolveClass(accessor, className(parameterTypeName), state.bypassStandardLoading());
-        } else {
-            throw new InvalidInputException("Wrong parameter type name " + parameterTypeName + ".");
-        }
-        return retVal;
-    }
-
     /**
      * Performs lookup of a method implementation (bytecode or native).
      * See JVMS v8, invokeinterface, invokespecial, invokestatic and invokevirtual

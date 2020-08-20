@@ -362,6 +362,10 @@ public final class Signatures {
                       "resolve");
     public static final Signature JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET =
         new Signature(JAVA_METHODHANDLENATIVES, "(" + REFERENCE + JAVA_MEMBERNAME + TYPEEND + ")" + LONG, "staticFieldOffset");
+    public static final Signature JAVA_METHODTYPE_METHODTYPE =
+        new Signature(JAVA_METHODTYPE, 
+                      "(" + REFERENCE + JAVA_CLASS + TYPEEND + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND + ")" + REFERENCE + JAVA_METHODTYPE + TYPEEND, 
+                      "methodType");
     public static final Signature JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING =
         new Signature(JAVA_METHODTYPE, "()" + REFERENCE + JAVA_STRING + TYPEEND, "toMethodDescriptorString");
     public static final Signature JAVA_OBJECT_CLONE =

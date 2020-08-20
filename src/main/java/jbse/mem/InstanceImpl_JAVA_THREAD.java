@@ -9,8 +9,7 @@ import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Class that represent an instance in the heap of an object 
- * whose class is {@code java.lang.Thread} or one of its subclasses. 
+ * Class that implements {@link Instance_JAVA_THREAD}. 
  */
 public final class InstanceImpl_JAVA_THREAD extends InstanceImpl implements Instance_JAVA_THREAD {
     /** The interruption state of the thread. */
