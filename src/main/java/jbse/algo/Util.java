@@ -1,5 +1,4 @@
 package jbse.algo;
-
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Offsets.offsetInvoke;
@@ -9,12 +8,12 @@ import static jbse.bc.Signatures.JAVA_MEMBERNAME_GETTYPE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_FINDMETHODHANDLETYPE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_LINKMETHOD;
+import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_LINKMETHODHANDLECONSTANT;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_INVOKEBASIC;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOINTERFACE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOSPECIAL;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOSTATIC;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOVIRTUAL;
-import static jbse.bc.Signatures.JAVA_METHODTYPE_METHODTYPE;
 import static jbse.bc.Signatures.JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_STACKTRACEELEMENT;
@@ -31,6 +30,7 @@ import static jbse.bc.Signatures.JBSE_BASE_MAKEKLASSSYMBOLIC;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.VERIFY_ERROR;
 import static jbse.bc.Signatures.noclass_REGISTERLOADEDCLASS;
+import static jbse.bc.Signatures.noclass_REGISTERMETHODHANDLE;
 import static jbse.bc.Signatures.noclass_REGISTERMETHODTYPE;
 import static jbse.bc.Signatures.noclass_STORELINKEDMETHODANDAPPENDIX;
 import static jbse.common.Type.ARRAYOF;
@@ -142,9 +142,11 @@ public final class Util {
     public static final byte REF_getField         = 1;
     public static final byte REF_getStatic        = 2;
     public static final byte REF_putField         = 3;
+    public static final byte REF_putStatic        = 4;
     public static final byte REF_invokeVirtual    = 5;
     public static final byte REF_invokeStatic     = 6;
     public static final byte REF_invokeSpecial    = 7;
+    public static final byte REF_newInvokeSpecial = 8;
     public static final byte REF_invokeInterface  = 9;
 
     //taken from java.lang.invoke.MemberName
@@ -306,7 +308,7 @@ public final class Util {
      *        method.
      * @param polymorphicMethodSignatureSpecialized the {@link Signature} of the signature-polymorphic method, with 
      *        the descriptor as declared in the member name (i.e., specialized on the actual arguments).
-     * @throws PleaseLoadClassException if the execution of this {@link Algorithm} must be interrupted 
+     * @throws PleaseLoadClassException if the execution of the invoking {@link Algorithm} must be interrupted 
      *         because a class referred in {@code resolved} must be loaded by a user-defined classloader.
      * @throws ClassFileNotFoundException if the bytecode for any 
      *         class referred in {@code polymorphicMethodDescriptor} is not found in the classpath.
@@ -363,7 +365,9 @@ public final class Util {
             final ReferenceConcrete mhNameRef = state.referenceToStringLiteral(polymorphicMethodName);
 
             //3- a java.lang.invoke.MethodType for its descriptor
-            final ReferenceConcrete mtRef = findMethodType(state, calc, accessor, polymorphicMethodSignatureSpecialized.getDescriptor());
+        	final ClassFile[] descriptorResolved = state.getClassHierarchy().resolveMethodType(accessor, polymorphicMethodSignatureSpecialized.getDescriptor(), state.bypassStandardLoading());
+            ensureInstance_JAVA_METHODTYPE(state, calc, descriptorResolved);
+            final ReferenceConcrete mtRef = state.referenceToInstance_JAVA_METHODTYPE(descriptorResolved);
 
             //4- an array with length 1 to host the returned appendix (if any)
             ClassFile cf_arrayOfJAVA_OBJECT = null; //to keep the compiler happy
@@ -418,166 +422,213 @@ public final class Util {
     }
     
     /**
-     * Finds a {@code java.lang.invoke.MethodType} for a method
-     * descriptor.
+     * Ensures that an instance of {@code java.lang.invoke.MethodType} exists in 
+     * a state for a resolved method or field descriptor.
      * 
      * @param state a {@link State}.
      * @param calc a {@link Calculator}.
-     * @param accessor a {@link ClassFile}, the accessor class.
-     * @param descriptor a {@link String}, the method descriptor.
-     * @return a {@link ReferenceConcrete} to an {@link Instance} of 
-     *         {@code java.lang.invoke.MethodType} for {@code descriptor}.
-     * @throws PleaseLoadClassException if the execution of this {@link Algorithm} must be interrupted 
-     *         because a class referred in {@code resolved} must be loaded by a user-defined classloader.
+     * @param descriptorResolved a {@link ClassFile}{@code []}, the resolved method or field descriptor.
+     * @throws InvalidInputException if {@code calc} is {@code null}, {@code descriptorResolved} is invalid, or {@code state} is frozen.
+     * @throws HeapMemoryExhaustedException if {@code state}'s heap memory ends.
      * @throws ClassFileNotFoundException if any class referred in {@code resolved} 
      *         does not exist.
      * @throws ClassFileIllFormedException if any class referred in {@code resolved} 
      *         is ill-formed.
+     * @throws ClassFileNotAccessibleException if any class referred in {@code resolved} 
+     *         is not accessible by {@code accessor}.
+     * @throws IncompatibleClassFileException if the superclass of any class referred in {@code resolved}
+     *         is resolved to an interface type, or a superinterface is resolved to an object type.
      * @throws BadClassFileVersionException if any class referred in {@code resolved}
      *         has a version number that is unsupported by the current version of JBSE.
      * @throws WrongClassNameException if the bytecode of any class referred in {@code resolved}
      *         has a name that is different from what expected (the corresponding name in 
      *         {@code resolved}).
-     * @throws IncompatibleClassFileException if the superclass of any class referred in {@code resolved}
-     *         is resolved to an interface type, or a superinterface is resolved to an object type.
-     * @throws ClassFileNotAccessibleException if any class referred in {@code resolved} 
-     *         is not accessible by {@code accessor}.
-     * @throws HeapMemoryExhaustedException if {@code state}'s heap memory ends.
-     * @throws InterruptException if the execution of this {@link Algorithm} must be interrupted.
      * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws InterruptException if the execution of the invoking {@link Algorithm} must be interrupted.
      */
-    private static ReferenceConcrete findMethodType(State state, Calculator calc, ClassFile accessor, String descriptor) 
-    throws PleaseLoadClassException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, IncompatibleClassFileException, 
-    ClassFileNotAccessibleException, HeapMemoryExhaustedException, InterruptException, ThreadStackEmptyException {
-        try {
-        	final ClassFile[] descriptorResolved = state.getClassHierarchy().resolveMethodType(accessor, descriptor, state.bypassStandardLoading());
-        	
-            //fast track: the MethodType already exists in the state's cache
-            if (state.hasInstance_JAVA_METHODTYPE(descriptorResolved)) {
-                return state.referenceToInstance_JAVA_METHODTYPE(descriptorResolved);
-            }
-            
-            //in the case the state does not cache the MethodType
-            //we upcall java.lang.invoke.MethodHandleNatives.findMethodHandleType,
-            //see hotspot:/src/share/vm/classfile/systemDictionary.cpp 
-            //lines 2419-2507, function SystemDictionary::find_method_handle_type;
-            //then upcalls the internal (pseudo)method noclass_REGISTERMETHODTYPE
-            //to store the returned method type in the state's cache
-        	
-            //prepares the parameters to upcalls: 
-            
-            //1-the return type
-            final ClassFile returnType = descriptorResolved[descriptorResolved.length - 1];
-            state.ensureInstance_JAVA_CLASS(calc, returnType);
-            final ReferenceConcrete rtype = state.referenceToInstance_JAVA_CLASS(returnType);
-            
-            //2-the parameter types
-            final ClassFile cf_arrayOfJAVA_CLASS = state.getClassHierarchy().loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND);
-            final ReferenceConcrete ptypes = state.createArray(calc, null, calc.valInt(descriptorResolved.length - 1), cf_arrayOfJAVA_CLASS);
-            final Array ptypesArray = (Array) state.getObject(ptypes);
-            for (int i = 0; i < descriptorResolved.length - 1; ++i) {
-                final ClassFile parameterType = descriptorResolved[i];
-                state.ensureInstance_JAVA_CLASS(calc, parameterType);
-                ptypesArray.setFast(calc.valInt(i), state.referenceToInstance_JAVA_CLASS(parameterType));
-            }
-            
-            //3-the descriptorResolved itself
-            final ReferenceConcrete descr = state.createMetaLevelBox(calc, descriptorResolved);
+    public static void ensureInstance_JAVA_METHODTYPE(State state, Calculator calc, ClassFile[] descriptorResolved) 
+    throws InvalidInputException, HeapMemoryExhaustedException, ClassFileNotFoundException, 
+    ClassFileIllFormedException, ClassFileNotAccessibleException, IncompatibleClassFileException, 
+    BadClassFileVersionException, WrongClassNameException, ThreadStackEmptyException, 
+    InterruptException {
+    	//fast track: the MethodType already exists in the state's cache
+    	if (state.hasInstance_JAVA_METHODTYPE(descriptorResolved)) {
+    		return;
+    	}
 
-            //upcalls
-            final Snippet snippet = state.snippetFactoryNoWrap()
-            	//parameters for noclass_REGISTERMETHODTYPE
-            	.addArg(descr)
-            	//parameters for JAVA_METHODHANDLENATIVES_FINDMETHODHANDLETYPE
-            	.addArg(rtype)
-            	.addArg(ptypes)
-            	//pushes everything
-				.op_aload((byte) 0)
-				.op_aload((byte) 1)
-				.op_aload((byte) 2)
-                .op_invokestatic(JAVA_METHODHANDLENATIVES_FINDMETHODHANDLETYPE)
-                //let's populate the descriptor now
-                .op_dup()
-                .op_invokevirtual(JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING)
-                .op_pop() //we care only of the side effect
-                //finally we register the method type
-                .op_invokestatic(noclass_REGISTERMETHODTYPE)
-                .op_return()
-                .mk();
-            state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang/invoke"); //zero offset so that upon return from the snippet will repeat the invocation of java.lang.invoke.MethodHandleNatives.resolve and reexecute this bytecode 
-            exitFromAlgorithm();
-        } catch (InvalidInputException | InvalidTypeException | 
-        		 FastArrayAccessNotAllowedException | InvalidProgramCounterException e) {
-            //this should never happen
-            failExecution(e);
-        }
-        
-        return null; //unreachable, to keep the compiler happy
+    	//in the case the state does not cache the MethodType
+    	//we upcall java.lang.invoke.MethodHandleNatives.findMethodHandleType(Class, Class[]);
+    	//(see hotspot:/src/share/vm/classfile/systemDictionary.cpp 
+    	//lines 2419-2507, function SystemDictionary::find_method_handle_type)
+    	//then upcalls the internal (pseudo)method noclass_REGISTERMETHODTYPE
+    	//to store the returned method type in the state's cache
+
+    	//prepares the parameters to upcalls: 
+
+    	//1-the return type
+    	final ClassFile returnType = descriptorResolved[descriptorResolved.length - 1];
+    	state.ensureInstance_JAVA_CLASS(calc, returnType);
+    	final ReferenceConcrete rtype = state.referenceToInstance_JAVA_CLASS(returnType);
+
+    	//2-the parameter types
+		ReferenceConcrete ptypes = null; //to keep the compiler happy
+    	try {
+    		final ClassFile cf_arrayOfJAVA_CLASS = state.getClassHierarchy().loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND);
+    		ptypes = state.createArray(calc, null, calc.valInt(descriptorResolved.length - 1), cf_arrayOfJAVA_CLASS);
+    		final Array ptypesArray = (Array) state.getObject(ptypes);
+    		for (int i = 0; i < descriptorResolved.length - 1; ++i) {
+    			final ClassFile parameterType = descriptorResolved[i];
+    			state.ensureInstance_JAVA_CLASS(calc, parameterType);
+    			ptypesArray.setFast(calc.valInt(i), state.referenceToInstance_JAVA_CLASS(parameterType));
+    		}
+    	} catch (FastArrayAccessNotAllowedException | InvalidTypeException | RenameUnsupportedException e) {
+    		//this should never happen
+    		failExecution(e);
+    	}
+
+    	//3-the descriptorResolved itself
+    	final ReferenceConcrete descr = state.createMetaLevelBox(calc, descriptorResolved);
+
+    	//upcalls
+    	final Snippet snippet = state.snippetFactoryNoWrap()
+    			.addArg(rtype)
+    			.addArg(ptypes)
+    			.addArg(descr)
+    			//pushes the arguments for the call to JAVA_METHODHANDLENATIVES_FINDMETHODHANDLETYPE and upcalls
+    			.op_aload((byte) 0)
+    			.op_aload((byte) 1)
+    			.op_invokestatic(JAVA_METHODHANDLENATIVES_FINDMETHODHANDLETYPE)
+    			//upcalls JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING to populate the descriptor string
+    			.op_dup()
+    			.op_invokevirtual(JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING)
+    			.op_pop() //we care only of the side effect
+    			//pushes the additional arguments for the call to noclass_REGISTERMETHODTYPE and upcalls
+    			.op_aload((byte) 2)
+    			.op_invokestatic(noclass_REGISTERMETHODTYPE)
+    			.op_return()
+    			.mk();
+    	try {
+    		state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang/invoke"); //zero offset so that upon return from the snippet will reexecute the invoking bytecode
+    	} catch (InvalidProgramCounterException e) {
+			//this should never happen
+			failExecution(e);
+    	}	
+    	exitFromAlgorithm();
     }
     
-    public static void ensureInstance_JAVA_METHODTYPE(State state, Calculator calc, ClassFile[] descriptorResolved) 
-    throws FrozenStateException, HeapMemoryExhaustedException, ClassFileNotFoundException, 
-    ClassFileIllFormedException, ClassFileNotAccessibleException, IncompatibleClassFileException, 
-    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, ThreadStackEmptyException, InterruptException {
+    
+    /**
+     * Ensures that an instance of {@code java.lang.invoke.MethodHandle} exists in 
+     * a state for a given key.
+     * 
+     * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
+     * @param caller a {@link ClassFile}, the caller that is requesting the {@code MethodHandle}.
+     * @param refKind a {@code int}, representing the method handle behavior (see the JVM
+     *        Specification v.8, Table 5.4.3.5-A).
+     * @param container a {@link ClassFile}, representing the class containing the field
+     *        or method. It must not be {@code null}.
+     * @param descriptorResolved a {@link ClassFile}{@code []}, the resolved method or field descriptor.
+     *        It must not be {@code null}.
+     * @param name a {@link String}, the name of the method or field.  It must not be {@code null}.
+     * @throws InvalidInputException if {@code calc} is {@code null}, a parameter is invalid (null) or 
+     *         {@code state} is frozen.
+     * @throws HeapMemoryExhaustedException if {@code state}'s heap memory ends.
+     * @throws ClassFileNotFoundException if any class referred in {@code resolved} 
+     *         does not exist.
+     * @throws ClassFileIllFormedException if any class referred in {@code resolved} 
+     *         is ill-formed.
+     * @throws ClassFileNotAccessibleException if any class referred in {@code resolved} 
+     *         is not accessible by {@code accessor}.
+     * @throws IncompatibleClassFileException if the superclass of any class referred in {@code resolved}
+     *         is resolved to an interface type, or a superinterface is resolved to an object type.
+     * @throws BadClassFileVersionException if any class referred in {@code resolved}
+     *         has a version number that is unsupported by the current version of JBSE.
+     * @throws WrongClassNameException if the bytecode of any class referred in {@code resolved}
+     *         has a name that is different from what expected (the corresponding name in 
+     *         {@code resolved}).
+     * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws InterruptException if the execution of the invoking {@link Algorithm} must be interrupted.
+     */
+    public static void ensureInstance_JAVA_METHODHANDLE(State state, Calculator calc, ClassFile caller, int refKind, ClassFile container, ClassFile[] descriptorResolved, String name) 
+    throws InvalidInputException, HeapMemoryExhaustedException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, 
+    IncompatibleClassFileException, BadClassFileVersionException, WrongClassNameException, ThreadStackEmptyException, InterruptException 
+    {
+    	//fast track: the MethodHandle already exists in the state's cache
+    	if (state.hasInstance_JAVA_METHODHANDLE(refKind, container, descriptorResolved, name)) {
+    		return;
+    	}
+
+    	//in the case the state does not cache the MethodHandle
+    	//we upcall java.lang.invoke.MethodHandleNatives.linkMethodHandleConstant(Class, int, Class, String, Object);
+    	//then upcalls the internal (pseudo)method noclass_REGISTERMETHODHANDLE
+    	//to store the returned method handle in the state's cache
+    	
+    	//prepares the parameters to upcalls: 
+    	
+    	//1-the caller
+    	state.ensureInstance_JAVA_CLASS(calc, caller);
+    	final ReferenceConcrete rcaller = state.referenceToInstance_JAVA_CLASS(caller);
+    	
+    	//2-the refKind
+    	final Primitive refKindPrimitive = calc.valInt(refKind);
+
+    	//3-the callee
+    	state.ensureInstance_JAVA_CLASS(calc, container);
+    	final ReferenceConcrete rcallee = state.referenceToInstance_JAVA_CLASS(container);
+    	
+    	//4-the name
+    	state.ensureStringLiteral(calc, name);
+    	final ReferenceConcrete rname = state.referenceToStringLiteral(name);
+    	
+    	//5-the type
+    	final ReferenceConcrete rtype;
+    	if (methodHandleKindIsField(refKind)) {
+    		final ClassFile fieldType = descriptorResolved[0];
+        	state.ensureInstance_JAVA_CLASS(calc, fieldType);
+        	rtype = state.referenceToInstance_JAVA_CLASS(fieldType);
+    	} else {
+    		ensureInstance_JAVA_METHODTYPE(state, calc, descriptorResolved);
+    		rtype = state.referenceToInstance_JAVA_METHODTYPE(descriptorResolved);
+    	}
+    	
+    	//6-the descriptorResolved itself
+    	final ReferenceConcrete descr = state.createMetaLevelBox(calc, descriptorResolved);
+
+    	//upcalls
+        final Snippet snippet = state.snippetFactoryNoWrap()
+        	.addArg(rcaller)
+        	.addArg(refKindPrimitive)
+        	.addArg(rcallee)
+        	.addArg(rname)
+        	.addArg(rtype)
+        	.addArg(descr)
+        	//pushes the arguments for the call to JAVA_METHODHANDLENATIVES_LINKMETHODHANDLECONSTANT and upcalls
+			.op_aload((byte) 0)
+			.op_aload((byte) 1)
+			.op_aload((byte) 2)
+			.op_aload((byte) 3)
+			.op_aload((byte) 4)
+            .op_invokestatic(JAVA_METHODHANDLENATIVES_LINKMETHODHANDLECONSTANT)
+            //pushes the additional arguments for the call to noclass_REGISTERMETHODHANDLE and upcalls
+			.op_aload((byte) 1)
+			.op_aload((byte) 2)
+			.op_aload((byte) 5)
+			.op_aload((byte) 3)
+            .op_invokestatic(noclass_REGISTERMETHODHANDLE)
+            .op_return()
+            .mk();
         try {
-        	//fast track: the MethodType already exists in the state's cache
-        	if (state.hasInstance_JAVA_METHODTYPE(descriptorResolved)) {
-        		return;
-        	}
-
-        	//in the case the state does not cache the MethodType
-        	//we upcall java.lang.invoke.MethodType.methodType(Class, Class[]);
-        	//then upcalls the internal (pseudo)method noclass_REGISTERMETHODTYPE
-        	//to store the returned method type in the state's cache
-
-        	//prepares the parameters to upcalls: 
-
-        	//1-the return type
-        	final ClassFile returnType = descriptorResolved[descriptorResolved.length - 1];
-        	state.ensureInstance_JAVA_CLASS(calc, returnType);
-        	final ReferenceConcrete rtype = state.referenceToInstance_JAVA_CLASS(returnType);
-
-        	//2-the parameter types
-        	final ClassFile cf_arrayOfJAVA_CLASS = state.getClassHierarchy().loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND);
-        	final ReferenceConcrete ptypes = state.createArray(calc, null, calc.valInt(descriptorResolved.length - 1), cf_arrayOfJAVA_CLASS);
-        	final Array ptypesArray = (Array) state.getObject(ptypes);
-        	for (int i = 0; i < descriptorResolved.length - 1; ++i) {
-        		final ClassFile parameterType = descriptorResolved[i];
-        		state.ensureInstance_JAVA_CLASS(calc, parameterType);
-        		ptypesArray.setFast(calc.valInt(i), state.referenceToInstance_JAVA_CLASS(parameterType));
-        	}
-
-        	//3-the descriptorResolved itself
-        	final ReferenceConcrete descr = state.createMetaLevelBox(calc, descriptorResolved);
-
-        	//upcalls
-            final Snippet snippet = state.snippetFactoryNoWrap()
-            	//parameters for noclass_REGISTERMETHODTYPE
-            	.addArg(descr)
-            	//parameters for JAVA_METHODHANDLENATIVES_FINDMETHODHANDLETYPE
-            	.addArg(rtype)
-            	.addArg(ptypes)
-            	//pushes everything
-				.op_aload((byte) 0)
-				.op_aload((byte) 1)
-				.op_aload((byte) 2)
-                .op_invokestatic(JAVA_METHODTYPE_METHODTYPE)
-                //let's populate the descriptor now
-                .op_dup()
-                .op_invokevirtual(JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING)
-                .op_pop() //we care only of the side effect
-                //finally we register the method type
-                .op_invokestatic(noclass_REGISTERMETHODTYPE)
-                .op_return()
-                .mk();
-            state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang/invoke"); //zero offset so that upon return from the snippet will reexecute the invoking bytecode 
-            exitFromAlgorithm();
-        } catch (InvalidInputException | InvalidTypeException | 
-       		 FastArrayAccessNotAllowedException | InvalidProgramCounterException e) {
-           //this should never happen
-           failExecution(e);
-       }
+        	state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang/invoke"); //zero offset so that upon return from the snippet will reexecute the invoking bytecode 
+    	} catch (InvalidProgramCounterException e) {
+			//this should never happen
+			failExecution(e);
+    	}	
+        exitFromAlgorithm();
+    }
+    
+    private static boolean methodHandleKindIsField(int refKind) {
+    	return (REF_getField <= refKind && refKind <= REF_putStatic);
     }
     
     /**

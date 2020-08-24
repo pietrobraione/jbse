@@ -17,6 +17,8 @@ public abstract class ConstantPoolMethodHandle extends ConstantPoolValue {
         result = prime * result + ((value == null) ? 0 : value.hashCode());
         this.hashCode = result;
     }
+    
+    public abstract int getKind();
 
     @Override
     public final Signature getValue() {

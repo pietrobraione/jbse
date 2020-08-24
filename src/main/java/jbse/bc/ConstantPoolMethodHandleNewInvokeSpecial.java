@@ -10,4 +10,9 @@ public final class ConstantPoolMethodHandleNewInvokeSpecial extends ConstantPool
     public ConstantPoolMethodHandleNewInvokeSpecial(Signature value) {
     	super(value, 173);
     }
+
+	@Override
+	public int getKind() {
+		return 8;
+	}
 }

@@ -10,4 +10,9 @@ public final class ConstantPoolMethodHandleGetStatic extends ConstantPoolMethodH
     public ConstantPoolMethodHandleGetStatic(Signature value) {
     	super(value, 61);
     }
+
+	@Override
+	public int getKind() {
+		return 2;
+	}
 }

@@ -10,4 +10,9 @@ public final class ConstantPoolMethodHandleInvokeVirtual extends ConstantPoolMet
     public ConstantPoolMethodHandleInvokeVirtual(Signature value) {
     	super(value, 107);
     }
+
+	@Override
+	public int getKind() {
+		return 5;
+	}
 }

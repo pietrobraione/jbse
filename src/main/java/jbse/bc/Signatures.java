@@ -352,6 +352,11 @@ public final class Signatures {
                       "(" + REFERENCE + JAVA_CLASS + TYPEEND + INT + REFERENCE + JAVA_CLASS + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + 
                       REFERENCE + JAVA_OBJECT + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_MEMBERNAME + TYPEEND,
                       "linkMethod");
+    public static final Signature JAVA_METHODHANDLENATIVES_LINKMETHODHANDLECONSTANT =
+            new Signature(JAVA_METHODHANDLENATIVES, 
+                          "(" + REFERENCE + JAVA_CLASS + TYPEEND + INT + REFERENCE + JAVA_CLASS + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + 
+                          REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_METHODHANDLE + TYPEEND,
+                          "linkMethodHandleConstant");
     public static final Signature JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET =
         new Signature(JAVA_METHODHANDLENATIVES, "(" + REFERENCE + JAVA_MEMBERNAME + TYPEEND + ")" + LONG, "objectFieldOffset");
     public static final Signature JAVA_METHODHANDLENATIVES_REGISTERNATIVES =
@@ -362,10 +367,6 @@ public final class Signatures {
                       "resolve");
     public static final Signature JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET =
         new Signature(JAVA_METHODHANDLENATIVES, "(" + REFERENCE + JAVA_MEMBERNAME + TYPEEND + ")" + LONG, "staticFieldOffset");
-    public static final Signature JAVA_METHODTYPE_METHODTYPE =
-        new Signature(JAVA_METHODTYPE, 
-                      "(" + REFERENCE + JAVA_CLASS + TYPEEND + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND + ")" + REFERENCE + JAVA_METHODTYPE + TYPEEND, 
-                      "methodType");
     public static final Signature JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING =
         new Signature(JAVA_METHODTYPE, "()" + REFERENCE + JAVA_STRING + TYPEEND, "toMethodDescriptorString");
     public static final Signature JAVA_OBJECT_CLONE =
@@ -753,11 +754,14 @@ public final class Signatures {
     public static final Signature SUN_VM_INITIALIZE = 
         new Signature(SUN_VM, "()" + VOID, "initialize");
     public static final Signature SUN_WIN32ERRORMODE_SETERRORMODE = 
-            new Signature(SUN_WIN32ERRORMODE, "(" + LONG + ")" + LONG, "setErrorMode");
+        new Signature(SUN_WIN32ERRORMODE, "(" + LONG + ")" + LONG, "setErrorMode");
     public static final Signature noclass_REGISTERLOADEDCLASS =
         new Signature(null, "(" + INT + REFERENCE + JAVA_CLASSLOADER + TYPEEND + ")" + VOID, "registerLoadedClass");
+    public static final Signature noclass_REGISTERMETHODHANDLE =
+        new Signature(null, "(" + REFERENCE + JAVA_METHODHANDLE + TYPEEND + INT + REFERENCE + JAVA_CLASS + TYPEEND + 
+            REFERENCE + JAVA_STRING + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "registerMethodHandle");
     public static final Signature noclass_REGISTERMETHODTYPE =
-        new Signature(null, "(" + REFERENCE + JAVA_STRING + TYPEEND + REFERENCE + JAVA_METHODTYPE + TYPEEND + ")" + VOID, "registerMethodType");
+        new Signature(null, "(" + REFERENCE + JAVA_METHODTYPE + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "registerMethodType");
     public static final Signature noclass_SETSTANDARDCLASSLOADERSREADY =
         new Signature(null, "()" + VOID, "setStandardClassLoadersReady");
     public static final Signature noclass_STORELINKEDMETHODANDAPPENDIX =

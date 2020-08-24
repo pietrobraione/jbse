@@ -10,4 +10,9 @@ public final class ConstantPoolMethodHandlePutField extends ConstantPoolMethodHa
     public ConstantPoolMethodHandlePutField(Signature value) {
     	super(value, 89);
     }
+
+	@Override
+	public int getKind() {
+		return 3;
+	}
 }

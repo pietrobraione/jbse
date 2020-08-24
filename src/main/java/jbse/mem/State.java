@@ -248,7 +248,7 @@ public final class State implements Cloneable {
         }
     }
     
-    private static class Inflater {
+    private static final class Inflater {
         final long address;
         
         final boolean nowrap;
@@ -269,6 +269,69 @@ public final class State implements Cloneable {
         Inflater(long address, boolean nowrap) {
             this(address, nowrap, null, 0, 0);
         }
+    }
+    
+    /**
+     * Class used as key for the method handles cache.
+     * 
+     * @author Pietro Braione
+     */
+    private static final class MHKey {
+    	final int refKind; 
+    	final ClassFile container;
+    	final List<ClassFile> descriptorResolved;
+    	final String name;
+    	
+    	final int hashCode;
+    	
+    	MHKey(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name) throws InvalidInputException {
+    		if (container == null || descriptorResolved == null || name == null) {
+    			throw new InvalidInputException("Tried to create a method handle key with null container class, or descriptor, or name of the field/method.");
+    		}
+    		this.refKind = refKind;
+    		this.container = container;
+    		this.descriptorResolved = Collections.unmodifiableList(Arrays.asList(descriptorResolved));
+    		this.name = name;
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + refKind;
+			result = prime * result + container.hashCode();
+			result = prime * result + descriptorResolved.hashCode();
+			result = prime * result + name.hashCode();
+			this.hashCode = result;
+    	}
+
+		@Override
+		public int hashCode() {
+			return this.hashCode;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (getClass() != obj.getClass()) {
+				return false;
+			}
+			final MHKey other = (MHKey) obj;
+			if (this.refKind != other.refKind) {
+				return false;
+			}
+			if (!this.container.equals(other.container)) {
+				return false;
+			}
+			if (!this.descriptorResolved.equals(other.descriptorResolved)) {
+				return false;
+			}
+			if (!this.name.equals(other.name)) { 
+				return false;
+			}
+			return true;
+		}
     }
 
     /** 
@@ -319,8 +382,11 @@ public final class State implements Cloneable {
      */
     private boolean standardClassLoadersNotReady = true;
     
-    /** The {@link ReferenceConcrete}s to {@link Instance}s of {@code java.lang.invoke.MethodType}s. */
+    /** The {@link ReferenceConcrete}s to {@link Instance}s of {@code java.lang.invoke.MethodType}. */
     private HashMap<List<ClassFile>, ReferenceConcrete> methodTypes = new HashMap<>();
+    
+    /** The {@link ReferenceConcrete}s to {@link Instance}s of {@code java.lang.invoke.MethodHandle}. */
+    private HashMap<MHKey, ReferenceConcrete> methodHandles = new HashMap<>();
     
     /** Maps file descriptors/handles to (meta-level) open files. */
     private HashMap<Long, Object> files = new HashMap<>();
@@ -2376,12 +2442,12 @@ public final class State implements Cloneable {
     }
     
     /**
-     * Checks if there is an {@link Instance} of {@code java.lang.invoke.MethodHandle} 
+     * Checks if there is an {@link Instance} of {@code java.lang.invoke.MethodType} 
      * in this state's heap for some descriptor.
      * 
      * @param descriptorResolved a {@link ClassFile}{@code []} representing a resolved 
-     *        method descriptor (the {@link ClassFile} for the return value 
-     *        comes last).
+     *        method (the {@link ClassFile} for the return value 
+     *        comes last) or field descriptor.
      * @return {@code true} iff there is a {@link Instance} in this state's {@link Heap} 
      *         associated to {@code descriptorResolved} by a previous call to 
      *         {@link #setReferenceToInstance_JAVA_METHODTYPE(ClassFile[], ReferenceConcrete)}.
@@ -2392,11 +2458,11 @@ public final class State implements Cloneable {
     
     /**
      * Returns a {@link ReferenceConcrete} to an {@link Instance} 
-     * of {@code java.lang.invoke.MethodHandle} representing a descriptor. 
+     * of {@code java.lang.invoke.MethodType} representing a descriptor. 
      * 
      * @param descriptorResolved a {@link ClassFile}{@code []} representing a resolved 
-     *        method descriptor (the {@link ClassFile} for the return value 
-     *        comes last).
+     *        method (the {@link ClassFile} for the return value 
+     *        comes last) or field descriptor.
      * @return a {@link ReferenceConcrete} to the {@link Instance} 
      *         in this state's {@link Heap} associated to {@code descriptorResolved}
      *         by a previous call to {@link #setReferenceToInstance_JAVA_METHODTYPE(ClassFile[], ReferenceConcrete)},
@@ -2411,19 +2477,91 @@ public final class State implements Cloneable {
      * of {@code java.lang.invoke.MethodType} representing it. 
      * 
      * @param descriptorResolved a {@link ClassFile}{@code []} representing a resolved 
-     *        method descriptor (the {@link ClassFile} for the return value 
-     *        comes last).
-     * @return a {@link ReferenceConcrete}. It should refer an {@link Instance}
-     *         of {@code java.lang.invoke.MethodType} 
-     *         in this state's {@link Heap} that is semantically equivalent to
-     *         {@code descriptorResolved}, but this is not checked.
+     *        method (the {@link ClassFile} for the return value 
+     *        comes last) or field descriptor.
+     * @param ref a {@link ReferenceConcrete}. It should refer an {@link Instance}
+     *        of {@code java.lang.invoke.MethodType} 
+     *        in this state's {@link Heap} that is semantically equivalent to
+     *        {@code descriptorResolved}, but this is not checked.
      * @throws FrozenStateException if the state is frozen.
      */
-    public void setReferenceToInstance_JAVA_METHODTYPE(ClassFile[] descriptorResolved, ReferenceConcrete ref) throws FrozenStateException {
+    public void setReferenceToInstance_JAVA_METHODTYPE(ClassFile[] descriptorResolved, ReferenceConcrete ref) 
+    throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
         this.methodTypes.put(Collections.unmodifiableList(Arrays.asList(descriptorResolved)), ref);
+    }
+
+    /**
+     * Checks if there is an {@link Instance} of {@code java.lang.invoke.MethodHandle} 
+     * in this state's heap for some method handle key.
+     * 
+     * @param refKind, an {@code int}, representing the method handle behavior (see the JVM
+     *        Specification v.8, Table 5.4.3.5-A).
+     * @param container a {@link ClassFile}, representing the class containing the field
+     *        or method.  It must not be {@code null}.
+     * @param descriptorResolved a {@link ClassFile}{@code []} representing a resolved 
+     *        method (the {@link ClassFile} for the return value 
+     *        comes last) or field descriptor. It must not be {@code null}.
+     * @param name a {@link String}, the name of the method or field. It must not be {@code null}. 
+     * @return {@code true} iff there is a {@link Instance} in this state's {@link Heap} 
+     *         associated to the key {@code (refKind, container, descriptorResolved, name)} by 
+     *         a previous call to 
+     *         {@link #setReferenceToInstance_JAVA_METHODHANDLE(int, ClassFile, ClassFile[], String, ReferenceConcrete)}.
+     * @throws InvalidInputException if a parameter is invalid (null).
+     */
+    public boolean hasInstance_JAVA_METHODHANDLE(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name) throws InvalidInputException {
+        return this.methodHandles.containsKey(new MHKey(refKind, container, descriptorResolved, name));
+    }
+    
+    /**
+     * Returns a {@link ReferenceConcrete} to an {@link Instance} 
+     * of {@code java.lang.invoke.MethodHandle} representing a suitable key. 
+     * 
+     * @param refKind, an {@code int}, representing the method handle behavior (see the JVM
+     *        Specification v.8, Table 5.4.3.5-A).
+     * @param container a {@link ClassFile}, representing the class containing the field
+     *        or method. It must not be {@code null}.
+     * @param descriptorResolved a {@link ClassFile}{@code []} representing a resolved 
+     *        method (the {@link ClassFile} for the return value 
+     *        comes last) or field descriptor. It must not be {@code null}.
+     * @param name a {@link String}, the name of the method or field.  It must not be {@code null}.
+     * @return a {@link ReferenceConcrete} to the {@link Instance} 
+     *         in this state's {@link Heap} associated to the key {@code (refKind, container, descriptorResolved, name)}
+     *         by a previous call to 
+     *         {@link #setReferenceToInstance_JAVA_METHODHANDLE(int, ClassFile, ClassFile[], String, ReferenceConcrete)}.
+     *         or {@code null} if there is not.
+     * @throws InvalidInputException if a parameter is invalid (null).
+     */
+    public ReferenceConcrete referenceToInstance_JAVA_METHODHANDLE(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name) throws InvalidInputException {
+        return this.methodHandles.get(new MHKey(refKind, container, descriptorResolved, name));
+    }
+    
+    /**
+     * Associates a key to a {@link ReferenceConcrete} to an {@link Instance} 
+     * of {@code java.lang.invoke.MethodHandle} representing it. 
+     * 
+     * @param refKind, an {@code int}, representing the method handle behavior (see the JVM
+     *        Specification v.8, Table 5.4.3.5-A).
+     * @param container a {@link ClassFile}, representing the class containing the field
+     *        or method.  It must not be {@code null}.
+     * @param descriptorResolved a {@link ClassFile}{@code []} representing a resolved 
+     *        method (the {@link ClassFile} for the return value 
+     *        comes last) or field descriptor. It must not be {@code null}.
+     * @param name a {@link String}, the name of the method or field.  It must not be {@code null}.
+     * @param ref a {@link ReferenceConcrete}. It should refer an {@link Instance}
+     *        of {@code java.lang.invoke.MethodHandle} 
+     *        in this state's {@link Heap} that is semantically equivalent to
+     *        the key {@code (refKind, container, descriptorResolved, name)}, but this is not checked.
+     * @throws InvalidInputException if a parameter is invalid (null).
+     */
+    public void setReferenceToInstance_JAVA_METHODHANDLE(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name, ReferenceConcrete ref) 
+    throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        this.methodHandles.put(new MHKey(refKind, container, descriptorResolved, name), ref);
     }
 
     /**
@@ -4047,6 +4185,16 @@ public final class State implements Cloneable {
         return this.methodTypes.values();
     }
     
+    /**
+     * Getter for garbage collection.
+     * 
+     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
+     *         of all the references to {@link Instance} of {@link java.lang.invoke.MethodHandle}.
+     */
+    Collection<ReferenceConcrete> getMethodHandles() {
+        return this.methodHandles.values();
+    }
+    
     private State deepCopyHeapAndStaticAreaExcluded() {
         final State o;
         try {
@@ -4066,6 +4214,9 @@ public final class State implements Cloneable {
         
         //methodTypes
         o.methodTypes = new HashMap<>(o.methodTypes);
+        
+        //methodHandles
+        o.methodHandles = new HashMap<>(o.methodHandles);
         
         //files
         try {

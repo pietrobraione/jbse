@@ -7,6 +7,8 @@ import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidOperatorException;
@@ -49,6 +51,12 @@ public interface BytecodeCooker {
      *         is pushed on the stack of a calculator (should never happen).
      * @throws ThreadStackEmptyException possibly raised if the
      *         thread stack is empty (should never happen).
+     * @throws InvalidProgramCounterException possibly raised if a snippet
+     *         frame is created with a bad return program counter (should never
+     *         happen).
+     * @throws FastArrayAccessNotAllowedException possibly raised if some
+     *         fast access to an array is attempted and the array is not simple
+     *         (should never happen).
      * @throws CannotManageStateException possibly raised if the 
      *         bytecode cannot be executed due to limitations of JBSE.
      * @throws InterruptException possibly raised if the execution 
@@ -64,6 +72,7 @@ public interface BytecodeCooker {
     void cook(State state) 
     throws DecisionException, ClasspathException, InvalidInputException, 
     InvalidTypeException, InvalidOperatorException, InvalidOperandException, 
-    ThreadStackEmptyException, CannotManageStateException, InterruptException, 
-    ContradictionException, RenameUnsupportedException;
+    ThreadStackEmptyException, InvalidProgramCounterException, 
+    FastArrayAccessNotAllowedException, CannotManageStateException, 
+    InterruptException, ContradictionException, RenameUnsupportedException;
 }
