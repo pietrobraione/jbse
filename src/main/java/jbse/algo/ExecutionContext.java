@@ -122,9 +122,11 @@ import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PUTLONG;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PUTOBJECT_O;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED;
 import static jbse.algo.Overrides.ALGO_noclass_REGISTERLOADEDCLASS;
+import static jbse.algo.Overrides.ALGO_noclass_REGISTERMETHODHANDLE;
 import static jbse.algo.Overrides.ALGO_noclass_REGISTERMETHODTYPE;
 import static jbse.algo.Overrides.ALGO_noclass_SETSTANDARDCLASSLOADERSREADY;
-import static jbse.algo.Overrides.ALGO_noclass_STORELINKEDMETHODANDAPPENDIX;
+import static jbse.algo.Overrides.ALGO_noclass_STORELINKEDCALLSITEADAPTERANDAPPENDIX;
+import static jbse.algo.Overrides.ALGO_noclass_STORELINKEDMETHODADAPTERANDAPPENDIX;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_1;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_2;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION_1;
@@ -413,9 +415,11 @@ import static jbse.bc.Signatures.SUN_VM_INITIALIZE;
 import static jbse.bc.Signatures.SUN_WIN32ERRORMODE_SETERRORMODE;
 import static jbse.bc.Signatures.SUN_WRAPPER_FORMAT;
 import static jbse.bc.Signatures.noclass_REGISTERLOADEDCLASS;
+import static jbse.bc.Signatures.noclass_REGISTERMETHODHANDLE;
 import static jbse.bc.Signatures.noclass_REGISTERMETHODTYPE;
 import static jbse.bc.Signatures.noclass_SETSTANDARDCLASSLOADERSREADY;
-import static jbse.bc.Signatures.noclass_STORELINKEDMETHODANDAPPENDIX;
+import static jbse.bc.Signatures.noclass_STORELINKEDCALLSITEADAPTERANDAPPENDIX;
+import static jbse.bc.Signatures.noclass_STORELINKEDMETHODADAPTERANDAPPENDIX;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -851,10 +855,12 @@ public final class ExecutionContext {
             addMetaOverridden(JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH,     ALGO_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH);
             
             //jbse classless (pseudo)methods
-            addMetaOverridden(noclass_REGISTERLOADEDCLASS,          ALGO_noclass_REGISTERLOADEDCLASS);
-            addMetaOverridden(noclass_REGISTERMETHODTYPE,           ALGO_noclass_REGISTERMETHODTYPE);
-            addMetaOverridden(noclass_SETSTANDARDCLASSLOADERSREADY, ALGO_noclass_SETSTANDARDCLASSLOADERSREADY);
-            addMetaOverridden(noclass_STORELINKEDMETHODANDAPPENDIX, ALGO_noclass_STORELINKEDMETHODANDAPPENDIX);
+            addMetaOverridden(noclass_REGISTERLOADEDCLASS,                   ALGO_noclass_REGISTERLOADEDCLASS);
+            addMetaOverridden(noclass_REGISTERMETHODHANDLE,                  ALGO_noclass_REGISTERMETHODHANDLE);
+            addMetaOverridden(noclass_REGISTERMETHODTYPE,                    ALGO_noclass_REGISTERMETHODTYPE);
+            addMetaOverridden(noclass_SETSTANDARDCLASSLOADERSREADY,          ALGO_noclass_SETSTANDARDCLASSLOADERSREADY);
+            addMetaOverridden(noclass_STORELINKEDMETHODADAPTERANDAPPENDIX,   ALGO_noclass_STORELINKEDMETHODADAPTERANDAPPENDIX);
+            addMetaOverridden(noclass_STORELINKEDCALLSITEADAPTERANDAPPENDIX, ALGO_noclass_STORELINKEDCALLSITEADAPTERANDAPPENDIX);
         } catch (MetaUnsupportedException e) {
             throw new UnexpectedInternalException(e);
         }

@@ -480,6 +480,12 @@ public class ClassFileSnippetWrap extends ClassFile {
     }
     
     @Override
+    public CallSiteSpecifier getCallSiteSpecifier(int index)
+    throws InvalidIndexException, ClassFileIllFormedException {
+    	return this.component.getCallSiteSpecifier(index);
+    }
+    
+    @Override
     public ClassFile getSuperclass() {
     	return this.component.getSuperclass();
     }

@@ -163,10 +163,12 @@ public final class Overrides {
     public static final String ALGO_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH     = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH.class.getName());
     
     //Overriding meta-level implementations of JBSE classless (pseudo)methods
-    public static final String ALGO_noclass_REGISTERLOADEDCLASS          = internalClassName(jbse.algo.meta.Algo_noclass_REGISTERLOADEDCLASS.class.getName());
-    public static final String ALGO_noclass_REGISTERMETHODTYPE           = internalClassName(jbse.algo.meta.Algo_noclass_REGISTERMETHODTYPE.class.getName());
-    public static final String ALGO_noclass_SETSTANDARDCLASSLOADERSREADY = internalClassName(jbse.algo.meta.Algo_noclass_SETSTANDARDCLASSLOADERSREADY.class.getName());
-    public static final String ALGO_noclass_STORELINKEDMETHODANDAPPENDIX = internalClassName(jbse.algo.meta.Algo_noclass_STORELINKEDMETHODANDAPPENDIX.class.getName());
+    public static final String ALGO_noclass_REGISTERLOADEDCLASS                   = internalClassName(jbse.algo.meta.Algo_noclass_REGISTERLOADEDCLASS.class.getName());
+    public static final String ALGO_noclass_REGISTERMETHODHANDLE                  = internalClassName(jbse.algo.meta.Algo_noclass_REGISTERMETHODHANDLE.class.getName());
+    public static final String ALGO_noclass_REGISTERMETHODTYPE                    = internalClassName(jbse.algo.meta.Algo_noclass_REGISTERMETHODTYPE.class.getName());
+    public static final String ALGO_noclass_SETSTANDARDCLASSLOADERSREADY          = internalClassName(jbse.algo.meta.Algo_noclass_SETSTANDARDCLASSLOADERSREADY.class.getName());
+    public static final String ALGO_noclass_STORELINKEDMETHODADAPTERANDAPPENDIX   = internalClassName(jbse.algo.meta.Algo_noclass_STORELINKEDMETHODADAPTERANDAPPENDIX.class.getName());
+    public static final String ALGO_noclass_STORELINKEDCALLSITEADAPTERANDAPPENDIX = internalClassName(jbse.algo.meta.Algo_noclass_STORELINKEDCALLSITEADAPTERANDAPPENDIX.class.getName());
     
     //Overriding base-level implementation of standard methods
     private static final String JBSE_BASE = internalClassName(jbse.base.Base.class.getName());

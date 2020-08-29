@@ -3,10 +3,11 @@ package jbse.algo;
 import static jbse.algo.Util.continueWith;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.getDescriptorFromMemberName;
 import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.isSignaturePolymorphicMethodIntrinsic;
 import static jbse.algo.Util.isSignaturePolymorphicMethodStatic;
-import static jbse.algo.Util.linkMethod;
+import static jbse.algo.Util.ensureMethodLinked;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
@@ -22,18 +23,12 @@ import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOINTERFACE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOSPECIAL;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOSTATIC;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOVIRTUAL;
-import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
 import static jbse.common.Type.parametersNumber;
-import static jbse.common.Type.REFERENCE;
-import static jbse.common.Type.splitParametersDescriptors;
-import static jbse.common.Type.splitReturnValueDescriptor;
-import static jbse.common.Type.TYPEEND;
 
-import java.util.Arrays;
 import java.util.function.Supplier;
 
 import jbse.algo.BytecodeData_1KME.Kind;
@@ -67,15 +62,14 @@ import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Simplex;
 import jbse.val.Value;
-import jbse.val.exc.InvalidTypeException;
 
 /**
- * Abstract algorithm for the invokehandle internal bytecode.
+ * Algorithm for the invokehandle internal bytecode.
  * 
  * @author Pietro Braione
  *
  */
-public class Algo_INVOKEHANDLE extends Algorithm<
+final class Algo_INVOKEHANDLE extends Algorithm<
 BytecodeData_1KME,
 DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>, 
@@ -83,9 +77,9 @@ StrategyRefine<DecisionAlternative_NONE>,
 StrategyUpdate<DecisionAlternative_NONE>> {
 	private final Algo_JAVA_METHODHANDLE_INVOKEBASIC algo_JAVA_METHODHANDLE_INVOKEBASIC; //set by constructor
 	private final Algo_JAVA_METHODHANDLE_LINKTO algo_JAVA_METHODHANDLE_LINKTO; //set by constructor
-	private ClassFile clazz; //set by cookMore
-	private Signature adapterSignature; //set by cookMore
-	private Value[] parameters; //set by cookMore
+	private ClassFile clazz; //set by bytecodeCooker
+	private Signature adapterSignature; //set by bytecodeCooker
+	private Value[] parameters; //set by bytecodeCooker
 	
 	public Algo_INVOKEHANDLE() { 
 		this.algo_JAVA_METHODHANDLE_INVOKEBASIC = new Algo_JAVA_METHODHANDLE_INVOKEBASIC();
@@ -134,11 +128,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 				}
 			} else {
             	final Calculator calc = this.ctx.getCalculator();
+            	
+            	//possibly links the method
 	            try {
-	            	//links the method
 	            	final ClassFile currentClass = state.getCurrentClass();
 	            	state.ensureInstance_JAVA_CLASS(calc, currentClass);
-	            	linkMethod(state, calc, state.referenceToInstance_JAVA_CLASS(currentClass), currentClass, this.data.signature());
+	            	ensureMethodLinked(state, calc, state.referenceToInstance_JAVA_CLASS(currentClass), currentClass, this.data.signature());
 				} catch (PleaseLoadClassException e) {
 		            invokeClassLoaderLoadClass(state, this.ctx.getCalculator(), e);
 		            exitFromAlgorithm();
@@ -166,8 +161,9 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 		            throwVerifyError(state, this.ctx.getCalculator());
 		            exitFromAlgorithm();
 				}
+	            
 	        	//gets the adapter
-	        	final ReferenceConcrete adapterReference = state.getAdapter(this.data.signature());
+	        	final ReferenceConcrete adapterReference = state.getMethodAdapter(this.data.signature());
 				if (state.isNull(adapterReference)) {
 					//this should never happen
 					failExecution("Null reference stored in state as adapter of a signature-polymorphic non-intrinsic method.");
@@ -212,8 +208,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 				final Instance_JAVA_CLASS instanceClazz = (Instance_JAVA_CLASS) state.getObject(referenceClazz);
 		        this.clazz = instanceClazz.representedClass();
 		        
+		        //builds the signature of the adapter method
+		        final String descriptor = getDescriptorFromMemberName(state, adapterReference);
+		        this.adapterSignature = new Signature(this.clazz.getClassName(), descriptor, name);
+		        
 	        	//gets the appendix
-		        final Reference appendixReference = state.getAppendix(this.data.signature());
+		        final Reference appendixReference = state.getMethodAppendix(this.data.signature());
 		        if (!(state.getObject(appendixReference) instanceof Array)) {
 		        	//this should never happen
 		        	failExecution("Reference to an appendix of a signature-polymorphic non-intrinsic method stored in a state does not refer to an array.");
@@ -225,16 +225,6 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 		        }
 		        final int appendixArrayLength = ((Integer) ((Simplex) appendixArray.getLength()).getActualValue()).intValue();
 		        final boolean hasAppendix = (appendixArrayLength > 0);
-		        
-		        //builds the signature of the adapter
-		        final String[] splitParametersDescriptorSignature = splitParametersDescriptors(this.data.signature().getDescriptor());
-		        final String splitReturnValueDescriptorSignature = splitReturnValueDescriptor(this.data.signature().getDescriptor());
-		        final String descriptor = "(" + 
-		        		REFERENCE + JAVA_OBJECT + TYPEEND +  //the form to invoke
-		        		String.join("", Arrays.stream(splitParametersDescriptorSignature).map(jbse.common.Type::simplifyType).toArray(String[]::new)) +
-		        		(hasAppendix ? (REFERENCE + JAVA_OBJECT + TYPEEND ) : "") + 
-		        		")" + splitReturnValueDescriptorSignature;
-		        this.adapterSignature = new Signature(this.clazz.getClassName(), descriptor, name);
 		        
 		        //builds the parameters
 		        this.parameters = new Value[this.data.operands().length + (hasAppendix ? 1 : 0)];
@@ -274,7 +264,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         return (state, alt) -> {
             try {
                 state.pushFrame(this.ctx.getCalculator(), this.clazz, this.adapterSignature, false, offsetInvoke(false), this.parameters);
-            } catch (InvalidProgramCounterException | InvalidSlotException | InvalidTypeException e) {
+            } catch (InvalidProgramCounterException | InvalidSlotException e) {
                 //TODO is it ok?
                 throwVerifyError(state, this.ctx.getCalculator());
             } catch (NullMethodReceiverException | MethodNotFoundException | MethodCodeNotFoundException e) {

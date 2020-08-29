@@ -499,6 +499,12 @@ abstract class ClassFilePrimitive extends ClassFile {
     }
     
     @Override
+    public CallSiteSpecifier getCallSiteSpecifier(int callSiteSpecifierIndex) 
+    throws InvalidIndexException {
+        throw new InvalidIndexException(NO_CONSTANT_POOL);
+    }    
+
+    @Override
     public ClassFile getSuperclass() {
         return null;
     }

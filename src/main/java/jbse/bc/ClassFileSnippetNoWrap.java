@@ -468,6 +468,11 @@ public class ClassFileSnippetNoWrap extends ClassFile {
     }
     
     @Override
+    public CallSiteSpecifier getCallSiteSpecifier(int index) throws InvalidIndexException {
+        throw new InvalidIndexException("Constant pool index " + index + " does not exist in snippet.");
+    }    
+
+    @Override
     public ClassFile getSuperclass() {
         return null;
     }

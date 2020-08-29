@@ -3,6 +3,7 @@ package jbse.mem;
 import java.util.Collections;
 import java.util.List;
 
+import jbse.bc.CallSiteSpecifier;
 import jbse.bc.ClassFile;
 import jbse.bc.ConstantPoolValue;
 import jbse.bc.ExceptionTable;
@@ -466,6 +467,12 @@ public final class InstanceImpl_METALEVELBOX extends InstanceImpl implements Ins
 		@Override
 		public String getClassSignature(int classRef) throws InvalidIndexException {
 			throw new InvalidIndexException("" + classRef);
+		}
+		
+		@Override
+		public CallSiteSpecifier getCallSiteSpecifier(int callSiteSpecifierIndex)
+		throws InvalidIndexException {
+			throw new InvalidIndexException("" + callSiteSpecifierIndex);
 		}
 
 		@Override

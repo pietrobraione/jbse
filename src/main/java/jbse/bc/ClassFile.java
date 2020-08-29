@@ -872,14 +872,16 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     throws MethodNotFoundException, MethodCodeNotFoundException;
 
     /**
-     * Returns a constant pool value (only for primitive, String, Uf8 or Class constants).
+     * Returns a constant pool value (only for primitive, String, Uf8, Class, MethodType, 
+     * or MethodHandle constants).
      * 
      * @param index an {@code int}, a constant pool index.
      * @return a {@link ConstantPoolValue} for the value contained in the constant pool 
      *         at the index, if such value is a primitive, String, Utf8 or Class.
      * @throws InvalidIndexException iff the constant pool has less entries than {@code index}, or
      *         {@code index} does not refer to a CONSTANT_Integer, CONSTANT_Long, CONSTANT_Float,
-     *         CONSTANT_Double, CONSTANT_Utf8, CONSTANT_String, or CONSTANT_Class.
+     *         CONSTANT_Double, CONSTANT_Utf8, CONSTANT_String, CONSTANT_Class, CONSTANT_MethodType, 
+     *         CONSTANT_MethodHandle.
      * @throws ClassFileIllFormedException if the class file is ill formed.
      */
     public abstract ConstantPoolValue getValueFromConstantPool(int index) 
@@ -1187,7 +1189,7 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     public abstract Signature getInterfaceMethodSignature(int methodRef) throws InvalidIndexException;
 
     /**
-     * Given an index of the constant table of CONSTANT_Class type, returns the signature 
+     * Given an index of the constant pool of CONSTANT_Class type, returns the signature 
      * of the class.
      * 
      * @param classRef the CONSTANT_Class of searched class.
@@ -1196,6 +1198,18 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      *         in the class constant pool.
      */
     public abstract String getClassSignature(int classRef) throws InvalidIndexException;
+    
+    /**
+     * Given an index of the constant pool of CONSTANT_InvokeDynamic type, returns the 
+     * call site specifier.
+     * 
+     * @param callSiteSpecifierIndex the CONSTANT_InvokeDynamic index in the constant pool.
+     * @return a {@link CallSiteSpecifier}.
+     * @throws InvalidIndexException iff {@code callSiteSpecifierIndex} is not the index of 
+     *         a valid CONSTANT_InvokeDynamic in the class constant pool.
+     * @throws ClassFileIllFormedException  iff the class file is ill-formed.
+     */
+    public abstract CallSiteSpecifier getCallSiteSpecifier(int callSiteSpecifierIndex) throws InvalidIndexException, ClassFileIllFormedException;
     
     /**
      * Returns the superclass.

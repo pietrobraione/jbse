@@ -198,6 +198,11 @@ public final class ClassFileArray extends ClassFile {
         }
         throw new InvalidIndexException(NO_CONSTANT_POOL);
     }
+    
+    @Override
+    public CallSiteSpecifier getCallSiteSpecifier(int callSiteSpecifierIndex) throws InvalidIndexException {
+        throw new InvalidIndexException(NO_CONSTANT_POOL);
+    }    
 
     @Override
     public int getCodeLength(Signature methodSignature)

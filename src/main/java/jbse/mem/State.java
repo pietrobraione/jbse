@@ -2,6 +2,7 @@ package jbse.mem;
 
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
+import static jbse.bc.Opcodes.OP_INVOKEDYNAMIC;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_CLASSLOADER;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER;
@@ -294,10 +295,10 @@ public final class State implements Cloneable {
     		this.name = name;
 			final int prime = 31;
 			int result = 1;
-			result = prime * result + refKind;
-			result = prime * result + container.hashCode();
-			result = prime * result + descriptorResolved.hashCode();
-			result = prime * result + name.hashCode();
+			result = prime * result + this.refKind;
+			result = prime * result + this.container.hashCode();
+			result = prime * result + this.descriptorResolved.hashCode();
+			result = prime * result + this.name.hashCode();
 			this.hashCode = result;
     	}
 
@@ -328,6 +329,87 @@ public final class State implements Cloneable {
 				return false;
 			}
 			if (!this.name.equals(other.name)) { 
+				return false;
+			}
+			return true;
+		}
+    }
+    
+    /**
+     * Class used as key for the call sites link maps
+     * .
+     * @author Pietro Braione
+     *
+     */
+    private static final class CSKey {
+    	final ClassFile containerClass;
+    	final String descriptor;
+    	final String name;
+    	final int programCounter;
+    	
+    	final int hashCode;
+    	
+    	CSKey(ClassFile containerClass, String descriptor, String name, int programCounter) throws InvalidInputException {
+    		if (containerClass == null || descriptor == null || name == null || programCounter < 0) {
+    			throw new InvalidInputException("Tried to create a call site key with null containerClass, descriptor or name, or with negative program counter.");
+    		}
+    		final Signature methodSignature = new Signature(containerClass.getClassName(), descriptor, name);
+    		if (!containerClass.hasMethodImplementation(methodSignature)) {
+    			throw new InvalidInputException("Tried to create a call site key for nonexisting method.");
+    		}
+    		final byte[] methodCode;
+			try {
+				methodCode = containerClass.getMethodCodeBySignature(methodSignature);
+			} catch (MethodNotFoundException | MethodCodeNotFoundException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
+    		if (programCounter >= methodCode.length) {
+    			throw new InvalidInputException("Tried to create a call site key for a programCounter exceeding the code length.");
+    		}
+    		if (methodCode[programCounter] != OP_INVOKEDYNAMIC) {
+    			throw new InvalidInputException("Tried to create a call site key for a programCounter not pointing to a dynamic call site.");
+    		}
+    		this.containerClass = containerClass;
+    		this.descriptor = descriptor;
+    		this.name = name;
+    		this.programCounter = programCounter;
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + this.containerClass.hashCode();
+			result = prime * result + this.descriptor.hashCode();
+			result = prime * result + this.name.hashCode();
+			result = prime * result + this.programCounter;
+			this.hashCode = result;
+    	}
+
+		@Override
+		public int hashCode() {
+			return this.hashCode;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (getClass() != obj.getClass()) {
+				return false;
+			}
+			final CSKey other = (CSKey) obj;
+			if (!this.containerClass.equals(other.containerClass)) {
+				return false;
+			}
+			if (!this.descriptor.equals(other.descriptor)) {
+				return false;
+			}
+			if (!this.name.equals(other.name)) {
+				return false;
+			}
+			if (this.programCounter != other.programCounter) {
 				return false;
 			}
 			return true;
@@ -490,14 +572,26 @@ public final class State implements Cloneable {
      * (type checking) semantics to their adapter methods, indicated
      * as {@link ReferenceConcrete}s to their respective {@code java.lang.invoke.MemberName}s.
      */
-    private HashMap<Signature, ReferenceConcrete> linkInvokers = new HashMap<>();
+    private HashMap<Signature, ReferenceConcrete> methodAdapters = new HashMap<>();
     
     /** 
      * Links signature polymorphic methods that have nonintrinsic
      * (type checking) semantics to their invocation appendices, indicated
      * as {@link ReferenceConcrete}s to {@code Object[]}s.
      */
-    private HashMap<Signature, ReferenceConcrete> linkAppendices = new HashMap<>();
+    private HashMap<Signature, ReferenceConcrete> methodAppendices = new HashMap<>();
+    
+    /** 
+     * Links dynamic call sites to their adapter methods, indicated
+     * as {@link ReferenceConcrete}s to their respective {@code java.lang.invoke.MemberName}s.
+     */
+    private HashMap<CSKey, ReferenceConcrete> callSiteAdapters = new HashMap<>();
+    
+    /** 
+     * Links dynamic call sites to their invocation appendices, indicated
+     * as {@link ReferenceConcrete}s to {@code Object[]}s.
+     */
+    private HashMap<CSKey, ReferenceConcrete> callSiteAppendices = new HashMap<>();
     
     /** The maximum length an array may have to be granted simple representation. */
     private final int maxSimpleArrayLength;
@@ -558,7 +652,7 @@ public final class State implements Cloneable {
                  Map<String, Set<String>> expansionBackdoor,
                  Map<String, String> modelClassSubstitutions,
                  SymbolFactory symbolFactory) 
-                 throws InvalidClassFileFactoryClassException, InvalidInputException {
+    throws InvalidClassFileFactoryClassException, InvalidInputException {
     	if (historyPoint == null || symbolFactory == null) {
     		throw new InvalidInputException("Attempted the creation of a state with null historyPoint, or symbolFactory.");
     	}
@@ -1157,8 +1251,8 @@ public final class State implements Cloneable {
     }
     
     /**
-     * Checks whether a {@link Signature} is linked to an 
-     * adapter method. 
+     * Checks whether a  a signature polymorphic nonintrinsic 
+     * method is linked to an adapter/appendix. 
      * 
      * @param signature a {@link Signature}.
      * @return {@code true} iff {@code signature} is the
@@ -1166,35 +1260,35 @@ public final class State implements Cloneable {
      *         linked to an adapter method.
      */
     public boolean isMethodLinked(Signature signature) {
-        return this.linkInvokers.containsKey(signature);
+        return this.methodAdapters.containsKey(signature);
     }
 
     /**
      * Links a signature polymorphic nonintrinsic method
      * to an adapter method, represented as a reference to
-     * a {@link java.lang.invoke.MemberName}.
+     * a {@link java.lang.invoke.MemberName}, and an appendix.
      * 
      * @param signature a {@link Signature}. It should be 
      *        the signature of a signature polymorphic
      *        nonintrinsic method, but this is not checked.
-     * @param invoker a {@link ReferenceConcrete}. It should
+     * @param adapter a {@link ReferenceConcrete}. It should
      *        refer an {@link Instance} of a {@link java.lang.invoke.MemberName},
      *        but this is not checked.
      * @param appendix a {@link ReferenceConcrete}. It should
      *        refer an {@link Instance} of a {@link java.lang.Object[]},
      *        but this is not checked.
      * @throws FrozenStateException if the state is frozen.
-     * @throws NullPointerException if {@code signature == null || invoker == null || appendix == null}.
+     * @throws NullPointerException if {@code signature == null || adapter == null || appendix == null}.
      */
-    public void link(Signature signature, ReferenceConcrete invoker, ReferenceConcrete appendix) throws FrozenStateException {
+    public void linkMethod(Signature signature, ReferenceConcrete adapter, ReferenceConcrete appendix) throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (signature == null || invoker == null || appendix == null) {
+        if (signature == null || adapter == null || appendix == null) {
             throw new NullPointerException(); //TODO throw better exception
         }
-        this.linkInvokers.put(signature, invoker);
-        this.linkAppendices.put(signature, appendix);
+        this.methodAdapters.put(signature, adapter);
+        this.methodAppendices.put(signature, appendix);
     }
     
     /**
@@ -1203,11 +1297,11 @@ public final class State implements Cloneable {
      * 
      * @param signature a {@link Signature}.
      * @return a {@link ReferenceConcrete} to a {@code java.lang.invoke.MemberName}
-     *         set with a previous call to {@link #link(Signature, ReferenceConcrete, ReferenceConcrete) link}, 
+     *         set with a previous call to {@link #linkMethod(Signature, ReferenceConcrete, ReferenceConcrete) link}, 
      *         or {@code null} if {@code signature} was not previously linked.
      */
-    public ReferenceConcrete getAdapter(Signature signature) {
-        return this.linkInvokers.get(signature);
+    public ReferenceConcrete getMethodAdapter(Signature signature) {
+        return this.methodAdapters.get(signature);
     }
     
     /**
@@ -1216,11 +1310,114 @@ public final class State implements Cloneable {
      * 
      * @param signature a {@link Signature}.
      * @return a {@link ReferenceConcrete} to an {@code Object[]}
-     *         set with a previous call to {@link #link(Signature, ReferenceConcrete, ReferenceConcrete) link}, 
+     *         set with a previous call to {@link #linkMethod(Signature, ReferenceConcrete, ReferenceConcrete) link}, 
      *         or {@code null} if {@code signature} was not previously linked.
      */
-    public ReferenceConcrete getAppendix(Signature signature) {
-        return this.linkAppendices.get(signature);
+    public ReferenceConcrete getMethodAppendix(Signature signature) {
+        return this.methodAppendices.get(signature);
+    }
+    
+    /**
+     * Checks whether a dynamic call site is linked to an 
+     * adapter/appendix. 
+     * 
+     * @param containerClass the {@link ClassFile} of the 
+     *        dynamic call site method.
+     * @param descriptor a {@link String}, the descriptor 
+     *        of the dynamic call site method.
+     * @param name a {@link String}, the name 
+     *        of the dynamic call site method.
+     * @param programCounter an {@code int}, the displacement
+     *        in the method's bytecode of the dynamic call site.
+     * @return {@code true} iff the dynamic call site has been 
+     *         previously linked to an adapter method.
+     * @throws InvalidInputException if any of the parameters
+     *         is {@code null}, or if the parameters do not 
+     *         indicate a method's dynamic call site.
+     */
+    public boolean isCallSiteLinked(ClassFile containerClass, String descriptor, String name, int programCounter) 
+    throws InvalidInputException {
+        return this.callSiteAdapters.containsKey(new CSKey(containerClass, descriptor, name, programCounter));
+    }
+
+    /**
+     * Links a dynamic call site to an adapter method, represented 
+     * as a reference to a {@link java.lang.invoke.MemberName}, 
+     * and an appendix.
+     * 
+     * @param containerClass the {@link ClassFile} of the 
+     *        dynamic call site method.
+     * @param descriptor a {@link String}, the descriptor 
+     *        of the dynamic call site method.
+     * @param name a {@link String}, the name 
+     *        of the dynamic call site method.
+     * @param programCounter an {@code int}, the displacement
+     *        in the method's bytecode of the dynamic call site.
+     * @param adapter a {@link ReferenceConcrete}. It should
+     *        refer an {@link Instance} of a {@link java.lang.invoke.MemberName},
+     *        but this is not checked.
+     * @param appendix a {@link ReferenceConcrete}. It should
+     *        refer an {@link Instance} of a {@link java.lang.Object[]},
+     *        but this is not checked.
+     * @throws InvalidInputException if the state is frozen or any of the 
+     *         parameters is {@code null}, or if the {@code containerClass}, 
+     *         {@code descriptor}, {@code name}, {@code programCounter} parameters 
+     *         do not indicate a method's dynamic call site
+     */
+    public void linkCallSite(ClassFile containerClass, String descriptor, String name, int programCounter, ReferenceConcrete adapter, ReferenceConcrete appendix) 
+    throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        this.callSiteAdapters.put(new CSKey(containerClass, descriptor, name, programCounter), adapter);
+        this.callSiteAppendices.put(new CSKey(containerClass, descriptor, name, programCounter), appendix);
+    }
+    
+    /**
+     * Returns the adapter method for a dynamic call site.
+     * 
+     * @param containerClass the {@link ClassFile} of the 
+     *        dynamic call site method.
+     * @param descriptor a {@link String}, the descriptor 
+     *        of the dynamic call site method.
+     * @param name a {@link String}, the name 
+     *        of the dynamic call site method.
+     * @param programCounter an {@code int}, the displacement
+     *        in the method's bytecode of the dynamic call site.
+     * @return a {@link ReferenceConcrete} to a {@code java.lang.invoke.MemberName}
+     *         set with a previous call to {@link #linkMethod(Signature, ReferenceConcrete, ReferenceConcrete) link}, 
+     *         or {@code null} if {@code signature} was not previously linked.
+     * @throws InvalidInputException if any of the parameters
+     *         is {@code null}, or if the parameters do not 
+     *         indicate a method's dynamic call site.
+     */
+    public ReferenceConcrete getCallSiteAdapter(ClassFile containerClass, String descriptor, String name, int programCounter) 
+    throws InvalidInputException {
+        return this.callSiteAdapters.get(new CSKey(containerClass, descriptor, name, programCounter));
+    }
+    
+    /**
+     * Returns the appendix for a linked signature 
+     * polymorphic nonintrinsic method.
+     * 
+     * @param containerClass the {@link ClassFile} of the 
+     *        dynamic call site method.
+     * @param descriptor a {@link String}, the descriptor 
+     *        of the dynamic call site method.
+     * @param name a {@link String}, the name 
+     *        of the dynamic call site method.
+     * @param programCounter an {@code int}, the displacement
+     *        in the method's bytecode of the dynamic call site.
+     * @return a {@link ReferenceConcrete} to an {@code Object[]}
+     *         set with a previous call to {@link #linkMethod(Signature, ReferenceConcrete, ReferenceConcrete) link}, 
+     *         or {@code null} if {@code signature} was not previously linked.
+     * @throws InvalidInputException if any of the parameters
+     *         is {@code null}, or if the parameters do not 
+     *         indicate a method's dynamic call site.
+     */
+    public ReferenceConcrete getCallSiteAppendix(ClassFile containerClass, String descriptor, String name, int programCounter) 
+    throws InvalidInputException {
+        return this.callSiteAppendices.get(new CSKey(containerClass, descriptor, name, programCounter));
     }
     
     /**
@@ -4345,10 +4542,10 @@ public final class State implements Cloneable {
         o.symbolFactory = o.symbolFactory.clone();
         
         //linkInvokers
-        o.linkInvokers = new HashMap<>(o.linkInvokers);
+        o.methodAdapters = new HashMap<>(o.methodAdapters);
         
         //linkAppendices
-        o.linkAppendices = new HashMap<>(o.linkAppendices);
+        o.methodAppendices = new HashMap<>(o.methodAppendices);
         
         //all other members are immutable
 

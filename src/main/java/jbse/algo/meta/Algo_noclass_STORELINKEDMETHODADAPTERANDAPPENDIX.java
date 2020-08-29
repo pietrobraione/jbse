@@ -25,9 +25,8 @@ import jbse.val.ReferenceConcrete;
 
 /**
  * An {@link Algorithm} for completing the semantics of
- * {@link Algo_JAVA_METHODHANDLENATIVES_RESOLVE} in the case 
- * where the resolved method is signature polymorphic 
- * and not intrinsic (usually from an invokehandle bytecode).
+ * linking of a signature polymorphic nonintrinsic method 
+ * (usually from an invokehandle bytecode).
  * The first parameter is a {@link ReferenceConcrete} to a {@code String} with 
  * the name of the method (either {@code invoke} or {@code invokeExact}), 
  * the second parameter is a {@link ReferenceConcrete} to a 
@@ -38,7 +37,7 @@ import jbse.val.ReferenceConcrete;
  * 
  * @author Pietro Braione
  */
-public final class Algo_noclass_STORELINKEDMETHODANDAPPENDIX extends Algo_INVOKEMETA_Nonbranching {
+public final class Algo_noclass_STORELINKEDMETHODADAPTERANDAPPENDIX extends Algo_INVOKEMETA_Nonbranching {
     private Signature methodSignature; //set by cookMore
     
     @Override
@@ -63,7 +62,7 @@ public final class Algo_noclass_STORELINKEDMETHODANDAPPENDIX extends Algo_INVOKE
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            state.link(this.methodSignature, (ReferenceConcrete) this.data.operand(3), (ReferenceConcrete) this.data.operand(2));
+            state.linkMethod(this.methodSignature, (ReferenceConcrete) this.data.operand(3), (ReferenceConcrete) this.data.operand(2));
         };
     }
 }

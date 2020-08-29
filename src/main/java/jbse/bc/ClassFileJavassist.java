@@ -9,7 +9,10 @@ import static javassist.bytecode.AccessFlag.STATIC;
 import static javassist.bytecode.AccessFlag.SUPER;
 import static jbse.bc.ClassLoaders.CLASSLOADER_NONE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE;
+import static jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP;
+import static jbse.bc.Signatures.JAVA_METHODTYPE;
 import static jbse.bc.Signatures.JAVA_OBJECT;
+import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.SIGNATURE_POLYMORPHIC_DESCRIPTOR;
 import static jbse.bc.Signatures.SUN_CALLERSENSITIVE;
 import static jbse.common.Type.ARRAYOF;
@@ -38,6 +41,8 @@ import javassist.Modifier;
 import javassist.bytecode.AccessFlag;
 import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.AttributeInfo;
+import javassist.bytecode.BootstrapMethodsAttribute;
+import javassist.bytecode.BootstrapMethodsAttribute.BootstrapMethod;
 //also uses javassist.bytecode.ClassFile, not imported to avoid name clash
 import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.ConstPool;
@@ -433,6 +438,40 @@ public class ClassFileJavassist extends ClassFile {
         return internalClassName(this.cp.getClassInfo(classIndex));
     }
     
+    private static final String BOOTSTRAP_METHOD_DESCRIPTOR_PREFIX = "(" + REFERENCE + JAVA_METHODHANDLES_LOOKUP + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + REFERENCE + JAVA_METHODTYPE + TYPEEND + ")";
+    
+    @Override
+    public CallSiteSpecifier getCallSiteSpecifier(int callSiteSpecifierIndex) 
+    throws InvalidIndexException, ClassFileIllFormedException {
+        if (callSiteSpecifierIndex < 1 || callSiteSpecifierIndex > this.cp.getSize()) {
+            throw new InvalidIndexException(indexOutOfRangeMessage(callSiteSpecifierIndex));
+        }
+        if (this.cp.getTag(callSiteSpecifierIndex) != ConstPool.CONST_InvokeDynamic) {
+            throw new InvalidIndexException(entryInvalidMessage(callSiteSpecifierIndex));
+        }
+        final int nameAndTypeIndex = this.cp.getInvokeDynamicNameAndType(callSiteSpecifierIndex);
+        final String descriptor = this.cp.getUtf8Info(this.cp.getNameAndTypeDescriptor(nameAndTypeIndex));
+        final String name = this.cp.getUtf8Info(this.cp.getNameAndTypeName(nameAndTypeIndex));
+        final int bootstrapIndex = this.cp.getInvokeDynamicBootstrap(callSiteSpecifierIndex);
+        final BootstrapMethodsAttribute bma = (BootstrapMethodsAttribute) this.cf.getAttribute(BootstrapMethodsAttribute.tag);
+        final BootstrapMethod bm = bma.getMethods()[bootstrapIndex];
+        final ConstantPoolValue cpvMethodRef = getValueFromConstantPool(bm.methodRef);
+        final Signature bootstrapMethodSignature;
+        if ((cpvMethodRef instanceof ConstantPoolMethodHandleInvokeStatic) || (cpvMethodRef instanceof ConstantPoolMethodHandleNewInvokeSpecial)) {
+        	bootstrapMethodSignature = ((ConstantPoolMethodHandle) cpvMethodRef).getValue();
+        	if (!bootstrapMethodSignature.getDescriptor().startsWith(BOOTSTRAP_METHOD_DESCRIPTOR_PREFIX)) {
+            	throw new ClassFileIllFormedException("The bootstrap method does not accept three arguments of type java.lang.invoke.MethodHandles.Lookup, String, and java.lang.invoke.MethodType.");
+        	}
+        } else {
+        	throw new ClassFileIllFormedException("The bootstrap method method_ref is not an index to a CONST_MethodHandle with kind 6 or 8.");
+        }
+        final ConstantPoolValue[] bootstrapParameters = new ConstantPoolValue[bm.arguments.length];
+        for (int i = 0; i < bootstrapParameters.length; ++i) {
+        	bootstrapParameters[i] = getValueFromConstantPool(bm.arguments[i]);
+        }
+        return new CallSiteSpecifier(descriptor, name, bootstrapMethodSignature, bootstrapParameters);
+    }
+    
     @Override
     public String getGenericSignatureType() {
     	final SignatureAttribute sa = (SignatureAttribute) this.cf.getAttribute(SignatureAttribute.tag);
@@ -752,42 +791,42 @@ public class ClassFileJavassist extends ClassFile {
             return new ConstantPoolMethodType(this.cp.getUtf8Info(this.cp.getMethodTypeInfo(index)));
         case ConstPool.CONST_MethodHandle:
         	try {
-        	switch (this.cp.getMethodHandleKind(index)) {
-        	case ConstPool.REF_getField:
-        		return new ConstantPoolMethodHandleGetField(getFieldSignature(this.cp.getMethodHandleIndex(index)));
-        	case ConstPool.REF_getStatic:
-        		return new ConstantPoolMethodHandleGetStatic(getFieldSignature(this.cp.getMethodHandleIndex(index)));
-        	case ConstPool.REF_putField:
-        		return new ConstantPoolMethodHandlePutField(getFieldSignature(this.cp.getMethodHandleIndex(index)));
-        	case ConstPool.REF_putStatic:
-        		return new ConstantPoolMethodHandlePutStatic(getFieldSignature(this.cp.getMethodHandleIndex(index)));
-        	case ConstPool.REF_invokeVirtual:
-        		return new ConstantPoolMethodHandleInvokeVirtual(getMethodSignature(this.cp.getMethodHandleIndex(index)));
-        	case ConstPool.REF_invokeStatic:
-        		try {
-        			return new ConstantPoolMethodHandleInvokeStatic(getMethodSignature(this.cp.getMethodHandleIndex(index)));
-        		} catch (InvalidIndexException e) {
-        			if (getMajorVersion() >= 52) {
-            			return new ConstantPoolMethodHandleInvokeStatic(getInterfaceMethodSignature(this.cp.getMethodHandleIndex(index)));
-        			} else {
-        				throw e;
+        		switch (this.cp.getMethodHandleKind(index)) {
+        		case ConstPool.REF_getField:
+        			return new ConstantPoolMethodHandleGetField(getFieldSignature(this.cp.getMethodHandleIndex(index)));
+        		case ConstPool.REF_getStatic:
+        			return new ConstantPoolMethodHandleGetStatic(getFieldSignature(this.cp.getMethodHandleIndex(index)));
+        		case ConstPool.REF_putField:
+        			return new ConstantPoolMethodHandlePutField(getFieldSignature(this.cp.getMethodHandleIndex(index)));
+        		case ConstPool.REF_putStatic:
+        			return new ConstantPoolMethodHandlePutStatic(getFieldSignature(this.cp.getMethodHandleIndex(index)));
+        		case ConstPool.REF_invokeVirtual:
+        			return new ConstantPoolMethodHandleInvokeVirtual(getMethodSignature(this.cp.getMethodHandleIndex(index)));
+        		case ConstPool.REF_invokeStatic:
+        			try {
+        				return new ConstantPoolMethodHandleInvokeStatic(getMethodSignature(this.cp.getMethodHandleIndex(index)));
+        			} catch (InvalidIndexException e) {
+        				if (getMajorVersion() >= 52) {
+        					return new ConstantPoolMethodHandleInvokeStatic(getInterfaceMethodSignature(this.cp.getMethodHandleIndex(index)));
+        				} else {
+        					throw e;
+        				}
         			}
-        		}
-        	case ConstPool.REF_invokeSpecial:
-        		try {
-        			return new ConstantPoolMethodHandleInvokeSpecial(getMethodSignature(this.cp.getMethodHandleIndex(index)));
-        		} catch (InvalidIndexException e) {
-        			if (getMajorVersion() >= 52) {
-            			return new ConstantPoolMethodHandleInvokeSpecial(getInterfaceMethodSignature(this.cp.getMethodHandleIndex(index)));
-        			} else {
-        				throw e;
+        		case ConstPool.REF_invokeSpecial:
+        			try {
+        				return new ConstantPoolMethodHandleInvokeSpecial(getMethodSignature(this.cp.getMethodHandleIndex(index)));
+        			} catch (InvalidIndexException e) {
+        				if (getMajorVersion() >= 52) {
+        					return new ConstantPoolMethodHandleInvokeSpecial(getInterfaceMethodSignature(this.cp.getMethodHandleIndex(index)));
+        				} else {
+        					throw e;
+        				}
         			}
+        		case ConstPool.REF_newInvokeSpecial:
+        			return new ConstantPoolMethodHandleNewInvokeSpecial(getMethodSignature(this.cp.getMethodHandleIndex(index)));
+        		case ConstPool.REF_invokeInterface:
+        			return new ConstantPoolMethodHandleInvokeInterface(getInterfaceMethodSignature(this.cp.getMethodHandleIndex(index)));
         		}
-        	case ConstPool.REF_newInvokeSpecial:
-        		return new ConstantPoolMethodHandleNewInvokeSpecial(getMethodSignature(this.cp.getMethodHandleIndex(index)));
-        	case ConstPool.REF_invokeInterface:
-        		return new ConstantPoolMethodHandleInvokeInterface(getInterfaceMethodSignature(this.cp.getMethodHandleIndex(index)));
-        	}
         	} catch (InvalidIndexException e) {
         		throw new ClassFileIllFormedException(e);
         	}

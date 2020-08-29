@@ -347,6 +347,11 @@ public final class Signatures {
         new Signature(JAVA_METHODHANDLENATIVES, 
                       "(" + REFERENCE + JAVA_MEMBERNAME + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, 
                       "init");
+    public static final Signature JAVA_METHODHANDLENATIVES_LINKCALLSITE =
+        new Signature(JAVA_METHODHANDLENATIVES, 
+                          "(" + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + 
+                          REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_MEMBERNAME + TYPEEND,
+                          "linkCallSite");
     public static final Signature JAVA_METHODHANDLENATIVES_LINKMETHOD =
         new Signature(JAVA_METHODHANDLENATIVES, 
                       "(" + REFERENCE + JAVA_CLASS + TYPEEND + INT + REFERENCE + JAVA_CLASS + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + 
@@ -764,8 +769,11 @@ public final class Signatures {
         new Signature(null, "(" + REFERENCE + JAVA_METHODTYPE + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "registerMethodType");
     public static final Signature noclass_SETSTANDARDCLASSLOADERSREADY =
         new Signature(null, "()" + VOID, "setStandardClassLoadersReady");
-    public static final Signature noclass_STORELINKEDMETHODANDAPPENDIX =
-        new Signature(null, "(" + REFERENCE + JAVA_STRING + TYPEEND + REFERENCE + JAVA_METHODTYPE + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_MEMBERNAME + TYPEEND + ")" + VOID, "storeLinkedMethodAndAppendix");
+    public static final Signature noclass_STORELINKEDCALLSITEADAPTERANDAPPENDIX =
+        new Signature(null, "(" + REFERENCE + JAVA_MEMBERNAME + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_CLASS + TYPEEND + 
+        	REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "storeLinkedCallSiteAdapterAndAppendix");
+    public static final Signature noclass_STORELINKEDMETHODADAPTERANDAPPENDIX =
+        new Signature(null, "(" + REFERENCE + JAVA_STRING + TYPEEND + REFERENCE + JAVA_METHODTYPE + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_MEMBERNAME + TYPEEND + ")" + VOID, "storeLinkedMethodAdapterAndAppendix");
     
     //field names
     public static final String ASSERTIONDISABLED_NAME = "$assertionsDisabled";
