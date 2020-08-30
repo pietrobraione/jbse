@@ -51,6 +51,7 @@ public final class Signatures {
     public static final String JAVA_COMPARABLE               = "java/lang/Comparable";
     public static final String JAVA_CONSTRUCTOR              = "java/lang/reflect/Constructor";
     public static final String JAVA_CRC32                    = "java/util/zip/CRC32";
+    public static final String JAVA_DELEGATINGMETHODHANDLE   = "java/lang/invoke/DelegatingMethodHandle";
     public static final String JAVA_DIRECTBYTEBUFFER         = "java/nio/DirectByteBuffer";
     public static final String JAVA_DIRECTLONGBUFFERU        = "java/nio/DirectLongBufferU";
     public static final String JAVA_DIRECTMETHODHANDLE       = "java/lang/invoke/DirectMethodHandle";
@@ -63,6 +64,7 @@ public final class Signatures {
     public static final String JAVA_FILEDESCRIPTOR           = "java/io/FileDescriptor";
     public static final String JAVA_FILEINPUTSTREAM          = "java/io/FileInputStream";
     public static final String JAVA_FILEOUTPUTSTREAM         = "java/io/FileOutputStream";
+    public static final String JAVA_FILEPERMISSION           = "java/io/FilePermission";
     public static final String JAVA_FINALIZER                = "java/lang/ref/Finalizer";
     public static final String JAVA_FINALREFERENCE           = "java/lang/ref/FinalReference";
     public static final String JAVA_FLOAT                    = "java/lang/Float";
@@ -125,6 +127,7 @@ public final class Signatures {
     public static final String JAVA_TREESET                  = "java/util/TreeSet";
     public static final String JAVA_TYPE                     = "java/lang/reflect/Type";
     public static final String JAVA_UNIXFILESYSTEM           = "java/io/UnixFileSystem";
+    public static final String JAVA_URI                      = "java/net/URI";
     public static final String JAVA_URL                      = "java/net/URL";
     public static final String JAVA_VOID                     = "java/lang/Void";
     public static final String JAVA_WINNTFILESYSTEM          = "java/io/WinNTFileSystem";
@@ -147,9 +150,11 @@ public final class Signatures {
     public static final String SUN_REFLECTION                = "sun/reflect/Reflection";
     public static final String SUN_SIGNAL                    = "sun/misc/Signal";
     public static final String SUN_UNIXNATIVEDISPATCHER      = "sun/nio/fs/UnixNativeDispatcher";
+    public static final String SUN_UNIXPATH                  = "sun/nio/fs/UnixPath";
     public static final String SUN_UNSAFE                    = "sun/misc/Unsafe";
     public static final String SUN_URLCLASSPATH              = "sun/misc/URLClassPath";
     public static final String SUN_URLCLASSPATH_JARLOADER    = "sun/misc/URLClassPath$JarLoader";
+    public static final String SUN_UTIL                      = "sun/nio/fs/Util";
     public static final String SUN_VERIFYACCESS              = "sun/invoke/util/VerifyAccess";
     public static final String SUN_VERIFYTYPE                = "sun/invoke/util/VerifyType";
     public static final String SUN_VM                        = "sun/misc/VM";

@@ -192,6 +192,7 @@ import static jbse.bc.Signatures.JAVA_CLASSLOADER_FINDLOADEDCLASS0;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_NATIVELIBRARY_LOAD;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_CRC32_UPDATEBYTES;
+import static jbse.bc.Signatures.JAVA_DELEGATINGMETHODHANDLE;
 import static jbse.bc.Signatures.JAVA_DIRECTBYTEBUFFER;
 import static jbse.bc.Signatures.JAVA_DIRECTLONGBUFFERU;
 import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE;
@@ -208,6 +209,7 @@ import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM_OPEN0;
 import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM_READBYTES;
 import static jbse.bc.Signatures.JAVA_FILEOUTPUTSTREAM_INITIDS;
 import static jbse.bc.Signatures.JAVA_FILEOUTPUTSTREAM_WRITEBYTES;
+import static jbse.bc.Signatures.JAVA_FILEPERMISSION;
 import static jbse.bc.Signatures.JAVA_FLOAT_FLOATTORAWINTBITS;
 import static jbse.bc.Signatures.JAVA_IDENTITYHASHMAP;
 import static jbse.bc.Signatures.JAVA_INFLATER;
@@ -310,6 +312,7 @@ import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_GETLASTMODIFIEDTIME;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_GETLENGTH;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_INITIDS;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_LIST;
+import static jbse.bc.Signatures.JAVA_URI;
 import static jbse.bc.Signatures.JAVA_VOID;
 import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_CANONICALIZE0;
 import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_CANONICALIZEWITHPREFIX0;
@@ -383,6 +386,7 @@ import static jbse.bc.Signatures.SUN_SIGNAL_FINDSIGNAL;
 import static jbse.bc.Signatures.SUN_SIGNAL_HANDLE0;
 import static jbse.bc.Signatures.SUN_UNIXNATIVEDISPATCHER_GETCWD;
 import static jbse.bc.Signatures.SUN_UNIXNATIVEDISPATCHER_INIT;
+import static jbse.bc.Signatures.SUN_UNIXPATH;
 import static jbse.bc.Signatures.SUN_UNSAFE_ADDRESSSIZE;
 import static jbse.bc.Signatures.SUN_UNSAFE_ALLOCATEMEMORY;
 import static jbse.bc.Signatures.SUN_UNSAFE_ARRAYBASEOFFSET;
@@ -409,6 +413,7 @@ import static jbse.bc.Signatures.SUN_UNSAFE_REGISTERNATIVES;
 import static jbse.bc.Signatures.SUN_UNSAFE_SHOULDBEINITIALIZED;
 import static jbse.bc.Signatures.SUN_URLCLASSPATH_GETLOOKUPCACHEURLS;
 import static jbse.bc.Signatures.SUN_URLCLASSPATH_JARLOADER;
+import static jbse.bc.Signatures.SUN_UTIL;
 import static jbse.bc.Signatures.SUN_VERIFYACCESS;
 import static jbse.bc.Signatures.SUN_VERIFYTYPE;
 import static jbse.bc.Signatures.SUN_VM_INITIALIZE;
@@ -1050,6 +1055,7 @@ public final class ExecutionContext {
         className.equals(JAVA_BYTE_BYTECACHE) ||
         className.equals(JAVA_CHARACTER_CHARACTERCACHE) ||
         className.equals(JAVA_CHARSET_EXTENDEDPROVIDERHOLDER) ||
+        className.equals(JAVA_DELEGATINGMETHODHANDLE) ||
         className.equals(JAVA_DIRECTBYTEBUFFER) ||
         className.equals(JAVA_DIRECTMETHODHANDLE_LAZY) || //apparently
         className.equals(JAVA_DIRECTLONGBUFFERU) || 
@@ -1065,11 +1071,13 @@ public final class ExecutionContext {
         className.equals(JAVA_MAPPEDBYTEBUFFER) || 
         className.equals(JAVA_METHODTYPEFORM) || 
         className.equals(JAVA_OPTIONAL) || 
+        className.equals(JAVA_FILEPERMISSION) || //apparently 
         className.equals(JAVA_SHORT) || 
         className.equals(JAVA_SHORT_SHORTCACHE) || 
         className.equals(JAVA_STANDARDCHARSETS) || 
         className.equals(JAVA_TREESET) ||
         className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
+        className.equals(JAVA_URI) || 
         className.equals(JAVA_VOID) || 
         className.equals(JAVA_ZIPFILE) || 
         className.equals(JDK_TYPE) || 
@@ -1079,6 +1087,7 @@ public final class ExecutionContext {
         className.equals(SUN_PERFCOUNTER) ||
         className.equals(SUN_PERFCOUNTER_CORECOUNTERS) ||
         className.equals(SUN_URLCLASSPATH_JARLOADER) ||
+        className.equals(SUN_UTIL) || //apparently
         className.equals(SUN_VERIFYACCESS) ||
         className.equals(SUN_VERIFYTYPE) ||
         className.equals(SUN_WRAPPER_FORMAT) ||
@@ -1103,6 +1112,7 @@ public final class ExecutionContext {
     	addPostInitInvariantClassName(JAVA_METHODTYPE); //can be considered as it were pure (all final except internTable and objectOnlyTypes that are caches) 
     	addPostInitInvariantClassName(JAVA_SIMPLEMETHODHANDLE); //necessary for method handles
         //addPostInitInvariantClassName(SUN_LAUNCHERHELPER); //necessary to JVM bootstrap (is it really?)
+        addPostInitInvariantClassName(SUN_UNIXPATH); //necessary to invokedynamic
     }
     
     private void addPostInitInvariantClassName(String className) {

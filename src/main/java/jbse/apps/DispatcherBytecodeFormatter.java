@@ -5,6 +5,7 @@ import static jbse.common.Util.asUnsignedByte;
 
 import java.util.function.BiFunction;
 
+import jbse.bc.CallSiteSpecifier;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.ConstantPoolClass;
 import jbse.bc.ConstantPoolString;
@@ -449,6 +450,32 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
         }		
     }
 
+
+    /**
+     * A formatter for bytecodes with 1 operand with type unsigned word (16 bits) whose
+     * meaning is a call site specifier in the constant pool.
+     * 
+     * @author Pietro Braione
+     */
+    private static class DispatchStrategyFormat1CS implements DispatchStrategyFormat {
+        private final String text;
+        public DispatchStrategyFormat1CS(String text) { this.text = text; }
+        public TextGenerator doIt() {
+            return (Frame f, ClassHierarchy hier) -> { 
+                String retVal = DispatchStrategyFormat1CS.this.text + " ";
+                try {
+                    final int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
+                    final CallSiteSpecifier css = f.getMethodClass().getCallSiteSpecifier(UW);
+                    retVal += " " + css.getDescriptor() + ":" + css.getName() + " * " + css.getBootstrapMethodSignature().toString(); 
+                } catch (InvalidProgramCounterException | InvalidIndexException | 
+                		ClassFileIllFormedException e) {
+                    //unrecognized bytecode
+                    retVal += UNRECOGNIZED_BYTECODE;
+                }
+                return retVal;					
+            };
+        }		
+    }
     /**
      * A formatter for bytecodes with 2 operands, the first with type unsigned word (16 bits) 
      * whose meaning is a class/array/interface signature in the constant pool, the second
@@ -758,7 +785,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
         setCase(OP_INVOKEVIRTUAL,   new DispatchStrategyFormat1ME(opcodeName(OP_INVOKEVIRTUAL), false));
         setCase(OP_INVOKESPECIAL,   new DispatchStrategyFormat1ME(opcodeName(OP_INVOKESPECIAL), false));
         setCase(OP_INVOKESTATIC,    new DispatchStrategyFormat1ME(opcodeName(OP_INVOKESTATIC), false));
-        setCase(OP_INVOKEDYNAMIC,   new DispatchStrategyFormat1ME(opcodeName(OP_INVOKEDYNAMIC), false));
+        setCase(OP_INVOKEDYNAMIC,   new DispatchStrategyFormat1CS(opcodeName(OP_INVOKEDYNAMIC)));
         setCase(OP_RETURN,          new DispatchStrategyFormat0(opcodeName(OP_RETURN)));
         setCase(OP_ARETURN,         new DispatchStrategyFormat0(opcodeName(OP_ARETURN)));
         setCase(OP_DRETURN,         new DispatchStrategyFormat0(opcodeName(OP_DRETURN)));
