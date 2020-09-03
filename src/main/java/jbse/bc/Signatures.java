@@ -39,6 +39,7 @@ public final class Signatures {
     public static final String JAVA_BYTE                     = "java/lang/Byte";
     public static final String JAVA_BYTE_BYTECACHE           = "java/lang/Byte$ByteCache";
     public static final String JAVA_BYTEBUFFER               = "java/nio/ByteBuffer";
+    public static final String JAVA_CALLSITE                 = "java/lang/invoke/CallSite";
     public static final String JAVA_CHARACTER                = "java/lang/Character";
     public static final String JAVA_CHARACTER_CHARACTERCACHE = "java/lang/Character$CharacterCache";
     public static final String JAVA_CHARSEQUENCE             = "java/lang/CharSequence";
@@ -375,6 +376,10 @@ public final class Signatures {
         new Signature(JAVA_METHODHANDLENATIVES, 
                       "(" + REFERENCE + JAVA_MEMBERNAME + TYPEEND + REFERENCE + JAVA_CLASS + TYPEEND + ")" + REFERENCE + JAVA_MEMBERNAME + TYPEEND, 
                       "resolve");
+    public static final Signature JAVA_METHODHANDLENATIVES_SETCALLSITETARGETNORMAL =
+        new Signature(JAVA_METHODHANDLENATIVES, "(" + REFERENCE + JAVA_CALLSITE + TYPEEND + REFERENCE + JAVA_METHODHANDLE + TYPEEND + ")" + VOID, "setCallSiteTargetNormal");
+    public static final Signature JAVA_METHODHANDLENATIVES_SETCALLSITETARGETVOLATILE =
+        new Signature(JAVA_METHODHANDLENATIVES, "(" + REFERENCE + JAVA_CALLSITE + TYPEEND + REFERENCE + JAVA_METHODHANDLE + TYPEEND + ")" + VOID, "setCallSiteTargetVolatile");
     public static final Signature JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET =
         new Signature(JAVA_METHODHANDLENATIVES, "(" + REFERENCE + JAVA_MEMBERNAME + TYPEEND + ")" + LONG, "staticFieldOffset");
     public static final Signature JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING =
@@ -790,6 +795,8 @@ public final class Signatures {
         new Signature(JAVA_BOOLEAN, "" + BOOLEAN, "value");
     public static final Signature JAVA_BYTE_VALUE = 
         new Signature(JAVA_BYTE, "" + BYTE, "value");
+    public static final Signature JAVA_CALLSITE_TARGET = 
+        new Signature(JAVA_CALLSITE, "" + REFERENCE + JAVA_METHODHANDLE + TYPEEND, "target");
     public static final Signature JAVA_CHARACTER_VALUE = 
         new Signature(JAVA_CHARACTER, "" + CHAR, "value");
     public static final Signature JAVA_CLASS_CLASSLOADER = 

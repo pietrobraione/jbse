@@ -75,6 +75,8 @@ public final class Overrides {
     public static final String ALGO_JAVA_METHODHANDLENATIVES_INIT                  = internalClassName(jbse.algo.meta.Algo_JAVA_METHODHANDLENATIVES_INIT.class.getName());
     public static final String ALGO_JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET     = internalClassName(jbse.algo.meta.Algo_JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET.class.getName());
     public static final String ALGO_JAVA_METHODHANDLENATIVES_RESOLVE               = internalClassName(jbse.algo.meta.Algo_JAVA_METHODHANDLENATIVES_RESOLVE.class.getName());
+    public static final String ALGO_JAVA_METHODHANDLENATIVES_SETCALLSITETARGETNORMAL = internalClassName(jbse.algo.meta.Algo_JAVA_METHODHANDLENATIVES_SETCALLSITETARGETNORMAL.class.getName());
+    public static final String ALGO_JAVA_METHODHANDLENATIVES_SETCALLSITETARGETVOLATILE = internalClassName(jbse.algo.meta.Algo_JAVA_METHODHANDLENATIVES_SETCALLSITETARGETVOLATILE.class.getName());
     public static final String ALGO_JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET     = internalClassName(jbse.algo.meta.Algo_JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET.class.getName());
     public static final String ALGO_JAVA_OBJECT_CLONE                              = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_CLONE.class.getName());
     public static final String ALGO_JAVA_OBJECT_GETCLASS                           = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_GETCLASS.class.getName());
