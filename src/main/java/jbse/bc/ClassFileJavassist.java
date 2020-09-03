@@ -438,7 +438,7 @@ public class ClassFileJavassist extends ClassFile {
         return internalClassName(this.cp.getClassInfo(classIndex));
     }
     
-    private static final String BOOTSTRAP_METHOD_DESCRIPTOR_PREFIX = "(" + REFERENCE + JAVA_METHODHANDLES_LOOKUP + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + REFERENCE + JAVA_METHODTYPE + TYPEEND + ")";
+    private static final String BOOTSTRAP_METHOD_DESCRIPTOR_PREFIX = "(" + REFERENCE + JAVA_METHODHANDLES_LOOKUP + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + REFERENCE + JAVA_METHODTYPE + TYPEEND;
     
     @Override
     public CallSiteSpecifier getCallSiteSpecifier(int callSiteSpecifierIndex) 
