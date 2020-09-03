@@ -12,6 +12,7 @@ import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETENCLOSINGMETHOD0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETMODIFIERS;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETNAME0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETPRIMITIVECLASS;
+import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETPROTECTIONDOMAIN0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETRAWANNOTATIONS;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETSIGNERS;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETSUPERCLASS;
@@ -177,6 +178,7 @@ import static jbse.bc.Signatures.JAVA_CLASS_GETENCLOSINGMETHOD0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETMODIFIERS;
 import static jbse.bc.Signatures.JAVA_CLASS_GETNAME0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETPRIMITIVECLASS;
+import static jbse.bc.Signatures.JAVA_CLASS_GETPROTECTIONDOMAIN0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETRAWANNOTATIONS;
 import static jbse.bc.Signatures.JAVA_CLASS_GETSIGNERS;
 import static jbse.bc.Signatures.JAVA_CLASS_GETSUPERCLASS;
@@ -222,6 +224,8 @@ import static jbse.bc.Signatures.JAVA_INFLATER_INIT;
 import static jbse.bc.Signatures.JAVA_INFLATER_INITIDS;
 import static jbse.bc.Signatures.JAVA_INFLATER_RESET;
 import static jbse.bc.Signatures.JAVA_INFLATER_SETDICTIONARY;
+import static jbse.bc.Signatures.JAVA_INFOFROMMEMBERNAME;
+import static jbse.bc.Signatures.JAVA_INNERCLASSLAMBDAMETAFACTORY;
 import static jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR;
 import static jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR_2;
 import static jbse.bc.Signatures.JAVA_INVOKERS;
@@ -231,6 +235,7 @@ import static jbse.bc.Signatures.JAVA_JARVERIFIER;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM_NAME;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM_NAMEDFUNCTION;
+import static jbse.bc.Signatures.JAVA_LAMBDAMETAFACTORY;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
 import static jbse.bc.Signatures.JAVA_MAPPEDBYTEBUFFER;
@@ -374,6 +379,7 @@ import static jbse.bc.Signatures.JBSE_JAVA_MAP_MAKEINITIAL;
 import static jbse.bc.Signatures.JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION;
 import static jbse.bc.Signatures.JBSE_JAVA_MAP_REFINEONKEYANDBRANCH;
 import static jbse.bc.Signatures.JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH;
+import static jbse.bc.Signatures.JDK_FRAME;
 import static jbse.bc.Signatures.JDK_TYPE;
 import static jbse.bc.Signatures.SUN_ASCIICASEINSENSITIVECOMPARATOR;
 import static jbse.bc.Signatures.SUN_JARINDEX;
@@ -386,6 +392,7 @@ import static jbse.bc.Signatures.SUN_PERFCOUNTER;
 import static jbse.bc.Signatures.SUN_PERFCOUNTER_CORECOUNTERS;
 import static jbse.bc.Signatures.SUN_REFLECTION_GETCALLERCLASS;
 import static jbse.bc.Signatures.SUN_REFLECTION_GETCLASSACCESSFLAGS;
+import static jbse.bc.Signatures.SUN_SECURITYCONSTANTS;
 import static jbse.bc.Signatures.SUN_SIGNAL_FINDSIGNAL;
 import static jbse.bc.Signatures.SUN_SIGNAL_HANDLE0;
 import static jbse.bc.Signatures.SUN_UNIXNATIVEDISPATCHER_GETCWD;
@@ -658,6 +665,7 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_CLASS_GETMODIFIERS,                            ALGO_JAVA_CLASS_GETMODIFIERS);
             addMetaOverridden(JAVA_CLASS_GETNAME0,                                ALGO_JAVA_CLASS_GETNAME0);
             addMetaOverridden(JAVA_CLASS_GETPRIMITIVECLASS,                       ALGO_JAVA_CLASS_GETPRIMITIVECLASS);
+            addMetaOverridden(JAVA_CLASS_GETPROTECTIONDOMAIN0,                    ALGO_JAVA_CLASS_GETPROTECTIONDOMAIN0);
             addMetaOverridden(JAVA_CLASS_GETRAWANNOTATIONS,                       ALGO_JAVA_CLASS_GETRAWANNOTATIONS);
             addMetaOverridden(JAVA_CLASS_GETSIGNERS,                              ALGO_JAVA_CLASS_GETSIGNERS);
             addMetaOverridden(JAVA_CLASS_GETSUPERCLASS,                           ALGO_JAVA_CLASS_GETSUPERCLASS);
@@ -1067,11 +1075,14 @@ public final class ExecutionContext {
         className.equals(JAVA_DIRECTLONGBUFFERU) || 
         className.equals(JAVA_IDENTITYHASHMAP) || 
         className.equals(JAVA_INFLATER) ||
+        className.equals(JAVA_INFOFROMMEMBERNAME) || 
+        className.equals(JAVA_INNERCLASSLAMBDAMETAFACTORY) || //almost, the only impure members are counter (an atomic integer that is used to give unique names) and dumper (used to debugging purposes only)
         className.equals(JAVA_INVOKERBYTECODEGENERATOR_2) ||
         className.equals(JAVA_JARFILE) || 
         className.equals(JAVA_JARVERIFIER) || 
         className.equals(JAVA_LAMBDAFORM) || 
         className.equals(JAVA_LAMBDAFORM_NAME) || 
+        className.equals(JAVA_LAMBDAMETAFACTORY) || 
         className.equals(JAVA_LINKEDLIST) || 
         className.equals(JAVA_LINKEDLIST_ENTRY) ||
         className.equals(JAVA_MAPPEDBYTEBUFFER) || 
@@ -1086,12 +1097,14 @@ public final class ExecutionContext {
         className.equals(JAVA_URI) || 
         className.equals(JAVA_VOID) || 
         className.equals(JAVA_ZIPFILE) || 
+        className.equals(JDK_FRAME) || 
         className.equals(JDK_TYPE) || 
         className.equals(SUN_ASCIICASEINSENSITIVECOMPARATOR) ||
         className.equals(SUN_JARINDEX) ||
         className.equals(SUN_PERF) ||
         className.equals(SUN_PERFCOUNTER) ||
         className.equals(SUN_PERFCOUNTER_CORECOUNTERS) ||
+        className.equals(SUN_SECURITYCONSTANTS) ||
         className.equals(SUN_URLCLASSPATH_JARLOADER) ||
         className.equals(SUN_UTIL) || //apparently
         className.equals(SUN_VERIFYACCESS) ||

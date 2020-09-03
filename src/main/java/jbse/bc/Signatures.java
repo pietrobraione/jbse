@@ -72,8 +72,10 @@ public final class Signatures {
     public static final String JAVA_GENERICDECLARATION       = "java/lang/reflect/GenericDeclaration";
     public static final String JAVA_HASHMAP                  = "java/util/HashMap";
     public static final String JAVA_IDENTITYHASHMAP          = "java/util/IdentityHashMap";
+    public static final String JAVA_INNERCLASSLAMBDAMETAFACTORY = "java/lang/invoke/InnerClassLambdaMetafactory";
     public static final String JAVA_INPUTSTREAM              = "java/io/InputStream";
     public static final String JAVA_INFLATER                 = "java/util/zip/Inflater";
+    public static final String JAVA_INFOFROMMEMBERNAME       = "java/lang/invoke/InfoFromMemberName";
     public static final String JAVA_INTEGER                  = "java/lang/Integer";
     public static final String JAVA_INVOKERBYTECODEGENERATOR = "java/lang/invoke/InvokerBytecodeGenerator";
     public static final String JAVA_INVOKERBYTECODEGENERATOR_2 = "java/lang/invoke/InvokerBytecodeGenerator$2";
@@ -83,6 +85,7 @@ public final class Signatures {
     public static final String JAVA_LAMBDAFORM               = "java/lang/invoke/LambdaForm";
     public static final String JAVA_LAMBDAFORM_NAME          = "java/lang/invoke/LambdaForm$Name";
     public static final String JAVA_LAMBDAFORM_NAMEDFUNCTION = "java/lang/invoke/LambdaForm$NamedFunction";
+    public static final String JAVA_LAMBDAMETAFACTORY        = "java/lang/invoke/LambdaMetafactory";
     public static final String JAVA_LINKEDLIST               = "java/util/LinkedList";
     public static final String JAVA_LINKEDLIST_ENTRY         = "java/util/LinkedList$Entry";
     public static final String JAVA_LONG                     = "java/lang/Long";
@@ -137,6 +140,7 @@ public final class Signatures {
     public static final String JBSE_ANALYSIS                 = internalClassName(jbse.meta.Analysis.class.getName());
     public static final String JBSE_BASE                     = internalClassName(jbse.base.Base.class.getName());
     public static final String JBSE_JAVA_MAP                 = internalClassName(jbse.base.JAVA_MAP.class.getName());
+    public static final String JDK_FRAME                     = "jdk/internal/org/objectweb/asm/Frame";
     public static final String JDK_TYPE                      = "jdk/internal/org/objectweb/asm/Type";
     public static final String SUN_ASCIICASEINSENSITIVECOMPARATOR = "sun/misc/ASCIICaseInsensitiveComparator";
     public static final String SUN_CALLERSENSITIVE           = "sun/reflect/CallerSensitive";
@@ -149,6 +153,7 @@ public final class Signatures {
     public static final String SUN_PERFCOUNTER               = "sun/misc/PerfCounter";
     public static final String SUN_PERFCOUNTER_CORECOUNTERS  = "sun/misc/PerfCounter$CoreCounters";
     public static final String SUN_REFLECTION                = "sun/reflect/Reflection";
+    public static final String SUN_SECURITYCONSTANTS         = "sun/security/util/SecurityConstants";
     public static final String SUN_SIGNAL                    = "sun/misc/Signal";
     public static final String SUN_UNIXNATIVEDISPATCHER      = "sun/nio/fs/UnixNativeDispatcher";
     public static final String SUN_UNIXPATH                  = "sun/nio/fs/UnixPath";
@@ -250,6 +255,8 @@ public final class Signatures {
         new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_STRING + TYPEEND, "getName0");
     public static final Signature JAVA_CLASS_GETPRIMITIVECLASS =
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_CLASS + TYPEEND, "getPrimitiveClass");
+    public static final Signature JAVA_CLASS_GETPROTECTIONDOMAIN0 =
+        new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_PROTECTIONDOMAIN + TYPEEND, "getProtectionDomain0");
     public static final Signature JAVA_CLASS_GETRAWANNOTATIONS =
         new Signature(JAVA_CLASS, "()" + ARRAYOF + BYTE, "getRawAnnotations");
     public static final Signature JAVA_CLASS_GETSIGNERS =
