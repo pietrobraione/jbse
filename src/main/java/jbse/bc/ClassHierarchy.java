@@ -321,15 +321,17 @@ public final class ClassHierarchy implements Cloneable {
      * Creates a dummy {@link ClassFile} for an anonymous (in the sense of
      * {@link sun.misc.Unsafe#defineAnonymousClass}) class.
      * 
+     * @param hostClass a {@link ClassFile}, the host class for the
+     *        anonymous class.
      * @param bytecode a {@code byte[]}, the bytecode for the anonymous class.
      * @return a dummy {@link ClassFile} for the anonymous class.
      * @throws ClassFileIllFormedException if {@code bytecode} is ill-formed.
      * @throws InvalidInputException if {@code bytecode == null}.
      */
-    public ClassFile createClassFileAnonymousDummy(byte[] bytecode) 
+    public ClassFile createClassFileAnonymousDummy(ClassFile hostClass, byte[] bytecode) 
     throws ClassFileIllFormedException, InvalidInputException {
         final ClassFile retval =
-            this.f.newClassFileAnonymous(bytecode, null, null, null, null);
+            this.f.newClassFileAnonymous(hostClass, bytecode, null, null, null);
         return retval;
     }
 
@@ -343,8 +345,6 @@ public final class ClassHierarchy implements Cloneable {
      *        {@code classFile.}{@link ClassFile#getSuperclassName() getSuperclassName()}.
      * @param superInterfaces a {@link ClassFile}{@code []} for {@code classFile}'s superinterfaces. It must agree with 
      *        {@code classFile.}{@link ClassFile#getSuperInterfaceNames() getSuperInterfaceNames()}.
-     * @param hostClass a {@link ClassFile}, the host class for the
-     *        anonymous class.
      * @param cpPatches a {@link Object}{@code []}; The i-th element of this
      *        array patches the i-th element in the constant pool defined
      *        by the {@code bytecode} (the two must agree). Note that 
@@ -357,7 +357,7 @@ public final class ClassHierarchy implements Cloneable {
      * @throws InvalidInputException  if any of the parameters has an invalid
      *         value.
      */
-    public ClassFile createClassFileAnonymous(ClassFile classFile, ClassFile superClass, ClassFile[] superInterfaces, ClassFile hostClass, Object[] cpPatches) 
+    public ClassFile createClassFileAnonymous(ClassFile classFile, ClassFile superClass, ClassFile[] superInterfaces, Object[] cpPatches) 
     throws InvalidInputException {
         if (classFile == null) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".addClassFileAnonymous() with a classFile parameter that has value null.");
@@ -365,12 +365,9 @@ public final class ClassHierarchy implements Cloneable {
         if (!classFile.isAnonymousUnregistered()) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".addClassFileAnonymous() with a classFile parameter that is not anonymous.");
         }
-        if (hostClass == null) {
-            throw new InvalidInputException("Invoked " + this.getClass().getName() + ".addClassFileAnonymous() with a hostClass parameter that has value null.");
-        }
         final ClassFile retVal;
         try {
-            retVal = this.f.newClassFileAnonymous(classFile.getBinaryFileContent(), superClass, superInterfaces, cpPatches, hostClass);
+            retVal = this.f.newClassFileAnonymous(classFile.getHostClass(), classFile.getBinaryFileContent(), superClass, superInterfaces, cpPatches);
         } catch (ClassFileIllFormedException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -817,7 +814,7 @@ public final class ClassHierarchy implements Cloneable {
         }
         
         //makes a dummy ClassFile
-        final ClassFile classDummy = createClassFileAnonymousDummy(bytecode);
+        final ClassFile classDummy = createClassFileAnonymousDummy(hostClass, bytecode);
         
         //checks the version
         if (classDummy.getMajorVersion() > JAVA_8) {
@@ -841,7 +838,7 @@ public final class ClassHierarchy implements Cloneable {
         }
         
         //creates a complete ClassFile for the class, registers it and returns it
-        final ClassFile retVal = createClassFileAnonymous(classDummy, superClass, superInterfaces, hostClass, cpPatches);
+        final ClassFile retVal = createClassFileAnonymous(classDummy, superClass, superInterfaces, cpPatches);
         addClassFileAnonymous(retVal);
         return retVal;
     }

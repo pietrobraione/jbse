@@ -7,7 +7,6 @@ import static javassist.bytecode.AccessFlag.setProtected;
 import static javassist.bytecode.AccessFlag.setPublic;
 import static javassist.bytecode.AccessFlag.STATIC;
 import static javassist.bytecode.AccessFlag.SUPER;
-import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP;
 import static jbse.bc.Signatures.JAVA_METHODTYPE;
@@ -109,9 +108,9 @@ public class ClassFileJavassist extends ClassFile {
      *        that are created to access the bytecode conveniently.
      * @throws ClassFileIllFormedException if the {@code bytecode} 
      *         is ill-formed.
-     * @throws InvalidInputException if {@code className}, {@code superClass} or
-     *         {@code superInterfaces} do not agree with {@code bytecode},
-     *         or {@code bytecode == null}.
+     * @throws InvalidInputException if {@code butecode == null}, or 
+     *         {@code className}, {@code superClass} or {@code superInterfaces} do 
+     *         not agree with {@code bytecode}.
      */
     ClassFileJavassist(int definingClassLoader, String className, byte[] bytecode, ClassFile superClass, ClassFile[] superInterfaces) 
     throws ClassFileIllFormedException, InvalidInputException {
@@ -161,9 +160,10 @@ public class ClassFileJavassist extends ClassFile {
     
     /**
      * Constructor for anonymous (unregistered) classes.
-     * 
+     * @param hostClass a {@link ClassFile}, the host class for the anonymous class. 
+     *        It must not be null.
      * @param bytecode a {@code byte[]}, the bytecode of the class. It must not be {@code null}.
-     * @param superClass a {@link ClassFile}, the superclass. It can be {@code null} for
+     * @param superClass a {@link ClassFile}, the superclass. It must be {@code null} for
      *        <em>dummy</em>, i.e., incomplete, classfiles that are created to access
      *        the bytecode conveniently.
      * @param superInterfaces a {@link ClassFile}{@code []}, the superinterfaces 
@@ -176,16 +176,14 @@ public class ClassFileJavassist extends ClassFile {
      *        {@code cpPatches[i]} with {@code i} equal or greater than the size
      *        of the constant pool in {@code classFile} are ignored. It can be 
      *        {@code null} to signify no patches.
-     * @param hostClass a {@link ClassFile}, the host class for the anonymous class. 
-     *        It must be {@code null} for <em>dummy</em>, i.e., incomplete classfiles 
-     *        that are created to access the bytecode conveniently.
      * @throws ClassFileIllFormedException if the {@code bytecode} 
      *         is ill-formed.
-     * @throws InvalidInputException if {@code cpPatches} does not agree with {@code bytecode},
-     *         or {@code bytecode == null} or {@code superClass == null && hostClass != null},
-     *         or {@code superInterfaces == null && hostClass != null}.
+     * @throws InvalidInputException if {@code hostClass == null} 
+     *         or {@code bytecode == null} or {@code superInterfaces == null && superclass != null}
+     *         or {@code superClass}, {@code superInterfaces}, or {@code cpPatches} do not agree 
+     *         with {@code bytecode}.
      */
-    ClassFileJavassist(byte[] bytecode, ClassFile superClass, ClassFile[] superInterfaces, Object[] cpPatches, ClassFile hostClass) 
+    ClassFileJavassist(ClassFile hostClass, byte[] bytecode, ClassFile superClass, ClassFile[] superInterfaces, Object[] cpPatches) 
     throws ClassFileIllFormedException, InvalidInputException {
         try {
             //checks
@@ -194,14 +192,14 @@ public class ClassFileJavassist extends ClassFile {
             }
             
             //determines if it is dummy
-            final boolean isDummy = (hostClass == null);
+            final boolean isDummy = (superClass == null);
             
             //checks
-            if (superClass == null && !isDummy) {
-                throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with superClass parameter whose value is null but the ClassFile is not dummy.");
-            }
             if (superInterfaces == null && !isDummy) {
                 throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with superInterfaces parameter whose value is null but the ClassFile is not dummy.");
+            }
+            if (hostClass == null) {
+                throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with hostClass parameter whose value is null.");
             }
             
             //reads and patches the bytecode
@@ -235,7 +233,7 @@ public class ClassFileJavassist extends ClassFile {
             
             //inits
             this.isAnonymousUnregistered = true;
-            this.definingClassLoader = (isDummy ? CLASSLOADER_BOOT : hostClass.getDefiningClassLoader());
+            this.definingClassLoader = hostClass.getDefiningClassLoader();
             this.className = internalClassName(this.cf.getName());
             this.cp = this.cf.getConstPool();
             this.bytecode = (isDummy ? bytecode : null); //only dummy anonymous classfiles (without a host class) cache their bytecode
@@ -259,8 +257,9 @@ public class ClassFileJavassist extends ClassFile {
                 continue;
             }
             final int tag = cp.getTag(i);
-            if (tag == ConstPool.CONST_String) {
-                continue; //any will fit
+            if (tag == ConstPool.CONST_String &&
+            	cpPatches[i] instanceof Reference) {
+                continue;
             }
             if (tag == ConstPool.CONST_Integer && 
                 cpPatches[i] instanceof Integer) {
@@ -278,10 +277,12 @@ public class ClassFileJavassist extends ClassFile {
                 cpPatches[i] instanceof Double) {
                 continue;
             }
-            if (tag == ConstPool.CONST_Utf8 && cpPatches[i] instanceof String) {
+            if (tag == ConstPool.CONST_Utf8 && 
+            	cpPatches[i] instanceof String) {
                 continue;
             }
-            if (tag == ConstPool.CONST_Class && cpPatches[i] instanceof ClassFile) {
+            if (tag == ConstPool.CONST_Class && 
+            	cpPatches[i] instanceof ClassFile) {
                 continue;
             }
             throw new InvalidInputException("ClassFile constructor for anonymous classfile invoked with cpPatches parameter not matching bytecode's constant pool.");
