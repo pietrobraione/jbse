@@ -272,14 +272,15 @@ public final class ClassHierarchy implements Cloneable {
      *        a classloader.
      * @param classFile a {@link ClassFile} for the class to be added.
      * @throws InvalidInputException if {@code initiatingLoader} is invalid (negative),
-     *         or {@code classFile == null}, or {@code classFile.}{@link ClassFile#isPrimitiveOrVoid()}, or 
-     *         {@code classFile.}{@link ClassFile#isAnonymousUnregistered()}, or there is already a different
-     *         {@link ClassFile} in the loaded class cache for the pair
+     *         or {@code classFile == null}, or {@code classFile.}{@link ClassFile#isPrimitiveOrVoid() isPrimitiveOrVoid()}, or 
+     *         {@code classFile.}{@link ClassFile#isAnonymousUnregistered() isAnonymousUnregistered()}, 
+     *         or {@code classFile.}{@link ClassFile#isDummy() isDummy()}, 
+     *         or there is already a different {@link ClassFile} in the loaded class cache for the pair
      *         {@code (initiatingLoader, classFile.}{@link ClassFile#getClassName() getClassName}{@code ())}.
      */
     public void addClassFileClassArray(int initiatingLoader, ClassFile classFile) 
     throws InvalidInputException {
-        this.cfs.putLoadedClassCache(initiatingLoader, classFile);
+        this.cfs.putClassFile(initiatingLoader, classFile);
     }
     
     /**
@@ -296,7 +297,7 @@ public final class ClassHierarchy implements Cloneable {
      *         otherwise. 
      */
     public ClassFile getClassFileClassArray(int initiatingLoader, String className) {
-        return this.cfs.getLoadedClassCache(initiatingLoader, className);
+        return this.cfs.getClassFile(initiatingLoader, className);
     }
     
     /**
@@ -328,30 +329,35 @@ public final class ClassHierarchy implements Cloneable {
     public ClassFile createClassFileAnonymousDummy(byte[] bytecode) 
     throws ClassFileIllFormedException, InvalidInputException {
         final ClassFile retval =
-            this.f.newClassFileAnonymous(bytecode, null, null, null);
+            this.f.newClassFileAnonymous(bytecode, null, null, null, null);
         return retval;
     }
 
     /**
-     * Adds a {@link ClassFile} for an anonymous class to this hierarchy.
+     * Creates a {@link ClassFile} for an anonymous (in the sense of
+     * {@link sun.misc.Unsafe#defineAnonymousClass}) class.
      *
      * @param classFile a dummy {@link ClassFile} created with a previous invocation 
      *        of {@link #createClassFileAnonymousDummy(byte[])}.
-     * @param cpPatches a {@link ConstantPoolValue}{@code []}; The i-th element of this
+     * @param superClass a {@link ClassFile} for {@code classFile}'s superclass. It must agree with 
+     *        {@code classFile.}{@link ClassFile#getSuperclassName() getSuperclassName()}.
+     * @param superInterfaces a {@link ClassFile}{@code []} for {@code classFile}'s superinterfaces. It must agree with 
+     *        {@code classFile.}{@link ClassFile#getSuperInterfaceNames() getSuperInterfaceNames()}.
+     * @param hostClass a {@link ClassFile}, the host class for the
+     *        anonymous class.
+     * @param cpPatches a {@link Object}{@code []}; The i-th element of this
      *        array patches the i-th element in the constant pool defined
      *        by the {@code bytecode} (the two must agree). Note that 
      *        {@code cpPatches[0]} and all the {@code cpPatches[i]} with {@code i} equal 
      *        or greater than the size of the constant pool in {@code classFile} are ignored.
      *        It can be {@code null} to signify no patches.
-     * @param hostClass a {@link ClassFile}, the host class for the
-     *        anonymous class.
      * @return the {@link ClassFile} for the anonymous class; It will be different
      *         from {@code classFile} because it will have the host class set and
      *         the classpath patches applied.
      * @throws InvalidInputException  if any of the parameters has an invalid
      *         value.
      */
-    public ClassFile addClassFileAnonymous(ClassFile classFile, ClassFile hostClass, ConstantPoolValue[] cpPatches) 
+    public ClassFile createClassFileAnonymous(ClassFile classFile, ClassFile superClass, ClassFile[] superInterfaces, ClassFile hostClass, Object[] cpPatches) 
     throws InvalidInputException {
         if (classFile == null) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".addClassFileAnonymous() with a classFile parameter that has value null.");
@@ -364,15 +370,17 @@ public final class ClassHierarchy implements Cloneable {
         }
         final ClassFile retVal;
         try {
-            retVal = this.f.newClassFileAnonymous(classFile.getBinaryFileContent(), loadCreateClass(JAVA_OBJECT), cpPatches, hostClass);
-        } catch (ClassFileIllFormedException | WrongClassNameException | ClassFileNotFoundException | 
-        		ClassFileNotAccessibleException | IncompatibleClassFileException | BadClassFileVersionException | 
-        		RenameUnsupportedException e) {
+            retVal = this.f.newClassFileAnonymous(classFile.getBinaryFileContent(), superClass, superInterfaces, cpPatches, hostClass);
+        } catch (ClassFileIllFormedException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-        this.cfs.putAnonymousClassCache(retVal);
         return retVal;
+    }
+    
+    @Deprecated
+    public void addClassFileAnonymous(ClassFile classFile) throws InvalidInputException {
+        this.cfs.putClassFileAnonymous(classFile);
     }
     
     /**
@@ -767,7 +775,7 @@ public final class ClassHierarchy implements Cloneable {
         
         //checks the version
         if (classDummy.getMajorVersion() > JAVA_8) {
-            throw new BadClassFileVersionException("The classfile for " + classDummy.getClassName() + " has unsupported version " + classDummy.getMajorVersion() + "." + classDummy.getMinorVersion() +".");
+            throw new BadClassFileVersionException("The classfile for " + classDummy.getClassName() + " has unsupported version " + classDummy.getMajorVersion() + "." + classDummy.getMinorVersion() + ".");
         }
         
         //checks the name
@@ -795,9 +803,46 @@ public final class ClassHierarchy implements Cloneable {
             }
         }
 
-        //creates a complete ClassFile for the class and registers it
+        //creates a complete ClassFile for the class, registers it and returns it
         final ClassFile retVal = createClassFileClass(classDummy, superClass, superInterfaces);
         addClassFileClassArray(definingClassLoader, retVal);
+        return retVal;
+    }
+    
+    public ClassFile defineClassAnonymous(byte[] bytecode, boolean bypassStandardLoading, ClassFile hostClass, Object[] cpPatches) 
+    throws InvalidInputException, ClassFileIllFormedException, BadClassFileVersionException, ClassFileNotFoundException, RenameUnsupportedException, 
+    WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException {
+        if (bytecode == null) {
+            throw new InvalidInputException("Invoked " + this.getClass().getName() + ".defineClassAnonymous with null bytecode.");
+        }
+        
+        //makes a dummy ClassFile
+        final ClassFile classDummy = createClassFileAnonymousDummy(bytecode);
+        
+        //checks the version
+        if (classDummy.getMajorVersion() > JAVA_8) {
+            throw new BadClassFileVersionException("The classfile for " + classDummy.getClassName() + " has unsupported version " + classDummy.getMajorVersion() + "." + classDummy.getMinorVersion() + ".");
+        }
+
+        //uses the dummy ClassFile to recursively resolve all the immediate 
+        //ancestor classes
+        //TODO check circularity
+        final ClassFile superClass = (classDummy.getSuperclassName() == null ? null : resolveClass(classDummy, classDummy.getSuperclassName(), bypassStandardLoading));
+        if (superClass != null && superClass.isInterface()) {
+            throw new IncompatibleClassFileException("Superclass " + classDummy.getSuperclassName() + " of class " + classDummy.getClassName() + " actually is an interface.");
+        }
+        final List<String> superInterfaceNames = classDummy.getSuperInterfaceNames();
+        final ClassFile[] superInterfaces = new ClassFile[superInterfaceNames.size()];
+        for (int i = 0; i < superInterfaces.length; ++i) {
+            superInterfaces[i] = resolveClass(classDummy, superInterfaceNames.get(i), bypassStandardLoading);
+            if (!superInterfaces[i].isInterface()) {
+                throw new IncompatibleClassFileException("Superinterface " + superInterfaceNames.get(i) + " of class " + classDummy.getClassName() + " actually is not an interface.");
+            }
+        }
+        
+        //creates a complete ClassFile for the class, registers it and returns it
+        final ClassFile retVal = createClassFileAnonymous(classDummy, superClass, superInterfaces, hostClass, cpPatches);
+        addClassFileAnonymous(retVal);
         return retVal;
     }
     
@@ -910,6 +955,11 @@ public final class ClassHierarchy implements Cloneable {
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, 
     BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException {
+    	//this handle the special case of an anonymous class that invokes itself
+    	if (accessor.isAnonymousUnregistered() && accessor.getClassName().equals(classSignature)) {
+    		return accessor;
+    	}
+    	
         //loads/creates the class for classSignature
         final int initiatingLoader = accessor.getDefiningClassLoader();
         final ClassFile accessed = loadCreateClass(initiatingLoader, classSignature, bypassStandardLoading);
@@ -1461,24 +1511,28 @@ public final class ClassHierarchy implements Cloneable {
     private boolean isFieldAccessible(ClassFile accessor, ClassFile accessed, ClassFile fieldSignatureClass, Signature fieldSignature) 
     throws FieldNotFoundException {
     	try {
-	        final boolean sameRuntimePackage = (accessor.getDefiningClassLoader() == accessed.getDefiningClassLoader() && accessed.getPackageName().equals(accessor.getPackageName()));
-	        if (accessed.isFieldPublic(fieldSignature)) {
+    		ClassFile accessorHost = accessor;
+    		while (accessorHost.isAnonymousUnregistered()) {
+    			accessorHost = accessorHost.getHostClass();
+    		}
+	        final boolean sameRuntimePackage = (accessorHost.getDefiningClassLoader() == accessed.getDefiningClassLoader() && accessed.getPackageName().equals(accessorHost.getPackageName()));
+	        if (accessor.equals(accessed) || accessed.isFieldPublic(fieldSignature)) {
 	            return true;
 	        } else if (accessed.isFieldProtected(fieldSignature)) {
 	            if (sameRuntimePackage) {
 	                return true;
-	            } else if (!accessor.isSubclass(accessed)) {
+	            } else if (!accessorHost.isSubclass(accessed)) {
 	                return false;
 	            } else if (accessed.isFieldStatic(fieldSignature)) {
 	                return true;
 	            } else {
-	                return accessor.isSubclass(fieldSignatureClass) || fieldSignatureClass.isSubclass(accessor);
+	                return accessorHost.isSubclass(fieldSignatureClass) || fieldSignatureClass.isSubclass(accessorHost);
 	            }
 	        } else if (accessed.isFieldPackage(fieldSignature)) {
 	            return sameRuntimePackage; 
 	        } else { //accessed.isFieldPrivate(fieldSignature)
-	            return (accessed.equals(accessor)); 
-	            //TODO there was a || accessor.isInner(accessed) clause but it is *wrong*!
+	            return (accessed.equals(accessorHost)); 
+	            //TODO there was a || accessorHost.isInner(accessed) clause but it is *wrong*!
 	        }
     	} catch (InvalidInputException e) {
     		//this should never happen, NullPointerException shall be thrown before
@@ -1504,24 +1558,28 @@ public final class ClassHierarchy implements Cloneable {
     private boolean isMethodAccessible(ClassFile accessor, ClassFile accessed, ClassFile methodSignatureClass, Signature methodSignature) 
     throws MethodNotFoundException {
     	try {
-    		final boolean sameRuntimePackage = (accessor.getDefiningClassLoader() == accessed.getDefiningClassLoader() && accessed.getPackageName().equals(accessor.getPackageName()));
-    		if (accessed.isMethodPublic(methodSignature)) {
+    		ClassFile accessorHost = accessor;
+    		while (accessorHost.isAnonymousUnregistered()) {
+    			accessorHost = accessorHost.getHostClass();
+    		}
+    		final boolean sameRuntimePackage = (accessorHost.getDefiningClassLoader() == accessed.getDefiningClassLoader() && accessed.getPackageName().equals(accessorHost.getPackageName()));
+    		if (accessor.equals(accessed) || accessed.isMethodPublic(methodSignature)) {
     			return true;
     		} else if (accessed.isMethodProtected(methodSignature)) {
     			if (sameRuntimePackage) {
     				return true;
-    			} else if (!accessor.isSubclass(accessed)) {
+    			} else if (!accessorHost.isSubclass(accessed)) {
     				return false;
     			} else if (accessed.isMethodStatic(methodSignature)) {
     				return true;
     			} else {
-    				return accessor.isSubclass(methodSignatureClass) || methodSignatureClass.isSubclass(accessor);
+    				return accessorHost.isSubclass(methodSignatureClass) || methodSignatureClass.isSubclass(accessorHost);
     			}
     		} else if (accessed.isMethodPackage(methodSignature)) {
     			return sameRuntimePackage;
     		} else { //accessed.isMethodPrivate(methodSignature)
-    			return (accessed.equals(accessor));
-    			//TODO there was a || accessor.isInner(accessed) clause but it is *wrong*!
+    			return (accessed.equals(accessorHost));
+    			//TODO there was a || accessorHost.isInner(accessed) clause but it is *wrong*!
     		}
     	} catch (InvalidInputException e) {
     		//this should never happen, NullPointerException shall be thrown before

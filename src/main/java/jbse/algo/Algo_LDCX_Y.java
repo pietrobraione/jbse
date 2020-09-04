@@ -22,6 +22,7 @@ import jbse.bc.ClassFile;
 import jbse.bc.ConstantPoolClass;
 import jbse.bc.ConstantPoolMethodHandle;
 import jbse.bc.ConstantPoolMethodType;
+import jbse.bc.ConstantPoolObject;
 import jbse.bc.ConstantPoolPrimitive;
 import jbse.bc.ConstantPoolString;
 import jbse.bc.ConstantPoolValue;

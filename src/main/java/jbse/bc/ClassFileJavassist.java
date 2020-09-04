@@ -7,7 +7,7 @@ import static javassist.bytecode.AccessFlag.setProtected;
 import static javassist.bytecode.AccessFlag.setPublic;
 import static javassist.bytecode.AccessFlag.STATIC;
 import static javassist.bytecode.AccessFlag.SUPER;
-import static jbse.bc.ClassLoaders.CLASSLOADER_NONE;
+import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP;
 import static jbse.bc.Signatures.JAVA_METHODTYPE;
@@ -69,6 +69,7 @@ import jbse.bc.exc.RenameUnsupportedException;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
+import jbse.val.Reference;
 
 /**
  * A {@link ClassFile} produced by a {@link ClassFileFactoryJavassist}.
@@ -82,7 +83,7 @@ public class ClassFileJavassist extends ClassFile {
     private final ConstPool cp;
     private final ClassFile superClass;
     private final ClassFile[] superInterfaces;
-    private final ConstantPoolValue[] cpPatches;
+    private final Object[] cpPatches;
     private final ClassFile hostClass;
     private String className; //nonfinal because of classfile renaming
     private byte[] bytecode; //only for dummy classes, nonfinal because of classfile renaming
@@ -161,44 +162,71 @@ public class ClassFileJavassist extends ClassFile {
     /**
      * Constructor for anonymous (unregistered) classes.
      * 
-     * @param bytecode a {@code byte[]}, the bytecode of the class.
-     * @param cfJAVA_OBJECT a {@link ClassFile} for {@code java.lang.Object}.
-     *        It can be {@code null} for <em>dummy</em>, i.e., incomplete 
-     *        classfiles that are created to access the bytecode conveniently.
-     * @param cpPatches a {@link ConstantPoolValue}{@code []}; The i-th element of this
+     * @param bytecode a {@code byte[]}, the bytecode of the class. It must not be {@code null}.
+     * @param superClass a {@link ClassFile}, the superclass. It can be {@code null} for
+     *        <em>dummy</em>, i.e., incomplete, classfiles that are created to access
+     *        the bytecode conveniently.
+     * @param superInterfaces a {@link ClassFile}{@code []}, the superinterfaces 
+     *        (empty array when no superinterfaces). 
+     *        It can be {@code null} for <em>dummy</em>, i.e., incomplete, classfiles 
+     *        that are created to access the bytecode conveniently.
+     * @param cpPatches a {@link Object}{@code []}; The i-th element of this
      *        array patches the i-th element in the constant pool defined
      *        by the {@code bytecode}. Note that {@code cpPatches[0]} and all the
      *        {@code cpPatches[i]} with {@code i} equal or greater than the size
      *        of the constant pool in {@code classFile} are ignored. It can be 
-     *        {@code null} for <em>dummy</em>, i.e., incomplete classfiles 
-     *        that are created to access the bytecode conveniently.
+     *        {@code null} to signify no patches.
      * @param hostClass a {@link ClassFile}, the host class for the anonymous class. 
      *        It must be {@code null} for <em>dummy</em>, i.e., incomplete classfiles 
      *        that are created to access the bytecode conveniently.
      * @throws ClassFileIllFormedException if the {@code bytecode} 
      *         is ill-formed.
      * @throws InvalidInputException if {@code cpPatches} does not agree with {@code bytecode},
-     *         or {@code bytecode == null} or {@code cf_JAVA_OBJECT != null} and {@code cf_JAVA_OBJECT}
-     *         is not a classfile for {@code java.lang.Object}.
+     *         or {@code bytecode == null} or {@code superClass == null && hostClass != null},
+     *         or {@code superInterfaces == null && hostClass != null}.
      */
-    ClassFileJavassist(byte[] bytecode, ClassFile cfJAVA_OBJECT, ConstantPoolValue[] cpPatches, ClassFile hostClass) 
+    ClassFileJavassist(byte[] bytecode, ClassFile superClass, ClassFile[] superInterfaces, Object[] cpPatches, ClassFile hostClass) 
     throws ClassFileIllFormedException, InvalidInputException {
         try {
             //checks
             if (bytecode == null) {
                 throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with bytecode parameter whose value is null.");
             }
-            if (cfJAVA_OBJECT != null && !JAVA_OBJECT.equals(cfJAVA_OBJECT.getClassName())) {
-                throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with cf_JAVA_OBJECT parameter whose value is a classfile for class " + cfJAVA_OBJECT.getClassName() + ".");
-            }
             
             //determines if it is dummy
             final boolean isDummy = (hostClass == null);
+            
+            //checks
+            if (superClass == null && !isDummy) {
+                throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with superClass parameter whose value is null but the ClassFile is not dummy.");
+            }
+            if (superInterfaces == null && !isDummy) {
+                throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with superInterfaces parameter whose value is null but the ClassFile is not dummy.");
+            }
             
             //reads and patches the bytecode
             this.cf = new javassist.bytecode.ClassFile(new DataInputStream(new ByteArrayInputStream(bytecode)));
             checkCpPatches(this.cf.getConstPool(), cpPatches);
             patch(this.cf.getConstPool(), cpPatches);
+            
+            //checks
+            if (superClass != null && !superClass.getClassName().equals(getSuperclassName())) {
+                throw new InvalidInputException("ClassFile constructor invoked with superClass and bytecode parameters that do not agree: superClass is for class " + superClass.getClassName() + " but bytecode requires " + this.cf.getSuperclass() + ".");
+            }
+            if (superInterfaces != null) {
+                final String[] superInterfaceNames = Arrays.stream(superInterfaces).map(ClassFile::getClassName).toArray(String[]::new);
+                final String[] bytecodeSuperInterfaceNames = Arrays.stream(this.cf.getInterfaces()).map(Type::internalClassName).toArray(String[]::new);
+                Arrays.sort(superInterfaceNames);
+                Arrays.sort(bytecodeSuperInterfaceNames);
+                if (superInterfaceNames.length != bytecodeSuperInterfaceNames.length) {
+                    throw new InvalidInputException("ClassFile constructor invoked with superInterfaces and bytecode parameters that do not agree: superInterfaces counts " + superInterfaceNames.length + " superinterfaces but bytecode requires " + bytecodeSuperInterfaceNames.length + " superinterfaces." );
+                }
+                for (int i = 0; i < superInterfaceNames.length; ++i) {
+                    if (!superInterfaceNames[i].equals(bytecodeSuperInterfaceNames[i])) {
+                        throw new InvalidInputException("ClassFile constructor invoked with superInterfaces and bytecode parameters that do not agree: superInterfaces has superinterface " + superInterfaceNames[i] + " that does not match with bytecode superinterface " + bytecodeSuperInterfaceNames[i] + "." );
+                    }
+                }
+            }
             
             //modifies the class name by adding the hash
             final String defaultName = this.cf.getName(); //the (possibly patched) name in the bytecode
@@ -207,12 +235,12 @@ public class ClassFileJavassist extends ClassFile {
             
             //inits
             this.isAnonymousUnregistered = true;
-            this.definingClassLoader = (isDummy ? CLASSLOADER_NONE : hostClass.getDefiningClassLoader());
+            this.definingClassLoader = (isDummy ? CLASSLOADER_BOOT : hostClass.getDefiningClassLoader());
             this.className = internalClassName(this.cf.getName());
             this.cp = this.cf.getConstPool();
             this.bytecode = (isDummy ? bytecode : null); //only dummy anonymous classfiles (without a host class) cache their bytecode
-            this.superClass = cfJAVA_OBJECT;
-            this.superInterfaces = new ClassFile[0];
+            this.superClass = superClass;
+            this.superInterfaces = superInterfaces;
             this.cpPatches = (cpPatches == null ? null : cpPatches.clone());
             this.hostClass = hostClass;
             this.fieldsStatic = this.fieldsObject = this.constructors = null;
@@ -221,7 +249,7 @@ public class ClassFileJavassist extends ClassFile {
         }
     }
     
-    private void checkCpPatches(javassist.bytecode.ConstPool cp, ConstantPoolValue[] cpPatches) 
+    private void checkCpPatches(javassist.bytecode.ConstPool cp, Object[] cpPatches) 
     throws InvalidInputException {
         if (cpPatches == null) {
             return;
@@ -235,36 +263,32 @@ public class ClassFileJavassist extends ClassFile {
                 continue; //any will fit
             }
             if (tag == ConstPool.CONST_Integer && 
-                cpPatches[i] instanceof ConstantPoolPrimitive && 
-                ((ConstantPoolPrimitive) cpPatches[i]).getValue() instanceof Integer) {
+                cpPatches[i] instanceof Integer) {
                 continue;
             }
             if (tag == ConstPool.CONST_Long && 
-                cpPatches[i] instanceof ConstantPoolPrimitive && 
-                ((ConstantPoolPrimitive) cpPatches[i]).getValue() instanceof Long) {
+                cpPatches[i] instanceof Long) {
                 continue;
             }
             if (tag == ConstPool.CONST_Float && 
-                cpPatches[i] instanceof ConstantPoolPrimitive && 
-                ((ConstantPoolPrimitive) cpPatches[i]).getValue() instanceof Float) {
+                cpPatches[i] instanceof Float) {
                 continue;
             }
             if (tag == ConstPool.CONST_Double && 
-                cpPatches[i] instanceof ConstantPoolPrimitive && 
-                ((ConstantPoolPrimitive) cpPatches[i]).getValue() instanceof Double) {
+                cpPatches[i] instanceof Double) {
                 continue;
             }
-            if (tag == ConstPool.CONST_Utf8 && cpPatches[i] instanceof ConstantPoolString) {
+            if (tag == ConstPool.CONST_Utf8 && cpPatches[i] instanceof String) {
                 continue;
             }
-            if (tag == ConstPool.CONST_Class && cpPatches[i] instanceof ConstantPoolClass) {
+            if (tag == ConstPool.CONST_Class && cpPatches[i] instanceof ClassFile) {
                 continue;
             }
             throw new InvalidInputException("ClassFile constructor for anonymous classfile invoked with cpPatches parameter not matching bytecode's constant pool.");
         }
     }
     
-    private void patch(javassist.bytecode.ConstPool cp, ConstantPoolValue[] cpPatches) {
+    private void patch(javassist.bytecode.ConstPool cp, Object[] cpPatches) {
         if (cpPatches == null) {
             return;
         }
@@ -278,15 +302,15 @@ public class ClassFileJavassist extends ClassFile {
             longVectorElementAt.setAccessible(true);
             for (int i = 1; i < Math.min(cp.getSize(), cpPatches.length); ++i) {
                 if (cpPatches[i] == null) {
-                    continue;
+                    continue; //nothing to set
                 }
                 final int tag = cp.getTag(i);
                 if (tag == ConstPool.CONST_String) {
-                    continue; //cannot set!
+                    continue; //will handle it in method getValueFromConstantPool
                 }
                 final Object cpItem = longVectorElementAt.invoke(cpItems, Integer.valueOf(i));
                 if (tag == ConstPool.CONST_Integer) {
-                    final Integer value = (Integer) ((ConstantPoolPrimitive) cpPatches[i]).getValue();
+                    final Integer value = (Integer) cpPatches[i];
                     final Class<?> integerInfoClass = Class.forName("javassist.bytecode.IntegerInfo");
                     final Field integerInfoValueField = integerInfoClass.getDeclaredField("value");
                     integerInfoValueField.setAccessible(true);
@@ -294,7 +318,7 @@ public class ClassFileJavassist extends ClassFile {
                     continue;
                 }
                 if (tag == ConstPool.CONST_Long) {
-                    final Long value = (Long) ((ConstantPoolPrimitive) cpPatches[i]).getValue();
+                    final Long value = (Long) cpPatches[i];
                     final Class<?> longInfoClass = Class.forName("javassist.bytecode.LongInfo");
                     final Field longInfoValueField = longInfoClass.getDeclaredField("value");
                     longInfoValueField.setAccessible(true);
@@ -302,7 +326,7 @@ public class ClassFileJavassist extends ClassFile {
                     continue;
                 }
                 if (tag == ConstPool.CONST_Float) {
-                    final Float value = (Float) ((ConstantPoolPrimitive) cpPatches[i]).getValue();
+                    final Float value = (Float) cpPatches[i];
                     final Class<?> floatInfoClass = Class.forName("javassist.bytecode.FloatInfo");
                     final Field floatInfoValueField = floatInfoClass.getDeclaredField("value");
                     floatInfoValueField.setAccessible(true);
@@ -310,7 +334,7 @@ public class ClassFileJavassist extends ClassFile {
                     continue;
                 }
                 if (tag == ConstPool.CONST_Double) {
-                    final Double value = (Double) ((ConstantPoolPrimitive) cpPatches[i]).getValue();
+                    final Double value = (Double) cpPatches[i];
                     final Class<?> doubleInfoClass = Class.forName("javassist.bytecode.DoubleInfo");
                     final Field doubleInfoValueField = doubleInfoClass.getDeclaredField("value");
                     doubleInfoValueField.setAccessible(true);
@@ -318,7 +342,7 @@ public class ClassFileJavassist extends ClassFile {
                     continue;
                 }
                 if (tag == ConstPool.CONST_Utf8) {
-                    final String value = ((ConstantPoolString) cpPatches[i]).getValue();
+                    final String value = (String) cpPatches[i];
                     final Class<?> utf8InfoClass = Class.forName("javassist.bytecode.Utf8Info");
                     final Field utf8InfoStringField = utf8InfoClass.getDeclaredField("string");
                     utf8InfoStringField.setAccessible(true);
@@ -326,7 +350,7 @@ public class ClassFileJavassist extends ClassFile {
                     continue;
                 }
                 if (tag == ConstPool.CONST_Class) {
-                    final int value = cp.addUtf8Info(((ConstantPoolClass) cpPatches[i]).getValue());
+                    final int value = cp.addUtf8Info(((ClassFile) cpPatches[i]).getClassName());
                     final Class<?> classInfoClass = Class.forName("javassist.bytecode.ClassInfo");
                     final Field classInfoNameField = classInfoClass.getDeclaredField("name");
                     classInfoNameField.setAccessible(true);
@@ -780,7 +804,7 @@ public class ClassFileJavassist extends ClassFile {
             return new ConstantPoolPrimitive(this.cp.getDoubleInfo(index));
         case ConstPool.CONST_String:
             if (this.cpPatches != null && index < this.cpPatches.length && this.cpPatches[index] != null) {
-                return this.cpPatches[index];
+                return new ConstantPoolObject((Reference) this.cpPatches[index]);
             }
             return new ConstantPoolString(this.cp.getStringInfo(index));
         case ConstPool.CONST_Class:

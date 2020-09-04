@@ -1,6 +1,5 @@
-package jbse.algo;
+package jbse.bc;
 
-import jbse.bc.ConstantPoolValue;
 import jbse.val.Reference;
 
 /**
