@@ -49,6 +49,7 @@ public final class Signatures {
     public static final String JAVA_CLASSLOADER              = "java/lang/ClassLoader";
     public static final String JAVA_CLASSLOADER_NATIVELIBRARY   = "java/lang/ClassLoader$NativeLibrary";
     public static final String JAVA_CLONEABLE                = "java/lang/Cloneable";
+    public static final String JAVA_COLLECTIONS_COPIESLIST   = "java/util/Collections$CopiesList";
     public static final String JAVA_COMPARABLE               = "java/lang/Comparable";
     public static final String JAVA_CONSTRUCTOR              = "java/lang/reflect/Constructor";
     public static final String JAVA_CRC32                    = "java/util/zip/CRC32";
@@ -83,6 +84,9 @@ public final class Signatures {
     public static final String JAVA_JARFILE                  = "java/util/jar/JarFile";
     public static final String JAVA_JARVERIFIER              = "java/util/jar/JarVerifier";
     public static final String JAVA_LAMBDAFORM               = "java/lang/invoke/LambdaForm";
+    public static final String JAVA_LAMBDAFORMBUFFER         = "java/lang/invoke/LambdaFormBuffer";
+    public static final String JAVA_LAMBDAFORMEDITOR         = "java/lang/invoke/LambdaFormEditor";
+    public static final String JAVA_LAMBDAFORMEDITOR_TRANSFORM = "java/lang/invoke/LambdaFormEditor$Transform";
     public static final String JAVA_LAMBDAFORM_NAME          = "java/lang/invoke/LambdaForm$Name";
     public static final String JAVA_LAMBDAFORM_NAMEDFUNCTION = "java/lang/invoke/LambdaForm$NamedFunction";
     public static final String JAVA_LAMBDAMETAFACTORY        = "java/lang/invoke/LambdaMetafactory";
@@ -95,6 +99,7 @@ public final class Signatures {
     public static final String JAVA_MEMBERNAME               = "java/lang/invoke/MemberName";
     public static final String JAVA_METHOD                   = "java/lang/reflect/Method";
     public static final String JAVA_METHODHANDLE             = "java/lang/invoke/MethodHandle";
+    public static final String JAVA_METHODHANDLEIMPL_LAZY    = "java/lang/invoke/MethodHandleImpl$Lazy";
     public static final String JAVA_METHODHANDLENATIVES      = "java/lang/invoke/MethodHandleNatives";
     public static final String JAVA_METHODHANDLES            = "java/lang/invoke/MethodHandles";
     public static final String JAVA_METHODHANDLES_LOOKUP     = "java/lang/invoke/MethodHandles$Lookup";

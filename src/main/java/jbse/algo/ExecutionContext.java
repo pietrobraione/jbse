@@ -164,6 +164,7 @@ import static jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_FACTORY;
 import static jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIESDATA;
 import static jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIES_L;
 import static jbse.bc.Signatures.JAVA_BYTE_BYTECACHE;
+import static jbse.bc.Signatures.JAVA_CALLSITE;
 import static jbse.bc.Signatures.JAVA_CHARACTER_CHARACTERCACHE;
 import static jbse.bc.Signatures.JAVA_CHARSET_EXTENDEDPROVIDERHOLDER;
 import static jbse.bc.Signatures.JAVA_CLASS_DESIREDASSERTIONSTATUS0;
@@ -195,6 +196,7 @@ import static jbse.bc.Signatures.JAVA_CLASSLOADER_FINDBUILTINLIB;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_FINDLOADEDCLASS0;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_NATIVELIBRARY_LOAD;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_REGISTERNATIVES;
+import static jbse.bc.Signatures.JAVA_COLLECTIONS_COPIESLIST;
 import static jbse.bc.Signatures.JAVA_CRC32_UPDATEBYTES;
 import static jbse.bc.Signatures.JAVA_DELEGATINGMETHODHANDLE;
 import static jbse.bc.Signatures.JAVA_DIRECTBYTEBUFFER;
@@ -233,12 +235,16 @@ import static jbse.bc.Signatures.JAVA_JARFILE;
 import static jbse.bc.Signatures.JAVA_JARFILE_GETMETAINFENTRYNAMES;
 import static jbse.bc.Signatures.JAVA_JARVERIFIER;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM;
+import static jbse.bc.Signatures.JAVA_LAMBDAFORMBUFFER;
+import static jbse.bc.Signatures.JAVA_LAMBDAFORMEDITOR;
+import static jbse.bc.Signatures.JAVA_LAMBDAFORMEDITOR_TRANSFORM;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM_NAME;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM_NAMEDFUNCTION;
 import static jbse.bc.Signatures.JAVA_LAMBDAMETAFACTORY;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
 import static jbse.bc.Signatures.JAVA_MAPPEDBYTEBUFFER;
+import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL_LAZY;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_GETCONSTANT;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_GETMEMBERS;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_INIT;
@@ -1067,8 +1073,10 @@ public final class ExecutionContext {
         className.equals(JAVA_ARRAYLIST) ||
         className.equals(JAVA_ATTRIBUTES_NAME) ||
         className.equals(JAVA_BYTE_BYTECACHE) ||
+        className.equals(JAVA_CALLSITE) ||
         className.equals(JAVA_CHARACTER_CHARACTERCACHE) ||
         className.equals(JAVA_CHARSET_EXTENDEDPROVIDERHOLDER) ||
+        className.equals(JAVA_COLLECTIONS_COPIESLIST) ||
         className.equals(JAVA_DELEGATINGMETHODHANDLE) ||
         className.equals(JAVA_DIRECTBYTEBUFFER) ||
         className.equals(JAVA_DIRECTMETHODHANDLE_LAZY) || //apparently
@@ -1081,11 +1089,15 @@ public final class ExecutionContext {
         className.equals(JAVA_JARFILE) || 
         className.equals(JAVA_JARVERIFIER) || 
         className.equals(JAVA_LAMBDAFORM) || 
+        className.equals(JAVA_LAMBDAFORMBUFFER) || 
+        className.equals(JAVA_LAMBDAFORMEDITOR) || 
+        className.equals(JAVA_LAMBDAFORMEDITOR_TRANSFORM) || 
         className.equals(JAVA_LAMBDAFORM_NAME) || 
         className.equals(JAVA_LAMBDAMETAFACTORY) || 
         className.equals(JAVA_LINKEDLIST) || 
         className.equals(JAVA_LINKEDLIST_ENTRY) ||
         className.equals(JAVA_MAPPEDBYTEBUFFER) || 
+        className.equals(JAVA_METHODHANDLEIMPL_LAZY) || //apparently
         className.equals(JAVA_METHODTYPEFORM) || 
         className.equals(JAVA_OPTIONAL) || 
         className.equals(JAVA_FILEPERMISSION) || //apparently 
