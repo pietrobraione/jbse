@@ -95,6 +95,7 @@ public final class Signatures {
     public static final String JAVA_LAMBDAMETAFACTORY        = "java/lang/invoke/LambdaMetafactory";
     public static final String JAVA_LINKEDLIST               = "java/util/LinkedList";
     public static final String JAVA_LINKEDLIST_ENTRY         = "java/util/LinkedList$Entry";
+    public static final String JAVA_LOCALE_1                 = "java/util/Locale$1";
     public static final String JAVA_LONG                     = "java/lang/Long";
     public static final String JAVA_LONG_LONGCACHE           = "java/lang/Long$LongCache";
     public static final String JAVA_MAP                      = "java/util/Map";
@@ -159,6 +160,8 @@ public final class Signatures {
     public static final String SUN_CONSTANTPOOL              = "sun/reflect/ConstantPool";
     public static final String SUN_EXTENSIONDEPENDENCY       = "sun/misc/ExtensionDependency";
     public static final String SUN_JARINDEX                  = "sun/misc/JarIndex";
+    public static final String SUN_LOCALEPROVIDERADAPTER     = "sun/util/locale/provider/LocaleProviderAdapter";
+    public static final String SUN_LOCALEPROVIDERADAPTER_1   = "sun/util/locale/provider/LocaleProviderAdapter$1";
     public static final String SUN_NATIVECONSTRUCTORACCESSORIMPL = "sun/reflect/NativeConstructorAccessorImpl";
     public static final String SUN_NATIVEMETHODACCESSORIMPL  = "sun/reflect/NativeMethodAccessorImpl";
     public static final String SUN_PERF                      = "sun/misc/Perf";

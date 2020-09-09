@@ -249,6 +249,7 @@ import static jbse.bc.Signatures.JAVA_LAMBDAFORM_NAMEDFUNCTION;
 import static jbse.bc.Signatures.JAVA_LAMBDAMETAFACTORY;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
+import static jbse.bc.Signatures.JAVA_LOCALE_1;
 import static jbse.bc.Signatures.JAVA_MAPPEDBYTEBUFFER;
 import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL_ASVARARGSCOLLECTOR;
 import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL_COUNTINGWRAPPER;
@@ -398,6 +399,8 @@ import static jbse.bc.Signatures.JDK_FRAME;
 import static jbse.bc.Signatures.JDK_TYPE;
 import static jbse.bc.Signatures.SUN_ASCIICASEINSENSITIVECOMPARATOR;
 import static jbse.bc.Signatures.SUN_JARINDEX;
+import static jbse.bc.Signatures.SUN_LOCALEPROVIDERADAPTER;
+import static jbse.bc.Signatures.SUN_LOCALEPROVIDERADAPTER_1;
 import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
 import static jbse.bc.Signatures.SUN_NATIVEMETHODACCESSORIMPL_INVOKE0;
 import static jbse.bc.Signatures.SUN_PERF;
@@ -1117,6 +1120,7 @@ public final class ExecutionContext {
         className.equals(JAVA_LAMBDAMETAFACTORY) || 
         className.equals(JAVA_LINKEDLIST) || 
         className.equals(JAVA_LINKEDLIST_ENTRY) ||
+        className.equals(JAVA_LOCALE_1) ||
         className.equals(JAVA_MAPPEDBYTEBUFFER) || 
         className.equals(JAVA_METHODHANDLEIMPL_ASVARARGSCOLLECTOR) ||
         className.equals(JAVA_METHODHANDLEIMPL_COUNTINGWRAPPER) || //almost surely
@@ -1136,6 +1140,8 @@ public final class ExecutionContext {
         className.equals(JDK_TYPE) || 
         className.equals(SUN_ASCIICASEINSENSITIVECOMPARATOR) ||
         className.equals(SUN_JARINDEX) ||
+        className.equals(SUN_LOCALEPROVIDERADAPTER) ||
+        className.equals(SUN_LOCALEPROVIDERADAPTER_1) ||
         className.equals(SUN_PERF) ||
         className.equals(SUN_PERFCOUNTER) ||
         className.equals(SUN_PERFCOUNTER_CORECOUNTERS) ||
