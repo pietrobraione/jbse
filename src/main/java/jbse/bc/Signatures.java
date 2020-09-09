@@ -80,6 +80,7 @@ public final class Signatures {
     public static final String JAVA_INFLATER                 = "java/util/zip/Inflater";
     public static final String JAVA_INFOFROMMEMBERNAME       = "java/lang/invoke/InfoFromMemberName";
     public static final String JAVA_INTEGER                  = "java/lang/Integer";
+    public static final String JAVA_INTEGER_INTEGERCACHE     = "java/lang/Integer$IntegerCache";
     public static final String JAVA_INVOKERBYTECODEGENERATOR = "java/lang/invoke/InvokerBytecodeGenerator";
     public static final String JAVA_INVOKERBYTECODEGENERATOR_2 = "java/lang/invoke/InvokerBytecodeGenerator$2";
     public static final String JAVA_INVOKERS                 = "java/lang/invoke/Invokers";
@@ -95,6 +96,7 @@ public final class Signatures {
     public static final String JAVA_LINKEDLIST               = "java/util/LinkedList";
     public static final String JAVA_LINKEDLIST_ENTRY         = "java/util/LinkedList$Entry";
     public static final String JAVA_LONG                     = "java/lang/Long";
+    public static final String JAVA_LONG_LONGCACHE           = "java/lang/Long$LongCache";
     public static final String JAVA_MAP                      = "java/util/Map";
     public static final String JAVA_MAPPEDBYTEBUFFER         = "java/nio/MappedByteBuffer";
     public static final String JAVA_MEMBER                   = "java/lang/reflect/Member";
@@ -820,12 +822,20 @@ public final class Signatures {
     //fields
     public static final Signature JAVA_ACCESSIBLEOBJECT_OVERRIDE = 
         new Signature(JAVA_ACCESSIBLEOBJECT, "" + BOOLEAN, "override");
+    public static final Signature JAVA_BOOLEAN_FALSE = 
+        new Signature(JAVA_BOOLEAN, "" + REFERENCE + JAVA_BOOLEAN + TYPEEND, "FALSE");
+    public static final Signature JAVA_BOOLEAN_TRUE = 
+        new Signature(JAVA_BOOLEAN, "" + REFERENCE + JAVA_BOOLEAN + TYPEEND, "TRUE");
     public static final Signature JAVA_BOOLEAN_VALUE = 
         new Signature(JAVA_BOOLEAN, "" + BOOLEAN, "value");
+    public static final Signature JAVA_BYTE_BYTECACHE_CACHE = 
+            new Signature(JAVA_BYTE_BYTECACHE, "" + ARRAYOF + REFERENCE + JAVA_BYTE + TYPEEND, "cache");
     public static final Signature JAVA_BYTE_VALUE = 
         new Signature(JAVA_BYTE, "" + BYTE, "value");
     public static final Signature JAVA_CALLSITE_TARGET = 
         new Signature(JAVA_CALLSITE, "" + REFERENCE + JAVA_METHODHANDLE + TYPEEND, "target");
+    public static final Signature JAVA_CHARACTER_CHARACTERCACHE_CACHE = 
+        new Signature(JAVA_CHARACTER_CHARACTERCACHE, "" + ARRAYOF + REFERENCE + JAVA_CHARACTER + TYPEEND, "cache");
     public static final Signature JAVA_CHARACTER_VALUE = 
         new Signature(JAVA_CHARACTER, "" + CHAR, "value");
     public static final Signature JAVA_CLASS_CLASSLOADER = 
@@ -896,10 +906,18 @@ public final class Signatures {
         new Signature(JAVA_INFLATER, "" + INT, "off");
     public static final Signature JAVA_INFLATER_ZSREF = 
         new Signature(JAVA_INFLATER, "" + REFERENCE + JAVA_ZSTREAMREF + TYPEEND, "zsRef");
+    public static final Signature JAVA_INTEGER_INTEGERCACHE_CACHE = 
+        new Signature(JAVA_INTEGER_INTEGERCACHE, "" + ARRAYOF + REFERENCE + JAVA_INTEGER + TYPEEND, "cache");
+    public static final Signature JAVA_INTEGER_INTEGERCACHE_HIGH = 
+        new Signature(JAVA_INTEGER_INTEGERCACHE, "" + INT, "high");
+    public static final Signature JAVA_INTEGER_INTEGERCACHE_LOW = 
+        new Signature(JAVA_INTEGER_INTEGERCACHE, "" + INT, "low");
     public static final Signature JAVA_INTEGER_VALUE = 
         new Signature(JAVA_INTEGER, "" + INT, "value");
     public static final Signature JAVA_LAMBDAFORM_VMENTRY = 
     	new Signature(JAVA_LAMBDAFORM, "" + REFERENCE + JAVA_MEMBERNAME + TYPEEND, "vmentry");
+    public static final Signature JAVA_LONG_LONGCACHE_CACHE = 
+        new Signature(JAVA_LONG_LONGCACHE, "" + ARRAYOF + REFERENCE + JAVA_LONG + TYPEEND, "cache");
     public static final Signature JAVA_LONG_VALUE = 
         new Signature(JAVA_LONG, "" + LONG, "value");
     public static final Signature JAVA_MEMBERNAME_CLAZZ = 
@@ -932,6 +950,8 @@ public final class Signatures {
         new Signature(JAVA_METHODHANDLE, "" + REFERENCE + JAVA_LAMBDAFORM + TYPEEND, "form");
     public static final Signature JAVA_METHODTYPE_METHODDESCRIPTOR = 
         new Signature(JAVA_METHODTYPE, "" + REFERENCE + JAVA_STRING + TYPEEND, "methodDescriptor");
+    public static final Signature JAVA_SHORT_SHORTCACHE_CACHE = 
+        new Signature(JAVA_SHORT_SHORTCACHE, "" + ARRAYOF + REFERENCE + JAVA_SHORT + TYPEEND, "cache");
     public static final Signature JAVA_SHORT_VALUE = 
         new Signature(JAVA_SHORT, "" + SHORT, "value");
     public static final Signature JAVA_STACKTRACEELEMENT_DECLARINGCLASS = 

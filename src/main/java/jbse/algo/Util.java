@@ -3,9 +3,32 @@ package jbse.algo;
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Offsets.offsetInvoke;
+import static jbse.bc.Signatures.JAVA_BOOLEAN;
+import static jbse.bc.Signatures.JAVA_BOOLEAN_FALSE;
+import static jbse.bc.Signatures.JAVA_BOOLEAN_TRUE;
+import static jbse.bc.Signatures.JAVA_BYTE_BYTECACHE;
+import static jbse.bc.Signatures.JAVA_BYTE_BYTECACHE_CACHE;
+import static jbse.bc.Signatures.JAVA_CHARACTER;
+import static jbse.bc.Signatures.JAVA_CHARACTER_CHARACTERCACHE;
+import static jbse.bc.Signatures.JAVA_CHARACTER_CHARACTERCACHE_CACHE;
+import static jbse.bc.Signatures.JAVA_CHARACTER_VALUE;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_LOADCLASS;
+import static jbse.bc.Signatures.JAVA_DOUBLE;
+import static jbse.bc.Signatures.JAVA_DOUBLE_VALUE;
+import static jbse.bc.Signatures.JAVA_FLOAT;
+import static jbse.bc.Signatures.JAVA_FLOAT_VALUE;
+import static jbse.bc.Signatures.JAVA_INTEGER;
+import static jbse.bc.Signatures.JAVA_INTEGER_INTEGERCACHE;
+import static jbse.bc.Signatures.JAVA_INTEGER_INTEGERCACHE_CACHE;
+import static jbse.bc.Signatures.JAVA_INTEGER_INTEGERCACHE_LOW;
+import static jbse.bc.Signatures.JAVA_INTEGER_INTEGERCACHE_HIGH;
+import static jbse.bc.Signatures.JAVA_INTEGER_VALUE;
+import static jbse.bc.Signatures.JAVA_LONG;
+import static jbse.bc.Signatures.JAVA_LONG_LONGCACHE;
+import static jbse.bc.Signatures.JAVA_LONG_LONGCACHE_CACHE;
+import static jbse.bc.Signatures.JAVA_LONG_VALUE;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_GETTYPE;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_TYPE;
@@ -23,6 +46,10 @@ import static jbse.bc.Signatures.JAVA_METHODTYPE;
 import static jbse.bc.Signatures.JAVA_METHODTYPE_METHODDESCRIPTOR;
 import static jbse.bc.Signatures.JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING;
 import static jbse.bc.Signatures.JAVA_OBJECT;
+import static jbse.bc.Signatures.JAVA_SHORT;
+import static jbse.bc.Signatures.JAVA_SHORT_SHORTCACHE;
+import static jbse.bc.Signatures.JAVA_SHORT_SHORTCACHE_CACHE;
+import static jbse.bc.Signatures.JAVA_SHORT_VALUE;
 import static jbse.bc.Signatures.JAVA_STACKTRACEELEMENT;
 import static jbse.bc.Signatures.JAVA_STACKTRACEELEMENT_DECLARINGCLASS;
 import static jbse.bc.Signatures.JAVA_STACKTRACEELEMENT_FILENAME;
@@ -42,6 +69,13 @@ import static jbse.bc.Signatures.noclass_REGISTERMETHODTYPE;
 import static jbse.bc.Signatures.noclass_STORELINKEDCALLSITEADAPTERANDAPPENDIX;
 import static jbse.bc.Signatures.noclass_STORELINKEDMETHODADAPTERANDAPPENDIX;
 import static jbse.common.Type.ARRAYOF;
+import static jbse.common.Type.BOOLEAN;
+import static jbse.common.Type.BYTE;
+import static jbse.common.Type.CHAR;
+import static jbse.common.Type.DOUBLE;
+import static jbse.common.Type.INT;
+import static jbse.common.Type.FLOAT;
+import static jbse.common.Type.LONG;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.binaryClassName;
@@ -94,10 +128,12 @@ import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.DecisionProcedureAlgorithms.ArrayAccessInfo;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
+import jbse.mem.Array.AccessOutcomeInValue;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssumeClassInitialized;
 import jbse.mem.ClauseAssumeClassNotInitialized;
 import jbse.mem.Frame;
+import jbse.mem.HeapObjekt;
 import jbse.mem.Instance;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.Klass;
@@ -434,6 +470,132 @@ public final class Util {
         exitFromAlgorithm();
     }
     
+    private static Reference doPrimitiveBoxing(State state, Calculator calc, Simplex val) throws InvalidInputException, HeapMemoryExhaustedException {
+    	final char type = val.getType();
+    	if (type == BOOLEAN) {
+    		final boolean valIsTrue = ((Boolean) val.getActualValue()).booleanValue();
+    		final ClassFile cf_JAVA_BOOLEAN = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_BOOLEAN);
+    		final Klass klassBoolean = state.getKlass(cf_JAVA_BOOLEAN);
+    		return (Reference) (valIsTrue ? klassBoolean.getFieldValue(JAVA_BOOLEAN_TRUE) : klassBoolean.getFieldValue(JAVA_BOOLEAN_FALSE));
+    	} else if (type == BYTE) {
+    		final byte valByte = ((Byte) val.getActualValue()).byteValue();
+    		final ClassFile cf_JAVA_BYTE_BYTECACHE = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_BYTE_BYTECACHE);
+    		final Klass klassBytecache = state.getKlass(cf_JAVA_BYTE_BYTECACHE);
+    		final Reference referenceCache = (Reference) klassBytecache.getFieldValue(JAVA_BYTE_BYTECACHE_CACHE);
+    		final Array cache = (Array) state.getObject(referenceCache);
+    		final Simplex index = calc.valInt(((int) valByte) + 128);
+    		try {
+				final AccessOutcomeInValue outcome = (AccessOutcomeInValue) cache.getFast(calc, index);
+				return (Reference) outcome.getValue();
+			} catch (InvalidInputException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
+    	} else if (type == CHAR) {
+    		final char valChar = ((Character) val.getActualValue()).charValue();
+    		if (valChar <= 127) { //the cached values
+        		final ClassFile cf_JAVA_CHARACTER_CHARACTERCACHE = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CHARACTER_CHARACTERCACHE);
+        		final Klass klassCharactercache = state.getKlass(cf_JAVA_CHARACTER_CHARACTERCACHE);
+        		final Reference referenceCache = (Reference) klassCharactercache.getFieldValue(JAVA_CHARACTER_CHARACTERCACHE_CACHE);
+        		final Array cache = (Array) state.getObject(referenceCache);
+        		final Simplex index = calc.valInt((int) valChar);
+        		try {
+    				final AccessOutcomeInValue outcome = (AccessOutcomeInValue) cache.getFast(calc, index);
+    				return (Reference) outcome.getValue();
+    			} catch (InvalidInputException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
+    				//this should never happen
+    				throw new UnexpectedInternalException(e);
+    			}
+    		} else {
+        		final ClassFile cf_JAVA_CHARACTER = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CHARACTER);
+    			final ReferenceConcrete referenceCharacter = state.createInstance(calc, cf_JAVA_CHARACTER);
+    			final HeapObjekt characterObject = state.getObject(referenceCharacter);
+    			characterObject.setFieldValue(JAVA_CHARACTER_VALUE, val);
+    			return referenceCharacter;
+    		}
+    	} else if (type == DOUBLE) {
+    		final ClassFile cf_JAVA_DOUBLE = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_DOUBLE);
+			final ReferenceConcrete referenceDouble = state.createInstance(calc, cf_JAVA_DOUBLE);
+			final HeapObjekt doubleObject = state.getObject(referenceDouble);
+			doubleObject.setFieldValue(JAVA_DOUBLE_VALUE, val);
+			return referenceDouble;
+    	} else if (type == INT) {
+    		final int valInt = ((Integer) val.getActualValue()).intValue();
+    		final ClassFile cf_JAVA_INTEGER_INTEGERCACHE = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_INTEGER_INTEGERCACHE);
+    		final Klass klassIntegercache = state.getKlass(cf_JAVA_INTEGER_INTEGERCACHE);
+    		final int low = ((Integer) ((Simplex) klassIntegercache.getFieldValue(JAVA_INTEGER_INTEGERCACHE_LOW)).getActualValue()).intValue();
+    		final int high = ((Integer) ((Simplex) klassIntegercache.getFieldValue(JAVA_INTEGER_INTEGERCACHE_HIGH)).getActualValue()).intValue();
+    		if (valInt >= low && valInt <= high) { //the cached values
+        		final Reference referenceCache = (Reference) klassIntegercache.getFieldValue(JAVA_INTEGER_INTEGERCACHE_CACHE);
+        		final Array cache = (Array) state.getObject(referenceCache);
+        		final Simplex index = calc.valInt(valInt + (-low));
+        		try {
+    				final AccessOutcomeInValue outcome = (AccessOutcomeInValue) cache.getFast(calc, index);
+    				return (Reference) outcome.getValue();
+    			} catch (InvalidInputException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
+    				//this should never happen
+    				throw new UnexpectedInternalException(e);
+    			}
+    		} else {
+        		final ClassFile cf_JAVA_INTEGER = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_INTEGER);
+    			final ReferenceConcrete referenceInteger = state.createInstance(calc, cf_JAVA_INTEGER);
+    			final HeapObjekt integerObject = state.getObject(referenceInteger);
+    			integerObject.setFieldValue(JAVA_INTEGER_VALUE, val);
+    			return referenceInteger;
+    		}    		
+    	} else if (type == FLOAT) {
+    		final ClassFile cf_JAVA_FLOAT = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_FLOAT);
+			final ReferenceConcrete referenceFloat = state.createInstance(calc, cf_JAVA_FLOAT);
+			final HeapObjekt floatObject = state.getObject(referenceFloat);
+			floatObject.setFieldValue(JAVA_FLOAT_VALUE, val);
+			return referenceFloat;
+    	} else if (type == LONG) {
+    		final long valLong = ((Long) val.getActualValue()).longValue();
+    		if (valLong >= -128 && valLong <= 127) { //the cached values
+        		final ClassFile cf_JAVA_LONG_LONGCACHE = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_LONG_LONGCACHE);
+        		final Klass klassLongcache = state.getKlass(cf_JAVA_LONG_LONGCACHE);
+        		final Reference referenceCache = (Reference) klassLongcache.getFieldValue(JAVA_LONG_LONGCACHE_CACHE);
+        		final Array cache = (Array) state.getObject(referenceCache);
+        		final Simplex index = calc.valInt(((int) valLong) + 128);
+        		try {
+    				final AccessOutcomeInValue outcome = (AccessOutcomeInValue) cache.getFast(calc, index);
+    				return (Reference) outcome.getValue();
+    			} catch (InvalidInputException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
+    				//this should never happen
+    				throw new UnexpectedInternalException(e);
+    			}
+    		} else {
+        		final ClassFile cf_JAVA_LONG = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_LONG);
+    			final ReferenceConcrete referenceLong = state.createInstance(calc, cf_JAVA_LONG);
+    			final HeapObjekt longObject = state.getObject(referenceLong);
+    			longObject.setFieldValue(JAVA_LONG_VALUE, val);
+    			return referenceLong;
+    		}
+    	} else { //(type == SHORT)
+    		final long valShort = ((Short) val.getActualValue()).shortValue();
+    		if (valShort >= -128 && valShort <= 127) { //the cached values
+        		final ClassFile cf_JAVA_SHORT_SHORTCACHE = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_SHORT_SHORTCACHE);
+        		final Klass klassShortcache = state.getKlass(cf_JAVA_SHORT_SHORTCACHE);
+        		final Reference referenceCache = (Reference) klassShortcache.getFieldValue(JAVA_SHORT_SHORTCACHE_CACHE);
+        		final Array cache = (Array) state.getObject(referenceCache);
+        		final Simplex index = calc.valInt(((int) valShort) + 128);
+        		try {
+    				final AccessOutcomeInValue outcome = (AccessOutcomeInValue) cache.getFast(calc, index);
+    				return (Reference) outcome.getValue();
+    			} catch (InvalidInputException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
+    				//this should never happen
+    				throw new UnexpectedInternalException(e);
+    			}
+    		} else {
+        		final ClassFile cf_JAVA_SHORT = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_SHORT);
+    			final ReferenceConcrete referenceShort = state.createInstance(calc, cf_JAVA_SHORT);
+    			final HeapObjekt shortObject = state.getObject(referenceShort);
+    			shortObject.setFieldValue(JAVA_SHORT_VALUE, val);
+    			return referenceShort;
+    		}
+    	}
+    }
+    
     public static void ensureCallSiteLinked(State state, Calculator calc, ClassFile caller, String callerDescriptor, String callerName, int callerProgramCounter, CallSiteSpecifier css) 
     throws ThreadStackEmptyException, InvalidInputException, HeapMemoryExhaustedException, ClassFileNotFoundException, 
     ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
@@ -503,9 +665,9 @@ public final class Util {
         final Array bmparams = (Array) state.getObject(rbmparams);
         for (int i = 0; i < nBootParams; ++i) {
         	final ConstantPoolValue cpv = css.getBootstrapParameters().get(i);
-        	Value val = null; //to keep the compiler happy
+        	Reference val = null; //to keep the compiler happy
             if (cpv instanceof ConstantPoolPrimitive) {
-                val = calc.val_(cpv.getValue());
+                val = doPrimitiveBoxing(state, calc, calc.val_(cpv.getValue()));
             } else if (cpv instanceof ConstantPoolString) {
                 final String stringLit = ((ConstantPoolString) cpv).getValue();
                 state.ensureStringLiteral(calc, stringLit);
