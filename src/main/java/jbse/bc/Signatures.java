@@ -114,6 +114,7 @@ public final class Signatures {
     public static final String JAVA_OBJECT                   = "java/lang/Object";
     public static final String JAVA_OPTIONAL                 = "java/util/Optional";
     public static final String JAVA_PACKAGE                  = "java/lang/Package";
+    public static final String JAVA_PATTERN                  = "java/util/regex/Pattern";
     public static final String JAVA_PRINTSTREAM              = "java/io/PrintStream";
     public static final String JAVA_PRIVILEGEDACTION         = "java/security/PrivilegedAction";
     public static final String JAVA_PRIVILEGEDEXCEPTIONACTION = "java/security/PrivilegedExceptionAction";

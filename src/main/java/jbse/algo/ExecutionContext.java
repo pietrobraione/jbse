@@ -273,6 +273,7 @@ import static jbse.bc.Signatures.JAVA_OBJECT_NOTIFYALL;
 import static jbse.bc.Signatures.JAVA_OBJECT_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_OPTIONAL;
 import static jbse.bc.Signatures.JAVA_PACKAGE_GETSYSTEMPACKAGE0;
+import static jbse.bc.Signatures.JAVA_PATTERN;
 import static jbse.bc.Signatures.JAVA_REFLECT_ARRAY_NEWARRAY;
 import static jbse.bc.Signatures.JAVA_RUNTIME_AVAILABLEPROCESSORS;
 import static jbse.bc.Signatures.JAVA_SHORT;
@@ -1100,6 +1101,7 @@ public final class ExecutionContext {
         className.equals(JAVA_DIRECTMETHODHANDLE_ENSUREINITIALIZED) ||
         className.equals(JAVA_DIRECTMETHODHANDLE_LAZY) || //apparently
         className.equals(JAVA_DIRECTLONGBUFFERU) || 
+        className.equals(JAVA_FILEPERMISSION) || //apparently 
         className.equals(JAVA_IDENTITYHASHMAP) || 
         className.equals(JAVA_INFLATER) ||
         className.equals(JAVA_INFOFROMMEMBERNAME) || 
@@ -1121,7 +1123,7 @@ public final class ExecutionContext {
         className.equals(JAVA_METHODHANDLEIMPL_LAZY) || //apparently
         className.equals(JAVA_METHODTYPEFORM) || 
         className.equals(JAVA_OPTIONAL) || 
-        className.equals(JAVA_FILEPERMISSION) || //apparently 
+        className.equals(JAVA_PATTERN) || 
         className.equals(JAVA_SHORT) || 
         className.equals(JAVA_SHORT_SHORTCACHE) || 
         className.equals(JAVA_STANDARDCHARSETS) || 
