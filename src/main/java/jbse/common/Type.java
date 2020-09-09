@@ -899,6 +899,8 @@ public final class Type {
     		} else {
     			return "" + DOUBLE;
     		}
+    	} else if (isVoid(type)) {
+    		return type;
     	} else {
     		return "" + REFERENCE + "java/lang/Object" + TYPEEND;
     	}
