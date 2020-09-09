@@ -371,6 +371,15 @@ public final class Base {
     }
     
     /**
+     * Overriding implementation of {@link sun.misc.Unsafe#fullFence()}.
+     * @see sun.misc.Unsafe#fullFence()
+     */
+    private static void base_SUN_UNSAFE_FULLFENCE(Unsafe _this) {
+        //no concurrency in JBSE
+        return; 
+    }
+    
+    /**
      * Overriding implementation of {@link sun.misc.URLClassPath#getLookupCacheURLs(ClassLoader)}.
      * @see sun.misc.URLClassPath#getLookupCacheURLs(ClassLoader)
      */

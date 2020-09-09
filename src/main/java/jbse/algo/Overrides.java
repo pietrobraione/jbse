@@ -20,6 +20,7 @@ import static jbse.common.Type.internalClassName;
 import static jbse.common.Type.LONG;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
+import static jbse.common.Type.VOID;
 
 import jbse.bc.Signature;
 
@@ -250,6 +251,10 @@ public final class Overrides {
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + SUN_UNSAFE + TYPEEND + REFERENCE + JAVA_CLASS + TYPEEND + ")" + INT, 
                       "base_SUN_UNSAFE_ARRAYINDEXSCALE");
+    public static final Signature BASE_SUN_UNSAFE_FULLFENCE =
+        new Signature(JBSE_BASE, 
+                      "(" + REFERENCE + SUN_UNSAFE + TYPEEND + ")" + VOID, 
+                      "base_SUN_UNSAFE_FULLFENCE");
     public static final Signature BASE_SUN_UNSAFE_OBJECTFIELDOFFSET =
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + SUN_UNSAFE + TYPEEND + REFERENCE + JAVA_FIELD + TYPEEND + ")" + LONG, 

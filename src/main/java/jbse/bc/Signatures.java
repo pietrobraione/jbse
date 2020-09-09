@@ -48,6 +48,7 @@ public final class Signatures {
     public static final String JAVA_CLASS                    = "java/lang/Class";
     public static final String JAVA_CLASSLOADER              = "java/lang/ClassLoader";
     public static final String JAVA_CLASSLOADER_NATIVELIBRARY   = "java/lang/ClassLoader$NativeLibrary";
+    public static final String JAVA_CLASSVALUE_CLASSVALUEMAP = "java/lang/ClassValue$ClassValueMap";
     public static final String JAVA_CLONEABLE                = "java/lang/Cloneable";
     public static final String JAVA_COLLECTIONS_COPIESLIST   = "java/util/Collections$CopiesList";
     public static final String JAVA_COMPARABLE               = "java/lang/Comparable";
@@ -57,6 +58,7 @@ public final class Signatures {
     public static final String JAVA_DIRECTBYTEBUFFER         = "java/nio/DirectByteBuffer";
     public static final String JAVA_DIRECTLONGBUFFERU        = "java/nio/DirectLongBufferU";
     public static final String JAVA_DIRECTMETHODHANDLE       = "java/lang/invoke/DirectMethodHandle";
+    public static final String JAVA_DIRECTMETHODHANDLE_ENSUREINITIALIZED = "java/lang/invoke/DirectMethodHandle$EnsureInitialized";
     public static final String JAVA_DIRECTMETHODHANDLE_LAZY  = "java/lang/invoke/DirectMethodHandle$Lazy";
     public static final String JAVA_DOUBLE                   = "java/lang/Double";
     public static final String JAVA_ENUM                     = "java/lang/Enum";
@@ -99,6 +101,7 @@ public final class Signatures {
     public static final String JAVA_MEMBERNAME               = "java/lang/invoke/MemberName";
     public static final String JAVA_METHOD                   = "java/lang/reflect/Method";
     public static final String JAVA_METHODHANDLE             = "java/lang/invoke/MethodHandle";
+    public static final String JAVA_METHODHANDLEIMPL_COUNTINGWRAPPER = "java/lang/invoke/MethodHandleImpl$CountingWrapper";
     public static final String JAVA_METHODHANDLEIMPL_ASVARARGSCOLLECTOR = "java/lang/invoke/MethodHandleImpl$AsVarargsCollector";
     public static final String JAVA_METHODHANDLEIMPL_LAZY    = "java/lang/invoke/MethodHandleImpl$Lazy";
     public static final String JAVA_METHODHANDLENATIVES      = "java/lang/invoke/MethodHandleNatives";
@@ -756,6 +759,8 @@ public final class Signatures {
         new Signature(SUN_UNSAFE, "(" + LONG + ")" + VOID, "freeMemory");
     public static final Signature SUN_UNSAFE_ENSURECLASSINITIALIZED = 
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + VOID, "ensureClassInitialized");
+    public static final Signature SUN_UNSAFE_FULLFENCE = 
+        new Signature(SUN_UNSAFE, "()" + VOID, "fullFence");
     public static final Signature SUN_UNSAFE_GETBYTE = 
         new Signature(SUN_UNSAFE, "(" + LONG + ")" + BYTE, "getByte");
     public static final Signature SUN_UNSAFE_GETINT = 

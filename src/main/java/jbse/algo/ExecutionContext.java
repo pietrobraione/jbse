@@ -151,6 +151,7 @@ import static jbse.algo.Overrides.BASE_SUN_SIGNAL_HANDLE0;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ADDRESSSIZE;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYBASEOFFSET;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYINDEXSCALE;
+import static jbse.algo.Overrides.BASE_SUN_UNSAFE_FULLFENCE;
 import static jbse.algo.Overrides.BASE_SUN_URLCLASSPATH_GETLOOKUPCACHEURLS;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_1;
@@ -199,12 +200,14 @@ import static jbse.bc.Signatures.JAVA_CLASSLOADER_FINDBUILTINLIB;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_FINDLOADEDCLASS0;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_NATIVELIBRARY_LOAD;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_REGISTERNATIVES;
+import static jbse.bc.Signatures.JAVA_CLASSVALUE_CLASSVALUEMAP;
 import static jbse.bc.Signatures.JAVA_COLLECTIONS_COPIESLIST;
 import static jbse.bc.Signatures.JAVA_CRC32_UPDATEBYTES;
 import static jbse.bc.Signatures.JAVA_DELEGATINGMETHODHANDLE;
 import static jbse.bc.Signatures.JAVA_DIRECTBYTEBUFFER;
 import static jbse.bc.Signatures.JAVA_DIRECTLONGBUFFERU;
 import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE;
+import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_ENSUREINITIALIZED;
 import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_LAZY;
 import static jbse.bc.Signatures.JAVA_DOUBLE_DOUBLETORAWLONGBITS;
 import static jbse.bc.Signatures.JAVA_DOUBLE_LONGBITSTODOUBLE;
@@ -248,6 +251,7 @@ import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
 import static jbse.bc.Signatures.JAVA_MAPPEDBYTEBUFFER;
 import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL_ASVARARGSCOLLECTOR;
+import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL_COUNTINGWRAPPER;
 import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL_LAZY;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_GETCONSTANT;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_GETMEMBERS;
@@ -419,6 +423,7 @@ import static jbse.bc.Signatures.SUN_UNSAFE_DEFINEANONYMOUSCLASS;
 import static jbse.bc.Signatures.SUN_UNSAFE_DEFINECLASS;
 import static jbse.bc.Signatures.SUN_UNSAFE_ENSURECLASSINITIALIZED;
 import static jbse.bc.Signatures.SUN_UNSAFE_FREEMEMORY;
+import static jbse.bc.Signatures.SUN_UNSAFE_FULLFENCE;
 import static jbse.bc.Signatures.SUN_UNSAFE_GETBYTE;
 import static jbse.bc.Signatures.SUN_UNSAFE_GETINT;
 import static jbse.bc.Signatures.SUN_UNSAFE_GETINTVOLATILE;
@@ -831,6 +836,7 @@ public final class ExecutionContext {
             addMetaOverridden(SUN_UNSAFE_DEFINECLASS,                             ALGO_SUN_UNSAFE_DEFINECLASS);
             addMetaOverridden(SUN_UNSAFE_ENSURECLASSINITIALIZED,                  ALGO_SUN_UNSAFE_ENSURECLASSINITIALIZED);
             addMetaOverridden(SUN_UNSAFE_FREEMEMORY,                              ALGO_SUN_UNSAFE_FREEMEMORY);
+            addBaseOverridden(SUN_UNSAFE_FULLFENCE,                               BASE_SUN_UNSAFE_FULLFENCE);
             addMetaOverridden(SUN_UNSAFE_GETBYTE,                                 ALGO_SUN_UNSAFE_GETBYTE);
             addMetaOverridden(SUN_UNSAFE_GETINT,                                  ALGO_SUN_UNSAFE_GETINT_O);
             addMetaOverridden(SUN_UNSAFE_GETINTVOLATILE,                          ALGO_SUN_UNSAFE_GETINT_O);
@@ -1087,9 +1093,11 @@ public final class ExecutionContext {
         className.equals(JAVA_CALLSITE) ||
         className.equals(JAVA_CHARACTER_CHARACTERCACHE) ||
         className.equals(JAVA_CHARSET_EXTENDEDPROVIDERHOLDER) ||
+        className.equals(JAVA_CLASSVALUE_CLASSVALUEMAP) ||
         className.equals(JAVA_COLLECTIONS_COPIESLIST) ||
         className.equals(JAVA_DELEGATINGMETHODHANDLE) ||
         className.equals(JAVA_DIRECTBYTEBUFFER) ||
+        className.equals(JAVA_DIRECTMETHODHANDLE_ENSUREINITIALIZED) ||
         className.equals(JAVA_DIRECTMETHODHANDLE_LAZY) || //apparently
         className.equals(JAVA_DIRECTLONGBUFFERU) || 
         className.equals(JAVA_IDENTITYHASHMAP) || 
@@ -1109,6 +1117,7 @@ public final class ExecutionContext {
         className.equals(JAVA_LINKEDLIST_ENTRY) ||
         className.equals(JAVA_MAPPEDBYTEBUFFER) || 
         className.equals(JAVA_METHODHANDLEIMPL_ASVARARGSCOLLECTOR) ||
+        className.equals(JAVA_METHODHANDLEIMPL_COUNTINGWRAPPER) || //almost surely
         className.equals(JAVA_METHODHANDLEIMPL_LAZY) || //apparently
         className.equals(JAVA_METHODTYPEFORM) || 
         className.equals(JAVA_OPTIONAL) || 
