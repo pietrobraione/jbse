@@ -139,7 +139,7 @@ public final class Algo_JAVA_METHODHANDLE_INVOKEBASIC extends Algo_INVOKEMETA_No
 	        final String descriptor = "(" + 
 	        		REFERENCE + JAVA_OBJECT + TYPEEND +  //the form to invoke
 	        		String.join("", Arrays.stream(splitParametersDescriptorSignature).map(jbse.common.Type::simplifyType).toArray(String[]::new)) +
-	        		")" + splitReturnValueDescriptorSignature;
+	        		")" + jbse.common.Type.simplifyType(splitReturnValueDescriptorSignature);
 			this.adapterSignature = new Signature(this.clazz.getClassName(), descriptor, name);
 		} catch (ClassCastException e) {
 			throw new UndefinedResultException(e);
