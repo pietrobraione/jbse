@@ -68,6 +68,7 @@ import jbse.val.Any;
 import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.HistoryPoint;
+import jbse.val.KlassPseudoReference;
 import jbse.val.Operator;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -1295,7 +1296,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
     		final ReferenceSymbolic containerRef;
     		{
     			final ReferenceSymbolic containerRefPre = refMember.getContainer();
-    			if (containerRefPre instanceof ReferenceSymbolicMemberArray || containerRefPre instanceof ReferenceSymbolicMemberMapValue) {
+    			if (containerRefPre instanceof KlassPseudoReference) {
+    				break;
+    			} else if (containerRefPre instanceof ReferenceSymbolicMemberArray || containerRefPre instanceof ReferenceSymbolicMemberMapValue) {
     				containerRef = ((ReferenceSymbolicMember) containerRefPre).getContainer();
     			} else {
     				containerRef = containerRefPre;
