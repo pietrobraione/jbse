@@ -99,6 +99,7 @@ public final class Signatures {
     public static final String JAVA_MEMBERNAME               = "java/lang/invoke/MemberName";
     public static final String JAVA_METHOD                   = "java/lang/reflect/Method";
     public static final String JAVA_METHODHANDLE             = "java/lang/invoke/MethodHandle";
+    public static final String JAVA_METHODHANDLEIMPL_ASVARARGSCOLLECTOR = "java/lang/invoke/MethodHandleImpl$AsVarargsCollector";
     public static final String JAVA_METHODHANDLEIMPL_LAZY    = "java/lang/invoke/MethodHandleImpl$Lazy";
     public static final String JAVA_METHODHANDLENATIVES      = "java/lang/invoke/MethodHandleNatives";
     public static final String JAVA_METHODHANDLES            = "java/lang/invoke/MethodHandles";
@@ -163,6 +164,7 @@ public final class Signatures {
     public static final String SUN_UNIXNATIVEDISPATCHER      = "sun/nio/fs/UnixNativeDispatcher";
     public static final String SUN_UNIXPATH                  = "sun/nio/fs/UnixPath";
     public static final String SUN_UNSAFE                    = "sun/misc/Unsafe";
+    public static final String SUN_UNSAFEFIELDACCESSORIMPL   = "sun/reflect/UnsafeFieldAccessorImpl";
     public static final String SUN_URLCLASSPATH              = "sun/misc/URLClassPath";
     public static final String SUN_URLCLASSPATH_JARLOADER    = "sun/misc/URLClassPath$JarLoader";
     public static final String SUN_UTIL                      = "sun/nio/fs/Util";
@@ -678,6 +680,8 @@ public final class Signatures {
         new Signature(JBSE_BASE, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "boxInvocationTargetExceptionAndReturn_J");
     public static final Signature JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_L = 
         new Signature(JBSE_BASE, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "boxInvocationTargetExceptionAndReturn_L");
+    public static final Signature JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_NULL = 
+        new Signature(JBSE_BASE, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "boxInvocationTargetExceptionAndReturn_null");
     public static final Signature JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_S = 
         new Signature(JBSE_BASE, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "boxInvocationTargetExceptionAndReturn_S");
     public static final Signature JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_V = 
@@ -744,6 +748,10 @@ public final class Signatures {
         new Signature(SUN_UNSAFE, 
                       "(" + REFERENCE + JAVA_CLASS + TYPEEND + ARRAYOF + BYTE + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_CLASS + TYPEEND, 
                       "defineAnonymousClass");
+    public static final Signature SUN_UNSAFE_DEFINECLASS = 
+        new Signature(SUN_UNSAFE, 
+                      "(" + REFERENCE + JAVA_STRING + TYPEEND + ARRAYOF + BYTE + INT + INT + REFERENCE + JAVA_CLASSLOADER + TYPEEND + REFERENCE + JAVA_PROTECTIONDOMAIN + TYPEEND + ")" + REFERENCE + JAVA_CLASS + TYPEEND, 
+                      "defineClass");
     public static final Signature SUN_UNSAFE_FREEMEMORY = 
         new Signature(SUN_UNSAFE, "(" + LONG + ")" + VOID, "freeMemory");
     public static final Signature SUN_UNSAFE_ENSURECLASSINITIALIZED = 
@@ -776,6 +784,10 @@ public final class Signatures {
         new Signature(SUN_UNSAFE, "()" + VOID, "registerNatives");
     public static final Signature SUN_UNSAFE_SHOULDBEINITIALIZED =
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + BOOLEAN, "shouldBeInitialized");
+    public static final Signature SUN_UNSAFE_STATICFIELDBASE = 
+        new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_FIELD + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "staticFieldBase");
+    public static final Signature SUN_UNSAFE_STATICFIELDOFFSET = 
+        new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_FIELD + TYPEEND + ")" + LONG, "staticFieldOffset");
     public static final Signature SUN_URLCLASSPATH_GETLOOKUPCACHEURLS =
         new Signature(SUN_URLCLASSPATH, "(" + REFERENCE + JAVA_CLASSLOADER + TYPEEND + ")" + ARRAYOF + REFERENCE + JAVA_URL + TYPEEND, "getLookupCacheURLs");
     public static final Signature SUN_VM_INITIALIZE = 

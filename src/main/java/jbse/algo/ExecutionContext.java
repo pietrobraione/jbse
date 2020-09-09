@@ -113,6 +113,7 @@ import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPINT;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPLONG;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_DEFINEANONYMOUSCLASS;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_DEFINECLASS;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_ENSURECLASSINITIALIZED;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_FREEMEMORY;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_GETBYTE;
@@ -124,6 +125,8 @@ import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PUTINT_O;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PUTLONG;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PUTOBJECT_O;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_STATICFIELDBASE;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_STATICFIELDOFFSET;
 import static jbse.algo.Overrides.ALGO_noclass_REGISTERLOADEDCLASS;
 import static jbse.algo.Overrides.ALGO_noclass_REGISTERMETHODHANDLE;
 import static jbse.algo.Overrides.ALGO_noclass_REGISTERMETHODTYPE;
@@ -244,6 +247,7 @@ import static jbse.bc.Signatures.JAVA_LAMBDAMETAFACTORY;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
 import static jbse.bc.Signatures.JAVA_MAPPEDBYTEBUFFER;
+import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL_ASVARARGSCOLLECTOR;
 import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL_LAZY;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_GETCONSTANT;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_GETMEMBERS;
@@ -412,6 +416,7 @@ import static jbse.bc.Signatures.SUN_UNSAFE_COMPAREANDSWAPINT;
 import static jbse.bc.Signatures.SUN_UNSAFE_COMPAREANDSWAPLONG;
 import static jbse.bc.Signatures.SUN_UNSAFE_COMPAREANDSWAPOBJECT;
 import static jbse.bc.Signatures.SUN_UNSAFE_DEFINEANONYMOUSCLASS;
+import static jbse.bc.Signatures.SUN_UNSAFE_DEFINECLASS;
 import static jbse.bc.Signatures.SUN_UNSAFE_ENSURECLASSINITIALIZED;
 import static jbse.bc.Signatures.SUN_UNSAFE_FREEMEMORY;
 import static jbse.bc.Signatures.SUN_UNSAFE_GETBYTE;
@@ -428,6 +433,9 @@ import static jbse.bc.Signatures.SUN_UNSAFE_PUTOBJECT;
 import static jbse.bc.Signatures.SUN_UNSAFE_PUTOBJECTVOLATILE;
 import static jbse.bc.Signatures.SUN_UNSAFE_REGISTERNATIVES;
 import static jbse.bc.Signatures.SUN_UNSAFE_SHOULDBEINITIALIZED;
+import static jbse.bc.Signatures.SUN_UNSAFE_STATICFIELDBASE;
+import static jbse.bc.Signatures.SUN_UNSAFE_STATICFIELDOFFSET;
+import static jbse.bc.Signatures.SUN_UNSAFEFIELDACCESSORIMPL;
 import static jbse.bc.Signatures.SUN_URLCLASSPATH_GETLOOKUPCACHEURLS;
 import static jbse.bc.Signatures.SUN_URLCLASSPATH_JARLOADER;
 import static jbse.bc.Signatures.SUN_UTIL;
@@ -820,6 +828,7 @@ public final class ExecutionContext {
             addMetaOverridden(SUN_UNSAFE_COMPAREANDSWAPLONG,                      ALGO_SUN_UNSAFE_COMPAREANDSWAPLONG);
             addMetaOverridden(SUN_UNSAFE_COMPAREANDSWAPOBJECT,                    ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT);
             addMetaOverridden(SUN_UNSAFE_DEFINEANONYMOUSCLASS,                    ALGO_SUN_UNSAFE_DEFINEANONYMOUSCLASS);
+            addMetaOverridden(SUN_UNSAFE_DEFINECLASS,                             ALGO_SUN_UNSAFE_DEFINECLASS);
             addMetaOverridden(SUN_UNSAFE_ENSURECLASSINITIALIZED,                  ALGO_SUN_UNSAFE_ENSURECLASSINITIALIZED);
             addMetaOverridden(SUN_UNSAFE_FREEMEMORY,                              ALGO_SUN_UNSAFE_FREEMEMORY);
             addMetaOverridden(SUN_UNSAFE_GETBYTE,                                 ALGO_SUN_UNSAFE_GETBYTE);
@@ -836,6 +845,8 @@ public final class ExecutionContext {
             addMetaOverridden(SUN_UNSAFE_PUTOBJECTVOLATILE,                       ALGO_SUN_UNSAFE_PUTOBJECT_O);
             addMetaOverridden(SUN_UNSAFE_REGISTERNATIVES,                         ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(SUN_UNSAFE_SHOULDBEINITIALIZED,                     ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED);
+            addMetaOverridden(SUN_UNSAFE_STATICFIELDBASE,                         ALGO_SUN_UNSAFE_STATICFIELDBASE);
+            addMetaOverridden(SUN_UNSAFE_STATICFIELDOFFSET,                       ALGO_SUN_UNSAFE_STATICFIELDOFFSET);
             addBaseOverridden(SUN_URLCLASSPATH_GETLOOKUPCACHEURLS,                BASE_SUN_URLCLASSPATH_GETLOOKUPCACHEURLS);
             addMetaOverridden(SUN_VM_INITIALIZE,                                  ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(SUN_WIN32ERRORMODE_SETERRORMODE,                    ALGO_INVOKEMETA_METACIRCULAR);
@@ -1097,6 +1108,7 @@ public final class ExecutionContext {
         className.equals(JAVA_LINKEDLIST) || 
         className.equals(JAVA_LINKEDLIST_ENTRY) ||
         className.equals(JAVA_MAPPEDBYTEBUFFER) || 
+        className.equals(JAVA_METHODHANDLEIMPL_ASVARARGSCOLLECTOR) ||
         className.equals(JAVA_METHODHANDLEIMPL_LAZY) || //apparently
         className.equals(JAVA_METHODTYPEFORM) || 
         className.equals(JAVA_OPTIONAL) || 
@@ -1117,6 +1129,7 @@ public final class ExecutionContext {
         className.equals(SUN_PERFCOUNTER) ||
         className.equals(SUN_PERFCOUNTER_CORECOUNTERS) ||
         className.equals(SUN_SECURITYCONSTANTS) ||
+        className.equals(SUN_UNSAFEFIELDACCESSORIMPL) ||
         className.equals(SUN_URLCLASSPATH_JARLOADER) ||
         className.equals(SUN_UTIL) || //apparently
         className.equals(SUN_VERIFYACCESS) ||

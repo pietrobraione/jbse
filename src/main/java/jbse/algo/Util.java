@@ -4,7 +4,9 @@ import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Offsets.offsetInvoke;
 import static jbse.bc.Signatures.JAVA_CLASS;
+import static jbse.bc.Signatures.JAVA_CLASSLOADER;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_LOADCLASS;
+import static jbse.bc.Signatures.JAVA_MEMBERNAME;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_GETTYPE;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_TYPE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE;
@@ -421,8 +423,10 @@ public final class Util {
         		.op_invokestatic(noclass_STORELINKEDMETHODADAPTERANDAPPENDIX)
         		.op_return()
         		.mk();
+        
+        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME);
         try {
-        	state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang/invoke");  //zero offset so that upon return from the snippet will reexecute the current algorithm
+        	state.pushSnippetFrameNoWrap(snippet, 0, cf_JAVA_MEMBERNAME);  //zero offset so that upon return from the snippet will reexecute the current algorithm
         } catch (InvalidProgramCounterException e) {
         	//this should never happen
         	failExecution(e);
@@ -574,8 +578,9 @@ public final class Util {
         		.op_invokestatic(noclass_STORELINKEDCALLSITEADAPTERANDAPPENDIX)
         		.op_return()
         		.mk();
+        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME);
         try {
-        	state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang/invoke");  //zero offset so that upon return from the snippet will reexecute the current algorithm
+        	state.pushSnippetFrameNoWrap(snippet, 0, cf_JAVA_MEMBERNAME);  //zero offset so that upon return from the snippet will reexecute the current algorithm
         } catch (InvalidProgramCounterException e) {
         	//this should never happen
         	failExecution(e);
@@ -669,8 +674,9 @@ public final class Util {
     			.op_invokestatic(noclass_REGISTERMETHODTYPE)
     			.op_return()
     			.mk();
+        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME);
     	try {
-    		state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang/invoke"); //zero offset so that upon return from the snippet will reexecute the invoking bytecode
+    		state.pushSnippetFrameNoWrap(snippet, 0, cf_JAVA_MEMBERNAME); //zero offset so that upon return from the snippet will reexecute the invoking bytecode
     	} catch (InvalidProgramCounterException e) {
 			//this should never happen
 			failExecution(e);
@@ -780,8 +786,9 @@ public final class Util {
             .op_invokestatic(noclass_REGISTERMETHODHANDLE)
             .op_return()
             .mk();
+        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME);
         try {
-        	state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang/invoke"); //zero offset so that upon return from the snippet will reexecute the invoking bytecode 
+        	state.pushSnippetFrameNoWrap(snippet, 0, cf_JAVA_MEMBERNAME); //zero offset so that upon return from the snippet will reexecute the invoking bytecode 
     	} catch (InvalidProgramCounterException e) {
 			//this should never happen
 			failExecution(e);
@@ -883,7 +890,8 @@ public final class Util {
                     .op_pop() //we cannot use the return value so we need to clean the stack
                     .op_return()
                     .mk();
-                state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang/invoke"); //zero offset so that upon return from the snippet will repeat the invocation of java.lang.invoke.MethodHandleNatives.resolve and reexecute this algorithm 
+                final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME);
+                state.pushSnippetFrameNoWrap(snippet, 0, cf_JAVA_MEMBERNAME); //zero offset so that upon return from the snippet will repeat the invocation of java.lang.invoke.MethodHandleNatives.resolve and reexecute this algorithm 
                 exitFromAlgorithm();
             } catch (InvalidProgramCounterException | InvalidInputException e) {
                 //this should never happen
@@ -2114,7 +2122,8 @@ public final class Util {
                 .op_invokestatic(noclass_REGISTERLOADEDCLASS) //...and registers it with the initiating loader
                 .op_return()
                 .mk();
-            state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang");
+	    	final ClassFile cf_JAVA_CLASSLOADER = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLASSLOADER);
+            state.pushSnippetFrameNoWrap(snippet, 0, cf_JAVA_CLASSLOADER);
             //TODO if ClassLoader.loadClass finds no class we should either propagate the thrown ClassNotFoundException or wrap it inside a NoClassDefFoundError.
             //then, pushes the parameters for noclass_REGISTERLOADEDCLASS
             state.pushOperand(calc.valInt(initiatingLoader));

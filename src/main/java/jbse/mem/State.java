@@ -1132,7 +1132,8 @@ public final class State implements Cloneable {
      *         <li>{@code ref} is {@link Null}, or</li> 
      *         <li>{@code ref} is concrete and its heap position is free, or</li> 
      *         <li>{@code ref} is symbolic and resolved to null, or</li> 
-     *         <li>{@code ref} is symbolic and unresolved.</li>
+     *         <li>{@code ref} is symbolic and unresolved, or</li>
+     *         <li>{@code ref} is a {@link KlassPseudoReference}.</li>
      *         </ul>
      * @throws FrozenStateException if the state is frozen.
      * @throws NullPointerException if {@code ref == null}.
@@ -2983,18 +2984,14 @@ public final class State implements Cloneable {
      * @param snippet a {@link Snippet}.
      * @param returnPCOffset the offset from the current 
      *        program counter of the return program counter.
-     * @param definingClassLoader an {@code int}, the defining
-     *        class loader that is assumed for the current class
-     *        of the frame.
-     * @param packageName a {@code String}, the name of the
-     *        package that is assumed for the current class
-     *        of the frame.
+     * @param hostClass a {@code ClassFile}, the host class 
+     *        assumed for the current class of the frame.
      * @throws InvalidProgramCounterException if {@code returnPCOffset} 
      *         is not a valid program count offset for the state's current frame.
      * @throws ThreadStackEmptyException if the state's thread stack is empty.
      * @throws FrozenStateException if the state is frozen.
      */
-    public void pushSnippetFrameNoWrap(Snippet snippet, int returnPCOffset, int definingClassLoader, String packageName) 
+    public void pushSnippetFrameNoWrap(Snippet snippet, int returnPCOffset, ClassFile hostClass) 
     throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
     	if (this.frozen) {
     	    throw new FrozenStateException();
@@ -3004,7 +3001,7 @@ public final class State implements Cloneable {
         setReturnProgramCounter(returnPCOffset);
 
         //creates the new snippet frame
-        final Frame f = new SnippetFrameNoWrap(snippet, definingClassLoader, packageName, "$SNIPPET$" + this.snippetClassFileCounter++);
+        final Frame f = new SnippetFrameNoWrap(snippet, hostClass, "$SNIPPET$" + this.snippetClassFileCounter++);
 
         this.stack.push(f);
     }
@@ -3019,9 +3016,8 @@ public final class State implements Cloneable {
      * as if the current class were the same before and after the
      * invocation of the method. Therefore, invoking this method is
      * equivalent to invoking 
-     * {@link #pushSnippetFrameNoWrap(Snippet, int, int, String) pushSnippetFrameNoWrap}{@code (snippet, returnPCOffset, }
-     * {@link #getCurrentClass()}{@code .}{@link ClassFile#getDefiningClassLoader() getDefiningClassLoader()}{@code , }
-     * {@link #getCurrentClass()}{@code .}{@link ClassFile#getPackageName() getPackageName()}{@code ).}
+     * {@link #pushSnippetFrameNoWrap(Snippet, int, ClassFile) pushSnippetFrameNoWrap}{@code (snippet, returnPCOffset, }
+     * {@link #getCurrentClass()}{@code ).}
      * 
      * @param snippet a {@link Snippet}.
      * @param returnPCOffset the offset from the current 
@@ -3033,7 +3029,7 @@ public final class State implements Cloneable {
      */
     public void pushSnippetFrameNoWrap(Snippet snippet, int returnPCOffset) 
     throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
-    	pushSnippetFrameNoWrap(snippet, returnPCOffset, getCurrentClass().getDefiningClassLoader(), getCurrentClass().getPackageName());
+    	pushSnippetFrameNoWrap(snippet, returnPCOffset, getCurrentClass());
     }
     
     private void narrowArgs(Calculator calc, Value[] args, Signature methodSignatureImpl, boolean isStatic) 

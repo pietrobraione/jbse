@@ -5,9 +5,11 @@ import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Offsets.GETX_PUTX_OFFSET;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
+import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.NO_SUCH_FIELD_ERROR;
 import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
@@ -34,6 +36,7 @@ import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.exc.DecisionException;
+import jbse.mem.HeapObjekt;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
@@ -119,7 +122,14 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     if (!state.isNull(refToPut)) {
                         //TODO the JVMS v8, putfield instruction, does not explicitly say how and when the field descriptor type is resolved  
                         final ClassFile destinationTypeClass = state.getClassHierarchy().resolveClass(currentClass, className(destinationType), state.bypassStandardLoading());
-                        final ClassFile valueObjectType = state.getObject(refToPut).getType();
+                        final HeapObjekt valueObject = state.getObject(refToPut);
+                        final ClassFile valueObjectType; 
+                        if (valueObject == null) { 
+                        	//it is a KlassPseudoReference originated by Unsafe.staticFieldBase
+                        	valueObjectType = state.getClassHierarchy().clone().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT);
+                        } else {
+                        	valueObjectType = valueObject.getType();
+                        }
                         if (!state.getClassHierarchy().isAssignmentCompatible(valueObjectType, destinationTypeClass)) {
                             throwVerifyError(state, this.ctx.getCalculator());
                             exitFromAlgorithm();

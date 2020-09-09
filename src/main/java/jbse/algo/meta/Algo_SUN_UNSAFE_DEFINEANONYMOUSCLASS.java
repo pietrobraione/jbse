@@ -46,7 +46,7 @@ import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Array;
 import jbse.mem.Array.AccessOutcomeInValue;
-import jbse.mem.Instance;
+import jbse.mem.HeapObjekt;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
@@ -170,7 +170,7 @@ public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_
                 if (state.isNull(_r)) {
                     retVal[i] = null;
                 } else {
-                    final Instance _o = (Instance) state.getObject(_r);
+                    final HeapObjekt _o = (HeapObjekt) state.getObject(_r);
                     if (JAVA_DOUBLE.equals(_o.getType().getClassName())) {
                     	retVal[i] = (Double) ((Simplex) (_o.getFieldValue(JAVA_DOUBLE_VALUE))).getActualValue();
                     } else if (JAVA_FLOAT.equals(_o.getType().getClassName())) {
@@ -180,7 +180,7 @@ public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_
                     } else if (JAVA_LONG.equals(_o.getType().getClassName())) {
                     	retVal[i] = (Long) ((Simplex) (_o.getFieldValue(JAVA_LONG_VALUE))).getActualValue();
                     } else if (JAVA_STRING.equals(_o.getType().getClassName())) {
-                    	retVal[i] = valueString(state, _o);
+                    	retVal[i] = valueString(state, _r);
                     } else if (JAVA_CLASS.equals(_o.getType().getClassName())) {
                         final Instance_JAVA_CLASS _oJavaClass = (Instance_JAVA_CLASS) _o;
                         retVal[i] = _oJavaClass.representedClass();

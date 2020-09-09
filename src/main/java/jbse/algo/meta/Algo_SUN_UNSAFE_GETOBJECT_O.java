@@ -23,6 +23,7 @@ import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.KlassPseudoReference;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Simplex;
@@ -50,10 +51,14 @@ public final class Algo_SUN_UNSAFE_GETOBJECT_O extends Algo_INVOKEMETA_Nonbranch
         try {           
             //gets and checks the object parameter
             final Reference objRef = (Reference) this.data.operand(1);
-            if (state.isNull(objRef)) {
+            final Objekt obj;
+            if (objRef instanceof KlassPseudoReference) {
+            	obj = state.getKlass(((KlassPseudoReference) objRef).getClassFile());
+            } else if (state.isNull(objRef)) {
                 throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getObjectVolatile was null.");
+            } else {
+            	obj = state.getObject(objRef);
             }
-            final Objekt obj = state.getObject(objRef); //TODO objRef from getStaticFieldBase
             if (obj == null) {
                 throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.getObjectVolatile.");
             }

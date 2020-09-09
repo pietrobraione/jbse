@@ -37,8 +37,8 @@ import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN
 import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_I;
 import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_J;
 import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_L;
+import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_NULL;
 import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_S;
-import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_V;
 import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_Z;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.common.Type.ARRAYOF;
@@ -336,7 +336,7 @@ public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKE
                     state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_S, false, this.pcOffset);
                     break;
                 case VOID:
-                    state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_V, false, this.pcOffset);
+                    state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_NULL, false, this.pcOffset);
                     break;
                 }
             } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 

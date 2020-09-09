@@ -15,9 +15,11 @@ import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.KlassPseudoReference;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Simplex;
+import jbse.val.Value;
 
 /**
  * Meta-level implementation of {@link sun.misc.Unsafe#putObjectVolatile(Object, long, Object)}.
@@ -26,9 +28,8 @@ import jbse.val.Simplex;
  */
 public final class Algo_SUN_UNSAFE_PUTOBJECT_O extends Algo_INVOKEMETA_Nonbranching {
     private final Algo_SUN_UNSAFE_PUTOBJECT_O_Array algoArray = new Algo_SUN_UNSAFE_PUTOBJECT_O_Array();
-    private Objekt toModify; //set by cookMore
-    private int slot; //set by cookMore
-    private Reference val; //set by cookMore
+    private Objekt obj; //set by cookMore
+    private int ofst; //set by cookMore
     
     @Override
     protected Supplier<Integer> numOperands() {
@@ -41,34 +42,40 @@ public final class Algo_SUN_UNSAFE_PUTOBJECT_O extends Algo_INVOKEMETA_Nonbranch
     InterruptException, FrozenStateException {
         //gets and checks the object to modify
         final Reference objRef = (Reference) this.data.operand(1);
-        if (state.isNull(objRef)) {
+        if (objRef instanceof KlassPseudoReference) {
+        	this.obj = state.getKlass(((KlassPseudoReference) objRef).getClassFile());
+        } else if (state.isNull(objRef)) {
             throw new UndefinedResultException("The Object o parameter to sun.misc.Unsafe.putObjectVolatile was null");
+        } else {
+        	this.obj = state.getObject(objRef);
         }
-        this.toModify = state.getObject(objRef);
-        if (this.toModify == null) {
+        if (this.obj == null) {
             throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.putObjectVolatile.");
         }
         
-        //gets and checks the offset
+        //gets and checks the offset parameter
         final Primitive ofstPrimitive = (Primitive) this.data.operand(2);
         if (ofstPrimitive instanceof Simplex) {
-            this.slot = ((Long) ((Simplex) ofstPrimitive).getActualValue()).intValue();
+            this.ofst = ((Long) ((Simplex) ofstPrimitive).getActualValue()).intValue();
         } else {
             throw new SymbolicValueNotAllowedException("The long offset parameter to sun.misc.Unsafe.putObjectVolatile must be concrete.");
         }
         
-        if (this.toModify instanceof Array) {
-            continueWith(this.algoArray);
+        //checks
+        if (!this.obj.hasOffset(this.ofst)) {
+            throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.putObjectVolatile was not a slot number of the object parameter.");
         }
 
-        //gets the reference to be copied
-        this.val = (Reference) this.data.operand(3);
+        if (this.obj instanceof Array) {
+            continueWith(this.algoArray);
+        }
     }
     
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            this.toModify.setFieldValue(this.slot, this.val);
+            final Value val = this.data.operand(3);
+            this.obj.setFieldValue(this.ofst, val);
         };
     }
 }

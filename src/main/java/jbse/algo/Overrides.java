@@ -126,21 +126,24 @@ public final class Overrides {
     public static final String ALGO_SUN_UNIXNATIVEDISPATCHER_GETCWD                = internalClassName(jbse.algo.meta.Algo_SUN_UNIXNATIVEDISPATCHER_GETCWD.class.getName());
     public static final String ALGO_SUN_UNIXNATIVEDISPATCHER_INIT                  = internalClassName(jbse.algo.meta.Algo_SUN_UNIXNATIVEDISPATCHER_INIT.class.getName());
     public static final String ALGO_SUN_UNSAFE_ALLOCATEMEMORY                      = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_ALLOCATEMEMORY.class.getName());
-    public static final String ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET                   = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_OBJECTFIELDOFFSET.class.getName());
     public static final String ALGO_SUN_UNSAFE_COMPAREANDSWAPINT                   = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_COMPAREANDSWAPINT.class.getName());
     public static final String ALGO_SUN_UNSAFE_COMPAREANDSWAPLONG                  = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_COMPAREANDSWAPLONG.class.getName());
     public static final String ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT                = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_COMPAREANDSWAPOBJECT.class.getName());
     public static final String ALGO_SUN_UNSAFE_DEFINEANONYMOUSCLASS                = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS.class.getName());
+    public static final String ALGO_SUN_UNSAFE_DEFINECLASS                         = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_DEFINECLASS.class.getName());
     public static final String ALGO_SUN_UNSAFE_ENSURECLASSINITIALIZED              = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_ENSURECLASSINITIALIZED.class.getName());
     public static final String ALGO_SUN_UNSAFE_FREEMEMORY                          = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_FREEMEMORY.class.getName());
     public static final String ALGO_SUN_UNSAFE_GETBYTE                             = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETBYTE.class.getName());
     public static final String ALGO_SUN_UNSAFE_GETINT_O                            = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETINT_O.class.getName());
     public static final String ALGO_SUN_UNSAFE_GETLONG                             = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETLONG.class.getName());
     public static final String ALGO_SUN_UNSAFE_GETOBJECT_O                         = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETOBJECT_O.class.getName());
+    public static final String ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET                   = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_OBJECTFIELDOFFSET.class.getName());
     public static final String ALGO_SUN_UNSAFE_PUTINT_O                            = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_PUTINT_O.class.getName());
     public static final String ALGO_SUN_UNSAFE_PUTLONG                             = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_PUTLONG.class.getName());
     public static final String ALGO_SUN_UNSAFE_PUTOBJECT_O                         = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_PUTOBJECT_O.class.getName());
     public static final String ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED                 = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_SHOULDBEINITIALIZED.class.getName());
+    public static final String ALGO_SUN_UNSAFE_STATICFIELDBASE                     = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_STATICFIELDBASE.class.getName());
+    public static final String ALGO_SUN_UNSAFE_STATICFIELDOFFSET                   = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_STATICFIELDOFFSET.class.getName());
 
     //Overriding meta-level implementations of jbse.meta.Analysis methods
     public static final String ALGO_JBSE_ANALYSIS_ANY                       = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ANY.class.getName());

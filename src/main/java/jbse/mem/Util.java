@@ -3,6 +3,7 @@ package jbse.mem;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isReference;
 
+import jbse.val.KlassPseudoReference;
 import jbse.val.Null;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -139,6 +140,7 @@ public class Util {
 		isPrimitive(v.getType()) ||
 		v instanceof ReferenceConcrete ||
         v instanceof ReferenceArrayImmaterial ||
+        v instanceof KlassPseudoReference ||
 		isResolvedSymbolicReference(s, v);
 	}
 	

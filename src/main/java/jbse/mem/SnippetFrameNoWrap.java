@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import jbse.bc.ClassFile;
 import jbse.bc.ClassFileSnippetNoWrap;
 import jbse.bc.Signature;
 import jbse.bc.Snippet;
@@ -28,16 +29,14 @@ public final class SnippetFrameNoWrap extends Frame implements Cloneable {
      * Constructor.
      * 
      * @param snippet a {@link Snippet}.
-     * @param definingClassLoader an {@code int}, the defining classloader 
-     *        assumed for the {@link ClassFileSnippetNoWrap} that will be
-     *        created.
-     * @param packageName a {@code String}, the name of the package where the
-     *        created {@link ClassFileSnippetNoWrap} must be assumed to reside.
+     * @param hostClass a {@code ClassFile}, the host class 
+     *        assumed for the {@link ClassFileSnippetNoWrap} 
+     *        that will be created.
      * @param className a {@code String}, the name of the
      *        created {@link ClassFileSnippetNoWrap}. It must be unique in the dynamic package.
      */
-    public SnippetFrameNoWrap(Snippet snippet, int definingClassLoader, String packageName, String className) {
-        super(new ClassFileSnippetNoWrap(snippet, definingClassLoader, packageName, className), snippet.getBytecode());
+    public SnippetFrameNoWrap(Snippet snippet, ClassFile hostClass, String className) {
+        super(new ClassFileSnippetNoWrap(snippet, hostClass, className), snippet.getBytecode());
         this.operandStack = new OperandStack();
         this.localVariablesValues = new ArrayList<>(snippet.getArgs());
     }

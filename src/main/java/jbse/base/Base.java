@@ -519,6 +519,24 @@ public final class Base {
     }
     
     /**
+     * Helper method for {@link sun.reflect.NativeMethodAccessorImpl#newInstance0(Constructor, Object[])}
+     * when it has void return type.
+     * Boxes the exceptions that are raised by the execution of a method 
+     * into an {@link InvocationTargetException} and rethrows them. Also, 
+     * returns {@code null} to comply with the fact that {@code newInstance0} 
+     * has {@code Object} as a return type. 
+     */
+    private static Object boxInvocationTargetExceptionAndReturn_null() 
+    throws InvocationTargetException {
+        try {
+            foo_V(); //skip this
+            return null;
+        } catch (Exception e) {
+            throw new InvocationTargetException(e);
+        }
+    }
+
+    /**
      * Helper method for {@link sun.reflect.NativeMethodAccessorImpl#invoke0(Method, Object, Object[])}.
      * Boxes the exceptions that are raised by the execution of a method 
      * into an {@link InvocationTargetException} and rethrows them. Also, 
@@ -536,8 +554,7 @@ public final class Base {
     }
     
     /**
-     * Helper method for {@link sun.reflect.NativeConstructorAccessorImpl#newInstance0(Constructor, Object[])}
-     * and {@link sun.reflect.NativeMethodAccessorImpl#invoke0(Method, Object, Object[])}.
+     * Helper method for {@link sun.reflect.NativeConstructorAccessorImpl#newInstance0(Constructor, Object[])}.
      * Boxes the exceptions that are raised by the execution of a constructor 
      * into an {@link InvocationTargetException} and rethrows them.
      */

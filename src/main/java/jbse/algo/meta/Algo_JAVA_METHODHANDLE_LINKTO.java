@@ -147,7 +147,7 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
 	                    .op_pop() //we cannot use the return value so we need to clean the stack
 	                    .op_return()
 	                    .mk();
-	                state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang/invoke"); //zero offset so that upon return from the snippet will repeat the invocation of invokehandle and reexecute this algorithm 
+	                state.pushSnippetFrameNoWrap(snippet, 0, cf_JAVA_MEMBERNAME); //zero offset so that upon return from the snippet will repeat the invocation of invokehandle and reexecute this algorithm 
 	                exitFromAlgorithm();
 	            } catch (InvalidProgramCounterException | InvalidInputException e) {
 	                //this should never happen
