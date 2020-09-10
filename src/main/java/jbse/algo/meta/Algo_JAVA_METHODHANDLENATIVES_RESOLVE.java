@@ -12,7 +12,6 @@ import static jbse.algo.Util.getMemberNameFlagsMethod;
 import static jbse.algo.Util.isConstructor;
 import static jbse.algo.Util.isField;
 import static jbse.algo.Util.IS_FIELD;
-import static jbse.algo.Util.isInvokeInterface;
 import static jbse.algo.Util.isMethod;
 import static jbse.algo.Util.isSetter;
 import static jbse.algo.Util.JVM_RECOGNIZED_FIELD_MODIFIERS;
@@ -164,7 +163,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 final Signature methodToResolve = new Signature(memberNameContainerClass.getClassName(), memberNameDescriptor, memberNameName);
 
                 //performs resolution
-                final boolean isInterface = isInvokeInterface(memberNameFlags);
+                final boolean isInterface = memberNameContainerClass.isInterface(); 
                 this.resolvedClass = state.getClassHierarchy().resolveMethod(accessorClass, methodToResolve, isInterface, state.bypassStandardLoading(), memberNameContainerClass);
                 
                 final boolean methodIsSignaturePolymorphic = !isInterface && this.resolvedClass.hasOneSignaturePolymorphicMethodDeclaration(methodToResolve.getName());
