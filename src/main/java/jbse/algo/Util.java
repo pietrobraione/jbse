@@ -460,7 +460,7 @@ public final class Util {
         		.op_return()
         		.mk();
         
-        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME);
+        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME); //surely loaded
         try {
         	state.pushSnippetFrameNoWrap(snippet, 0, cf_JAVA_MEMBERNAME);  //zero offset so that upon return from the snippet will reexecute the current algorithm
         } catch (InvalidProgramCounterException e) {
@@ -470,16 +470,19 @@ public final class Util {
         exitFromAlgorithm();
     }
     
-    private static Reference doPrimitiveBoxing(State state, Calculator calc, Simplex val) throws InvalidInputException, HeapMemoryExhaustedException {
+    private static Reference doPrimitiveBoxing(State state, Calculator calc, Simplex val) 
+    throws InvalidInputException, HeapMemoryExhaustedException, ClassFileNotFoundException, 
+    ClassFileIllFormedException, ClassFileNotAccessibleException, IncompatibleClassFileException, 
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException {
     	final char type = val.getType();
     	if (type == BOOLEAN) {
     		final boolean valIsTrue = ((Boolean) val.getActualValue()).booleanValue();
-    		final ClassFile cf_JAVA_BOOLEAN = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_BOOLEAN);
+    		final ClassFile cf_JAVA_BOOLEAN = state.getClassHierarchy().loadCreateClass(JAVA_BOOLEAN);
     		final Klass klassBoolean = state.getKlass(cf_JAVA_BOOLEAN);
     		return (Reference) (valIsTrue ? klassBoolean.getFieldValue(JAVA_BOOLEAN_TRUE) : klassBoolean.getFieldValue(JAVA_BOOLEAN_FALSE));
     	} else if (type == BYTE) {
     		final byte valByte = ((Byte) val.getActualValue()).byteValue();
-    		final ClassFile cf_JAVA_BYTE_BYTECACHE = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_BYTE_BYTECACHE);
+    		final ClassFile cf_JAVA_BYTE_BYTECACHE = state.getClassHierarchy().loadCreateClass(JAVA_BYTE_BYTECACHE);
     		final Klass klassBytecache = state.getKlass(cf_JAVA_BYTE_BYTECACHE);
     		final Reference referenceCache = (Reference) klassBytecache.getFieldValue(JAVA_BYTE_BYTECACHE_CACHE);
     		final Array cache = (Array) state.getObject(referenceCache);
@@ -494,7 +497,7 @@ public final class Util {
     	} else if (type == CHAR) {
     		final char valChar = ((Character) val.getActualValue()).charValue();
     		if (valChar <= 127) { //the cached values
-        		final ClassFile cf_JAVA_CHARACTER_CHARACTERCACHE = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CHARACTER_CHARACTERCACHE);
+        		final ClassFile cf_JAVA_CHARACTER_CHARACTERCACHE = state.getClassHierarchy().loadCreateClass(JAVA_CHARACTER_CHARACTERCACHE);
         		final Klass klassCharactercache = state.getKlass(cf_JAVA_CHARACTER_CHARACTERCACHE);
         		final Reference referenceCache = (Reference) klassCharactercache.getFieldValue(JAVA_CHARACTER_CHARACTERCACHE_CACHE);
         		final Array cache = (Array) state.getObject(referenceCache);
@@ -507,21 +510,21 @@ public final class Util {
     				throw new UnexpectedInternalException(e);
     			}
     		} else {
-        		final ClassFile cf_JAVA_CHARACTER = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CHARACTER);
+        		final ClassFile cf_JAVA_CHARACTER = state.getClassHierarchy().loadCreateClass(JAVA_CHARACTER);
     			final ReferenceConcrete referenceCharacter = state.createInstance(calc, cf_JAVA_CHARACTER);
     			final HeapObjekt characterObject = state.getObject(referenceCharacter);
     			characterObject.setFieldValue(JAVA_CHARACTER_VALUE, val);
     			return referenceCharacter;
     		}
     	} else if (type == DOUBLE) {
-    		final ClassFile cf_JAVA_DOUBLE = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_DOUBLE);
+    		final ClassFile cf_JAVA_DOUBLE = state.getClassHierarchy().loadCreateClass(JAVA_DOUBLE);
 			final ReferenceConcrete referenceDouble = state.createInstance(calc, cf_JAVA_DOUBLE);
 			final HeapObjekt doubleObject = state.getObject(referenceDouble);
 			doubleObject.setFieldValue(JAVA_DOUBLE_VALUE, val);
 			return referenceDouble;
     	} else if (type == INT) {
     		final int valInt = ((Integer) val.getActualValue()).intValue();
-    		final ClassFile cf_JAVA_INTEGER_INTEGERCACHE = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_INTEGER_INTEGERCACHE);
+    		final ClassFile cf_JAVA_INTEGER_INTEGERCACHE = state.getClassHierarchy().loadCreateClass(JAVA_INTEGER_INTEGERCACHE);
     		final Klass klassIntegercache = state.getKlass(cf_JAVA_INTEGER_INTEGERCACHE);
     		final int low = ((Integer) ((Simplex) klassIntegercache.getFieldValue(JAVA_INTEGER_INTEGERCACHE_LOW)).getActualValue()).intValue();
     		final int high = ((Integer) ((Simplex) klassIntegercache.getFieldValue(JAVA_INTEGER_INTEGERCACHE_HIGH)).getActualValue()).intValue();
@@ -537,14 +540,14 @@ public final class Util {
     				throw new UnexpectedInternalException(e);
     			}
     		} else {
-        		final ClassFile cf_JAVA_INTEGER = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_INTEGER);
+        		final ClassFile cf_JAVA_INTEGER = state.getClassHierarchy().loadCreateClass(JAVA_INTEGER);
     			final ReferenceConcrete referenceInteger = state.createInstance(calc, cf_JAVA_INTEGER);
     			final HeapObjekt integerObject = state.getObject(referenceInteger);
     			integerObject.setFieldValue(JAVA_INTEGER_VALUE, val);
     			return referenceInteger;
     		}    		
     	} else if (type == FLOAT) {
-    		final ClassFile cf_JAVA_FLOAT = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_FLOAT);
+    		final ClassFile cf_JAVA_FLOAT = state.getClassHierarchy().loadCreateClass(JAVA_FLOAT);
 			final ReferenceConcrete referenceFloat = state.createInstance(calc, cf_JAVA_FLOAT);
 			final HeapObjekt floatObject = state.getObject(referenceFloat);
 			floatObject.setFieldValue(JAVA_FLOAT_VALUE, val);
@@ -552,7 +555,7 @@ public final class Util {
     	} else if (type == LONG) {
     		final long valLong = ((Long) val.getActualValue()).longValue();
     		if (valLong >= -128 && valLong <= 127) { //the cached values
-        		final ClassFile cf_JAVA_LONG_LONGCACHE = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_LONG_LONGCACHE);
+        		final ClassFile cf_JAVA_LONG_LONGCACHE = state.getClassHierarchy().loadCreateClass(JAVA_LONG_LONGCACHE);
         		final Klass klassLongcache = state.getKlass(cf_JAVA_LONG_LONGCACHE);
         		final Reference referenceCache = (Reference) klassLongcache.getFieldValue(JAVA_LONG_LONGCACHE_CACHE);
         		final Array cache = (Array) state.getObject(referenceCache);
@@ -565,7 +568,7 @@ public final class Util {
     				throw new UnexpectedInternalException(e);
     			}
     		} else {
-        		final ClassFile cf_JAVA_LONG = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_LONG);
+        		final ClassFile cf_JAVA_LONG = state.getClassHierarchy().loadCreateClass(JAVA_LONG);
     			final ReferenceConcrete referenceLong = state.createInstance(calc, cf_JAVA_LONG);
     			final HeapObjekt longObject = state.getObject(referenceLong);
     			longObject.setFieldValue(JAVA_LONG_VALUE, val);
@@ -574,7 +577,7 @@ public final class Util {
     	} else { //(type == SHORT)
     		final long valShort = ((Short) val.getActualValue()).shortValue();
     		if (valShort >= -128 && valShort <= 127) { //the cached values
-        		final ClassFile cf_JAVA_SHORT_SHORTCACHE = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_SHORT_SHORTCACHE);
+        		final ClassFile cf_JAVA_SHORT_SHORTCACHE = state.getClassHierarchy().loadCreateClass(JAVA_SHORT_SHORTCACHE);
         		final Klass klassShortcache = state.getKlass(cf_JAVA_SHORT_SHORTCACHE);
         		final Reference referenceCache = (Reference) klassShortcache.getFieldValue(JAVA_SHORT_SHORTCACHE_CACHE);
         		final Array cache = (Array) state.getObject(referenceCache);
@@ -587,7 +590,7 @@ public final class Util {
     				throw new UnexpectedInternalException(e);
     			}
     		} else {
-        		final ClassFile cf_JAVA_SHORT = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_SHORT);
+        		final ClassFile cf_JAVA_SHORT = state.getClassHierarchy().loadCreateClass(JAVA_SHORT);
     			final ReferenceConcrete referenceShort = state.createInstance(calc, cf_JAVA_SHORT);
     			final HeapObjekt shortObject = state.getObject(referenceShort);
     			shortObject.setFieldValue(JAVA_SHORT_VALUE, val);
@@ -740,7 +743,7 @@ public final class Util {
         		.op_invokestatic(noclass_STORELINKEDCALLSITEADAPTERANDAPPENDIX)
         		.op_return()
         		.mk();
-        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME);
+        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME); //surely loaded
         try {
         	state.pushSnippetFrameNoWrap(snippet, 0, cf_JAVA_MEMBERNAME);  //zero offset so that upon return from the snippet will reexecute the current algorithm
         } catch (InvalidProgramCounterException e) {
@@ -836,7 +839,7 @@ public final class Util {
     			.op_invokestatic(noclass_REGISTERMETHODTYPE)
     			.op_return()
     			.mk();
-        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME);
+        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME); //surely loaded
     	try {
     		state.pushSnippetFrameNoWrap(snippet, 0, cf_JAVA_MEMBERNAME); //zero offset so that upon return from the snippet will reexecute the invoking bytecode
     	} catch (InvalidProgramCounterException e) {
@@ -948,7 +951,7 @@ public final class Util {
             .op_invokestatic(noclass_REGISTERMETHODHANDLE)
             .op_return()
             .mk();
-        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME);
+        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME); //surely loaded
         try {
         	state.pushSnippetFrameNoWrap(snippet, 0, cf_JAVA_MEMBERNAME); //zero offset so that upon return from the snippet will reexecute the invoking bytecode 
     	} catch (InvalidProgramCounterException e) {
@@ -1052,7 +1055,7 @@ public final class Util {
                     .op_pop() //we cannot use the return value so we need to clean the stack
                     .op_return()
                     .mk();
-                final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME);
+                final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME); //surely loaded
                 state.pushSnippetFrameNoWrap(snippet, 0, cf_JAVA_MEMBERNAME); //zero offset so that upon return from the snippet will repeat the invocation of java.lang.invoke.MethodHandleNatives.resolve and reexecute this algorithm 
                 exitFromAlgorithm();
             } catch (InvalidProgramCounterException | InvalidInputException e) {
@@ -1313,7 +1316,7 @@ public final class Util {
      * @throws FrozenStateException if {@code s} is frozen.
      */
     public static String valueString(State s, Instance i) throws FrozenStateException {
-        final ClassFile cf_JAVA_STRING = s.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING);
+        final ClassFile cf_JAVA_STRING = s.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING); //surely loaded
         if (cf_JAVA_STRING == null) {
             failExecution("Could not find class java.lang.String.");
         }
@@ -1457,11 +1460,11 @@ public final class Util {
                 }
                 ++stackDepth;
             }
-            final ClassFile cf_JAVA_STACKTRACEELEMENT = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STACKTRACEELEMENT);
+            final ClassFile cf_JAVA_STACKTRACEELEMENT = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STACKTRACEELEMENT); //surely loaded
             if (cf_JAVA_STACKTRACEELEMENT == null) {
                 failExecution("Could not find classfile for java.lang.StackTraceElement.");
             }
-            final ClassFile cf_arrayJAVA_STACKTRACEELEMENT = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, "" + ARRAYOF + REFERENCE + JAVA_STACKTRACEELEMENT + TYPEEND);
+            final ClassFile cf_arrayJAVA_STACKTRACEELEMENT = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, "" + ARRAYOF + REFERENCE + JAVA_STACKTRACEELEMENT + TYPEEND); //surely loaded
             if (cf_arrayJAVA_STACKTRACEELEMENT == null) {
                 failExecution("Could not find classfile for java.lang.StackTraceElement[].");
             }
@@ -2284,7 +2287,7 @@ public final class Util {
                 .op_invokestatic(noclass_REGISTERLOADEDCLASS) //...and registers it with the initiating loader
                 .op_return()
                 .mk();
-	    	final ClassFile cf_JAVA_CLASSLOADER = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLASSLOADER);
+	    	final ClassFile cf_JAVA_CLASSLOADER = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLASSLOADER); //surely loaded
             state.pushSnippetFrameNoWrap(snippet, 0, cf_JAVA_CLASSLOADER);
             //TODO if ClassLoader.loadClass finds no class we should either propagate the thrown ClassNotFoundException or wrap it inside a NoClassDefFoundError.
             //then, pushes the parameters for noclass_REGISTERLOADEDCLASS

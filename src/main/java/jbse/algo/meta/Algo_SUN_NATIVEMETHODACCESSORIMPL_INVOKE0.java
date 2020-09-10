@@ -354,7 +354,7 @@ public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKE
             try {
                 final Signature methodSignatureOverriding = lookupMethodImplOverriding(state, this.ctx, this.methodClassFile, this.methodSignature, this.isInterface, this.isSpecial, this.isStatic, this.isNative);
                 if (methodSignatureOverriding != null) {
-                    final ClassFile classFileMethodOverriding = hier.getClassFileClassArray(CLASSLOADER_APP, methodSignatureOverriding.getClassName());
+                    final ClassFile classFileMethodOverriding = hier.getClassFileClassArray(CLASSLOADER_APP, methodSignatureOverriding.getClassName()); //if lookup had success, the overriding class is already loaded
                     checkOverridingMethodFits(state, this.methodClassFile, this.methodSignature, classFileMethodOverriding, methodSignatureOverriding);
                     this.methodClassFile = classFileMethodOverriding;
                     this.methodSignature = methodSignatureOverriding;

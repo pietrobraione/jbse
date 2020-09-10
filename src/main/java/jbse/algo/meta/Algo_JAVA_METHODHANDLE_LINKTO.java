@@ -6,7 +6,6 @@ import static jbse.algo.Util.lookupMethodImpl;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
-import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Offsets.offsetInvoke;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
@@ -95,6 +94,7 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
 	throws UndefinedResultException, SymbolicValueNotAllowedException, 
 	ThreadStackEmptyException, InterruptException, InvalidInputException, 
 	RenameUnsupportedException, ClasspathException {
+		final Calculator calc = this.ctx.getCalculator();
 		try {
 			//gets the trailing MemberName
 			final Reference referenceMemberName = (Reference) this.data.operand(numOperands().get() - 1);
@@ -102,7 +102,7 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
 				throw new UndefinedResultException("Invoked method java.lang.invoke.MethodHandle.linkToVirtual with null trailing MemberName parameter.");
 			}
 			final Instance instanceMemberName = (Instance) state.getObject(referenceMemberName);
-	        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME);
+	        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().loadCreateClass(JAVA_MEMBERNAME);
 	        if (cf_JAVA_MEMBERNAME == null) {
 	        	//this should never happen
 	            failExecution("Could not find class java.lang.invoke.MemberName.");
@@ -117,7 +117,7 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
 				throw new UndefinedResultException("The trailing MemberName parameter to java.lang.invoke.MethodHandle.linkToVirtual has null value for the field String name.");
 			}
 			final Instance instanceName = (Instance) state.getObject(referenceName);
-	        final ClassFile cf_JAVA_STRING = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING);
+	        final ClassFile cf_JAVA_STRING = state.getClassHierarchy().loadCreateClass(JAVA_STRING);
 	        if (cf_JAVA_STRING == null) {
 	        	//this should never happen
 	            failExecution("Could not find class java.lang.String.");
@@ -145,7 +145,7 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
                 failExecution("The trailing MemberName parameter to java.lang.invoke.MethodHandle.linkToVirtual has null value for the field Object type.");
 			}
 			final Instance instanceType = (Instance) state.getObject(referenceType);
-	        final ClassFile cf_JAVA_METHODTYPE = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_METHODTYPE);
+	        final ClassFile cf_JAVA_METHODTYPE = state.getClassHierarchy().loadCreateClass(JAVA_METHODTYPE);
 	        if (cf_JAVA_METHODTYPE == null) {
 	        	//this should never happen
 	            failExecution("Could not find class java.lang.invoke.MethodType.");
@@ -214,55 +214,52 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
             	throw new UndefinedResultException(e);
             }
             
-    		final Calculator calc = this.ctx.getCalculator();
-            try {
-            	final boolean isVarargs = this.methodImplClass.isMethodVarargs(this.methodImplSignature);
-            	if (isVarargs) {
-            		final int actualParametersNumber = parametersNumber(this.methodImplSignature.getDescriptor(), this.isLinkStatic);
-            		this.parameters = new Value[actualParametersNumber];
-            		System.arraycopy(this.data.operands(), 0, this.parameters, 0, this.parameters.length - 1);
-            		final String[] methodImplDescriptorSplit = splitParametersDescriptors(this.methodImplSignature.getDescriptor());
-            		final String varargsArrayType = methodImplDescriptorSplit[methodImplDescriptorSplit.length - 1];
-            		final ClassFile varargsArrayClass = state.getClassHierarchy().loadCreateClass(varargsArrayType);
-            		final int arrayLength = numOperands().get() - actualParametersNumber;
-            		final ReferenceConcrete referenceVarargsArray = state.createArray(calc, null, calc.valInt(arrayLength), varargsArrayClass);
-            		final Array varargsArray = (Array) state.getObject(referenceVarargsArray);
-            		final int start = actualParametersNumber - 1;
-            		for (int i = 0; i < arrayLength; ++i) {
-            			varargsArray.setFast(calc.valInt(i), this.data.operands()[start + i]);
-            		}
-            		this.parameters[actualParametersNumber - 1] = referenceVarargsArray;
-            	} else {
-            		this.parameters = new Value[numOperands().get() - 1];
-            		System.arraycopy(this.data.operands(), 0, this.parameters, 0, this.parameters.length);
-            	}
-            } catch (ClassFileNotFoundException e) {
-                //TODO should this exception wrap (or throw) a ClassNotFoundException?
-                throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR);
-                exitFromAlgorithm();
-			} catch (BadClassFileVersionException e) {
-	            throwNew(state, this.ctx.getCalculator(), UNSUPPORTED_CLASS_VERSION_ERROR);
-	            exitFromAlgorithm();
-			} catch (ClassFileNotAccessibleException e) {
-	            throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
-	            exitFromAlgorithm();
-			} catch (IncompatibleClassFileException e) {
-	            throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
-	            exitFromAlgorithm();
-			} catch (HeapMemoryExhaustedException e) {
-	            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
-	            exitFromAlgorithm();
-			} catch (ClassFileIllFormedException e) {
-	            //TODO is it ok?
-	            throwVerifyError(state, this.ctx.getCalculator());
-	            exitFromAlgorithm();
-            } catch (MethodNotFoundException | FastArrayAccessNotAllowedException | InvalidTypeException |
-              		 WrongClassNameException e) {
-               	//this should never happen
-               	failExecution(e);
-			}
+    		final boolean isVarargs = this.methodImplClass.isMethodVarargs(this.methodImplSignature);
+    		if (isVarargs) {
+    			final int actualParametersNumber = parametersNumber(this.methodImplSignature.getDescriptor(), this.isLinkStatic);
+    			this.parameters = new Value[actualParametersNumber];
+    			System.arraycopy(this.data.operands(), 0, this.parameters, 0, this.parameters.length - 1);
+    			final String[] methodImplDescriptorSplit = splitParametersDescriptors(this.methodImplSignature.getDescriptor());
+    			final String varargsArrayType = methodImplDescriptorSplit[methodImplDescriptorSplit.length - 1];
+    			final ClassFile varargsArrayClass = state.getClassHierarchy().loadCreateClass(varargsArrayType);
+    			final int arrayLength = numOperands().get() - actualParametersNumber;
+    			final ReferenceConcrete referenceVarargsArray = state.createArray(calc, null, calc.valInt(arrayLength), varargsArrayClass);
+    			final Array varargsArray = (Array) state.getObject(referenceVarargsArray);
+    			final int start = actualParametersNumber - 1;
+    			for (int i = 0; i < arrayLength; ++i) {
+    				varargsArray.setFast(calc.valInt(i), this.data.operands()[start + i]);
+    			}
+    			this.parameters[actualParametersNumber - 1] = referenceVarargsArray;
+    		} else {
+    			this.parameters = new Value[numOperands().get() - 1];
+    			System.arraycopy(this.data.operands(), 0, this.parameters, 0, this.parameters.length);
+    		}
 		} catch (ClassCastException e) {
 			throw new UndefinedResultException(e);
+        } catch (ClassFileNotFoundException e) {
+            //TODO should this exception wrap (or throw) a ClassNotFoundException?
+            throwNew(state, calc, NO_CLASS_DEFINITION_FOUND_ERROR);
+            exitFromAlgorithm();
+		} catch (BadClassFileVersionException e) {
+            throwNew(state, calc, UNSUPPORTED_CLASS_VERSION_ERROR);
+            exitFromAlgorithm();
+		} catch (ClassFileNotAccessibleException e) {
+            throwNew(state, calc, ILLEGAL_ACCESS_ERROR);
+            exitFromAlgorithm();
+		} catch (IncompatibleClassFileException e) {
+            throwNew(state, calc, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            exitFromAlgorithm();
+		} catch (HeapMemoryExhaustedException e) {
+            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
+            exitFromAlgorithm();
+		} catch (ClassFileIllFormedException e) {
+            //TODO is it ok?
+            throwVerifyError(state, calc);
+            exitFromAlgorithm();
+        } catch (MethodNotFoundException | FastArrayAccessNotAllowedException | 
+        		InvalidTypeException | WrongClassNameException e) {
+           	//this should never happen
+           	failExecution(e);
 		}
 	}
 

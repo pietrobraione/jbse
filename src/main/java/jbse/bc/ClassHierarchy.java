@@ -247,15 +247,15 @@ public final class ClassHierarchy implements Cloneable {
     throws InvalidInputException {
         //Note that initialization put all the following 
         //standard classes in the loaded class cache
-        final ClassFile cf_JAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT);
+        final ClassFile cf_JAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT); //surely loaded
         if (cf_JAVA_OBJECT == null) {
             throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".createClassFileArray was unable to find standard class java.lang.Object.");
         }
-        final ClassFile cf_JAVA_CLONEABLE = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLONEABLE);
+        final ClassFile cf_JAVA_CLONEABLE = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLONEABLE); //surely loaded
         if (cf_JAVA_CLONEABLE == null) {
             throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".createClassFileArray was unable to find standard class java.lang.Cloneable.");
         } 
-        final ClassFile cf_JAVA_SERIALIZABLE = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_SERIALIZABLE);
+        final ClassFile cf_JAVA_SERIALIZABLE = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_SERIALIZABLE); //surely loaded
         if (cf_JAVA_SERIALIZABLE == null) {
             throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".createClassFileArrays was unable to find standard class java.lang.Cloneable.");
         }
@@ -1274,7 +1274,7 @@ public final class ClassHierarchy implements Cloneable {
         //the previous code does not do in the case of interfaces
         //(JVMS v8, section 5.4.3.4 step 3)
         if (accessed == null && isInterface) {
-            final ClassFile cfJAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT);
+            final ClassFile cfJAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT); //surely loaded
             if (cfJAVA_OBJECT == null) {
                 throw new InvalidInputException("Invoked " + this.getClass().getName() + ".resolveMethod before the class java.lang.Object were loaded.");
             }
@@ -1712,7 +1712,7 @@ public final class ClassHierarchy implements Cloneable {
 
         		//step 3
         		if (retVal == null && c.isInterface()) {
-        			final ClassFile cf_JAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT);
+        			final ClassFile cf_JAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT); //surely loaded
         			if (cf_JAVA_OBJECT == null) {
         				throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".lookupMethodImplSpecial was unable to find standard class java.lang.Object.");
         			}
@@ -1839,15 +1839,15 @@ public final class ClassHierarchy implements Cloneable {
      *         compatible with {@code target}.
      */
     public boolean isAssignmentCompatible(ClassFile source, ClassFile target) {       
-        final ClassFile cf_JAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT);
+        final ClassFile cf_JAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT); //surely loaded
         if (cf_JAVA_OBJECT == null) {
             throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".createClassFileArray was unable to find standard class java.lang.Object.");
         }
-        final ClassFile cf_JAVA_CLONEABLE = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLONEABLE);
+        final ClassFile cf_JAVA_CLONEABLE = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLONEABLE); //surely loaded
         if (cf_JAVA_CLONEABLE == null) {
             throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".createClassFileArray was unable to find standard class java.lang.Cloneable.");
         } 
-        final ClassFile cf_JAVA_SERIALIZABLE = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_SERIALIZABLE);
+        final ClassFile cf_JAVA_SERIALIZABLE = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_SERIALIZABLE); //surely loaded
         if (cf_JAVA_SERIALIZABLE == null) {
             throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".createClassFileArrays was unable to find standard class java.lang.Cloneable.");
         }

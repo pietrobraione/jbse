@@ -2008,7 +2008,7 @@ public final class State implements Cloneable {
     private ReferenceConcrete createInstance_JAVA_CLASS(Calculator calc, ClassFile representedClass) 
     throws HeapMemoryExhaustedException {
         try {
-            final ClassFile cf_JAVA_CLASS = this.classHierarchy.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLASS);
+            final ClassFile cf_JAVA_CLASS = this.classHierarchy.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLASS); //surely loaded
             if (cf_JAVA_CLASS == null) {
                 throw new UnexpectedInternalException("Could not find the classfile for java.lang.Class.");
             }
@@ -2378,7 +2378,7 @@ public final class State implements Cloneable {
         try {
             final ReferenceConcrete value = createArrayOfChars(calc, stringLit);
             final Simplex hash = calc.valInt(stringLit.hashCode());
-            final ClassFile cf_JAVA_STRING = this.classHierarchy.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING);
+            final ClassFile cf_JAVA_STRING = this.classHierarchy.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING); //surely loaded
             if (cf_JAVA_STRING == null) {
                 throw new UnexpectedInternalException("Could not find classfile for type java.lang.String.");
             }

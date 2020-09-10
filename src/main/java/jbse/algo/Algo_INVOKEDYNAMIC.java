@@ -119,7 +119,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 				failExecution("Null reference stored in state as adapter of a call site.");
 			}
 			final Instance adapterInstance = (Instance) state.getObject(adapterReference);
-	        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME);
+	        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME); //surely loaded
 	        if (cf_JAVA_MEMBERNAME == null) {
 	        	//this should never happen
 	            failExecution("Could not find class java.lang.invoke.MemberName.");
@@ -136,7 +136,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 				failExecution("An adapter of a call site has null value for the field String name.");
 			}
 			final Instance instanceName = (Instance) state.getObject(referenceName);
-	        final ClassFile cf_JAVA_STRING = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING);
+	        final ClassFile cf_JAVA_STRING = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING); //surely loaded
 	        if (cf_JAVA_STRING == null) {
 	        	//this should never happen
 	            failExecution("Could not find class java.lang.String.");

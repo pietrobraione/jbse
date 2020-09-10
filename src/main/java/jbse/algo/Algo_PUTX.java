@@ -126,7 +126,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                         final ClassFile valueObjectType; 
                         if (valueObject == null) { 
                         	//it is a KlassPseudoReference originated by Unsafe.staticFieldBase
-                        	valueObjectType = state.getClassHierarchy().clone().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT);
+                        	valueObjectType = state.getClassHierarchy().clone().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT); //surely loaded
                         } else {
                         	valueObjectType = valueObject.getType();
                         }

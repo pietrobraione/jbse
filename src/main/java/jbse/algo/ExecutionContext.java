@@ -1157,7 +1157,7 @@ public final class ExecutionContext {
         className.equals(SUN_VERIFYTYPE) ||
         className.equals(SUN_WRAPPER_FORMAT) ||
         
-        classFile.isSubclass(hier.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_ENUM)));
+        classFile.isSubclass(hier.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_ENUM))); //surely loaded
     }
     
     private void addBasicPostInitInvariantClasses() { 
