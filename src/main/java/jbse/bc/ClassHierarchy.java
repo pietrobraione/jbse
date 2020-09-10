@@ -1139,9 +1139,10 @@ public final class ClassHierarchy implements Cloneable {
      * 
      * @param accessor a {@link ClassFile}, the accessor's class.
      * @param methodSignature the {@link Signature} of the method to be resolved.  
-     * @param isInterface {@code true} iff the method to be resolved is required to be 
-     *        an interface method (i.e., if the bytecode which triggered the resolution
-     *        is invokeinterface).
+     * @param isInterface {@code true} iff the method to be resolved is  
+     *        an interface method (our interpretation is: if the reference from
+     *        the constant pool is a CONSTANT_InterfaceMethodref rather than
+     *        a CONSTANT_Methodref).
      * @param bypassStandardLoading a {@code boolean}; if it is {@code true} and the defining classloader
      *        of {@code accessor}
      *        is either {@link ClassLoaders#CLASSLOADER_EXT CLASSLOADER_EXT} or {@link ClassLoaders#CLASSLOADER_APP CLASSLOADER_APP}, 

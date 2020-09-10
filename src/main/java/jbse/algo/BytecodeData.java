@@ -54,6 +54,7 @@ public abstract class BytecodeData {
     private Value varValue;
     private int jumpOffset;
     private int jumpTarget;
+    private boolean interfaceMethodSignature;
     private Signature signature;
     private String className;
     private char primitiveType;
@@ -338,6 +339,7 @@ public abstract class BytecodeData {
     protected final void readInterfaceMethodSignature(State state, Calculator calc, int interfaceMethodRefIndex)
     throws InterruptException, ClasspathException {
         try {
+        	this.interfaceMethodSignature = true;
             this.signature = state.getCurrentClass().getInterfaceMethodSignature(interfaceMethodRefIndex);
         } catch (InvalidIndexException e) {
             throwVerifyError(state, calc);
@@ -363,6 +365,7 @@ public abstract class BytecodeData {
     protected final void readNoninterfaceMethodSignature(State state, Calculator calc, int noninterfaceMethodRefIndex)
     throws InterruptException, ClasspathException {
         try {
+        	this.interfaceMethodSignature = false;
             this.signature = state.getCurrentClass().getMethodSignature(noninterfaceMethodRefIndex);
         } catch (InvalidIndexException e) {
             throwVerifyError(state, calc);
@@ -388,9 +391,11 @@ public abstract class BytecodeData {
     protected final void readMethodSignature(State state, Calculator calc, int methodRefIndex)
     throws InterruptException, ClasspathException {
         try {
+        	this.interfaceMethodSignature = false;
             this.signature = state.getCurrentClass().getMethodSignature(methodRefIndex);
         } catch (InvalidIndexException e1) {
             try {
+            	this.interfaceMethodSignature = true;
                 this.signature = state.getCurrentClass().getInterfaceMethodSignature(methodRefIndex);
             } catch (InvalidIndexException e) {
                 throwVerifyError(state, calc);
@@ -413,18 +418,6 @@ public abstract class BytecodeData {
         } catch (ThreadStackEmptyException e) {
             failExecution(e);
         }
-    }
-
-
-    /**
-     * Sets a method signature. Used only when
-     * we want to dispatch manually a method invocation 
-     * so we want to force the content of the data object.
-     * 
-     * @param signature a {@link Signature}.
-     */
-    protected final void setMethodSignature(Signature signature) {
-        this.signature = signature;
     }
 
     /**
@@ -617,6 +610,19 @@ public abstract class BytecodeData {
      */
     public Signature signature() {
         return this.signature;
+    }
+    
+    /**
+     * Returns whether the signature read with 
+     * {@link #readFieldSignature(State, int) readFieldSignature}, 
+     * {@link #readInterfaceMethodSignature(State, int) readInterfaceMethodSignature}, or
+     * {@link #readNoninterfaceMethodSignature(State, int) readNoninterfaceMethodSignature}
+     * was an interface method signature or not.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean interfaceMethodSignature() {
+    	return this.interfaceMethodSignature;
     }
 
     /**

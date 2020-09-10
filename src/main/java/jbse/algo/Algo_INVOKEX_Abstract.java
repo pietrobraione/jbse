@@ -95,7 +95,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             //signature with no class: skips resolution
             this.methodResolvedClass = null;
         } else {
-            this.methodResolvedClass = state.getClassHierarchy().resolveMethod(currentClass, this.data.signature(), this.isInterface, state.bypassStandardLoading());
+            this.methodResolvedClass = state.getClassHierarchy().resolveMethod(currentClass, this.data.signature(), this.data.interfaceMethodSignature(), state.bypassStandardLoading());
         }
     }
     
