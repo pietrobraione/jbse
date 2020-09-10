@@ -50,6 +50,7 @@ import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_CLONE;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_GETCLASS;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_HASHCODE;
 import static jbse.algo.Overrides.ALGO_JAVA_PACKAGE_GETSYSTEMPACKAGE0;
+import static jbse.algo.Overrides.ALGO_JAVA_PROCESSENVIRONMENT_ENVIRON;
 import static jbse.algo.Overrides.ALGO_JAVA_REFLECT_ARRAY_NEWARRAY;
 import static jbse.algo.Overrides.ALGO_JAVA_STRING_HASHCODE;
 import static jbse.algo.Overrides.ALGO_JAVA_STRING_INTERN;
@@ -275,6 +276,8 @@ import static jbse.bc.Signatures.JAVA_OBJECT_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_OPTIONAL;
 import static jbse.bc.Signatures.JAVA_PACKAGE_GETSYSTEMPACKAGE0;
 import static jbse.bc.Signatures.JAVA_PATTERN;
+import static jbse.bc.Signatures.JAVA_PROCESSENVIRONMENT;
+import static jbse.bc.Signatures.JAVA_PROCESSENVIRONMENT_ENVIRON;
 import static jbse.bc.Signatures.JAVA_REFLECT_ARRAY_NEWARRAY;
 import static jbse.bc.Signatures.JAVA_RUNTIME_AVAILABLEPROCESSORS;
 import static jbse.bc.Signatures.JAVA_SHORT;
@@ -741,6 +744,7 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_OBJECT_NOTIFYALL,                              ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(JAVA_OBJECT_REGISTERNATIVES,                        ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(JAVA_PACKAGE_GETSYSTEMPACKAGE0,                     ALGO_JAVA_PACKAGE_GETSYSTEMPACKAGE0);
+            addMetaOverridden(JAVA_PROCESSENVIRONMENT_ENVIRON,                    ALGO_JAVA_PROCESSENVIRONMENT_ENVIRON);
             addMetaOverridden(JAVA_REFLECT_ARRAY_NEWARRAY,                        ALGO_JAVA_REFLECT_ARRAY_NEWARRAY);
             addBaseOverridden(JAVA_RUNTIME_AVAILABLEPROCESSORS,                   BASE_JAVA_RUNTIME_AVAILABLEPROCESSORS);
             addMetaOverridden(JAVA_STRICTMATH_ACOS,                               ALGO_INVOKEMETA_METACIRCULAR);
@@ -1171,6 +1175,7 @@ public final class ExecutionContext {
     	addPostInitInvariantClassName(JAVA_METHODHANDLES); //can be considered as it were pure (all final except ZERO_MHS and IDENTITY_MHS that are caches) 
     	addPostInitInvariantClassName(JAVA_METHODHANDLES_LOOKUP); //can be considered as it were pure (all final including PUBLIC_LOOKUP and IMPL_LOOKUP that are instances of Lookup - that is immutable - and except LOOKASIDE_TABLE, that seems to be a sort of cache) 
     	addPostInitInvariantClassName(JAVA_METHODTYPE); //can be considered as it were pure (all final except internTable and objectOnlyTypes that are caches) 
+    	addPostInitInvariantClassName(JAVA_PROCESSENVIRONMENT); //necessary for bootstrapping of invokedynamic-related stuff 
     	addPostInitInvariantClassName(JAVA_SIMPLEMETHODHANDLE); //necessary for method handles
         //addPostInitInvariantClassName(SUN_LAUNCHERHELPER); //necessary to JVM bootstrap (is it really?)
         addPostInitInvariantClassName(SUN_UNIXPATH); //necessary to invokedynamic

@@ -119,6 +119,7 @@ public final class Signatures {
     public static final String JAVA_PRINTSTREAM              = "java/io/PrintStream";
     public static final String JAVA_PRIVILEGEDACTION         = "java/security/PrivilegedAction";
     public static final String JAVA_PRIVILEGEDEXCEPTIONACTION = "java/security/PrivilegedExceptionAction";
+    public static final String JAVA_PROCESSENVIRONMENT       = "java/lang/ProcessEnvironment";
     public static final String JAVA_PROPERTIES               = "java/util/Properties";
     public static final String JAVA_PROTECTIONDOMAIN         = "java/security/ProtectionDomain";
     public static final String JAVA_REFERENCE                = "java/lang/ref/Reference";
@@ -421,6 +422,8 @@ public final class Signatures {
         new Signature(JAVA_OBJECT, "()" + VOID, "registerNatives");
     public static final Signature JAVA_PACKAGE_GETSYSTEMPACKAGE0 =
         new Signature(JAVA_PACKAGE, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, "getSystemPackage0");
+    public static final Signature JAVA_PROCESSENVIRONMENT_ENVIRON =
+        new Signature(JAVA_PROCESSENVIRONMENT, "()" + ARRAYOF + ARRAYOF + BYTE, "environ");
     public static final Signature JAVA_REFLECT_ARRAY_NEWARRAY =
         new Signature(JAVA_REFLECT_ARRAY, "(" + REFERENCE + JAVA_CLASS + TYPEEND + INT + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "newArray");
     public static final Signature JAVA_RUNTIME_AVAILABLEPROCESSORS = 
