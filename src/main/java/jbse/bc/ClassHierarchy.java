@@ -1605,29 +1605,37 @@ public final class ClassHierarchy implements Cloneable {
         ClassFile retVal = null;
         
         try {
-            //step 1 and 2
-            for (ClassFile f : receiverClass.superclasses()) {
-                if (f.hasMethodDeclaration(methodSignature) && !f.isMethodStatic(methodSignature)) {
-                    retVal = f;
-                    
-                    //third run-time exception
-                    if (!retVal.isMethodPublic(methodSignature)) {
-                        throw new MethodNotAccessibleException(methodSignature.toString());
-                    }
+            //step 1
+        	if (receiverClass.hasMethodDeclaration(methodSignature) && !receiverClass.isMethodStatic(methodSignature)) {
+        		retVal = receiverClass;
+        		
+        		//third run-time exception
+        		if (!retVal.isMethodPublic(methodSignature)) {
+        			throw new MethodNotAccessibleException(methodSignature.toString());
+        		}
 
-                    //fourth run-time exception
-                    if (retVal.isMethodAbstract(methodSignature)) {
-                        throw new MethodAbstractException(methodSignature.toString());
-                    }
-                    
-                    break;
-                }
-            }
+        		//fourth run-time exception
+        		if (retVal.isMethodAbstract(methodSignature)) {
+        			throw new MethodAbstractException(methodSignature.toString());
+        		}
+        	}
+        	
+        	//step 2
+        	if (retVal == null) {
+        		final ClassFile receiverClassSuperclass = receiverClass.getSuperclass();
+        		if (receiverClassSuperclass != null) {
+        			try { 
+        				retVal = lookupMethodImplInterface(receiverClassSuperclass, resolutionClass, methodSignature);
+        			} catch (MethodAbstractException e) {
+        				retVal = null;
+        			}
+        		}
+        	}
 
             //step 3
             if (retVal == null) {
                 final Set<ClassFile> nonabstractMaxSpecMethods = 
-                    maximallySpecificSuperinterfaceMethods(resolutionClass, methodSignature, true);
+                    maximallySpecificSuperinterfaceMethods(receiverClass, methodSignature, true);
                 if (nonabstractMaxSpecMethods.size() == 0) {
                     //sixth run-time exception
                     throw new MethodAbstractException(methodSignature.toString());
@@ -1793,21 +1801,39 @@ public final class ClassHierarchy implements Cloneable {
         } else {
             ClassFile retVal = null;
             
-            //step 1 and 2
-            for (ClassFile f : receiverClass.superclasses()) {
-                if (f.hasMethodDeclaration(methodSignature) && !f.isMethodStatic(methodSignature)) {
-                    if (overrides(f, resolutionClass, methodSignature, methodSignature)) {
-                        retVal = f;
+            //step 1
+            if (receiverClass.hasMethodDeclaration(methodSignature) && !receiverClass.isMethodStatic(methodSignature)) {
+                if (overrides(receiverClass, resolutionClass, methodSignature, methodSignature)) {
+                    retVal = receiverClass;
 
-                        //third run-time exception
-                        if (retVal.isMethodAbstract(methodSignature)) {
-                            throw new MethodAbstractException(methodSignature.toString());
-                        }
-
-                        break;
+                    //third run-time exception
+                    if (retVal.isMethodAbstract(methodSignature)) {
+                        throw new MethodAbstractException(methodSignature.toString());
                     }
                 }
             }
+            
+            //step 2
+        	if (retVal == null) {
+        		final ClassFile receiverClassSuperclass = receiverClass.getSuperclass();
+        		if (receiverClassSuperclass != null) {
+        			for (ClassFile f : receiverClassSuperclass.superclasses()) {
+        	            if (f.hasMethodDeclaration(methodSignature) && !f.isMethodStatic(methodSignature)) {
+        	            	if (overrides(f, resolutionClass, methodSignature, methodSignature)) {
+        	            		retVal = f;
+
+        	            		//third run-time exception
+        	            		if (retVal.isMethodAbstract(methodSignature)) {
+        	            			throw new MethodAbstractException(methodSignature.toString());
+        	            		}
+
+        	            		break;
+        	            	}
+        	            }
+        			}
+        		}
+        	}
+
 
             //step 3
             if (retVal == null) {

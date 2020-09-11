@@ -1114,7 +1114,6 @@ public final class Util {
         } else { //invokevirtual
             retVal = hier.lookupMethodImplVirtual(receiverClass, resolutionClass, methodSignature);
         }
-        //TODO invokedynamic
         return retVal;
     }
 
