@@ -9,6 +9,7 @@ import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETDECLAREDFIELDS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETDECLAREDMETHODS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETDECLARINGCLASS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETENCLOSINGMETHOD0;
+import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETINTERFACES0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETMODIFIERS;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETNAME0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETPRIMITIVECLASS;
@@ -181,6 +182,7 @@ import static jbse.bc.Signatures.JAVA_CLASS_GETDECLAREDFIELDS0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETDECLAREDMETHODS0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETDECLARINGCLASS0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETENCLOSINGMETHOD0;
+import static jbse.bc.Signatures.JAVA_CLASS_GETINTERFACES0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETMODIFIERS;
 import static jbse.bc.Signatures.JAVA_CLASS_GETNAME0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETPRIMITIVECLASS;
@@ -213,6 +215,8 @@ import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_LAZY;
 import static jbse.bc.Signatures.JAVA_DOUBLE_DOUBLETORAWLONGBITS;
 import static jbse.bc.Signatures.JAVA_DOUBLE_LONGBITSTODOUBLE;
 import static jbse.bc.Signatures.JAVA_ENUM;
+import static jbse.bc.Signatures.JAVA_ENUMMAP;
+import static jbse.bc.Signatures.JAVA_ENUMSET;
 import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR_INITIDS;
 import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR_SET;
 import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM_INITIDS;
@@ -688,6 +692,7 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_CLASS_GETDECLAREDMETHODS0,                     ALGO_JAVA_CLASS_GETDECLAREDMETHODS0);
             addMetaOverridden(JAVA_CLASS_GETDECLARINGCLASS0,                      ALGO_JAVA_CLASS_GETDECLARINGCLASS0);
             addMetaOverridden(JAVA_CLASS_GETENCLOSINGMETHOD0,                     ALGO_JAVA_CLASS_GETENCLOSINGMETHOD0);
+            addMetaOverridden(JAVA_CLASS_GETINTERFACES0,                          ALGO_JAVA_CLASS_GETINTERFACES0);
             addMetaOverridden(JAVA_CLASS_GETMODIFIERS,                            ALGO_JAVA_CLASS_GETMODIFIERS);
             addMetaOverridden(JAVA_CLASS_GETNAME0,                                ALGO_JAVA_CLASS_GETNAME0);
             addMetaOverridden(JAVA_CLASS_GETPRIMITIVECLASS,                       ALGO_JAVA_CLASS_GETPRIMITIVECLASS);
@@ -1108,6 +1113,8 @@ public final class ExecutionContext {
         className.equals(JAVA_DIRECTMETHODHANDLE_ENSUREINITIALIZED) ||
         className.equals(JAVA_DIRECTMETHODHANDLE_LAZY) || //apparently
         className.equals(JAVA_DIRECTLONGBUFFERU) || 
+        className.equals(JAVA_ENUMMAP) || 
+        className.equals(JAVA_ENUMSET) || 
         className.equals(JAVA_FILEPERMISSION) || //apparently 
         className.equals(JAVA_IDENTITYHASHMAP) || 
         className.equals(JAVA_INFLATER) ||

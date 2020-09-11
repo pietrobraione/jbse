@@ -62,6 +62,8 @@ public final class Signatures {
     public static final String JAVA_DIRECTMETHODHANDLE_LAZY  = "java/lang/invoke/DirectMethodHandle$Lazy";
     public static final String JAVA_DOUBLE                   = "java/lang/Double";
     public static final String JAVA_ENUM                     = "java/lang/Enum";
+    public static final String JAVA_ENUMMAP                  = "java/util/EnumMap";
+    public static final String JAVA_ENUMSET                  = "java/util/EnumSet";
     public static final String JAVA_EXECUTABLE               = "java/lang/reflect/Executable";
     public static final String JAVA_FIELD                    = "java/lang/reflect/Field";
     public static final String JAVA_FILE                     = "java/io/File";
@@ -266,6 +268,8 @@ public final class Signatures {
         new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getDeclaringClass0");
     public static final Signature JAVA_CLASS_GETENCLOSINGMETHOD0 =
         new Signature(JAVA_CLASS, "()" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND, "getEnclosingMethod0");
+    public static final Signature JAVA_CLASS_GETINTERFACES0 =
+        new Signature(JAVA_CLASS, "()" + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND, "getInterfaces0");
     public static final Signature JAVA_CLASS_GETMODIFIERS =
         new Signature(JAVA_CLASS, "()" + INT, "getModifiers");
     public static final Signature JAVA_CLASS_GETNAME0 =

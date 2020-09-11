@@ -43,6 +43,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_CLASS_GETDECLAREDMETHODS0                 = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETDECLAREDMETHODS0.class.getName());
     public static final String ALGO_JAVA_CLASS_GETDECLARINGCLASS0                  = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETDECLARINGCLASS0.class.getName());
     public static final String ALGO_JAVA_CLASS_GETENCLOSINGMETHOD0                 = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETENCLOSINGMETHOD0.class.getName());
+    public static final String ALGO_JAVA_CLASS_GETINTERFACES0                      = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETINTERFACES0.class.getName());
     public static final String ALGO_JAVA_CLASS_GETMODIFIERS                        = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETMODIFIERS.class.getName());
     public static final String ALGO_JAVA_CLASS_GETNAME0                            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETNAME0.class.getName());
     public static final String ALGO_JAVA_CLASS_GETPRIMITIVECLASS                   = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETPRIMITIVECLASS.class.getName());
