@@ -1682,11 +1682,18 @@ public final class ClassHierarchy implements Cloneable {
         	//determines whether should start looking for the implementation in 
         	//the superclass of the current class (virtual semantics, for super 
         	//calls) or in the class of the resolved method (nonvirtual semantics, 
-        	//for <init> and private methods)
+        	//for <init> and private methods).
+        	//N.B. here we use the specification as described in the JVMS v.12 and
+        	//following ("The symbolic reference names a class (not an interface),
+        	//and that class is a superclass of the current class") rather than 
+        	//that of the JVMS v.8 to v.11 ("If the symbolic reference names a class 
+        	//(not an interface), then that class is a superclass of the current class")
+        	//because the former seems to be the correct one and the latter to be
+        	//a mistake.
         	final boolean useVirtualSemantics = 
         			(!"<init>".equals(methodSignature.getName()) &&
-        					(resolutionClass.isInterface() || (currentClass.getSuperclass() != null && currentClass.getSuperclass().isSubclass(resolutionClass))) && 
-        					currentClass.isSuperInvoke());
+        			(!resolutionClass.isInterface() && currentClass.getSuperclass() != null && currentClass.getSuperclass().isSubclass(resolutionClass)) && 
+        			currentClass.isSuperInvoke());
         	final ClassFile c = (useVirtualSemantics ? currentClass.getSuperclass() : resolutionClass);
         	if (c == null) {
         		throw new InvalidInputException("Invoked " + this.getClass().getName() + ".lookupMethodImplSpecial with a virtual invocation semantics (\"super\") but currentClass has not a superclass.");
