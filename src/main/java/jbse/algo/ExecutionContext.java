@@ -156,6 +156,7 @@ import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYINDEXSCALE;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_FULLFENCE;
 import static jbse.algo.Overrides.BASE_SUN_URLCLASSPATH_GETLOOKUPCACHEURLS;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
+import static jbse.bc.Signatures.JAVA_ABSTRACTPIPELINE;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_1;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_2;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION_1;
@@ -163,6 +164,7 @@ import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION_
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT;
 import static jbse.bc.Signatures.JAVA_ARRAYDEQUE;
 import static jbse.bc.Signatures.JAVA_ARRAYLIST;
+import static jbse.bc.Signatures.JAVA_ARRAYS_LEGACYMERGESORT;
 import static jbse.bc.Signatures.JAVA_ATOMICLONG_VMSUPPORTSCS8;
 import static jbse.bc.Signatures.JAVA_ATTRIBUTES_NAME;
 import static jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE;
@@ -210,6 +212,7 @@ import static jbse.bc.Signatures.JAVA_DELEGATINGMETHODHANDLE;
 import static jbse.bc.Signatures.JAVA_DIRECTBYTEBUFFER;
 import static jbse.bc.Signatures.JAVA_DIRECTLONGBUFFERU;
 import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE;
+import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_CONSTRUCTOR;
 import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_ENSUREINITIALIZED;
 import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_LAZY;
 import static jbse.bc.Signatures.JAVA_DOUBLE_DOUBLETORAWLONGBITS;
@@ -228,6 +231,7 @@ import static jbse.bc.Signatures.JAVA_FILEOUTPUTSTREAM_INITIDS;
 import static jbse.bc.Signatures.JAVA_FILEOUTPUTSTREAM_WRITEBYTES;
 import static jbse.bc.Signatures.JAVA_FILEPERMISSION;
 import static jbse.bc.Signatures.JAVA_FLOAT_FLOATTORAWINTBITS;
+import static jbse.bc.Signatures.JAVA_HASHSET;
 import static jbse.bc.Signatures.JAVA_IDENTITYHASHMAP;
 import static jbse.bc.Signatures.JAVA_INFLATER;
 import static jbse.bc.Signatures.JAVA_INFLATER_END;
@@ -282,6 +286,8 @@ import static jbse.bc.Signatures.JAVA_PACKAGE_GETSYSTEMPACKAGE0;
 import static jbse.bc.Signatures.JAVA_PATTERN;
 import static jbse.bc.Signatures.JAVA_PROCESSENVIRONMENT;
 import static jbse.bc.Signatures.JAVA_PROCESSENVIRONMENT_ENVIRON;
+import static jbse.bc.Signatures.JAVA_REFERENCEPIPELINE_STATEFULOP;
+import static jbse.bc.Signatures.JAVA_REFERENCEPIPELINE_STATELESSOP;
 import static jbse.bc.Signatures.JAVA_REFLECT_ARRAY_NEWARRAY;
 import static jbse.bc.Signatures.JAVA_RUNTIME_AVAILABLEPROCESSORS;
 import static jbse.bc.Signatures.JAVA_SHORT;
@@ -336,6 +342,7 @@ import static jbse.bc.Signatures.JAVA_THROWABLE_FILLINSTACKTRACE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEDEPTH;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEELEMENT;
 import static jbse.bc.Signatures.JAVA_THROWABLE_SENTINELHOLDER;
+import static jbse.bc.Signatures.JAVA_TIMSORT;
 import static jbse.bc.Signatures.JAVA_TREESET;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_CANONICALIZE0;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_CHECKACCESS;
@@ -1099,8 +1106,10 @@ public final class ExecutionContext {
     	}
         final String className = classFile.getClassName();
         return (
+        className.equals(JAVA_ABSTRACTPIPELINE) ||
         className.equals(JAVA_ARRAYDEQUE) ||
         className.equals(JAVA_ARRAYLIST) ||
+        className.equals(JAVA_ARRAYS_LEGACYMERGESORT) ||
         className.equals(JAVA_ATTRIBUTES_NAME) ||
         className.equals(JAVA_BYTE_BYTECACHE) ||
         className.equals(JAVA_CALLSITE) ||
@@ -1110,12 +1119,14 @@ public final class ExecutionContext {
         className.equals(JAVA_COLLECTIONS_COPIESLIST) ||
         className.equals(JAVA_DELEGATINGMETHODHANDLE) ||
         className.equals(JAVA_DIRECTBYTEBUFFER) ||
+        className.equals(JAVA_DIRECTMETHODHANDLE_CONSTRUCTOR) ||
         className.equals(JAVA_DIRECTMETHODHANDLE_ENSUREINITIALIZED) ||
         className.equals(JAVA_DIRECTMETHODHANDLE_LAZY) || //apparently
         className.equals(JAVA_DIRECTLONGBUFFERU) || 
         className.equals(JAVA_ENUMMAP) || 
         className.equals(JAVA_ENUMSET) || 
         className.equals(JAVA_FILEPERMISSION) || //apparently 
+        className.equals(JAVA_HASHSET) || 
         className.equals(JAVA_IDENTITYHASHMAP) || 
         className.equals(JAVA_INFLATER) ||
         className.equals(JAVA_INFOFROMMEMBERNAME) || 
@@ -1139,9 +1150,12 @@ public final class ExecutionContext {
         className.equals(JAVA_METHODTYPEFORM) || 
         className.equals(JAVA_OPTIONAL) || 
         className.equals(JAVA_PATTERN) || 
+        className.equals(JAVA_REFERENCEPIPELINE_STATEFULOP) || 
+        className.equals(JAVA_REFERENCEPIPELINE_STATELESSOP) || 
         className.equals(JAVA_SHORT) || 
         className.equals(JAVA_SHORT_SHORTCACHE) || 
         className.equals(JAVA_STANDARDCHARSETS) || 
+        className.equals(JAVA_TIMSORT) ||
         className.equals(JAVA_TREESET) ||
         className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
         className.equals(JAVA_URI) || 

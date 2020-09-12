@@ -22,12 +22,14 @@ import static jbse.common.Type.VOID;
  */
 public final class Signatures {
     //classes and interfaces
+    public static final String JAVA_ABSTRACTPIPELINE         = "java/util/stream/AbstractPipeline";
     public static final String JAVA_ACCESSCONTROLCONTEXT     = "java/security/AccessControlContext";
     public static final String JAVA_ACCESSCONTROLLER         = "java/security/AccessController";
     public static final String JAVA_ACCESSIBLEOBJECT         = "java/lang/reflect/AccessibleObject";
     public static final String JAVA_ANNOTATEDELEMENT         = "java/lang/reflect/AnnotatedElement";
     public static final String JAVA_ARRAYDEQUE               = "java/util/ArrayDeque";
     public static final String JAVA_ARRAYLIST                = "java/util/ArrayList";
+    public static final String JAVA_ARRAYS_LEGACYMERGESORT   = "java/util/Arrays$LegacyMergeSort";
     public static final String JAVA_ATOMICLONG               = "java/util/concurrent/atomic/AtomicLong";
     public static final String JAVA_ATTRIBUTES_NAME          = "java/util/jar/Attributes$Name";
     public static final String JAVA_BITS                     = "java/nio/Bits";
@@ -58,6 +60,7 @@ public final class Signatures {
     public static final String JAVA_DIRECTBYTEBUFFER         = "java/nio/DirectByteBuffer";
     public static final String JAVA_DIRECTLONGBUFFERU        = "java/nio/DirectLongBufferU";
     public static final String JAVA_DIRECTMETHODHANDLE       = "java/lang/invoke/DirectMethodHandle";
+    public static final String JAVA_DIRECTMETHODHANDLE_CONSTRUCTOR = "java/lang/invoke/DirectMethodHandle$Constructor";
     public static final String JAVA_DIRECTMETHODHANDLE_ENSUREINITIALIZED = "java/lang/invoke/DirectMethodHandle$EnsureInitialized";
     public static final String JAVA_DIRECTMETHODHANDLE_LAZY  = "java/lang/invoke/DirectMethodHandle$Lazy";
     public static final String JAVA_DOUBLE                   = "java/lang/Double";
@@ -76,6 +79,7 @@ public final class Signatures {
     public static final String JAVA_FLOAT                    = "java/lang/Float";
     public static final String JAVA_GENERICDECLARATION       = "java/lang/reflect/GenericDeclaration";
     public static final String JAVA_HASHMAP                  = "java/util/HashMap";
+    public static final String JAVA_HASHSET                  = "java/util/HashSet";
     public static final String JAVA_IDENTITYHASHMAP          = "java/util/IdentityHashMap";
     public static final String JAVA_INNERCLASSLAMBDAMETAFACTORY = "java/lang/invoke/InnerClassLambdaMetafactory";
     public static final String JAVA_INPUTSTREAM              = "java/io/InputStream";
@@ -125,6 +129,8 @@ public final class Signatures {
     public static final String JAVA_PROPERTIES               = "java/util/Properties";
     public static final String JAVA_PROTECTIONDOMAIN         = "java/security/ProtectionDomain";
     public static final String JAVA_REFERENCE                = "java/lang/ref/Reference";
+    public static final String JAVA_REFERENCEPIPELINE_STATEFULOP  = "java/util/stream/ReferencePipeline$StatefulOp";
+    public static final String JAVA_REFERENCEPIPELINE_STATELESSOP = "java/util/stream/ReferencePipeline$StatelessOp";
     public static final String JAVA_REFLECT_ARRAY            = "java/lang/reflect/Array";
     public static final String JAVA_RUNNABLE                 = "java/lang/Runnable";
     public static final String JAVA_RUNTIME                  = "java/lang/Runtime";
@@ -144,6 +150,7 @@ public final class Signatures {
     public static final String JAVA_THREADGROUP              = "java/lang/ThreadGroup";
     public static final String JAVA_THROWABLE                = "java/lang/Throwable";
     public static final String JAVA_THROWABLE_SENTINELHOLDER = "java/lang/Throwable$SentinelHolder";
+    public static final String JAVA_TIMSORT                  = "java/util/TimSort";
     public static final String JAVA_TREESET                  = "java/util/TreeSet";
     public static final String JAVA_TYPE                     = "java/lang/reflect/Type";
     public static final String JAVA_UNIXFILESYSTEM           = "java/io/UnixFileSystem";
