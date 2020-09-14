@@ -205,24 +205,6 @@ public final class ClassFileArray extends ClassFile {
     }    
 
     @Override
-    public int getCodeLength(Signature methodSignature)
-    throws MethodNotFoundException, MethodCodeNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return METHOD_CLONE_BYTECODE.length;
-        }
-        throw new MethodNotFoundException(methodSignature.toString());
-    }
-
-    @Override
-    public ExceptionTable getExceptionTable(Signature methodSignature)
-    throws MethodNotFoundException, MethodCodeNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return METHOD_CLONE_EXCEPTIONTABLE;
-        }
-        throw new MethodNotFoundException(methodSignature.toString());
-    }
-
-    @Override
     public Signature getFieldSignature(int fieldRef)
     throws InvalidIndexException {
         throw new InvalidIndexException(NO_CONSTANT_POOL);
@@ -253,12 +235,39 @@ public final class ClassFileArray extends ClassFile {
     throws InvalidIndexException {
         throw new InvalidIndexException(NO_CONSTANT_POOL);
     }
+    
+    @Override
+    public ParameterInfo[] getMethodParameters(Signature methodSignature) 
+    throws MethodNotFoundException {
+        if (isMethodClone(methodSignature)) {
+            return null;
+        }
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
 
     @Override
-    public int getLocalVariableLength(Signature methodSignature)
+    public String[] getMethodThrownExceptions(Signature methodSignature) 
+    throws MethodNotFoundException {
+        if (isMethodClone(methodSignature)) {
+            return new String[0];
+        }
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+
+    @Override
+    public int getCodeLength(Signature methodSignature)
     throws MethodNotFoundException, MethodCodeNotFoundException {
         if (isMethodClone(methodSignature)) {
-            return 2;
+            return METHOD_CLONE_BYTECODE.length;
+        }
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+
+    @Override
+    public ExceptionTable getExceptionTable(Signature methodSignature)
+    throws MethodNotFoundException, MethodCodeNotFoundException {
+        if (isMethodClone(methodSignature)) {
+            return METHOD_CLONE_EXCEPTIONTABLE;
         }
         throw new MethodNotFoundException(methodSignature.toString());
     }
@@ -277,6 +286,24 @@ public final class ClassFileArray extends ClassFile {
     throws MethodNotFoundException {
         if (isMethodClone(methodSignature)) {
             return new LocalVariableTable(0);
+        }
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+
+    @Override
+    public int getLocalVariableTableLength(Signature methodSignature)
+    throws MethodNotFoundException, MethodCodeNotFoundException {
+        if (isMethodClone(methodSignature)) {
+            return 2;
+        }
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+
+    @Override
+    public LineNumberTable getLineNumberTable(Signature methodSignature) 
+    throws MethodNotFoundException, MethodCodeNotFoundException {
+        if (isMethodClone(methodSignature)) {
+            return defaultLineNumberTable();
         }
         throw new MethodNotFoundException(methodSignature.toString());
     }
@@ -455,15 +482,6 @@ public final class ClassFileArray extends ClassFile {
     }
 
     @Override
-    public String[] getMethodThrownExceptions(Signature methodSignature) 
-    throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return new String[0];
-        }
-        throw new MethodNotFoundException(methodSignature.toString());
-    }
-
-    @Override
     public boolean isMethodStatic(Signature methodSignature) throws MethodNotFoundException {
         if (isMethodClone(methodSignature)) {
             return false;
@@ -562,15 +580,6 @@ public final class ClassFileArray extends ClassFile {
     @Override
     public boolean hasFieldDeclaration(Signature fieldSignature) {
         return false;
-    }
-
-    @Override
-    public LineNumberTable getLineNumberTable(Signature methodSignature) 
-    throws MethodNotFoundException, MethodCodeNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return defaultLineNumberTable();
-        }
-        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override

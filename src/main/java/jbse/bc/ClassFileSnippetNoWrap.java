@@ -304,9 +304,16 @@ public class ClassFileSnippetNoWrap extends ClassFile {
     throws MethodNotFoundException {
     	throw new MethodNotFoundException(methodSignature.toString());
     }
+    
+    @Override
+    public ParameterInfo[] getMethodParameters(Signature methodSignature) 
+    throws MethodNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
 
     @Override
-    public String[] getMethodThrownExceptions(Signature methodSignature) throws MethodNotFoundException {
+    public String[] getMethodThrownExceptions(Signature methodSignature) 
+    throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
@@ -493,7 +500,7 @@ public class ClassFileSnippetNoWrap extends ClassFile {
     }
 
     @Override
-    public int getLocalVariableLength(Signature methodSignature)
+    public int getLocalVariableTableLength(Signature methodSignature)
     throws MethodNotFoundException, MethodCodeNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
     }

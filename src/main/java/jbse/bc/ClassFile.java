@@ -674,6 +674,21 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     throws MethodNotFoundException;
     
     /**
+     * Given the signature of a method, returns the information on its 
+     * parameters according to the associated {@code MethodParameters_attribute}. 
+     * 
+     * @param methodSignature a method's {@link Signature}.
+     * @return a {@link ParameterInfo}{@code []}. The order of the parameters 
+     *         is the same as that in {@code method signature}. If the method
+     *         has an implicit {@code this} parameter, its {@link ParameterInfo}
+     *         has position {@code 0}. If {@code methodSignature} has no associated 
+     *         {@code MethodParameters_attribute} this method returns {@code null}.
+     * @throws MethodNotFoundException iff the method does not exist in the class.
+     */
+    public abstract ParameterInfo[] getMethodParameters(Signature methodSignature)
+    throws MethodNotFoundException;
+
+    /**
      * Returns the list of the exception that a method declares to throw.
      * 
      * @param methodSignature the {@link Signature} of a method.
@@ -741,21 +756,6 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     throws MethodNotFoundException, MethodCodeNotFoundException;    
 
     /**
-     * Returns a method's {@link LineNumberTable}. 
-     * 
-     * @param methodSignature a method's {@link Signature}.
-     * @return the {@link LineNumberTable} for the method with signature {@code methodSignature}.
-     *         If {@code methodSignature}'s name is signature polymorphic in this 
-     *         class the method must succeed for all the polymorphic variants of the
-     *         signature and return the {@link LineNumberTable} for the 
-     *         {@code (Object...)Object} declared variant.
-     * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
-     * @throws MethodCodeNotFoundException iff the method has not the Code attribute.
-     */
-    public abstract LineNumberTable getLineNumberTable(Signature methodSignature) 
-    throws MethodNotFoundException, MethodCodeNotFoundException;    
-
-    /**
      * Returns the length of the local variable table of a method.
      * 
      * @param methodSignature a method's {@link Signature}.
@@ -771,8 +771,33 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * @throws MethodCodeNotFoundException iff the method has not the 
      *         Code attribute.
      */
-    public abstract int getLocalVariableLength(Signature methodSignature) 
+    public abstract int getLocalVariableTableLength(Signature methodSignature) 
     throws MethodNotFoundException, MethodCodeNotFoundException;
+    
+    public static class ParameterInfo {
+    	public final String name;
+    	public final int accessFlags;
+    	
+    	public ParameterInfo(String name, int accessFlags) {
+    		this.name = name;
+    		this.accessFlags = accessFlags;
+    	}
+    }
+    
+    /**
+     * Returns a method's {@link LineNumberTable}. 
+     * 
+     * @param methodSignature a method's {@link Signature}.
+     * @return the {@link LineNumberTable} for the method with signature {@code methodSignature}.
+     *         If {@code methodSignature}'s name is signature polymorphic in this 
+     *         class the method must succeed for all the polymorphic variants of the
+     *         signature and return the {@link LineNumberTable} for the 
+     *         {@code (Object...)Object} declared variant.
+     * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
+     * @throws MethodCodeNotFoundException iff the method has not the Code attribute.
+     */
+    public abstract LineNumberTable getLineNumberTable(Signature methodSignature) 
+    throws MethodNotFoundException, MethodCodeNotFoundException;    
 
     /**
      * Returns the length of the bytecode of a method.
@@ -808,7 +833,7 @@ public abstract class ClassFile implements Comparable<ClassFile> {
         //variable table from information on the method's signature
         boolean isStatic = isMethodStatic(methodSignature);
         final String[] parDescList = splitParametersDescriptors(methodSignature.getDescriptor());
-        final LocalVariableTable lvt = new LocalVariableTable(getLocalVariableLength(methodSignature));
+        final LocalVariableTable lvt = new LocalVariableTable(getLocalVariableTableLength(methodSignature));
         int i = 0;
         short slot = 0;
         if (!isStatic) {

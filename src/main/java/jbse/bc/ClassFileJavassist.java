@@ -53,6 +53,7 @@ import javassist.bytecode.LineNumberAttribute;
 import javassist.bytecode.LocalVariableAttribute;
 import javassist.bytecode.LocalVariableTypeAttribute;
 import javassist.bytecode.MethodInfo;
+import javassist.bytecode.MethodParametersAttribute;
 import javassist.bytecode.SignatureAttribute;
 import javassist.bytecode.annotation.Annotation;
 import javassist.bytecode.annotation.MemberValue;
@@ -1212,8 +1213,7 @@ public class ClassFileJavassist extends ClassFile {
         return null;
     }
     
-    @Override
-    public String[] getMethodThrownExceptions(Signature methodSignature) 
+    private MethodInfo getMethodInfo(Signature methodSignature) 
     throws MethodNotFoundException {
     	final MethodInfo m;
     	if (hasOneSignaturePolymorphicMethodDeclaration(methodSignature.getName())) {
@@ -1224,24 +1224,37 @@ public class ClassFileJavassist extends ClassFile {
 	            throw new MethodNotFoundException(methodSignature.toString());
 	        }
     	}
+    	return m;
+    }
+
+    public ParameterInfo[] getMethodParameters(Signature methodSignature)
+    throws MethodNotFoundException {
+    	final MethodInfo m = getMethodInfo(methodSignature);
+    	final MethodParametersAttribute p = (MethodParametersAttribute) m.getAttribute(MethodParametersAttribute.tag);
+    	if (p == null) {
+    		return null;
+    	}
+    	final ParameterInfo[] retVal = new ParameterInfo[p.length()];
+    	for (int i = 0; i < retVal.length; ++i) {
+    		retVal[i] = new ParameterInfo(this.cp.getUtf8Info(p.name(i)), p.accessFlags(i));
+    	}
+    	return retVal;
+    }
+
+    @Override
+    public String[] getMethodThrownExceptions(Signature methodSignature) 
+    throws MethodNotFoundException {
+    	final MethodInfo m = getMethodInfo(methodSignature);
         final ExceptionsAttribute exc = m.getExceptionsAttribute();
         if (exc == null) {
             return new String[0];
         }
         return Arrays.stream(exc.getExceptions()).map(Type::internalClassName).toArray(String[]::new);
     }
-
+    
     private CodeAttribute getMethodCodeAttribute(Signature methodSignature) 
     throws MethodNotFoundException, MethodCodeNotFoundException {
-    	final MethodInfo m;
-    	if (hasOneSignaturePolymorphicMethodDeclaration(methodSignature.getName())) {
-    		m = findUniqueMethodDeclarationWithName(methodSignature.getName());
-    	} else {
-	        m = findMethodDeclaration(methodSignature);
-	        if (m == null) {
-	            throw new MethodNotFoundException(methodSignature.toString());
-	        }
-    	}
+    	final MethodInfo m = getMethodInfo(methodSignature);
         final CodeAttribute ca = m.getCodeAttribute();
         if (ca == null) {
             throw new MethodCodeNotFoundException(methodSignature.toString()); 
@@ -1308,7 +1321,7 @@ public class ClassFileJavassist extends ClassFile {
     public LineNumberTable getLineNumberTable(Signature methodSignature) 
     throws MethodNotFoundException, MethodCodeNotFoundException {
         final CodeAttribute ca = getMethodCodeAttribute(methodSignature);
-        final LineNumberAttribute lnJA = (LineNumberAttribute) ca.getAttribute("LineNumberTable");
+        final LineNumberAttribute lnJA = (LineNumberAttribute) ca.getAttribute(LineNumberAttribute.tag);
 
         if (lnJA == null) {
             return defaultLineNumberTable();
@@ -1327,11 +1340,11 @@ public class ClassFileJavassist extends ClassFile {
     }
 
     @Override
-    public int getLocalVariableLength(Signature methodSignature)
+    public int getLocalVariableTableLength(Signature methodSignature)
     throws MethodNotFoundException, MethodCodeNotFoundException {
         return getMethodCodeAttribute(methodSignature).getMaxLocals();
     }
-
+    
     @Override
     public int getCodeLength(Signature methodSignature) throws MethodNotFoundException, MethodCodeNotFoundException {
         return getMethodCodeAttribute(methodSignature).getCodeLength();

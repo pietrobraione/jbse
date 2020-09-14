@@ -306,9 +306,16 @@ public class ClassFileSnippetWrap extends ClassFile {
     throws MethodNotFoundException {
     	return this.component.getMethodAnnotationParameterValueString(methodSignature, annotation, parameter);
     }
+    
+    @Override
+    public ParameterInfo[] getMethodParameters(Signature methodSignature) 
+    throws MethodNotFoundException {
+    	return this.component.getMethodParameters(methodSignature);
+    }
 
     @Override
-    public String[] getMethodThrownExceptions(Signature methodSignature) throws MethodNotFoundException {
+    public String[] getMethodThrownExceptions(Signature methodSignature) 
+    throws MethodNotFoundException {
     	return this.component.getMethodThrownExceptions(methodSignature);
     }
 
@@ -506,9 +513,9 @@ public class ClassFileSnippetWrap extends ClassFile {
     }
 
     @Override
-    public int getLocalVariableLength(Signature methodSignature)
+    public int getLocalVariableTableLength(Signature methodSignature)
     throws MethodNotFoundException, MethodCodeNotFoundException {
-    	return this.component.getLocalVariableLength(methodSignature);
+    	return this.component.getLocalVariableTableLength(methodSignature);
     }
 
     @Override

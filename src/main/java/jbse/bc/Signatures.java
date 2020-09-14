@@ -121,6 +121,7 @@ public final class Signatures {
     public static final String JAVA_OBJECT                   = "java/lang/Object";
     public static final String JAVA_OPTIONAL                 = "java/util/Optional";
     public static final String JAVA_PACKAGE                  = "java/lang/Package";
+    public static final String JAVA_PARAMETER                = "java/lang/reflect/Parameter";
     public static final String JAVA_PATTERN                  = "java/util/regex/Pattern";
     public static final String JAVA_PRINTSTREAM              = "java/io/PrintStream";
     public static final String JAVA_PRIVILEGEDACTION         = "java/security/PrivilegedAction";
@@ -329,6 +330,8 @@ public final class Signatures {
         new Signature(JAVA_DOUBLE, "(" + DOUBLE + ")" + LONG, "doubleToRawLongBits");
     public static final Signature JAVA_DOUBLE_LONGBITSTODOUBLE =
         new Signature(JAVA_DOUBLE, "(" + LONG + ")" + DOUBLE, "longBitsToDouble");
+    public static final Signature JAVA_EXECUTABLE_GETPARAMETERS0 =
+        new Signature(JAVA_EXECUTABLE, "()" + ARRAYOF + REFERENCE + JAVA_PARAMETER + TYPEEND, "getParameters0");
     public static final Signature JAVA_FILEDESCRIPTOR_INITIDS =
         new Signature(JAVA_FILEDESCRIPTOR, "()" + VOID, "initIDs");
     public static final Signature JAVA_FILEDESCRIPTOR_SET =
@@ -968,6 +971,14 @@ public final class Signatures {
         new Signature(JAVA_METHODHANDLE, "" + REFERENCE + JAVA_LAMBDAFORM + TYPEEND, "form");
     public static final Signature JAVA_METHODTYPE_METHODDESCRIPTOR = 
         new Signature(JAVA_METHODTYPE, "" + REFERENCE + JAVA_STRING + TYPEEND, "methodDescriptor");
+    public static final Signature JAVA_PARAMETER_EXECUTABLE =
+        new Signature(JAVA_PARAMETER, "" + REFERENCE + JAVA_EXECUTABLE + TYPEEND, "executable");
+    public static final Signature JAVA_PARAMETER_INDEX =
+        new Signature(JAVA_PARAMETER, "" + INT, "index");
+    public static final Signature JAVA_PARAMETER_MODIFIERS =
+        new Signature(JAVA_PARAMETER, "" + INT, "modifiers");
+    public static final Signature JAVA_PARAMETER_NAME =
+        new Signature(JAVA_PARAMETER, "" + REFERENCE + JAVA_STRING + TYPEEND, "name");
     public static final Signature JAVA_SHORT_SHORTCACHE_CACHE = 
         new Signature(JAVA_SHORT_SHORTCACHE, "" + ARRAYOF + REFERENCE + JAVA_SHORT + TYPEEND, "cache");
     public static final Signature JAVA_SHORT_VALUE = 

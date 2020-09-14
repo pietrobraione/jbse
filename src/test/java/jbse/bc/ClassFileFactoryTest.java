@@ -901,7 +901,7 @@ public class ClassFileFactoryTest {
         byte[] b = getFromJar(className);
         ClassFile c = f.newClassFileClass(0, className, b, null, null);         
         Signature sig = new Signature(className, "(Ljava/lang/Object;)V", "addFirst");
-        assertEquals(2, c.getLocalVariableLength(sig));
+        assertEquals(2, c.getLocalVariableTableLength(sig));
     }
 
     @Test(expected=MethodNotFoundException.class)
@@ -910,7 +910,7 @@ public class ClassFileFactoryTest {
         byte[] b = getFromJar(className);
         ClassFile c = f.newClassFileClass(0, className, b, null, null);         
         Signature sig = new Signature(className, "()V", "foo");
-        c.getLocalVariableLength(sig);
+        c.getLocalVariableTableLength(sig);
     }
 
     @Test(expected=MethodCodeNotFoundException.class)
@@ -919,7 +919,7 @@ public class ClassFileFactoryTest {
         byte[] b = getFromJar(className);
         ClassFile c = f.newClassFileClass(0, className, b, null, null);         
         Signature sig = new Signature(className, "(Ljava/lang/Object;)Z", "remove");
-        c.getLocalVariableLength(sig);
+        c.getLocalVariableTableLength(sig);
     }
 
     @Test

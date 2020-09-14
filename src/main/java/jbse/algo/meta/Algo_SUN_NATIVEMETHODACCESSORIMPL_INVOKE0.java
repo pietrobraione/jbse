@@ -161,10 +161,10 @@ public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKE
                 throwNew(state, calc, INTERNAL_ERROR);
                 exitFromAlgorithm();
             }
+            this.methodSignature = declaredMethods[slot];
             
             //determines the features of the method
             //TODO resolve/lookup the method ???????
-            this.methodSignature = declaredMethods[slot];
             this.isInterface = false; //TODO is it ok?
             this.isSpecial = false;   //TODO is it ok?
             this.isStatic = this.methodClassFile.isMethodStatic(this.methodSignature);
