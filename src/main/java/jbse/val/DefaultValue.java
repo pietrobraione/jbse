@@ -3,7 +3,7 @@ package jbse.val;
 import jbse.common.Type;
 
 /**
- * Class representing a default value with unknown type. 
+ * Class representing a default value for any possible (cat 1) type. 
  * Used to initialize the local variable memory area to
  * cope with absence of type information. It is a singleton.
  * 
@@ -13,7 +13,7 @@ public final class DefaultValue extends Value {
     private static DefaultValue instance = new DefaultValue();
 
     private DefaultValue() { 
-        super(Type.UNKNOWN); 
+        super(Type.KNOWN); 
     }
 
     public static DefaultValue getInstance() {
