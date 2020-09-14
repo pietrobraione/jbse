@@ -208,6 +208,7 @@ import static jbse.bc.Signatures.JAVA_CLASSLOADER_NATIVELIBRARY_LOAD;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_CLASSVALUE_CLASSVALUEMAP;
 import static jbse.bc.Signatures.JAVA_COLLECTIONS_COPIESLIST;
+import static jbse.bc.Signatures.JAVA_COLLECTORS;
 import static jbse.bc.Signatures.JAVA_CRC32_UPDATEBYTES;
 import static jbse.bc.Signatures.JAVA_DELEGATINGMETHODHANDLE;
 import static jbse.bc.Signatures.JAVA_DIRECTBYTEBUFFER;
@@ -215,6 +216,7 @@ import static jbse.bc.Signatures.JAVA_DIRECTLONGBUFFERU;
 import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE;
 import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_CONSTRUCTOR;
 import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_ENSUREINITIALIZED;
+import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_INTERFACE;
 import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_LAZY;
 import static jbse.bc.Signatures.JAVA_DOUBLE_DOUBLETORAWLONGBITS;
 import static jbse.bc.Signatures.JAVA_DOUBLE_LONGBITSTODOUBLE;
@@ -262,6 +264,7 @@ import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
 import static jbse.bc.Signatures.JAVA_LOCALE_1;
 import static jbse.bc.Signatures.JAVA_MAPPEDBYTEBUFFER;
+import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL_ARRAYACCESSOR;
 import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL_ASVARARGSCOLLECTOR;
 import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL_COUNTINGWRAPPER;
 import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL_LAZY;
@@ -1120,10 +1123,12 @@ public final class ExecutionContext {
         className.equals(JAVA_CHARSET_EXTENDEDPROVIDERHOLDER) ||
         className.equals(JAVA_CLASSVALUE_CLASSVALUEMAP) ||
         className.equals(JAVA_COLLECTIONS_COPIESLIST) ||
+        className.equals(JAVA_COLLECTORS) ||
         className.equals(JAVA_DELEGATINGMETHODHANDLE) ||
         className.equals(JAVA_DIRECTBYTEBUFFER) ||
         className.equals(JAVA_DIRECTMETHODHANDLE_CONSTRUCTOR) ||
         className.equals(JAVA_DIRECTMETHODHANDLE_ENSUREINITIALIZED) ||
+        className.equals(JAVA_DIRECTMETHODHANDLE_INTERFACE) ||
         className.equals(JAVA_DIRECTMETHODHANDLE_LAZY) || //apparently
         className.equals(JAVA_DIRECTLONGBUFFERU) || 
         className.equals(JAVA_ENUMMAP) || 
@@ -1147,6 +1152,7 @@ public final class ExecutionContext {
         className.equals(JAVA_LINKEDLIST_ENTRY) ||
         className.equals(JAVA_LOCALE_1) ||
         className.equals(JAVA_MAPPEDBYTEBUFFER) || 
+        className.equals(JAVA_METHODHANDLEIMPL_ARRAYACCESSOR) || //lazily (its cache of array accessor method handles is lazily but monotonically filled)
         className.equals(JAVA_METHODHANDLEIMPL_ASVARARGSCOLLECTOR) ||
         className.equals(JAVA_METHODHANDLEIMPL_COUNTINGWRAPPER) || //almost surely
         className.equals(JAVA_METHODHANDLEIMPL_LAZY) || //apparently
