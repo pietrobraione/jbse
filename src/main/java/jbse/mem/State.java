@@ -4401,6 +4401,9 @@ public final class State implements Cloneable {
 
         //classes
         o.classes = new HashMap<>(o.classes);
+        
+        //classLoaders
+        o.classLoaders = new ArrayList<>(o.classLoaders);
 
         //classesPrimitive
         o.classesPrimitive = new HashMap<>(o.classesPrimitive);
@@ -4532,16 +4535,22 @@ public final class State implements Cloneable {
         //pathCondition
         o.pathCondition = o.pathCondition.clone();
 
-        //exc and val are values, so they are immutable
+        //exc and val are Values, so they are immutable
+        
+        //methodAdapters
+        o.methodAdapters = new HashMap<>(o.methodAdapters);
+        
+        //methodAppendices
+        o.methodAppendices = new HashMap<>(o.methodAppendices);
+        
+        //callSiteAdapters
+        o.callSiteAdapters = new HashMap<>(o.callSiteAdapters);
+        
+        //callSiteAppendices
+        o.callSiteAppendices = new HashMap<>(o.callSiteAppendices);
 
         //symbolFactory
         o.symbolFactory = o.symbolFactory.clone();
-        
-        //linkInvokers
-        o.methodAdapters = new HashMap<>(o.methodAdapters);
-        
-        //linkAppendices
-        o.methodAppendices = new HashMap<>(o.methodAppendices);
         
         //all other members are immutable
 
