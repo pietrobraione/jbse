@@ -467,6 +467,7 @@ import static jbse.bc.Signatures.SUN_UNSAFEFIELDACCESSORIMPL;
 import static jbse.bc.Signatures.SUN_URLCLASSPATH_GETLOOKUPCACHEURLS;
 import static jbse.bc.Signatures.SUN_URLCLASSPATH_JARLOADER;
 import static jbse.bc.Signatures.SUN_UTIL;
+import static jbse.bc.Signatures.SUN_VALUECONVERSIONS;
 import static jbse.bc.Signatures.SUN_VERIFYACCESS;
 import static jbse.bc.Signatures.SUN_VERIFYTYPE;
 import static jbse.bc.Signatures.SUN_VM_INITIALIZE;
@@ -1183,6 +1184,7 @@ public final class ExecutionContext {
         className.equals(SUN_UNSAFEFIELDACCESSORIMPL) ||
         className.equals(SUN_URLCLASSPATH_JARLOADER) ||
         className.equals(SUN_UTIL) || //apparently
+        className.equals(SUN_VALUECONVERSIONS) || //lazily (its cache of value conversion method handles is lazily but monotonically filled)
         className.equals(SUN_VERIFYACCESS) ||
         className.equals(SUN_VERIFYTYPE) ||
         className.equals(SUN_WRAPPER_FORMAT) ||
