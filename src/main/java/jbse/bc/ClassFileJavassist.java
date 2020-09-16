@@ -541,27 +541,27 @@ public class ClassFileJavassist extends ClassFile {
 
     @Override
     public boolean isPublic() {
-        return Modifier.isPublic(getModifiers());
+        return AccessFlag.isPublic(getAccessFlags());
     }
     
     @Override
     public boolean isProtected() {
-        return Modifier.isProtected(getModifiers());
+        return AccessFlag.isProtected(getAccessFlags());
     }
     
     @Override
     public boolean isPackage() {
-        return Modifier.isPackage(getModifiers());
+        return AccessFlag.isPackage(getAccessFlags());
     }
     
     @Override
     public boolean isPrivate() {
-        return Modifier.isPrivate(getModifiers());
+        return AccessFlag.isPrivate(getAccessFlags());
     }
 
     @Override
     public boolean isStatic() {
-        return Modifier.isStatic(getModifiers());
+        return (getAccessFlags() & AccessFlag.STATIC) != 0;
     }
 
     @Override
@@ -571,7 +571,7 @@ public class ClassFileJavassist extends ClassFile {
     
     @Override
     public boolean isEnum() {
-        return Modifier.isEnum(getModifiers());
+        return (getAccessFlags() & AccessFlag.ENUM) != 0;
     }
 
     @Override
@@ -581,9 +581,7 @@ public class ClassFileJavassist extends ClassFile {
 
     @Override
     public boolean isSuperInvoke() {
-        //note that we use getClassFile().getAccessFlag() because 
-        //getModifiers() does not provide the ACC_SUPER flag
-        return ((this.cf.getAccessFlags() & AccessFlag.SUPER) != 0);
+        return (getAccessFlags() & AccessFlag.SUPER) != 0;
     }
     
     @Override

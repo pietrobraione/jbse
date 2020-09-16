@@ -1483,11 +1483,11 @@ public final class ClassHierarchy implements Cloneable {
      *         {@code accessor}.
      */
     public boolean isClassAccessible(ClassFile accessor, ClassFile accessed) {
-        //TODO this implementation is incomplete: some kinds of nested (member) classes may have all the visibility accessors. Also, the treatment of arrays might be wrong.
-        if (accessed.isPublic()) {
+        final boolean sameRuntimePackage = (accessor.getDefiningClassLoader() == accessed.getDefiningClassLoader() && accessed.getPackageName().equals(accessor.getPackageName()));
+        if (accessor.equals(accessed) || accessed.isPublic()) {
             return true;
-        } else { //cfAccessed.isPackage()
-            return (accessed.getDefiningClassLoader() == accessor.getDefiningClassLoader() && accessed.getPackageName().equals(accessor.getPackageName()));
+        } else {
+            return sameRuntimePackage;
         }
     }
 
