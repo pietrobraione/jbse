@@ -61,7 +61,7 @@ public final class Algo_JAVA_CLASS_ISASSIGNABLEFROM extends Algo_INVOKEMETA_Nonb
                 throwNew(state, calc, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
-            final Instance_JAVA_CLASS javaClassOther = (Instance_JAVA_CLASS) state.getObject(javaClassRefThis);
+            final Instance_JAVA_CLASS javaClassOther = (Instance_JAVA_CLASS) state.getObject(javaClassRefOther);
             if (javaClassOther == null) {
                 //this should never happen
                 failExecution("The class parameter to java.lang.Class.isInstance method is symbolic and unresolved.");
