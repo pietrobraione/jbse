@@ -1,15 +1,7 @@
 package jbse.bc;
 
-import static jbse.bc.Opcodes.OP_ACONST_NULL;
-import static jbse.bc.Opcodes.OP_ALOAD_0;
-import static jbse.bc.Opcodes.OP_ARETURN;
-import static jbse.bc.Opcodes.OP_CHECKCAST;
-import static jbse.bc.Opcodes.OP_INVOKESPECIAL;
-import static jbse.bc.Opcodes.OP_POP;
-import static jbse.bc.Signatures.CLONE_NOT_SUPPORTED_EXCEPTION;
 import static jbse.bc.Signatures.JAVA_CLONEABLE;
 import static jbse.bc.Signatures.JAVA_OBJECT;
-import static jbse.bc.Signatures.JAVA_OBJECT_CLONE;
 import static jbse.bc.Signatures.JAVA_SERIALIZABLE;
 
 import java.lang.reflect.Modifier;
@@ -29,26 +21,7 @@ import jbse.bc.exc.RenameUnsupportedException;
  * @author Pietro Braione
  */
 public final class ClassFileArray extends ClassFile {
-    /* TODO it is unclear how to treat the method clone; since it has greater
-     * visibility than java.lang.Object.clone, we consider the clone method of
-     * array classes as an overridden implementation.
-     */
-    private static final byte[] METHOD_CLONE_BYTECODE = {
-      OP_ALOAD_0,
-      OP_INVOKESPECIAL, (byte) 0, (byte) 1,
-      OP_CHECKCAST,     (byte) 0, (byte) 2,
-      OP_ARETURN,
-      OP_POP,
-      OP_ACONST_NULL,
-      OP_ARETURN
-    };
-    private static final ExceptionTable METHOD_CLONE_EXCEPTIONTABLE = new ExceptionTable(1);
-    
-    static {
-        METHOD_CLONE_EXCEPTIONTABLE.addEntry(new ExceptionTableEntry(0, 7, 8, CLONE_NOT_SUPPORTED_EXCEPTION));
-    }
-    
-    private static final String NO_CONSTANT_POOL = "no member of this kind is in the constant pool of an array class";
+    private static final String NO_CONSTANT_POOL = "No member of this kind is in the constant pool of an array class.";
     
     private static enum Accessibility {
         PUBLIC(Modifier.PUBLIC), 
@@ -68,7 +41,6 @@ public final class ClassFileArray extends ClassFile {
     private final int definingClassLoader;
     private final String packageName;
     private final Accessibility accessibility;
-    private final Signature signatureCloneMethod;
 
     ClassFileArray(String className, ClassFile memberClass, ClassFile cf_JAVA_OBJECT, ClassFile cf_JAVA_CLONEABLE, ClassFile cf_JAVA_SERIALIZABLE) { 
         this.className = className; 
@@ -97,15 +69,8 @@ public final class ClassFileArray extends ClassFile {
         //TODO the JVMS v8 is not clear about that. Is it ok? Does it work for nested classes?
         this.definingClassLoader = memberClass.getDefiningClassLoader();
         this.packageName = memberClass.getPackageName();
-
-        this.signatureCloneMethod = new Signature(this.className, JAVA_OBJECT_CLONE.getDescriptor(), JAVA_OBJECT_CLONE.getName());
     }
 
-    private boolean isMethodClone(Signature methodSignature) {
-        return (JAVA_OBJECT_CLONE.getName().equals(methodSignature.getName()) &&
-                JAVA_OBJECT_CLONE.getDescriptor().equals(methodSignature.getDescriptor()));
-    }
-    
     @Override
     public byte[] getBinaryFileContent() {
         return null;
@@ -239,90 +204,60 @@ public final class ClassFileArray extends ClassFile {
     @Override
     public ParameterInfo[] getMethodParameters(Signature methodSignature) 
     throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return null;
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public String[] getMethodThrownExceptions(Signature methodSignature) 
     throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return new String[0];
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public int getCodeLength(Signature methodSignature)
     throws MethodNotFoundException, MethodCodeNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return METHOD_CLONE_BYTECODE.length;
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public ExceptionTable getExceptionTable(Signature methodSignature)
     throws MethodNotFoundException, MethodCodeNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return METHOD_CLONE_EXCEPTIONTABLE;
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public LocalVariableTable getLocalVariableTable(Signature methodSignature) 
     throws MethodNotFoundException, MethodCodeNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return defaultLocalVariableTable(this.signatureCloneMethod);
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
     
     @Override
     public LocalVariableTable getLocalVariableTypeTable(Signature methodSignature)
     throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return new LocalVariableTable(0);
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public int getLocalVariableTableLength(Signature methodSignature)
     throws MethodNotFoundException, MethodCodeNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return 2;
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public LineNumberTable getLineNumberTable(Signature methodSignature) 
     throws MethodNotFoundException, MethodCodeNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return defaultLineNumberTable();
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public byte[] getMethodCodeBySignature(Signature methodSignature)
     throws MethodNotFoundException, MethodCodeNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return METHOD_CLONE_BYTECODE;
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public Signature getMethodSignature(int methodRef)
     throws InvalidIndexException {
-        if (methodRef == 1) {
-            return JAVA_OBJECT_CLONE;
-        }
         throw new InvalidIndexException(NO_CONSTANT_POOL);
     }
     
@@ -360,7 +295,7 @@ public final class ClassFileArray extends ClassFile {
 
     @Override
     public boolean hasMethodDeclaration(Signature methodSignature) {
-        return isMethodClone(methodSignature);
+        return false;
     }
     
     @Override
@@ -370,7 +305,7 @@ public final class ClassFileArray extends ClassFile {
 
     @Override
     public boolean hasMethodImplementation(Signature methodSignature) {
-        return isMethodClone(methodSignature);
+        return false;
     }
 
     @Override
@@ -391,88 +326,60 @@ public final class ClassFileArray extends ClassFile {
     @Override
     public boolean isMethodAbstract(Signature methodSignature)
     throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return false;
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public boolean isMethodNative(Signature methodSignature)
     throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return false;
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public boolean isMethodVarargs(Signature methodSignature)
     throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return false;
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
     
     @Override
     public boolean isMethodFinal(Signature methodSignature) 
     throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return true;
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
     
     @Override
     public boolean isMethodCallerSensitive(Signature methodSignature) 
     throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return false;
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public Signature[] getDeclaredMethods() {
-        final Signature[] retVal = new Signature[1];
-        retVal[0] = this.signatureCloneMethod;
+        final Signature[] retVal = new Signature[0];
         return retVal;
     }
 
     @Override
     public String getMethodGenericSignatureType(Signature methodSignature) 
     throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return null;
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public int getMethodModifiers(Signature methodSignature) 
     throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return Modifier.PUBLIC;
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public byte[] getMethodAnnotationsRaw(Signature methodSignature) 
     throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return new byte[0];
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public String[] getMethodAvailableAnnotations(Signature methodSignature)
     throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return new String[0];
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
     
@@ -483,41 +390,26 @@ public final class ClassFileArray extends ClassFile {
 
     @Override
     public boolean isMethodStatic(Signature methodSignature) throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return false;
-    }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public boolean isMethodPublic(Signature methodSignature) throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return true;
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public boolean isMethodProtected(Signature methodSignature) throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return false;
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public boolean isMethodPackage(Signature methodSignature) throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return false;
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public boolean isMethodPrivate(Signature methodSignature) throws MethodNotFoundException {
-        if (isMethodClone(methodSignature)) {
-            return false;
-        }
         throw new MethodNotFoundException(methodSignature.toString());
     }
 

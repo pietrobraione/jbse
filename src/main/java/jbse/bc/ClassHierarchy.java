@@ -16,10 +16,12 @@ import static jbse.common.Type.isArray;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isReference;
 import static jbse.common.Type.isVoid;
+import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.splitParametersDescriptors;
 import static jbse.common.Type.splitReturnValueDescriptor;
 import static jbse.common.Type.toPrimitiveOrVoidCanonicalName;
 import static jbse.common.Type.toPrimitiveOrVoidInternalName;
+import static jbse.common.Type.TYPEEND;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -1537,6 +1539,9 @@ public final class ClassHierarchy implements Cloneable {
     		throw new UnexpectedInternalException(e);
     	}
     }
+    
+    private static final String JAVA_OBJECT_CLONE_DESCRIPTOR = "()" + REFERENCE + JAVA_OBJECT + TYPEEND;
+    private static final String JAVA_OBJECT_CLONE_NAME = "clone";
 
     /**
      * Checks whether a method is accessible to a class/interface
@@ -1556,6 +1561,11 @@ public final class ClassHierarchy implements Cloneable {
     private boolean isMethodAccessible(ClassFile accessor, ClassFile accessed, ClassFile methodSignatureClass, Signature methodSignature) 
     throws MethodNotFoundException {
     	try {
+    	        //special case: the resolution class is an array class and the method is
+    	        //clone; in this case, treat it as a public method
+    	        if (JAVA_OBJECT_CLONE_DESCRIPTOR.equals(methodSignature.getDescriptor()) && JAVA_OBJECT_CLONE_NAME.equals(methodSignature.getName()) && methodSignatureClass.isArray()) {
+    	            return true;
+    	        }
     		ClassFile accessorHost = accessor;
     		while (accessorHost.isAnonymousUnregistered()) {
     			accessorHost = accessorHost.getHostClass();
