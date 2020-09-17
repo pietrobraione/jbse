@@ -320,7 +320,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
                         int i = 0;
                         for (String excClassName : exceptions) {
                             //TODO *absolutely* put resolution of exception types OUTSIDE (in cookMore)
-                            final ClassFile excClass = hier.resolveClass(state.getCurrentClass(), excClassName, state.bypassStandardLoading());
+                            final ClassFile excClass = hier.resolveClass(this.thisClass, excClassName, state.bypassStandardLoading());
                             state.ensureInstance_JAVA_CLASS(calc, excClass);
                             final ReferenceConcrete excClazz = state.referenceToInstance_JAVA_CLASS(excClass);
                             arrayExcClasses.setFast(calc.valInt(i), excClazz);
