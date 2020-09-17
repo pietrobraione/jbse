@@ -20,6 +20,7 @@ import static jbse.common.Type.isPrimitiveOpStack;
 import static jbse.common.Type.isReference;
 import static jbse.common.Type.NULLREF;
 
+import java.util.ListIterator;
 import java.util.function.Supplier;
 
 import jbse.bc.ClassFile;
@@ -36,6 +37,7 @@ import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.exc.DecisionException;
+import jbse.mem.Frame;
 import jbse.mem.HeapObjekt;
 import jbse.mem.Objekt;
 import jbse.mem.State;
@@ -86,12 +88,25 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 this.fieldClassResolved = state.getClassHierarchy().resolveField(currentClass, this.data.signature(), state.bypassStandardLoading());
 
                 //checks that, if the field is final, then it is declared in the current class and the
-                //current method is an instance initialization method
-                final String initializationMethodName = (this.isStatic ? "<clinit>" : "<init>");
-                if (this.fieldClassResolved.isFieldFinal(this.data.signature()) && 
-                   (this.fieldClassResolved != currentClass || !initializationMethodName.equals(state.getCurrentMethodSignature().getName()))) {
-                    throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
-                    exitFromAlgorithm();
+                //current method executes in the context of an initialization method
+                if (this.fieldClassResolved.isFieldFinal(this.data.signature())) {
+                    final String initializationMethodName = (this.isStatic ? "<clinit>" : "<init>");
+                    boolean notInInitializationContext = true;
+                    final ListIterator<Frame> iterator = state.getStack().listIterator(state.getStack().size());
+                    while (iterator.hasPrevious()) {
+                        final Frame f = iterator.previous();
+                        if (!this.fieldClassResolved.equals(f.getMethodClass())) {
+                            break;
+                        }
+                        if (initializationMethodName.equals(f.getMethodSignature().getName())) {
+                            notInInitializationContext = false;
+                            break;
+                        }
+                    }
+                    if (notInInitializationContext) {
+                        throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
+                        exitFromAlgorithm();
+                    }
                 }
 
                 //TODO this code is duplicated in Algo_XRETURN: refactor! 
