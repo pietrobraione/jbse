@@ -461,6 +461,8 @@ import static jbse.bc.Signatures.SUN_UNSAFE_PUTINTVOLATILE;
 import static jbse.bc.Signatures.SUN_UNSAFE_PUTLONG;
 import static jbse.bc.Signatures.SUN_UNSAFE_PUTOBJECT;
 import static jbse.bc.Signatures.SUN_UNSAFE_PUTOBJECTVOLATILE;
+import static jbse.bc.Signatures.SUN_UNSAFE_PUTORDEREDINT;
+import static jbse.bc.Signatures.SUN_UNSAFE_PUTORDEREDOBJECT;
 import static jbse.bc.Signatures.SUN_UNSAFE_REGISTERNATIVES;
 import static jbse.bc.Signatures.SUN_UNSAFE_SHOULDBEINITIALIZED;
 import static jbse.bc.Signatures.SUN_UNSAFE_STATICFIELDBASE;
@@ -879,6 +881,8 @@ public final class ExecutionContext {
             addMetaOverridden(SUN_UNSAFE_PUTLONG,                                 ALGO_SUN_UNSAFE_PUTLONG);
             addMetaOverridden(SUN_UNSAFE_PUTOBJECT,                               ALGO_SUN_UNSAFE_PUTOBJECT_O);
             addMetaOverridden(SUN_UNSAFE_PUTOBJECTVOLATILE,                       ALGO_SUN_UNSAFE_PUTOBJECT_O);
+            addMetaOverridden(SUN_UNSAFE_PUTORDEREDINT,                           ALGO_SUN_UNSAFE_PUTINT_O);
+            addMetaOverridden(SUN_UNSAFE_PUTORDEREDOBJECT,                        ALGO_SUN_UNSAFE_PUTOBJECT_O);
             addMetaOverridden(SUN_UNSAFE_REGISTERNATIVES,                         ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(SUN_UNSAFE_SHOULDBEINITIALIZED,                     ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED);
             addMetaOverridden(SUN_UNSAFE_STATICFIELDBASE,                         ALGO_SUN_UNSAFE_STATICFIELDBASE);

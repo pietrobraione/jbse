@@ -814,6 +814,10 @@ public final class Signatures {
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "putObject");
     public static final Signature SUN_UNSAFE_PUTOBJECTVOLATILE = 
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "putObjectVolatile");
+    public static final Signature SUN_UNSAFE_PUTORDEREDINT = 
+        new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + INT + ")" + VOID, "putOrderedInt");
+    public static final Signature SUN_UNSAFE_PUTORDEREDOBJECT = 
+        new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "putOrderedObject");
     public static final Signature SUN_UNSAFE_REGISTERNATIVES =
         new Signature(SUN_UNSAFE, "()" + VOID, "registerNatives");
     public static final Signature SUN_UNSAFE_SHOULDBEINITIALIZED =
