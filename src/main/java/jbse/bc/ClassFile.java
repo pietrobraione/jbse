@@ -1,6 +1,7 @@
 package jbse.bc;
 
 import static jbse.bc.Signatures.ASSERTIONDISABLED_NAME;
+import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
@@ -1286,7 +1287,9 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     	if (sup == null) {
     		throw new InvalidInputException("Invoked ClassFile.isSubclass with null parameter.");
     	}
-        if (isArray() && sup.isArray()) {
+    	if (JAVA_OBJECT.equals(sup.getClassName())) {
+    	    return true; //every class/interface is subclass of java.lang.Object
+    	} else if (isArray() && sup.isArray()) {
             final ClassFile subMember = getMemberClass(); 
             final ClassFile supMember = sup.getMemberClass();
             if (subMember.isPrimitiveOrVoid() && supMember.isPrimitiveOrVoid()) {
