@@ -760,6 +760,8 @@ public final class Signatures {
         new Signature(SUN_UNIXNATIVEDISPATCHER, "()" + INT, "init");
     public static final Signature SUN_UNSAFE_ADDRESSSIZE = 
         new Signature(SUN_UNSAFE, "()" + INT, "addressSize");
+    public static final Signature SUN_UNSAFE_ALLOCATEINSTANCE = 
+    new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "allocateInstance");
     public static final Signature SUN_UNSAFE_ALLOCATEMEMORY = 
         new Signature(SUN_UNSAFE, "(" + LONG + ")" + LONG, "allocateMemory");
     public static final Signature SUN_UNSAFE_ARRAYBASEOFFSET = 
