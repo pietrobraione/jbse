@@ -2074,7 +2074,7 @@ public final class State implements Cloneable {
         }
         final int numOfStaticFields = classFile.numOfStaticFields();
         final Signature[] fieldsSignatures = classFile.getObjectFields();
-        final KlassImpl k = new KlassImpl(calc, false, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
+        final KlassImpl k = new KlassImpl(calc, false, createSymbolKlassPseudoReference(this.historyPoint, classFile), this.historyPoint, numOfStaticFields, fieldsSignatures);
         k.setIdentityHashCode(calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(classFile, k);
     }
