@@ -1606,14 +1606,27 @@ public final class ClassHierarchy implements Cloneable {
      *        must be looked up.
      * @return the {@link ClassFile} which contains the implementation of 
      *         {@code methodSignature}.
+     * @throws InvalidInputException if any parameter is {@code null}.
      * @throws MethodNotAccessibleException  if lookup fails and {@link java.lang.IllegalAccessError} should be thrown.
      * @throws MethodAbstractException if lookup fails and {@link java.lang.AbstractMethodError} should be thrown.
      * @throws IncompatibleClassFileException if lookup fails and {@link java.lang.IncompatibleClassChangeError} should be thrown.
      */
     public ClassFile lookupMethodImplInterface(ClassFile receiverClass, ClassFile resolutionClass, Signature methodSignature) 
-    throws MethodNotAccessibleException, MethodAbstractException, IncompatibleClassFileException {
-        ClassFile retVal = null;
+    throws InvalidInputException, MethodNotAccessibleException, MethodAbstractException, IncompatibleClassFileException {
+    	if (receiverClass == null || resolutionClass == null || methodSignature == null) {
+    		throw new InvalidInputException("Invoked ClassHierarchy.lookupMethodImplInterface with a null parameter.");
+    	}
+        final ClassFile retVal = lookupMethodImplInterface_recurse(receiverClass, resolutionClass, methodSignature);
+        if (retVal == null) {
+            //sixth run-time exception
+        	throw new MethodAbstractException(methodSignature.toString());
+        }
+        return retVal;
+    }
         
+    public ClassFile lookupMethodImplInterface_recurse(ClassFile receiverClass, ClassFile resolutionClass, Signature methodSignature) 
+    throws MethodNotAccessibleException, MethodAbstractException, IncompatibleClassFileException {
+    	ClassFile retVal = null;
         try {
             //step 1
         	if (receiverClass.hasMethodDeclaration(methodSignature) && !receiverClass.isMethodStatic(methodSignature)) {
@@ -1634,11 +1647,7 @@ public final class ClassHierarchy implements Cloneable {
         	if (retVal == null) {
         		final ClassFile receiverClassSuperclass = receiverClass.getSuperclass();
         		if (receiverClassSuperclass != null) {
-        			try { 
-        				retVal = lookupMethodImplInterface(receiverClassSuperclass, resolutionClass, methodSignature);
-        			} catch (MethodAbstractException e) {
-        				retVal = null;
-        			}
+        			retVal = lookupMethodImplInterface_recurse(receiverClassSuperclass, resolutionClass, methodSignature);
         		}
         	}
 
@@ -1647,8 +1656,8 @@ public final class ClassHierarchy implements Cloneable {
                 final Set<ClassFile> nonabstractMaxSpecMethods = 
                     maximallySpecificSuperinterfaceMethods(receiverClass, methodSignature, true);
                 if (nonabstractMaxSpecMethods.size() == 0) {
-                    //sixth run-time exception
-                    throw new MethodAbstractException(methodSignature.toString());
+                    //defer sixth run-time exception
+                    retVal = null;
                 } else if (nonabstractMaxSpecMethods.size() == 1) {
                     retVal = nonabstractMaxSpecMethods.iterator().next();
                 } else { //nonabstractMaxSpecMethods.size() > 1
@@ -1656,12 +1665,12 @@ public final class ClassHierarchy implements Cloneable {
                     throw new IncompatibleClassFileException(methodSignature.toString());
                 }
             }
+            
+            return retVal;
         } catch (MethodNotFoundException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-        
-        return retVal;
     }
 
     /**
@@ -1816,58 +1825,60 @@ public final class ClassHierarchy implements Cloneable {
         if (resolutionClass.isMethodSignaturePolymorphic(methodSignature)) {
             return resolutionClass;
         } else {
-            ClassFile retVal = null;
-            
-            //step 1
-            if (receiverClass.hasMethodDeclaration(methodSignature) && !receiverClass.isMethodStatic(methodSignature)) {
-                if (overrides(receiverClass, resolutionClass, methodSignature, methodSignature)) {
-                    retVal = receiverClass;
-
-                    //third run-time exception
-                    if (retVal.isMethodAbstract(methodSignature)) {
-                        throw new MethodAbstractException(methodSignature.toString());
-                    }
-                }
-            }
-            
-            //step 2
+        	final ClassFile retVal = lookupMethodImplVirtual_recurse(receiverClass, resolutionClass, methodSignature);
         	if (retVal == null) {
-        		final ClassFile receiverClassSuperclass = receiverClass.getSuperclass();
-        		if (receiverClassSuperclass != null) {
-        			for (ClassFile f : receiverClassSuperclass.superclasses()) {
-        	            if (f.hasMethodDeclaration(methodSignature) && !f.isMethodStatic(methodSignature)) {
-        	            	if (overrides(f, resolutionClass, methodSignature, methodSignature)) {
-        	            		retVal = f;
-
-        	            		//third run-time exception
-        	            		if (retVal.isMethodAbstract(methodSignature)) {
-        	            			throw new MethodAbstractException(methodSignature.toString());
-        	            		}
-
-        	            		break;
-        	            	}
-        	            }
-        			}
-        		}
-        	}
-
-
-            //step 3
-            if (retVal == null) {
-                final Set<ClassFile> nonabstractMaxSpecMethods = 
-                    maximallySpecificSuperinterfaceMethods(resolutionClass, methodSignature, true);
-                if (nonabstractMaxSpecMethods.size() == 0) {
-                    //sixth run-time exception
-                    throw new MethodAbstractException(methodSignature.toString());
-                } else if (nonabstractMaxSpecMethods.size() == 1) {
-                    retVal = nonabstractMaxSpecMethods.iterator().next();
-                } else { //nonabstractMaxSpecMethods.size() > 1
-                    //fifth run-time exception
-                    throw new IncompatibleClassFileException(methodSignature.toString());
-                }
+                //sixth run-time exception
+            	throw new MethodAbstractException(methodSignature.toString());
             }
-            
             return retVal;
+        }
+    }
+    
+    
+    private ClassFile lookupMethodImplVirtual_recurse(ClassFile receiverClass, ClassFile resolutionClass, Signature methodSignature) 
+    throws MethodAbstractException, IncompatibleClassFileException {
+    	ClassFile retVal = null;
+    	try {
+	    	//step 1
+	    	if (receiverClass.hasMethodDeclaration(methodSignature) && !receiverClass.isMethodStatic(methodSignature)) {
+	    		if (overrides(receiverClass, resolutionClass, methodSignature, methodSignature)) {
+	    			retVal = receiverClass;
+	
+	    			//third run-time exception
+	    			if (retVal.isMethodAbstract(methodSignature)) {
+	    				throw new MethodAbstractException(methodSignature.toString());
+	    			}
+	    		}
+	    	}
+	
+	    	//step 2
+	    	if (retVal == null) {
+	    		final ClassFile receiverClassSuperclass = receiverClass.getSuperclass();
+	    		if (receiverClassSuperclass != null) {
+	    			retVal = lookupMethodImplVirtual_recurse(receiverClassSuperclass, resolutionClass, methodSignature);
+	    		}
+	    	}
+	
+	
+	    	//step 3
+	    	if (retVal == null) {
+	    		final Set<ClassFile> nonabstractMaxSpecMethods = 
+	    		    maximallySpecificSuperinterfaceMethods(receiverClass, methodSignature, true);
+	    		if (nonabstractMaxSpecMethods.size() == 0) {
+	    			//defer sixth run-time exception
+	    			retVal = null;
+	    		} else if (nonabstractMaxSpecMethods.size() == 1) {
+	    			retVal = nonabstractMaxSpecMethods.iterator().next();
+	    		} else { //nonabstractMaxSpecMethods.size() > 1
+	    			//fifth run-time exception
+	    			throw new IncompatibleClassFileException(methodSignature.toString());
+	    		}
+	    	}
+	
+	    	return retVal;
+    	} catch (MethodNotFoundException | InvalidInputException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
         }
     }
     
