@@ -92,6 +92,7 @@ import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.FrozenStateException;
+import jbse.mem.exc.InvalidNumberOfOperandsException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -352,7 +353,7 @@ public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKE
             //we need to push on the operand stack the converted parameters in case
             //the method is meta-overridden
             try {
-                final Signature methodSignatureOverriding = lookupMethodImplOverriding(state, this.ctx, this.methodClassFile, this.methodSignature, this.isInterface, this.isSpecial, this.isStatic, this.isNative);
+                final Signature methodSignatureOverriding = lookupMethodImplOverriding(state, this.ctx, this.methodClassFile, this.methodSignature, this.isInterface, this.isSpecial, this.isStatic, this.isNative, false);
                 if (methodSignatureOverriding != null) {
                     final ClassFile classFileMethodOverriding = hier.getClassFileClassArray(CLASSLOADER_APP, methodSignatureOverriding.getClassName()); //if lookup had success, the overriding class is already loaded
                     checkOverridingMethodFits(state, this.methodClassFile, this.methodSignature, classFileMethodOverriding, methodSignatureOverriding);
@@ -368,7 +369,10 @@ public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKE
                 throw e;
             } catch (MethodNotFoundException e) {
                 throw new BaseUnsupportedException(e);
-            }
+            } catch (InvalidNumberOfOperandsException e) {
+				//this should never happen
+				failExecution(e);
+			}
             
             try {
                 state.pushFrame(calc, this.methodClassFile, this.methodSignature, false, INVOKESPECIALSTATICVIRTUAL_OFFSET, this.params);

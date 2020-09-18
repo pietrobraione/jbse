@@ -23,7 +23,6 @@ import java.util.function.Supplier;
 import jbse.algo.exc.BaseUnsupportedException;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.MetaUnsupportedException;
-import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
@@ -42,6 +41,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
+import jbse.mem.exc.InvalidNumberOfOperandsException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
@@ -286,18 +286,18 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     protected final void findOverridingImpl(State state)
-    throws BaseUnsupportedException, MetaUnsupportedException, NotYetImplementedException, InterruptException, 
+    throws BaseUnsupportedException, MetaUnsupportedException, InterruptException, 
     ClasspathException, ThreadStackEmptyException, InvalidInputException {
         if (this.methodImplSignature == null || this.isMethodImplSignaturePolymorphic) {
             return; //no implementation to override, or method is signature polymorphic (cannot be overridden!)
         }
         
-        final Signature methodSignatureOverriding = lookupMethodImplOverriding(state, this.ctx, this.methodImplClass, this.methodImplSignature, this.isInterface, this.isSpecial, this.isStatic, this.isMethodImplNative);
-        if (methodSignatureOverriding == null) {
-            return;
-        }
-
         try {
+        	final Signature methodSignatureOverriding = lookupMethodImplOverriding(state, this.ctx, this.methodImplClass, this.methodImplSignature, this.isInterface, this.isSpecial, this.isStatic, this.isMethodImplNative, false);
+        	if (methodSignatureOverriding == null) {
+        		return;
+        	}
+
             final ClassHierarchy hier = state.getClassHierarchy();
             final ClassFile classFileMethodOverriding = hier.getClassFileClassArray(CLASSLOADER_APP, methodSignatureOverriding.getClassName()); //if lookup of overriding method succeeded, the class is surely loaded
             checkOverridingMethodFits(state, this.methodImplClass, this.methodImplSignature, classFileMethodOverriding, methodSignatureOverriding);
@@ -306,6 +306,9 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             this.isMethodImplSignaturePolymorphic = this.methodImplClass.isMethodSignaturePolymorphic(this.methodImplSignature);
         } catch (MethodNotFoundException e) {
             throw new BaseUnsupportedException(e);
-        }
+        } catch (InvalidNumberOfOperandsException e) {
+			//this should never happen
+			failExecution(e);
+		}
     }
 }
