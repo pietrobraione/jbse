@@ -118,6 +118,7 @@ public final class Signatures {
     public static final String JAVA_METHODHANDLEIMPL_LAZY    = "java/lang/invoke/MethodHandleImpl$Lazy";
     public static final String JAVA_METHODHANDLENATIVES      = "java/lang/invoke/MethodHandleNatives";
     public static final String JAVA_METHODHANDLES            = "java/lang/invoke/MethodHandles";
+    public static final String JAVA_METHODHANDLES_1          = "java/lang/invoke/MethodHandles$1";
     public static final String JAVA_METHODHANDLES_LOOKUP     = "java/lang/invoke/MethodHandles$Lookup";
     public static final String JAVA_METHODTYPE               = "java/lang/invoke/MethodType";
     public static final String JAVA_METHODTYPEFORM           = "java/lang/invoke/MethodTypeForm";
@@ -192,6 +193,7 @@ public final class Signatures {
     public static final String SUN_URLCLASSPATH_JARLOADER    = "sun/misc/URLClassPath$JarLoader";
     public static final String SUN_UTIL                      = "sun/nio/fs/Util";
     public static final String SUN_VALUECONVERSIONS          = "sun/invoke/util/ValueConversions";
+    public static final String SUN_VALUECONVERSIONS_1        = "sun/invoke/util/ValueConversions$1";
     public static final String SUN_VERIFYACCESS              = "sun/invoke/util/VerifyAccess";
     public static final String SUN_VERIFYTYPE                = "sun/invoke/util/VerifyType";
     public static final String SUN_VM                        = "sun/misc/VM";

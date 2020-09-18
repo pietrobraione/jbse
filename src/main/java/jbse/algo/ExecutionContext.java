@@ -279,6 +279,7 @@ import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_SETCALLSITETARGETNORMA
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_SETCALLSITETARGETVOLATILE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET;
 import static jbse.bc.Signatures.JAVA_METHODHANDLES;
+import static jbse.bc.Signatures.JAVA_METHODHANDLES_1;
 import static jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP;
 import static jbse.bc.Signatures.JAVA_METHODTYPE;
 import static jbse.bc.Signatures.JAVA_METHODTYPEFORM;
@@ -472,6 +473,7 @@ import static jbse.bc.Signatures.SUN_URLCLASSPATH_GETLOOKUPCACHEURLS;
 import static jbse.bc.Signatures.SUN_URLCLASSPATH_JARLOADER;
 import static jbse.bc.Signatures.SUN_UTIL;
 import static jbse.bc.Signatures.SUN_VALUECONVERSIONS;
+import static jbse.bc.Signatures.SUN_VALUECONVERSIONS_1;
 import static jbse.bc.Signatures.SUN_VERIFYACCESS;
 import static jbse.bc.Signatures.SUN_VERIFYTYPE;
 import static jbse.bc.Signatures.SUN_VM_INITIALIZE;
@@ -1164,6 +1166,7 @@ public final class ExecutionContext {
         className.equals(JAVA_METHODHANDLEIMPL_ASVARARGSCOLLECTOR) ||
         className.equals(JAVA_METHODHANDLEIMPL_COUNTINGWRAPPER) || //almost surely
         className.equals(JAVA_METHODHANDLEIMPL_LAZY) || //apparently
+        className.equals(JAVA_METHODHANDLES_1) ||
         className.equals(JAVA_METHODTYPEFORM) || 
         className.equals(JAVA_OPTIONAL) || 
         className.equals(JAVA_PATTERN) || 
@@ -1192,6 +1195,7 @@ public final class ExecutionContext {
         className.equals(SUN_URLCLASSPATH_JARLOADER) ||
         className.equals(SUN_UTIL) || //apparently
         className.equals(SUN_VALUECONVERSIONS) || //lazily (its cache of value conversion method handles is lazily but monotonically filled)
+        className.equals(SUN_VALUECONVERSIONS_1) ||
         className.equals(SUN_VERIFYACCESS) ||
         className.equals(SUN_VERIFYTYPE) ||
         className.equals(SUN_WRAPPER_FORMAT) ||
