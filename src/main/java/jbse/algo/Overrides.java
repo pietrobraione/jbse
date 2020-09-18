@@ -161,6 +161,7 @@ public final class Overrides {
     public static final String ALGO_JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION.class.getName());
     public static final String ALGO_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH                 = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH.class.getName());
     public static final String ALGO_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH     = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH.class.getName());
+    public static final String ALGO_JBSE_JAVA_MAP_NOTIFYEXECUTION                	   = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_MAP_NOTIFYEXECUTION.class.getName());
     
     //Overriding meta-level implementations of JBSE classless (pseudo)methods
     public static final String ALGO_noclass_REGISTERLOADEDCLASS          = internalClassName(jbse.algo.meta.Algo_noclass_REGISTERLOADEDCLASS.class.getName());

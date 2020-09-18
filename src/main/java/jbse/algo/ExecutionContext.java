@@ -98,6 +98,7 @@ import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_MAKEINITIAL;
 import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION;
 import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH;
 import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH;
+import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_NOTIFYEXECUTION;
 import static jbse.algo.Overrides.ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
 import static jbse.algo.Overrides.ALGO_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0;
 import static jbse.algo.Overrides.ALGO_SUN_PERF_CREATELONG;
@@ -365,6 +366,7 @@ import static jbse.bc.Signatures.JBSE_JAVA_MAP_MAKEINITIAL;
 import static jbse.bc.Signatures.JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION;
 import static jbse.bc.Signatures.JBSE_JAVA_MAP_REFINEONKEYANDBRANCH;
 import static jbse.bc.Signatures.JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH;
+import static jbse.bc.Signatures.JBSE_JAVA_MAP_NOTIFYEXECUTION;
 import static jbse.bc.Signatures.JDK_TYPE;
 import static jbse.bc.Signatures.SUN_ASCIICASEINSENSITIVECOMPARATOR;
 import static jbse.bc.Signatures.SUN_JARINDEX;
@@ -849,6 +851,7 @@ public final class ExecutionContext {
             addMetaOverridden(JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION, ALGO_JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION);
             addMetaOverridden(JBSE_JAVA_MAP_REFINEONKEYANDBRANCH,                 ALGO_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH);
             addMetaOverridden(JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH,     ALGO_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH);
+            addMetaOverridden(JBSE_JAVA_MAP_NOTIFYEXECUTION,                 	  ALGO_JBSE_JAVA_MAP_NOTIFYEXECUTION);
             
             //jbse classless (pseudo)methods
             addMetaOverridden(noclass_REGISTERLOADEDCLASS,          ALGO_noclass_REGISTERLOADEDCLASS);

@@ -663,11 +663,13 @@ public final class Signatures {
     public static final Signature JBSE_JAVA_MAP_REFINEIN = 
     	new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineIn");
     public static final Signature JBSE_JAVA_MAP_REFINEONKEYANDBRANCH = 
-    	new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOnKeyAndBranch");
+        	new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOnKeyAndBranch");
     public static final Signature JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH = 
     	new Signature(JAVA_HASHMAP, "(" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOnKeyCombinationsAndBranch");
     public static final Signature JBSE_JAVA_MAP_REFINEOUTKEY = 
     	new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOutKey");
+    public static final Signature JBSE_JAVA_MAP_NOTIFYEXECUTION = 
+    		new Signature(JAVA_HASHMAP, "(" + ")" + VOID, "notifyMethodExecution");
     public static final Signature SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 = 
         new Signature(SUN_NATIVECONSTRUCTORACCESSORIMPL, 
                       "(" + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 
