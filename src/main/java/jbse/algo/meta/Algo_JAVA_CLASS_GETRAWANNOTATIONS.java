@@ -78,6 +78,14 @@ public final class Algo_JAVA_CLASS_GETRAWANNOTATIONS extends Algo_INVOKEMETA_Non
             //gets the (raw) annotations
             final byte[] annotations = classFile.getClassAnnotationsRaw();
             
+            //if the annotations array is empty, we need to push null
+            //(an empty array misses metadata, and this confuses reflection
+            //methods, that therefore expect null)
+            if (annotations.length == 0) {
+            	this.annotationsRef = Null.getInstance();
+                return;
+            }
+            
             //creates the destination array
             final ClassHierarchy hier = state.getClassHierarchy();
             final Calculator calc = this.ctx.getCalculator();
