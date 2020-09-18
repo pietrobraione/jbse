@@ -133,8 +133,11 @@ public class StateTree {
     /** State identification mode. */
     private final StateIdentificationMode stateIdMode;
 
-    /** Breadth mode. */
-    private final BreadthMode breadthMode;
+    /** Breadth mode, current. */
+    private BreadthMode breadthMode;
+
+    /** Breadth mode, after switching to post-initial phase. */
+    private final BreadthMode breadthModePostInitial;
 
     /** Buffer of the inserted {@link State}s. */
     private final LinkedList<State> stateBuffer = new LinkedList<State>();
@@ -153,10 +156,25 @@ public class StateTree {
 
     /**
      * Constructor.
+     * 
+     * @param stateIdMode the {@link StateIdentificationMode}.
+     * @param breadthMode the {@link BreadthMode}. It will be used 
+     *        only after invocation of {@link #setBreadthModePostInitial()}, 
+     *        until then {@link BreadthMode#MORE_THAN_ONE} will be used.
      */
     public StateTree(StateIdentificationMode stateIdMode, BreadthMode breadthMode) {
         this.stateIdMode = stateIdMode;
-        this.breadthMode = breadthMode;
+        this.breadthMode = BreadthMode.MORE_THAN_ONE;
+        this.breadthModePostInitial = breadthMode;
+    }
+    
+    
+    /**
+     * Switches the breadth mode to the 
+     * one specified with the class constructor.
+     */
+    public void setBreadthModePostInitial() {
+        this.breadthMode = this.breadthModePostInitial;
     }
 
     /**

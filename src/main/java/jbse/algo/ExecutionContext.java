@@ -1003,8 +1003,9 @@ public final class ExecutionContext {
      *        stores in this execution contest a safety 
      *        copy of it.
      */
-    public void setStateInitial(State stateInitial) {
+    public void switchInitial(State stateInitial) {
         this.stateInitial = stateInitial.clone();
+        this.stateTree.setBreadthModePostInitial();
     }
 
     /**
