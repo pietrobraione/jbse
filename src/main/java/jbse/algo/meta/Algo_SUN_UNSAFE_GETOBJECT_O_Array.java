@@ -66,8 +66,9 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Meta-level implementation of {@link sun.misc.Unsafe#getObjectVolatile(Object, long)} in 
- * the case the object to read into is an array.
+ * Meta-level implementation of {@link sun.misc.Unsafe#getObject(Object, long)} and
+ * {@link sun.misc.Unsafe#getObjectVolatile(Object, long)} in the case the object 
+ * to read into is an array.
  * 
  * @author Pietro Braione
  */

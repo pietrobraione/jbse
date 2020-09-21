@@ -25,7 +25,8 @@ import jbse.val.Value;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Meta-level implementation of {@link sun.misc.Unsafe#putInt(Object, long, int)} 
+ * Meta-level implementation of {@link sun.misc.Unsafe#putInt(Object, long, int)} and 
+ * {@link sun.misc.Unsafe#putIntVolatile(Object, long, int)} 
  * in the case the object to write into is an array.
  * 
  * @author Pietro Braione

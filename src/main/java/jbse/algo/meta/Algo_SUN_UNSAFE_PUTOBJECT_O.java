@@ -22,7 +22,9 @@ import jbse.val.Simplex;
 import jbse.val.Value;
 
 /**
- * Meta-level implementation of {@link sun.misc.Unsafe#putObjectVolatile(Object, long, Object)}.
+ * Meta-level implementation of {@link sun.misc.Unsafe#putObject(Object, long, Object)}, 
+ * {@link sun.misc.Unsafe#putObjectVolatile(Object, long, Object)} and 
+ * {@link sun.misc.Unsafe#putOrderedObject(Object, long, Object)}.
  * 
  * @author Pietro Braione
  */

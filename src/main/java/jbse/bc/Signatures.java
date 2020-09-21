@@ -763,7 +763,7 @@ public final class Signatures {
     public static final Signature SUN_UNSAFE_ADDRESSSIZE = 
         new Signature(SUN_UNSAFE, "()" + INT, "addressSize");
     public static final Signature SUN_UNSAFE_ALLOCATEINSTANCE = 
-    new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "allocateInstance");
+        new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "allocateInstance");
     public static final Signature SUN_UNSAFE_ALLOCATEMEMORY = 
         new Signature(SUN_UNSAFE, "(" + LONG + ")" + LONG, "allocateMemory");
     public static final Signature SUN_UNSAFE_ARRAYBASEOFFSET = 
@@ -806,6 +806,10 @@ public final class Signatures {
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "getObjectVolatile");
     public static final Signature SUN_UNSAFE_OBJECTFIELDOFFSET = 
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_FIELD + TYPEEND + ")" + LONG, "objectFieldOffset");
+    public static final Signature SUN_UNSAFE_PAGESIZE = 
+        new Signature(SUN_UNSAFE, "()" + INT, "pageSize");
+    public static final Signature SUN_UNSAFE_PARK = 
+        new Signature(SUN_UNSAFE, "(" + BOOLEAN + LONG + ")" + VOID, "park");
     public static final Signature SUN_UNSAFE_PUTINT = 
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + INT + ")" + VOID, "putInt");
     public static final Signature SUN_UNSAFE_PUTINTVOLATILE = 
@@ -828,6 +832,8 @@ public final class Signatures {
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_FIELD + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "staticFieldBase");
     public static final Signature SUN_UNSAFE_STATICFIELDOFFSET = 
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_FIELD + TYPEEND + ")" + LONG, "staticFieldOffset");
+    public static final Signature SUN_UNSAFE_UNPARK = 
+        new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "unpark");
     public static final Signature SUN_URLCLASSPATH_GETLOOKUPCACHEURLS =
         new Signature(SUN_URLCLASSPATH, "(" + REFERENCE + JAVA_CLASSLOADER + TYPEEND + ")" + ARRAYOF + REFERENCE + JAVA_URL + TYPEEND, "getLookupCacheURLs");
     public static final Signature SUN_VM_INITIALIZE = 

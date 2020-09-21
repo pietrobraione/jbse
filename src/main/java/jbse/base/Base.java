@@ -344,15 +344,6 @@ public final class Base {
     }
 
     /**
-     * Overriding implementation of {@link sun.misc.Unsafe#addressSize()}.
-     * @see sun.misc.Unsafe#addressSize()
-     */
-    private static int base_SUN_UNSAFE_ADDRESSSIZE(Unsafe _this) {
-        //JBSE offers no raw access to its data structures, so we return a dummy value
-        return 8; //can be either 4 or 8, we choose 8 
-    }
-
-    /**
      * Overriding implementation of {@link sun.misc.Unsafe#arrayBaseOffset(Class)}.
      * @see sun.misc.Unsafe#arrayBaseOffset(Class)
      */
@@ -376,6 +367,24 @@ public final class Base {
      */
     private static void base_SUN_UNSAFE_FULLFENCE(Unsafe _this) {
         //no concurrency in JBSE
+        return; 
+    }
+    
+    /**
+     * Overriding implementation of {@link sun.misc.Unsafe#park(boolean, long)}.
+     * @see sun.misc.Unsafe#park(boolean, long)
+     */
+    private static void base_SUN_UNSAFE_PARK(Unsafe _this, boolean isAbsolute, long time) {
+        //no threads in JBSE
+        return; 
+    }
+    
+    /**
+     * Overriding implementation of {@link sun.misc.Unsafe#unpark(Object)}.
+     * @see sun.misc.Unsafe#unpark(Object)
+     */
+    private static void base_SUN_UNSAFE_UNPARK(Unsafe _this, Object thread) {
+        //no threads in JBSE
         return; 
     }
     
