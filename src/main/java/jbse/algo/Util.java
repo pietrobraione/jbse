@@ -1481,7 +1481,7 @@ public final class Util {
                 state.createArray(calc, null, calc.valInt(stackDepth), cf_arrayJAVA_STACKTRACEELEMENT);
             final Array theArray = (Array) state.getObject(refToArray);
             exc.setFieldValue(JAVA_THROWABLE_BACKTRACE, refToArray);
-            int i = 0;
+            int i = stackDepth - 1;
             for (Frame f : state.getStack()) {
                 if (f instanceof SnippetFrameNoWrap) {
                     continue; //skips
@@ -1514,7 +1514,7 @@ public final class Util {
                 stackTraceElement.setFieldValue(JAVA_STACKTRACEELEMENT_METHODNAME,     state.referenceToStringLiteral(methodName));
 
                 //sets the array
-                theArray.setFast(calc.valInt(i++), steReference);
+                theArray.setFast(calc.valInt(i--), steReference);
             }
         } catch (HeapMemoryExhaustedException e) {
             //just gives up
