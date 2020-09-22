@@ -36,9 +36,9 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  */
 public final class Algo_JAVA_ZIPFILE_GETENTRY extends Algo_INVOKEMETA_Nonbranching {
-    private long jzentry; //set by cookMore
     private long jzfile; //set by cookMore
     private byte[] name; //set by cookMore
+    private long jzentry; //set by cookMore
     
     @Override
     protected Supplier<Integer> numOperands() {

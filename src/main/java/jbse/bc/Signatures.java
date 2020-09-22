@@ -282,6 +282,8 @@ public final class Signatures {
         new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getDeclaringClass0");
     public static final Signature JAVA_CLASS_GETENCLOSINGMETHOD0 =
         new Signature(JAVA_CLASS, "()" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND, "getEnclosingMethod0");
+    public static final Signature JAVA_CLASS_GETGENERICSIGNATURE0 =
+        new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_STRING + TYPEEND, "getGenericSignature0");
     public static final Signature JAVA_CLASS_GETINTERFACES0 =
         new Signature(JAVA_CLASS, "()" + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND, "getInterfaces0");
     public static final Signature JAVA_CLASS_GETMODIFIERS =
@@ -436,6 +438,8 @@ public final class Signatures {
         new Signature(JAVA_OBJECT, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getClass");
     public static final Signature JAVA_OBJECT_HASHCODE =
         new Signature(JAVA_OBJECT, "()" + INT, "hashCode");
+    public static final Signature JAVA_OBJECT_NOTIFY =
+        new Signature(JAVA_OBJECT, "()" + VOID, "notify");
     public static final Signature JAVA_OBJECT_NOTIFYALL =
         new Signature(JAVA_OBJECT, "()" + VOID, "notifyAll");
     public static final Signature JAVA_OBJECT_REGISTERNATIVES =
@@ -630,6 +634,8 @@ public final class Signatures {
         new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + LONG, "getEntrySize");
     public static final Signature JAVA_ZIPFILE_GETENTRYTIME = 
         new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + LONG, "getEntryTime");
+    public static final Signature JAVA_ZIPFILE_GETNEXTENTRY = 
+        new Signature(JAVA_ZIPFILE, "(" + LONG + INT + ")" + LONG, "getNextEntry");
     public static final Signature JAVA_ZIPFILE_GETTOTAL = 
         new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + INT, "getTotal");
     public static final Signature JAVA_ZIPFILE_INITIDS = 
@@ -736,6 +742,10 @@ public final class Signatures {
     	new Signature(JAVA_HASHMAP, "(" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOnKeyCombinationsAndBranch");
     public static final Signature JBSE_JAVA_MAP_REFINEOUTKEY = 
     	new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOutKey");
+    public static final Signature SUN_CONSTANTPOOL_GETUTF8AT0 = 
+        new Signature(SUN_CONSTANTPOOL, 
+                      "(" + REFERENCE + JAVA_OBJECT + TYPEEND + INT + ")" + REFERENCE + JAVA_STRING + TYPEEND, 
+                      "getUTF8At0");
     public static final Signature SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 = 
         new Signature(SUN_NATIVECONSTRUCTORACCESSORIMPL, 
                       "(" + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 

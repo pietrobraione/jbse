@@ -43,6 +43,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_CLASS_GETDECLAREDMETHODS0                 = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETDECLAREDMETHODS0.class.getName());
     public static final String ALGO_JAVA_CLASS_GETDECLARINGCLASS0                  = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETDECLARINGCLASS0.class.getName());
     public static final String ALGO_JAVA_CLASS_GETENCLOSINGMETHOD0                 = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETENCLOSINGMETHOD0.class.getName());
+    public static final String ALGO_JAVA_CLASS_GETGENERICSIGNATURE0                = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETGENERICSIGNATURE0.class.getName());
     public static final String ALGO_JAVA_CLASS_GETINTERFACES0                      = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETINTERFACES0.class.getName());
     public static final String ALGO_JAVA_CLASS_GETMODIFIERS                        = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETMODIFIERS.class.getName());
     public static final String ALGO_JAVA_CLASS_GETNAME0                            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETNAME0.class.getName());
@@ -118,10 +119,12 @@ public final class Overrides {
     public static final String ALGO_JAVA_ZIPFILE_GETENTRYMETHOD                    = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETENTRYMETHOD.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_GETENTRYSIZE                      = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETENTRYSIZE.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_GETENTRYTIME                      = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETENTRYTIME.class.getName());
+    public static final String ALGO_JAVA_ZIPFILE_GETNEXTENTRY                      = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETNEXTENTRY.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_GETTOTAL                          = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETTOTAL.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_OPEN                              = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_OPEN.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_READ                              = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_READ.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_STARTSWITHLOC                     = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_STARTSWITHLOC.class.getName());
+    public static final String ALGO_SUN_CONSTANTPOOL_GETUTF8AT0                    = internalClassName(jbse.algo.meta.Algo_SUN_CONSTANTPOOL_GETUTF8AT0.class.getName());
     public static final String ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 = internalClassName(jbse.algo.meta.Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0.class.getName());
     public static final String ALGO_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0           = internalClassName(jbse.algo.meta.Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0.class.getName());
     public static final String ALGO_SUN_PERF_CREATELONG                            = internalClassName(jbse.algo.meta.Algo_SUN_PERF_CREATELONG.class.getName());
@@ -221,6 +224,10 @@ public final class Overrides {
         new Signature(JBSE_BASE, 
                       "(" + INT + ")" + INT, 
                       "base_JAVA_METHODHANDLENATIVES_GETCONSTANT");
+    public static final Signature BASE_JAVA_OBJECT_NOTIFY = 
+        new Signature(JBSE_BASE, 
+                      "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, 
+                      "base_JAVA_OBJECT_NOTIFY");
     public static final Signature BASE_JAVA_RUNTIME_AVAILABLEPROCESSORS = 
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + JAVA_RUNTIME + TYPEEND + ")" + INT, 
@@ -237,6 +244,10 @@ public final class Overrides {
         new Signature(JBSE_BASE, 
                       "()" + BOOLEAN, 
                       "base_JBSE_ANALYSIS_ISRUNBYJBSE");
+    public static final Signature BASE_REGISTERNATIVES =
+        new Signature(JBSE_BASE, 
+                      "()" + VOID, 
+                      "base_REGISTERNATIVES");
     public static final Signature BASE_SUN_SIGNAL_FINDSIGNAL =
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + INT, 

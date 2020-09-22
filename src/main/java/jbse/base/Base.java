@@ -291,6 +291,22 @@ public final class Base {
     }
     
     /**
+     * Overriding implementation of several {@code registerNatives()} methods.
+     */
+    private static void base_REGISTERNATIVES() {
+        return;
+    }
+    
+    /**
+     * Overriding implementation of {@link java.lang.Object#notify()}.
+     * @see java.lang.Object#notify()
+     */
+    private static void base_JAVA_OBJECT_NOTIFY(Object _this) {
+        //no concurrency
+        return;
+    }
+    
+    /**
      * Overriding implementation of {@link java.lang.Thread#isAlive()}.
      * @see java.lang.Thread#isAlive()
      */
