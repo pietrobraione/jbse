@@ -17,6 +17,7 @@ import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Null;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 
@@ -56,7 +57,7 @@ public final class Algo_JAVA_CLASS_GETSIGNERS extends Algo_INVOKEMETA_Nonbranchi
     @Override
     protected final StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            state.pushOperand(this.signers);
+            state.pushOperand(this.signers == null ? Null.getInstance() : this.signers);
         };
     }
 }

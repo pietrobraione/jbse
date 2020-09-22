@@ -145,12 +145,10 @@ public final class DecisionProcedureConsole extends DecisionProcedureAlgorithms 
     protected Outcome decide_XSWITCH_Nonconcrete(Primitive val, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) {
         boolean shouldRefine;
         if (val instanceof Any) {
-            int branchCounter = 1;
             for (int i : tab) {
-                result.add(DecisionAlternative_XSWITCH.toNonconcrete(i, branchCounter));
-                ++branchCounter;
+                result.add(DecisionAlternative_XSWITCH.toNonconcrete(i));
             }
-            result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault(branchCounter));
+            result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault());
             shouldRefine = false;
         } else {
             boolean none = true;
@@ -192,16 +190,14 @@ public final class DecisionProcedureConsole extends DecisionProcedureAlgorithms 
                     final String s = m.group();
                     try {
                         final int i = Integer.parseInt(s);
-                        int branchCounter = 1;
                         for (int k : tab) {
                             if (i == k) {
-                                result.add(DecisionAlternative_XSWITCH.toNonconcrete(i, branchCounter));
+                                result.add(DecisionAlternative_XSWITCH.toNonconcrete(i));
                                 none = false;
                             }
-                            ++branchCounter;
                         }
                         if (none) {
-                            result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault(branchCounter));
+                            result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault());
                             none = false;
                         }
                     } catch (NumberFormatException e) {

@@ -88,7 +88,7 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm<?, ?
     private final Algo_IFX            algo_IF_ICMPNE       = new Algo_IFX(false, NE);
     private final Algo_IINC           algo_IINC            = new Algo_IINC();
     private final Algo_INSTANCEOF     algo_INSTANCEOF      = new Algo_INSTANCEOF();
-    private final Algo_UNSUPPORTED    algo_INVOKEDYNAMIC   = new Algo_UNSUPPORTED("INVOKEDYNAMIC"); 
+    private final Algo_INVOKEDYNAMIC  algo_INVOKEDYNAMIC   = new Algo_INVOKEDYNAMIC(); 
     private final Algo_INVOKEHANDLE   algo_INVOKEHANDLE    = new Algo_INVOKEHANDLE();
     private final Algo_INVOKEX        algo_INVOKEINTERFACE = new Algo_INVOKEX(true, false, false);
     private final Algo_INVOKEX        algo_INVOKESPECIAL   = new Algo_INVOKEX(false, true, false);

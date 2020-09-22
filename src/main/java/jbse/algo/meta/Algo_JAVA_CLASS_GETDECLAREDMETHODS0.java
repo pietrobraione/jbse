@@ -320,7 +320,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
                         int i = 0;
                         for (String excClassName : exceptions) {
                             //TODO *absolutely* put resolution of exception types OUTSIDE (in cookMore)
-                            final ClassFile excClass = hier.resolveClass(state.getCurrentClass(), excClassName, state.bypassStandardLoading());
+                            final ClassFile excClass = hier.resolveClass(this.thisClass, excClassName, state.bypassStandardLoading());
                             state.ensureInstance_JAVA_CLASS(calc, excClass);
                             final ReferenceConcrete excClazz = state.referenceToInstance_JAVA_CLASS(excClass);
                             arrayExcClasses.setFast(calc.valInt(i), excClazz);
@@ -396,13 +396,15 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
                     try {
                         final byte[] annotations = this.thisClass.getMethodAnnotationsRaw(sigMethod);
                         final ClassFile cf_arrayOfBYTE = hier.loadCreateClass("" + ARRAYOF + BYTE);
-                        final ReferenceConcrete annotationsRef = state.createArray(calc, null, calc.valInt(annotations.length), cf_arrayOfBYTE);
+                        final ReferenceConcrete annotationsRef = (annotations.length == 0 ? Null.getInstance() : state.createArray(calc, null, calc.valInt(annotations.length), cf_arrayOfBYTE));
                         method.setFieldValue(JAVA_METHOD_ANNOTATIONS, annotationsRef);
 
                         //populates annotations
-                        final Array annotationsArray = (Array) state.getObject(annotationsRef);
-                        for (int i = 0; i < annotations.length; ++i) {
-                            annotationsArray.setFast(calc.valInt(i), calc.valByte(annotations[i]));
+                        if (annotations.length > 0) {
+                        	final Array annotationsArray = (Array) state.getObject(annotationsRef);
+                        	for (int i = 0; i < annotations.length; ++i) {
+                        		annotationsArray.setFast(calc.valInt(i), calc.valByte(annotations[i]));
+                        	}
                         }
                     } catch (HeapMemoryExhaustedException e) {
                         throwNew(state, calc, OUT_OF_MEMORY_ERROR);

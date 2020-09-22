@@ -24,7 +24,7 @@ import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 
 /**
- * Meta-level implementation of {@link java.lang.Class#isPrimitive()}.
+ * Meta-level implementation of {@link java.lang.Class#getSuperclass()}.
  * 
  * @author Pietro Braione
  */
@@ -44,7 +44,7 @@ public final class Algo_JAVA_CLASS_GETSUPERCLASS extends Algo_INVOKEMETA_Nonbran
             final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject((Reference) this.data.operand(0));
             if (clazz == null) {
                 //this should never happen
-                failExecution("violated invariant (unexpected heap access with symbolic unresolved reference)");
+                failExecution("Violated invariant (unexpected heap access with symbolic unresolved reference).");
             }
             final ClassFile cf = clazz.representedClass();
             final ClassFile superClass = cf.getSuperclass();

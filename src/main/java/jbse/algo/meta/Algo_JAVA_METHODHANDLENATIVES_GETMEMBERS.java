@@ -157,7 +157,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_GETMEMBERS extends Algo_INVOKEM
 							try {
 								final Instance result = (Instance) ((AccessOutcomeInValue) arrayResults.getFast(calc, calc.valInt(rfill++))).getValue();
 			                    final ClassHierarchy hier = state.getClassHierarchy();
-			                    final ClassFile classFileMemberName = hier.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME);
+			                    final ClassFile classFileMemberName = hier.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME); //surely loaded
 								if (!classFileMemberName.equals(result.getType())) {
 						            state.pushOperand(calc.valInt(-99));
 						            return;
@@ -323,15 +323,15 @@ public final class Algo_JAVA_METHODHANDLENATIVES_GETMEMBERS extends Algo_INVOKEM
 		if (isPrimitive(descriptor)) {
 			return state.referenceToInstance_JAVA_CLASS_primitiveOrVoid(toPrimitiveOrVoidCanonicalName(descriptor));
 		} else if (descriptor.equals(REFERENCE + JAVA_OBJECT + TYPEEND)) {
-			final ClassFile cf_JAVA_OBJECT = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT);
+			final ClassFile cf_JAVA_OBJECT = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT); //surely loaded
 			state.ensureInstance_JAVA_CLASS(calc, cf_JAVA_OBJECT);
 			return state.referenceToInstance_JAVA_CLASS(cf_JAVA_OBJECT);
 		} else if (descriptor.equals(REFERENCE + JAVA_CLASS + TYPEEND)) {
-			final ClassFile cf_JAVA_CLASS = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLASS);
+			final ClassFile cf_JAVA_CLASS = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLASS); //surely loaded
 			state.ensureInstance_JAVA_CLASS(calc, cf_JAVA_CLASS);
 			return state.referenceToInstance_JAVA_CLASS(cf_JAVA_CLASS);
 		} else if (descriptor.equals(REFERENCE + JAVA_STRING + TYPEEND)) {
-			final ClassFile cf_JAVA_STRING = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING);
+			final ClassFile cf_JAVA_STRING = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING); //surely loaded
 			state.ensureInstance_JAVA_CLASS(calc, cf_JAVA_STRING);
 			return state.referenceToInstance_JAVA_CLASS(cf_JAVA_STRING);
 		} else {

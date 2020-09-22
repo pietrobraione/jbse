@@ -21,8 +21,8 @@ public final class KlassImpl extends ObjektImpl implements Klass {
      * @param symbolic a {@code boolean}, whether this object is symbolic
      *        (i.e., not explicitly created during symbolic execution, 
      *        but rather assumed).
-     * @param origin a {@link KlassPseudoReference} if this {@link KlassImpl}
-     *        exists in the initial state, otherwise {@code null}.
+     * @param origin a {@link KlassPseudoReference} "pointing" to this 
+     *        {@link KlassImpl}.
      * @param epoch the creation {@link HistoryPoint} of this {@link KlassImpl}.
      * @param numOfStaticFields an {@code int}, the number of static fields.
      * @param fieldSignatures varargs of field {@link Signature}s, all the

@@ -198,6 +198,14 @@ public final class ReachableObjectsCollector {
                 .forEachOrdered(reachable::add);
         }
         
+        //possibly adds the method handles
+        if (precise) {
+            s.getMethodHandles().stream()
+                .filter(r -> !s.isNull(r))
+                .map(ReferenceConcrete::getHeapPosition)
+                .forEachOrdered(reachable::add);
+        }
+        
         //possibly adds the main thread and thread group
         if (precise) {
         	reachable.add(s.getMainThread().getHeapPosition());

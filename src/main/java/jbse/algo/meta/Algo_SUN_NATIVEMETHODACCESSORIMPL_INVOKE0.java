@@ -37,8 +37,8 @@ import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN
 import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_I;
 import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_J;
 import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_L;
+import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_NULL;
 import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_S;
-import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_V;
 import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_Z;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.common.Type.ARRAYOF;
@@ -161,10 +161,10 @@ public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKE
                 throwNew(state, calc, INTERNAL_ERROR);
                 exitFromAlgorithm();
             }
+            this.methodSignature = declaredMethods[slot];
             
             //determines the features of the method
             //TODO resolve/lookup the method ???????
-            this.methodSignature = declaredMethods[slot];
             this.isInterface = false; //TODO is it ok?
             this.isSpecial = false;   //TODO is it ok?
             this.isStatic = this.methodClassFile.isMethodStatic(this.methodSignature);
@@ -336,7 +336,7 @@ public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKE
                     state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_S, false, this.pcOffset);
                     break;
                 case VOID:
-                    state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_V, false, this.pcOffset);
+                    state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_NULL, false, this.pcOffset);
                     break;
                 }
             } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
@@ -354,7 +354,7 @@ public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKE
             try {
                 final Signature methodSignatureOverriding = lookupMethodImplOverriding(state, this.ctx, this.methodClassFile, this.methodSignature, this.isInterface, this.isSpecial, this.isStatic, this.isNative);
                 if (methodSignatureOverriding != null) {
-                    final ClassFile classFileMethodOverriding = hier.getClassFileClassArray(CLASSLOADER_APP, methodSignatureOverriding.getClassName());
+                    final ClassFile classFileMethodOverriding = hier.getClassFileClassArray(CLASSLOADER_APP, methodSignatureOverriding.getClassName()); //if lookup had success, the overriding class is already loaded
                     checkOverridingMethodFits(state, this.methodClassFile, this.methodSignature, classFileMethodOverriding, methodSignatureOverriding);
                     this.methodClassFile = classFileMethodOverriding;
                     this.methodSignature = methodSignatureOverriding;

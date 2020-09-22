@@ -95,7 +95,6 @@ import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.InitializationException;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
@@ -386,14 +385,18 @@ public final class Action_START {
 
     private void invokeGetSystemClassLoader(State state, ExecutionContext ctx) {
         try {
+        	final ClassFile cf_JAVA_OBJECT = state.getClassHierarchy().loadCreateClass(JAVA_OBJECT);
             final Snippet snippet = state.snippetFactoryNoWrap()
             .op_invokestatic(JAVA_CLASSLOADER_GETSYSTEMCLASSLOADER)
             .op_pop() //discards the return value
             .op_invokestatic(noclass_SETSTANDARDCLASSLOADERSREADY)
             .op_return()
             .mk();
-            state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang");
-        } catch (ThreadStackEmptyException | InvalidProgramCounterException | FrozenStateException e) {
+            state.pushSnippetFrameNoWrap(snippet, 0, cf_JAVA_OBJECT);
+        } catch (ThreadStackEmptyException | InvalidProgramCounterException |  
+        		InvalidInputException | ClassFileNotFoundException | ClassFileIllFormedException | 
+        		ClassFileNotAccessibleException | IncompatibleClassFileException | BadClassFileVersionException | 
+        		RenameUnsupportedException | WrongClassNameException e) {
             //this should not happen now
             failExecution(e);
         }

@@ -13,7 +13,7 @@ public final class DecisionAlternative_XSWITCH implements DecisionAlternative {
     /** The {@link String} representation of this object. */
 	private final String toString;
 	
-	private DecisionAlternative_XSWITCH(int value, boolean isDefault, boolean isConcrete, int branchNumber) {
+	private DecisionAlternative_XSWITCH(int value, boolean isDefault, boolean isConcrete) {
 		this.value = value;
 		this.isDefault = isDefault;
 		this.isConcrete = isConcrete;
@@ -26,8 +26,8 @@ public final class DecisionAlternative_XSWITCH implements DecisionAlternative {
 	 * @param value the {@code int} value of the case entry. It must be
 	 *        greater than zero.
 	 */
-	public static DecisionAlternative_XSWITCH toConcrete(int value, int branchNumber) { 
-		return new DecisionAlternative_XSWITCH(value, false, true, branchNumber);
+	public static DecisionAlternative_XSWITCH toConcrete(int value) { 
+		return new DecisionAlternative_XSWITCH(value, false, true);
 	}	
 	
 	/**
@@ -37,8 +37,8 @@ public final class DecisionAlternative_XSWITCH implements DecisionAlternative {
      *        greater than zero.
 	 * @param branchNumber an {@code int}, the number of the branch.
 	 */
-	public static DecisionAlternative_XSWITCH toNonconcrete(int value, int branchNumber) { 
-		return new DecisionAlternative_XSWITCH(value, false, false, branchNumber);
+	public static DecisionAlternative_XSWITCH toNonconcrete(int value) { 
+		return new DecisionAlternative_XSWITCH(value, false, false);
 	}
 
 	/**
@@ -47,8 +47,8 @@ public final class DecisionAlternative_XSWITCH implements DecisionAlternative {
 	 * @param branchNumber an {@code int}, the number of the branch.
 	 * @return the corresponding {@link DecisionAlternative_XSWITCH}.
 	 */
-	public static DecisionAlternative_XSWITCH toConcreteDefault(int branchNumber) {
-		return new DecisionAlternative_XSWITCH(0, true, true, branchNumber);
+	public static DecisionAlternative_XSWITCH toConcreteDefault() {
+		return new DecisionAlternative_XSWITCH(0, true, true);
 	}
 	
 	/**
@@ -57,8 +57,8 @@ public final class DecisionAlternative_XSWITCH implements DecisionAlternative {
 	 * @param branchNumber an {@code int}, the number of the branch.
 	 * @return the corresponding {@link DecisionAlternative_XSWITCH}.
 	 */
-	public static DecisionAlternative_XSWITCH toNonconcreteDefault(int branchNumber) {
-		return new DecisionAlternative_XSWITCH(0, true, false, branchNumber);
+	public static DecisionAlternative_XSWITCH toNonconcreteDefault() {
+		return new DecisionAlternative_XSWITCH(0, true, false);
 	}
 	
 	/**

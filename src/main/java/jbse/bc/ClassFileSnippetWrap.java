@@ -3,6 +3,7 @@ package jbse.bc;
 import java.util.List;
 
 import jbse.bc.exc.AttributeNotFoundException;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
@@ -305,9 +306,16 @@ public class ClassFileSnippetWrap extends ClassFile {
     throws MethodNotFoundException {
     	return this.component.getMethodAnnotationParameterValueString(methodSignature, annotation, parameter);
     }
+    
+    @Override
+    public ParameterInfo[] getMethodParameters(Signature methodSignature) 
+    throws MethodNotFoundException {
+    	return this.component.getMethodParameters(methodSignature);
+    }
 
     @Override
-    public String[] getMethodThrownExceptions(Signature methodSignature) throws MethodNotFoundException {
+    public String[] getMethodThrownExceptions(Signature methodSignature) 
+    throws MethodNotFoundException {
     	return this.component.getMethodThrownExceptions(methodSignature);
     }
 
@@ -336,7 +344,8 @@ public class ClassFileSnippetWrap extends ClassFile {
     }
 
     @Override
-    public ConstantPoolValue getValueFromConstantPool(int index) throws InvalidIndexException {
+    public ConstantPoolValue getValueFromConstantPool(int index) 
+    throws InvalidIndexException, ClassFileIllFormedException {
     	if (this.snippet.containsValueFromConstantPool(index)) {
     		try {
     			return this.snippet.getValueFromConstantPool(index);
@@ -478,6 +487,12 @@ public class ClassFileSnippetWrap extends ClassFile {
     }
     
     @Override
+    public CallSiteSpecifier getCallSiteSpecifier(int index)
+    throws InvalidIndexException, ClassFileIllFormedException {
+    	return this.component.getCallSiteSpecifier(index);
+    }
+    
+    @Override
     public ClassFile getSuperclass() {
     	return this.component.getSuperclass();
     }
@@ -498,9 +513,9 @@ public class ClassFileSnippetWrap extends ClassFile {
     }
 
     @Override
-    public int getLocalVariableLength(Signature methodSignature)
+    public int getLocalVariableTableLength(Signature methodSignature)
     throws MethodNotFoundException, MethodCodeNotFoundException {
-    	return this.component.getLocalVariableLength(methodSignature);
+    	return this.component.getLocalVariableTableLength(methodSignature);
     }
 
     @Override

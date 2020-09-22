@@ -3,10 +3,12 @@ package jbse.algo.meta;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.lookupMethodImpl;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
-import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Offsets.offsetInvoke;
+import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_CLAZZ;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_NAME;
@@ -15,7 +17,11 @@ import static jbse.bc.Signatures.JAVA_METHODTYPE;
 import static jbse.bc.Signatures.JAVA_METHODTYPE_METHODDESCRIPTOR;
 import static jbse.bc.Signatures.JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING;
 import static jbse.bc.Signatures.JAVA_STRING;
+import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
+import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
 import static jbse.common.Type.parametersNumber;
+import static jbse.common.Type.splitParametersDescriptors;
 
 import java.util.function.Supplier;
 
@@ -27,21 +33,33 @@ import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.bc.Snippet;
+import jbse.bc.exc.BadClassFileVersionException;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.MethodAbstractException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
+import jbse.bc.exc.RenameUnsupportedException;
+import jbse.bc.exc.WrongClassNameException;
+import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
+import jbse.mem.Array;
 import jbse.mem.Instance;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
+import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Reference;
+import jbse.val.ReferenceConcrete;
 import jbse.val.Value;
 import jbse.val.exc.InvalidTypeException;
 
@@ -58,6 +76,7 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
 	private boolean isLinkStatic;          //set by setLinkFeatures
     private ClassFile methodImplClass;     //set by cookMore
     private Signature methodImplSignature; //set by cookMore
+    private Value[] parameters;            //set by cookMore
     
     public void setLinkFeatures(boolean isLinkInterface, boolean isLinkSpecial, boolean isLinkStatic) {
     	this.isLinkInterface = isLinkInterface;
@@ -73,7 +92,9 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
 	@Override
 	protected void cookMore(State state) 
 	throws UndefinedResultException, SymbolicValueNotAllowedException, 
-	ThreadStackEmptyException, InterruptException, InvalidInputException {
+	ThreadStackEmptyException, InterruptException, InvalidInputException, 
+	RenameUnsupportedException, ClasspathException {
+		final Calculator calc = this.ctx.getCalculator();
 		try {
 			//gets the trailing MemberName
 			final Reference referenceMemberName = (Reference) this.data.operand(numOperands().get() - 1);
@@ -81,7 +102,7 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
 				throw new UndefinedResultException("Invoked method java.lang.invoke.MethodHandle.linkToVirtual with null trailing MemberName parameter.");
 			}
 			final Instance instanceMemberName = (Instance) state.getObject(referenceMemberName);
-	        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME);
+	        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().loadCreateClass(JAVA_MEMBERNAME);
 	        if (cf_JAVA_MEMBERNAME == null) {
 	        	//this should never happen
 	            failExecution("Could not find class java.lang.invoke.MemberName.");
@@ -96,7 +117,7 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
 				throw new UndefinedResultException("The trailing MemberName parameter to java.lang.invoke.MethodHandle.linkToVirtual has null value for the field String name.");
 			}
 			final Instance instanceName = (Instance) state.getObject(referenceName);
-	        final ClassFile cf_JAVA_STRING = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING);
+	        final ClassFile cf_JAVA_STRING = state.getClassHierarchy().loadCreateClass(JAVA_STRING);
 	        if (cf_JAVA_STRING == null) {
 	        	//this should never happen
 	            failExecution("Could not find class java.lang.String.");
@@ -124,7 +145,7 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
                 failExecution("The trailing MemberName parameter to java.lang.invoke.MethodHandle.linkToVirtual has null value for the field Object type.");
 			}
 			final Instance instanceType = (Instance) state.getObject(referenceType);
-	        final ClassFile cf_JAVA_METHODTYPE = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_METHODTYPE);
+	        final ClassFile cf_JAVA_METHODTYPE = state.getClassHierarchy().loadCreateClass(JAVA_METHODTYPE);
 	        if (cf_JAVA_METHODTYPE == null) {
 	        	//this should never happen
 	            failExecution("Could not find class java.lang.invoke.MethodType.");
@@ -147,7 +168,7 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
 	                    .op_pop() //we cannot use the return value so we need to clean the stack
 	                    .op_return()
 	                    .mk();
-	                state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang/invoke"); //zero offset so that upon return from the snippet will repeat the invocation of invokehandle and reexecute this algorithm 
+	                state.pushSnippetFrameNoWrap(snippet, 0, cf_JAVA_MEMBERNAME); //zero offset so that upon return from the snippet will repeat the invocation of invokehandle and reexecute this algorithm 
 	                exitFromAlgorithm();
 	            } catch (InvalidProgramCounterException | InvalidInputException e) {
 	                //this should never happen
@@ -191,19 +212,63 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
             } catch (IncompatibleClassFileException | MethodNotAccessibleException | 
             		 MethodAbstractException | MethodNotFoundException e) {
             	throw new UndefinedResultException(e);
-            }            
+            }
+            
+    		final boolean isVarargs = this.methodImplClass.isMethodVarargs(this.methodImplSignature);
+    		if (isVarargs) {
+    			final int actualParametersNumber = parametersNumber(this.methodImplSignature.getDescriptor(), this.isLinkStatic);
+    			this.parameters = new Value[actualParametersNumber];
+    			System.arraycopy(this.data.operands(), 0, this.parameters, 0, this.parameters.length - 1);
+    			final String[] methodImplDescriptorSplit = splitParametersDescriptors(this.methodImplSignature.getDescriptor());
+    			final String varargsArrayType = methodImplDescriptorSplit[methodImplDescriptorSplit.length - 1];
+    			final ClassFile varargsArrayClass = state.getClassHierarchy().loadCreateClass(varargsArrayType);
+    			final int arrayLength = numOperands().get() - actualParametersNumber;
+    			final ReferenceConcrete referenceVarargsArray = state.createArray(calc, null, calc.valInt(arrayLength), varargsArrayClass);
+    			final Array varargsArray = (Array) state.getObject(referenceVarargsArray);
+    			final int start = actualParametersNumber - 1;
+    			for (int i = 0; i < arrayLength; ++i) {
+    				varargsArray.setFast(calc.valInt(i), this.data.operands()[start + i]);
+    			}
+    			this.parameters[actualParametersNumber - 1] = referenceVarargsArray;
+    		} else {
+    			this.parameters = new Value[numOperands().get() - 1];
+    			System.arraycopy(this.data.operands(), 0, this.parameters, 0, this.parameters.length);
+    		}
 		} catch (ClassCastException e) {
 			throw new UndefinedResultException(e);
+        } catch (ClassFileNotFoundException e) {
+            //TODO should this exception wrap (or throw) a ClassNotFoundException?
+            throwNew(state, calc, NO_CLASS_DEFINITION_FOUND_ERROR);
+            exitFromAlgorithm();
+		} catch (BadClassFileVersionException e) {
+            throwNew(state, calc, UNSUPPORTED_CLASS_VERSION_ERROR);
+            exitFromAlgorithm();
+		} catch (ClassFileNotAccessibleException e) {
+            throwNew(state, calc, ILLEGAL_ACCESS_ERROR);
+            exitFromAlgorithm();
+		} catch (IncompatibleClassFileException e) {
+            throwNew(state, calc, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            exitFromAlgorithm();
+		} catch (HeapMemoryExhaustedException e) {
+            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
+            exitFromAlgorithm();
+		} catch (ClassFileIllFormedException e) {
+            //TODO is it ok?
+            throwVerifyError(state, calc);
+            exitFromAlgorithm();
+        } catch (MethodNotFoundException | FastArrayAccessNotAllowedException | 
+        		InvalidTypeException | WrongClassNameException e) {
+           	//this should never happen
+           	failExecution(e);
 		}
 	}
 
 	@Override
 	protected StrategyUpdate<DecisionAlternative_NONE> updater() {
 		return (state, alt) -> {
-			final Value[] parameters = new Value[numOperands().get() - 1];
-			System.arraycopy(this.data.operands(), 0, parameters, 0, parameters.length);
-            try {
-                state.pushFrame(this.ctx.getCalculator(), this.methodImplClass, this.methodImplSignature, false, offsetInvoke(false), parameters);
+            //builds the parameters
+			try {
+				state.pushFrame(this.ctx.getCalculator(), this.methodImplClass, this.methodImplSignature, false, offsetInvoke(false), this.parameters);
             } catch (InvalidProgramCounterException | InvalidSlotException | InvalidTypeException e) {
                 //TODO is it ok?
                 throwVerifyError(state, this.ctx.getCalculator());

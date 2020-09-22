@@ -13,8 +13,11 @@ public final class Type {
     /** Not recognized as a value of any type. */
     public static final char ERROR          = '\0';
 
-    /** The (almost) top type, which fits a default datum. */
+    /** The (cat 1) "top" type that, when input, can receive from any output. */
     public static final char UNKNOWN        = '?';
+
+    /** The (cat 1) "bottom" type that, when output, can feed any input. */
+    public static final char KNOWN        = '£';
 
     /** The type {@code void}. */
     public static final char VOID           = 'V';
@@ -438,8 +441,9 @@ public final class Type {
      * primitive type.
      * 
      * @param c a {@code char}. It must be {@link #isPrimitive(char) isPrimitive}{@code (c) || 
-     *        c == }{@link #UNKNOWN} (note that {@link #UNKNOWN} is assumed to be category 1 because 
-     *        DefaultValues must be able to fill single slots).
+     *        c == }{@link #UNKNOWN}{@code || 
+     *        c == }{@link #KNOWN} (note that {@link #UNKNOWN} and {@link #KNOWN} are assumed to be category 1 
+     *        because DefaultValues must be able to fill single slots).
      * @return a {@code boolean}.
      */
     public static boolean isCat_1(char c) {
@@ -899,6 +903,8 @@ public final class Type {
     		} else {
     			return "" + DOUBLE;
     		}
+    	} else if (isVoid(type)) {
+    		return type;
     	} else {
     		return "" + REFERENCE + "java/lang/Object" + TYPEEND;
     	}

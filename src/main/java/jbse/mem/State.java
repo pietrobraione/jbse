@@ -2,6 +2,7 @@ package jbse.mem;
 
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
+import static jbse.bc.Opcodes.OP_INVOKEDYNAMIC;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_CLASSLOADER;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER;
@@ -29,6 +30,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -247,7 +249,7 @@ public final class State implements Cloneable {
         }
     }
     
-    private static class Inflater {
+    private static final class Inflater {
         final long address;
         
         final boolean nowrap;
@@ -268,6 +270,150 @@ public final class State implements Cloneable {
         Inflater(long address, boolean nowrap) {
             this(address, nowrap, null, 0, 0);
         }
+    }
+    
+    /**
+     * Class used as key for the method handles cache.
+     * 
+     * @author Pietro Braione
+     */
+    private static final class MHKey {
+    	final int refKind; 
+    	final ClassFile container;
+    	final List<ClassFile> descriptorResolved;
+    	final String name;
+    	
+    	final int hashCode;
+    	
+    	MHKey(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name) throws InvalidInputException {
+    		if (container == null || descriptorResolved == null || name == null) {
+    			throw new InvalidInputException("Tried to create a method handle key with null container class, or descriptor, or name of the field/method.");
+    		}
+    		this.refKind = refKind;
+    		this.container = container;
+    		this.descriptorResolved = Collections.unmodifiableList(Arrays.asList(descriptorResolved));
+    		this.name = name;
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + this.refKind;
+			result = prime * result + this.container.hashCode();
+			result = prime * result + this.descriptorResolved.hashCode();
+			result = prime * result + this.name.hashCode();
+			this.hashCode = result;
+    	}
+
+		@Override
+		public int hashCode() {
+			return this.hashCode;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (getClass() != obj.getClass()) {
+				return false;
+			}
+			final MHKey other = (MHKey) obj;
+			if (this.refKind != other.refKind) {
+				return false;
+			}
+			if (!this.container.equals(other.container)) {
+				return false;
+			}
+			if (!this.descriptorResolved.equals(other.descriptorResolved)) {
+				return false;
+			}
+			if (!this.name.equals(other.name)) { 
+				return false;
+			}
+			return true;
+		}
+    }
+    
+    /**
+     * Class used as key for the call sites link maps
+     * .
+     * @author Pietro Braione
+     *
+     */
+    private static final class CSKey {
+    	final ClassFile containerClass;
+    	final String descriptor;
+    	final String name;
+    	final int programCounter;
+    	
+    	final int hashCode;
+    	
+    	CSKey(ClassFile containerClass, String descriptor, String name, int programCounter) throws InvalidInputException {
+    		if (containerClass == null || descriptor == null || name == null || programCounter < 0) {
+    			throw new InvalidInputException("Tried to create a call site key with null containerClass, descriptor or name, or with negative program counter.");
+    		}
+    		final Signature methodSignature = new Signature(containerClass.getClassName(), descriptor, name);
+    		if (!containerClass.hasMethodImplementation(methodSignature)) {
+    			throw new InvalidInputException("Tried to create a call site key for nonexisting method.");
+    		}
+    		final byte[] methodCode;
+			try {
+				methodCode = containerClass.getMethodCodeBySignature(methodSignature);
+			} catch (MethodNotFoundException | MethodCodeNotFoundException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
+    		if (programCounter >= methodCode.length) {
+    			throw new InvalidInputException("Tried to create a call site key for a programCounter exceeding the code length.");
+    		}
+    		if (methodCode[programCounter] != OP_INVOKEDYNAMIC) {
+    			throw new InvalidInputException("Tried to create a call site key for a programCounter not pointing to a dynamic call site.");
+    		}
+    		this.containerClass = containerClass;
+    		this.descriptor = descriptor;
+    		this.name = name;
+    		this.programCounter = programCounter;
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + this.containerClass.hashCode();
+			result = prime * result + this.descriptor.hashCode();
+			result = prime * result + this.name.hashCode();
+			result = prime * result + this.programCounter;
+			this.hashCode = result;
+    	}
+
+		@Override
+		public int hashCode() {
+			return this.hashCode;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (getClass() != obj.getClass()) {
+				return false;
+			}
+			final CSKey other = (CSKey) obj;
+			if (!this.containerClass.equals(other.containerClass)) {
+				return false;
+			}
+			if (!this.descriptor.equals(other.descriptor)) {
+				return false;
+			}
+			if (!this.name.equals(other.name)) {
+				return false;
+			}
+			if (this.programCounter != other.programCounter) {
+				return false;
+			}
+			return true;
+		}
     }
 
     /** 
@@ -318,8 +464,11 @@ public final class State implements Cloneable {
      */
     private boolean standardClassLoadersNotReady = true;
     
-    /** The {@link ReferenceConcrete}s to {@link Instance}s of {@code java.lang.invoke.MethodType}s. */
-    private HashMap<String, ReferenceConcrete> methodTypes = new HashMap<>();
+    /** The {@link ReferenceConcrete}s to {@link Instance}s of {@code java.lang.invoke.MethodType}. */
+    private HashMap<List<ClassFile>, ReferenceConcrete> methodTypes = new HashMap<>();
+    
+    /** The {@link ReferenceConcrete}s to {@link Instance}s of {@code java.lang.invoke.MethodHandle}. */
+    private HashMap<MHKey, ReferenceConcrete> methodHandles = new HashMap<>();
     
     /** Maps file descriptors/handles to (meta-level) open files. */
     private HashMap<Long, Object> files = new HashMap<>();
@@ -423,14 +572,26 @@ public final class State implements Cloneable {
      * (type checking) semantics to their adapter methods, indicated
      * as {@link ReferenceConcrete}s to their respective {@code java.lang.invoke.MemberName}s.
      */
-    private HashMap<Signature, ReferenceConcrete> linkInvokers = new HashMap<>();
+    private HashMap<Signature, ReferenceConcrete> methodAdapters = new HashMap<>();
     
     /** 
      * Links signature polymorphic methods that have nonintrinsic
      * (type checking) semantics to their invocation appendices, indicated
      * as {@link ReferenceConcrete}s to {@code Object[]}s.
      */
-    private HashMap<Signature, ReferenceConcrete> linkAppendices = new HashMap<>();
+    private HashMap<Signature, ReferenceConcrete> methodAppendices = new HashMap<>();
+    
+    /** 
+     * Links dynamic call sites to their adapter methods, indicated
+     * as {@link ReferenceConcrete}s to their respective {@code java.lang.invoke.MemberName}s.
+     */
+    private HashMap<CSKey, ReferenceConcrete> callSiteAdapters = new HashMap<>();
+    
+    /** 
+     * Links dynamic call sites to their invocation appendices, indicated
+     * as {@link ReferenceConcrete}s to {@code Object[]}s.
+     */
+    private HashMap<CSKey, ReferenceConcrete> callSiteAppendices = new HashMap<>();
     
     /** The maximum length an array may have to be granted simple representation. */
     private final int maxSimpleArrayLength;
@@ -491,7 +652,7 @@ public final class State implements Cloneable {
                  Map<String, Set<String>> expansionBackdoor,
                  Map<String, String> modelClassSubstitutions,
                  SymbolFactory symbolFactory) 
-                 throws InvalidClassFileFactoryClassException, InvalidInputException {
+    throws InvalidClassFileFactoryClassException, InvalidInputException {
     	if (historyPoint == null || symbolFactory == null) {
     		throw new InvalidInputException("Attempted the creation of a state with null historyPoint, or symbolFactory.");
     	}
@@ -971,7 +1132,8 @@ public final class State implements Cloneable {
      *         <li>{@code ref} is {@link Null}, or</li> 
      *         <li>{@code ref} is concrete and its heap position is free, or</li> 
      *         <li>{@code ref} is symbolic and resolved to null, or</li> 
-     *         <li>{@code ref} is symbolic and unresolved.</li>
+     *         <li>{@code ref} is symbolic and unresolved, or</li>
+     *         <li>{@code ref} is a {@link KlassPseudoReference}.</li>
      *         </ul>
      * @throws FrozenStateException if the state is frozen.
      * @throws NullPointerException if {@code ref == null}.
@@ -1090,8 +1252,8 @@ public final class State implements Cloneable {
     }
     
     /**
-     * Checks whether a {@link Signature} is linked to an 
-     * adapter method. 
+     * Checks whether a  a signature polymorphic nonintrinsic 
+     * method is linked to an adapter/appendix. 
      * 
      * @param signature a {@link Signature}.
      * @return {@code true} iff {@code signature} is the
@@ -1099,35 +1261,35 @@ public final class State implements Cloneable {
      *         linked to an adapter method.
      */
     public boolean isMethodLinked(Signature signature) {
-        return this.linkInvokers.containsKey(signature);
+        return this.methodAdapters.containsKey(signature);
     }
 
     /**
      * Links a signature polymorphic nonintrinsic method
      * to an adapter method, represented as a reference to
-     * a {@link java.lang.invoke.MemberName}.
+     * a {@link java.lang.invoke.MemberName}, and an appendix.
      * 
      * @param signature a {@link Signature}. It should be 
      *        the signature of a signature polymorphic
      *        nonintrinsic method, but this is not checked.
-     * @param invoker a {@link ReferenceConcrete}. It should
+     * @param adapter a {@link ReferenceConcrete}. It should
      *        refer an {@link Instance} of a {@link java.lang.invoke.MemberName},
      *        but this is not checked.
      * @param appendix a {@link ReferenceConcrete}. It should
      *        refer an {@link Instance} of a {@link java.lang.Object[]},
      *        but this is not checked.
      * @throws FrozenStateException if the state is frozen.
-     * @throws NullPointerException if {@code signature == null || invoker == null || appendix == null}.
+     * @throws NullPointerException if {@code signature == null || adapter == null || appendix == null}.
      */
-    public void link(Signature signature, ReferenceConcrete invoker, ReferenceConcrete appendix) throws FrozenStateException {
+    public void linkMethod(Signature signature, ReferenceConcrete adapter, ReferenceConcrete appendix) throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (signature == null || invoker == null || appendix == null) {
+        if (signature == null || adapter == null || appendix == null) {
             throw new NullPointerException(); //TODO throw better exception
         }
-        this.linkInvokers.put(signature, invoker);
-        this.linkAppendices.put(signature, appendix);
+        this.methodAdapters.put(signature, adapter);
+        this.methodAppendices.put(signature, appendix);
     }
     
     /**
@@ -1136,11 +1298,11 @@ public final class State implements Cloneable {
      * 
      * @param signature a {@link Signature}.
      * @return a {@link ReferenceConcrete} to a {@code java.lang.invoke.MemberName}
-     *         set with a previous call to {@link #link(Signature, ReferenceConcrete, ReferenceConcrete) link}, 
+     *         set with a previous call to {@link #linkMethod(Signature, ReferenceConcrete, ReferenceConcrete) link}, 
      *         or {@code null} if {@code signature} was not previously linked.
      */
-    public ReferenceConcrete getAdapter(Signature signature) {
-        return this.linkInvokers.get(signature);
+    public ReferenceConcrete getMethodAdapter(Signature signature) {
+        return this.methodAdapters.get(signature);
     }
     
     /**
@@ -1149,11 +1311,114 @@ public final class State implements Cloneable {
      * 
      * @param signature a {@link Signature}.
      * @return a {@link ReferenceConcrete} to an {@code Object[]}
-     *         set with a previous call to {@link #link(Signature, ReferenceConcrete, ReferenceConcrete) link}, 
+     *         set with a previous call to {@link #linkMethod(Signature, ReferenceConcrete, ReferenceConcrete) link}, 
      *         or {@code null} if {@code signature} was not previously linked.
      */
-    public ReferenceConcrete getAppendix(Signature signature) {
-        return this.linkAppendices.get(signature);
+    public ReferenceConcrete getMethodAppendix(Signature signature) {
+        return this.methodAppendices.get(signature);
+    }
+    
+    /**
+     * Checks whether a dynamic call site is linked to an 
+     * adapter/appendix. 
+     * 
+     * @param containerClass the {@link ClassFile} of the 
+     *        dynamic call site method.
+     * @param descriptor a {@link String}, the descriptor 
+     *        of the dynamic call site method.
+     * @param name a {@link String}, the name 
+     *        of the dynamic call site method.
+     * @param programCounter an {@code int}, the displacement
+     *        in the method's bytecode of the dynamic call site.
+     * @return {@code true} iff the dynamic call site has been 
+     *         previously linked to an adapter method.
+     * @throws InvalidInputException if any of the parameters
+     *         is {@code null}, or if the parameters do not 
+     *         indicate a method's dynamic call site.
+     */
+    public boolean isCallSiteLinked(ClassFile containerClass, String descriptor, String name, int programCounter) 
+    throws InvalidInputException {
+        return this.callSiteAdapters.containsKey(new CSKey(containerClass, descriptor, name, programCounter));
+    }
+
+    /**
+     * Links a dynamic call site to an adapter method, represented 
+     * as a reference to a {@link java.lang.invoke.MemberName}, 
+     * and an appendix.
+     * 
+     * @param containerClass the {@link ClassFile} of the 
+     *        dynamic call site method.
+     * @param descriptor a {@link String}, the descriptor 
+     *        of the dynamic call site method.
+     * @param name a {@link String}, the name 
+     *        of the dynamic call site method.
+     * @param programCounter an {@code int}, the displacement
+     *        in the method's bytecode of the dynamic call site.
+     * @param adapter a {@link ReferenceConcrete}. It should
+     *        refer an {@link Instance} of a {@link java.lang.invoke.MemberName},
+     *        but this is not checked.
+     * @param appendix a {@link ReferenceConcrete}. It should
+     *        refer an {@link Instance} of a {@link java.lang.Object[]},
+     *        but this is not checked.
+     * @throws InvalidInputException if the state is frozen or any of the 
+     *         parameters is {@code null}, or if the {@code containerClass}, 
+     *         {@code descriptor}, {@code name}, {@code programCounter} parameters 
+     *         do not indicate a method's dynamic call site
+     */
+    public void linkCallSite(ClassFile containerClass, String descriptor, String name, int programCounter, ReferenceConcrete adapter, ReferenceConcrete appendix) 
+    throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        this.callSiteAdapters.put(new CSKey(containerClass, descriptor, name, programCounter), adapter);
+        this.callSiteAppendices.put(new CSKey(containerClass, descriptor, name, programCounter), appendix);
+    }
+    
+    /**
+     * Returns the adapter method for a dynamic call site.
+     * 
+     * @param containerClass the {@link ClassFile} of the 
+     *        dynamic call site method.
+     * @param descriptor a {@link String}, the descriptor 
+     *        of the dynamic call site method.
+     * @param name a {@link String}, the name 
+     *        of the dynamic call site method.
+     * @param programCounter an {@code int}, the displacement
+     *        in the method's bytecode of the dynamic call site.
+     * @return a {@link ReferenceConcrete} to a {@code java.lang.invoke.MemberName}
+     *         set with a previous call to {@link #linkMethod(Signature, ReferenceConcrete, ReferenceConcrete) link}, 
+     *         or {@code null} if {@code signature} was not previously linked.
+     * @throws InvalidInputException if any of the parameters
+     *         is {@code null}, or if the parameters do not 
+     *         indicate a method's dynamic call site.
+     */
+    public ReferenceConcrete getCallSiteAdapter(ClassFile containerClass, String descriptor, String name, int programCounter) 
+    throws InvalidInputException {
+        return this.callSiteAdapters.get(new CSKey(containerClass, descriptor, name, programCounter));
+    }
+    
+    /**
+     * Returns the appendix for a linked signature 
+     * polymorphic nonintrinsic method.
+     * 
+     * @param containerClass the {@link ClassFile} of the 
+     *        dynamic call site method.
+     * @param descriptor a {@link String}, the descriptor 
+     *        of the dynamic call site method.
+     * @param name a {@link String}, the name 
+     *        of the dynamic call site method.
+     * @param programCounter an {@code int}, the displacement
+     *        in the method's bytecode of the dynamic call site.
+     * @return a {@link ReferenceConcrete} to an {@code Object[]}
+     *         set with a previous call to {@link #linkMethod(Signature, ReferenceConcrete, ReferenceConcrete) link}, 
+     *         or {@code null} if {@code signature} was not previously linked.
+     * @throws InvalidInputException if any of the parameters
+     *         is {@code null}, or if the parameters do not 
+     *         indicate a method's dynamic call site.
+     */
+    public ReferenceConcrete getCallSiteAppendix(ClassFile containerClass, String descriptor, String name, int programCounter) 
+    throws InvalidInputException {
+        return this.callSiteAppendices.get(new CSKey(containerClass, descriptor, name, programCounter));
     }
     
     /**
@@ -1657,8 +1922,8 @@ public final class State implements Cloneable {
      * was exhausted. Use it only to throw critical errors.
      * 
      * @param calc a {@link Calculator}. It must not be {@code null}.
-     * @param classFile the {@link ClassFile} for the class of the new object.
-     * @return a {@link ReferenceConcrete} to the newly created object.
+     * @param classFile the {@link ClassFile} for the class of the new {@link Instance}.
+     * @return a {@link ReferenceConcrete} to the newly created {@link Instance}.
      * @throws FrozenStateException if the state is frozen.
      * @throws InvalidInputException if {@code calc == null || classFile == null} 
      *         or if {@code classFile} is invalid, i.e., is the classfile for 
@@ -1743,7 +2008,7 @@ public final class State implements Cloneable {
     private ReferenceConcrete createInstance_JAVA_CLASS(Calculator calc, ClassFile representedClass) 
     throws HeapMemoryExhaustedException {
         try {
-            final ClassFile cf_JAVA_CLASS = this.classHierarchy.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLASS);
+            final ClassFile cf_JAVA_CLASS = this.classHierarchy.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLASS); //surely loaded
             if (cf_JAVA_CLASS == null) {
                 throw new UnexpectedInternalException("Could not find the classfile for java.lang.Class.");
             }
@@ -1809,7 +2074,7 @@ public final class State implements Cloneable {
         }
         final int numOfStaticFields = classFile.numOfStaticFields();
         final Signature[] fieldsSignatures = classFile.getObjectFields();
-        final KlassImpl k = new KlassImpl(calc, false, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
+        final KlassImpl k = new KlassImpl(calc, false, createSymbolKlassPseudoReference(this.historyPoint, classFile), this.historyPoint, numOfStaticFields, fieldsSignatures);
         k.setIdentityHashCode(calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(classFile, k);
     }
@@ -1915,6 +2180,36 @@ public final class State implements Cloneable {
             //this should never happen
             throw new UnexpectedInternalException(e);
 		}
+    }
+    
+    /**
+     * Creates a new {@link Instance_METALEVELBOX} in the heap 
+     * of the state and injects a content in it.
+     * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param content an {@link Object}.
+     * @return a {@link ReferenceConcrete} to the newly created object.
+     * @throws FrozenStateException if the state is frozen.
+     * @throws InvalidInputException if {@code calc == null}.
+     * @throws HeapMemoryExhaustedException if the heap is full.
+     */
+    public ReferenceConcrete createMetaLevelBox(Calculator calc, Object content) 
+    throws FrozenStateException, InvalidInputException, HeapMemoryExhaustedException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        if (calc == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".createMetaLevelBox with null Calculator calc parameter.");
+        }
+        try { 
+        	final InstanceImpl_METALEVELBOX myObj = new InstanceImpl_METALEVELBOX(calc, this.historyPoint, content);
+        	final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
+        	initIdentityHashCodeConcrete(calc, myObj, retVal);
+        	return retVal;
+        } catch (InvalidTypeException e) {
+        	//this should never happen
+        	throw new UnexpectedInternalException(e);
+        }
     }
     
     /**
@@ -2083,7 +2378,7 @@ public final class State implements Cloneable {
         try {
             final ReferenceConcrete value = createArrayOfChars(calc, stringLit);
             final Simplex hash = calc.valInt(stringLit.hashCode());
-            final ClassFile cf_JAVA_STRING = this.classHierarchy.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING);
+            final ClassFile cf_JAVA_STRING = this.classHierarchy.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING); //surely loaded
             if (cf_JAVA_STRING == null) {
                 throw new UnexpectedInternalException("Could not find classfile for type java.lang.String.");
             }
@@ -2345,50 +2640,126 @@ public final class State implements Cloneable {
     }
     
     /**
-     * Checks if there is an {@link Instance} of {@code java.lang.invoke.MethodHandle} 
+     * Checks if there is an {@link Instance} of {@code java.lang.invoke.MethodType} 
      * in this state's heap for some descriptor.
      * 
-     * @param descriptor a {@link String} representing a descriptor. It is
-     *        not checked.
-     * @return {@code true} iff there is a {@link Instance} in this state's {@link Heap} associated to {@code descriptor}
-     *         by a previous call to {@link #setReferenceToInstance_JAVA_METHODTYPE(String, ReferenceConcrete)}.
+     * @param descriptorResolved a {@link ClassFile}{@code []} representing a resolved 
+     *        method (the {@link ClassFile} for the return value 
+     *        comes last) or field descriptor.
+     * @return {@code true} iff there is a {@link Instance} in this state's {@link Heap} 
+     *         associated to {@code descriptorResolved} by a previous call to 
+     *         {@link #setReferenceToInstance_JAVA_METHODTYPE(ClassFile[], ReferenceConcrete)}.
      */
-    public boolean hasInstance_JAVA_METHODTYPE(String descriptor) {
-        return this.methodTypes.containsKey(descriptor);
+    public boolean hasInstance_JAVA_METHODTYPE(ClassFile[] descriptorResolved) {
+        return this.methodTypes.containsKey(Arrays.asList(descriptorResolved));
     }
     
     /**
      * Returns a {@link ReferenceConcrete} to an {@link Instance} 
-     * of {@code java.lang.invoke.MethodHandle} representing a descriptor. 
+     * of {@code java.lang.invoke.MethodType} representing a descriptor. 
      * 
-     * @param descriptor a {@link String} representing a descriptor. It is
-     *        not checked.
+     * @param descriptorResolved a {@link ClassFile}{@code []} representing a resolved 
+     *        method (the {@link ClassFile} for the return value 
+     *        comes last) or field descriptor.
      * @return a {@link ReferenceConcrete} to the {@link Instance} 
-     *         in this state's {@link Heap} associated to {@code descriptor}
-     *         by a previous call to {@link #setReferenceToInstance_JAVA_METHODTYPE(String, ReferenceConcrete)},
+     *         in this state's {@link Heap} associated to {@code descriptorResolved}
+     *         by a previous call to {@link #setReferenceToInstance_JAVA_METHODTYPE(ClassFile[], ReferenceConcrete)},
      *         or {@code null} if there is not.
      */
-    public ReferenceConcrete referenceToInstance_JAVA_METHODTYPE(String descriptor) {
-        return this.methodTypes.get(descriptor);
+    public ReferenceConcrete referenceToInstance_JAVA_METHODTYPE(ClassFile[] descriptorResolved) {
+        return this.methodTypes.get(Arrays.asList(descriptorResolved));
     }
     
     /**
      * Associates a descriptor to a {@link ReferenceConcrete} to an {@link Instance} 
      * of {@code java.lang.invoke.MethodType} representing it. 
      * 
-     * @param descriptor a {@link String} representing a descriptor. It is
-     *        not checked.
-     * @return a {@link ReferenceConcrete}. It should refer an {@link Instance}
-     *         of {@code java.lang.invoke.MethodType} 
-     *         in this state's {@link Heap} that is semantically equivalent to
-     *         {@code descriptor}, but this is not checked.
+     * @param descriptorResolved a {@link ClassFile}{@code []} representing a resolved 
+     *        method (the {@link ClassFile} for the return value 
+     *        comes last) or field descriptor.
+     * @param ref a {@link ReferenceConcrete}. It should refer an {@link Instance}
+     *        of {@code java.lang.invoke.MethodType} 
+     *        in this state's {@link Heap} that is semantically equivalent to
+     *        {@code descriptorResolved}, but this is not checked.
      * @throws FrozenStateException if the state is frozen.
      */
-    public void setReferenceToInstance_JAVA_METHODTYPE(String descriptor, ReferenceConcrete ref) throws FrozenStateException {
+    public void setReferenceToInstance_JAVA_METHODTYPE(ClassFile[] descriptorResolved, ReferenceConcrete ref) 
+    throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        this.methodTypes.put(descriptor, ref);
+        this.methodTypes.put(Collections.unmodifiableList(Arrays.asList(descriptorResolved)), ref);
+    }
+
+    /**
+     * Checks if there is an {@link Instance} of {@code java.lang.invoke.MethodHandle} 
+     * in this state's heap for some method handle key.
+     * 
+     * @param refKind, an {@code int}, representing the method handle behavior (see the JVM
+     *        Specification v.8, Table 5.4.3.5-A).
+     * @param container a {@link ClassFile}, representing the class containing the field
+     *        or method.  It must not be {@code null}.
+     * @param descriptorResolved a {@link ClassFile}{@code []} representing a resolved 
+     *        method (the {@link ClassFile} for the return value 
+     *        comes last) or field descriptor. It must not be {@code null}.
+     * @param name a {@link String}, the name of the method or field. It must not be {@code null}. 
+     * @return {@code true} iff there is a {@link Instance} in this state's {@link Heap} 
+     *         associated to the key {@code (refKind, container, descriptorResolved, name)} by 
+     *         a previous call to 
+     *         {@link #setReferenceToInstance_JAVA_METHODHANDLE(int, ClassFile, ClassFile[], String, ReferenceConcrete)}.
+     * @throws InvalidInputException if a parameter is invalid (null).
+     */
+    public boolean hasInstance_JAVA_METHODHANDLE(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name) throws InvalidInputException {
+        return this.methodHandles.containsKey(new MHKey(refKind, container, descriptorResolved, name));
+    }
+    
+    /**
+     * Returns a {@link ReferenceConcrete} to an {@link Instance} 
+     * of {@code java.lang.invoke.MethodHandle} representing a suitable key. 
+     * 
+     * @param refKind, an {@code int}, representing the method handle behavior (see the JVM
+     *        Specification v.8, Table 5.4.3.5-A).
+     * @param container a {@link ClassFile}, representing the class containing the field
+     *        or method. It must not be {@code null}.
+     * @param descriptorResolved a {@link ClassFile}{@code []} representing a resolved 
+     *        method (the {@link ClassFile} for the return value 
+     *        comes last) or field descriptor. It must not be {@code null}.
+     * @param name a {@link String}, the name of the method or field.  It must not be {@code null}.
+     * @return a {@link ReferenceConcrete} to the {@link Instance} 
+     *         in this state's {@link Heap} associated to the key {@code (refKind, container, descriptorResolved, name)}
+     *         by a previous call to 
+     *         {@link #setReferenceToInstance_JAVA_METHODHANDLE(int, ClassFile, ClassFile[], String, ReferenceConcrete)}.
+     *         or {@code null} if there is not.
+     * @throws InvalidInputException if a parameter is invalid (null).
+     */
+    public ReferenceConcrete referenceToInstance_JAVA_METHODHANDLE(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name) throws InvalidInputException {
+        return this.methodHandles.get(new MHKey(refKind, container, descriptorResolved, name));
+    }
+    
+    /**
+     * Associates a key to a {@link ReferenceConcrete} to an {@link Instance} 
+     * of {@code java.lang.invoke.MethodHandle} representing it. 
+     * 
+     * @param refKind, an {@code int}, representing the method handle behavior (see the JVM
+     *        Specification v.8, Table 5.4.3.5-A).
+     * @param container a {@link ClassFile}, representing the class containing the field
+     *        or method.  It must not be {@code null}.
+     * @param descriptorResolved a {@link ClassFile}{@code []} representing a resolved 
+     *        method (the {@link ClassFile} for the return value 
+     *        comes last) or field descriptor. It must not be {@code null}.
+     * @param name a {@link String}, the name of the method or field.  It must not be {@code null}.
+     * @param ref a {@link ReferenceConcrete}. It should refer an {@link Instance}
+     *        of {@code java.lang.invoke.MethodHandle} 
+     *        in this state's {@link Heap} that is semantically equivalent to
+     *        the key {@code (refKind, container, descriptorResolved, name)}, but this is not checked.
+     * @throws InvalidInputException if a parameter is invalid (null).
+     */
+    public void setReferenceToInstance_JAVA_METHODHANDLE(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name, ReferenceConcrete ref) 
+    throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        this.methodHandles.put(new MHKey(refKind, container, descriptorResolved, name), ref);
     }
 
     /**
@@ -2613,18 +2984,14 @@ public final class State implements Cloneable {
      * @param snippet a {@link Snippet}.
      * @param returnPCOffset the offset from the current 
      *        program counter of the return program counter.
-     * @param definingClassLoader an {@code int}, the defining
-     *        class loader that is assumed for the current class
-     *        of the frame.
-     * @param packageName a {@code String}, the name of the
-     *        package that is assumed for the current class
-     *        of the frame.
+     * @param hostClass a {@code ClassFile}, the host class 
+     *        assumed for the current class of the frame.
      * @throws InvalidProgramCounterException if {@code returnPCOffset} 
      *         is not a valid program count offset for the state's current frame.
      * @throws ThreadStackEmptyException if the state's thread stack is empty.
      * @throws FrozenStateException if the state is frozen.
      */
-    public void pushSnippetFrameNoWrap(Snippet snippet, int returnPCOffset, int definingClassLoader, String packageName) 
+    public void pushSnippetFrameNoWrap(Snippet snippet, int returnPCOffset, ClassFile hostClass) 
     throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
     	if (this.frozen) {
     	    throw new FrozenStateException();
@@ -2634,7 +3001,7 @@ public final class State implements Cloneable {
         setReturnProgramCounter(returnPCOffset);
 
         //creates the new snippet frame
-        final Frame f = new SnippetFrameNoWrap(snippet, definingClassLoader, packageName, "$SNIPPET$" + this.snippetClassFileCounter++);
+        final Frame f = new SnippetFrameNoWrap(snippet, hostClass, "$SNIPPET$" + this.snippetClassFileCounter++);
 
         this.stack.push(f);
     }
@@ -2649,9 +3016,8 @@ public final class State implements Cloneable {
      * as if the current class were the same before and after the
      * invocation of the method. Therefore, invoking this method is
      * equivalent to invoking 
-     * {@link #pushSnippetFrameNoWrap(Snippet, int, int, String) pushSnippetFrameNoWrap}{@code (snippet, returnPCOffset, }
-     * {@link #getCurrentClass()}{@code .}{@link ClassFile#getDefiningClassLoader() getDefiningClassLoader()}{@code , }
-     * {@link #getCurrentClass()}{@code .}{@link ClassFile#getPackageName() getPackageName()}{@code ).}
+     * {@link #pushSnippetFrameNoWrap(Snippet, int, ClassFile) pushSnippetFrameNoWrap}{@code (snippet, returnPCOffset, }
+     * {@link #getCurrentClass()}{@code ).}
      * 
      * @param snippet a {@link Snippet}.
      * @param returnPCOffset the offset from the current 
@@ -2663,7 +3029,7 @@ public final class State implements Cloneable {
      */
     public void pushSnippetFrameNoWrap(Snippet snippet, int returnPCOffset) 
     throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
-    	pushSnippetFrameNoWrap(snippet, returnPCOffset, getCurrentClass().getDefiningClassLoader(), getCurrentClass().getPackageName());
+    	pushSnippetFrameNoWrap(snippet, returnPCOffset, getCurrentClass());
     }
     
     private void narrowArgs(Calculator calc, Value[] args, Signature methodSignatureImpl, boolean isStatic) 
@@ -4012,6 +4378,16 @@ public final class State implements Cloneable {
         return this.methodTypes.values();
     }
     
+    /**
+     * Getter for garbage collection.
+     * 
+     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
+     *         of all the references to {@link Instance} of {@link java.lang.invoke.MethodHandle}.
+     */
+    Collection<ReferenceConcrete> getMethodHandles() {
+        return this.methodHandles.values();
+    }
+    
     private State deepCopyHeapAndStaticAreaExcluded() {
         final State o;
         try {
@@ -4025,12 +4401,18 @@ public final class State implements Cloneable {
 
         //classes
         o.classes = new HashMap<>(o.classes);
+        
+        //classLoaders
+        o.classLoaders = new ArrayList<>(o.classLoaders);
 
         //classesPrimitive
         o.classesPrimitive = new HashMap<>(o.classesPrimitive);
         
         //methodTypes
         o.methodTypes = new HashMap<>(o.methodTypes);
+        
+        //methodHandles
+        o.methodHandles = new HashMap<>(o.methodHandles);
         
         //files
         try {
@@ -4153,16 +4535,22 @@ public final class State implements Cloneable {
         //pathCondition
         o.pathCondition = o.pathCondition.clone();
 
-        //exc and val are values, so they are immutable
+        //exc and val are Values, so they are immutable
+        
+        //methodAdapters
+        o.methodAdapters = new HashMap<>(o.methodAdapters);
+        
+        //methodAppendices
+        o.methodAppendices = new HashMap<>(o.methodAppendices);
+        
+        //callSiteAdapters
+        o.callSiteAdapters = new HashMap<>(o.callSiteAdapters);
+        
+        //callSiteAppendices
+        o.callSiteAppendices = new HashMap<>(o.callSiteAppendices);
 
         //symbolFactory
         o.symbolFactory = o.symbolFactory.clone();
-        
-        //linkInvokers
-        o.linkInvokers = new HashMap<>(o.linkInvokers);
-        
-        //linkAppendices
-        o.linkAppendices = new HashMap<>(o.linkAppendices);
         
         //all other members are immutable
 

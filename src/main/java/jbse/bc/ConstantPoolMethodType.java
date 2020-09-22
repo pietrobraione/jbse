@@ -1,28 +1,26 @@
-package jbse.algo;
-
-import jbse.bc.ConstantPoolValue;
-import jbse.val.Reference;
+package jbse.bc;
 
 /**
- * A {@link ConstantPoolValue} representing an arbitrary object. 
- * It is used with anonymous classes having patched constant pool values.
+ * A {@link ConstantPoolValue} representing a symbolic reference to a method type from 
+ * the constant pool. 
  * 
  * @author Pietro Braione
+ *
  */
-public final class ConstantPoolObject extends ConstantPoolValue {
-    private final Reference value;
+public final class ConstantPoolMethodType extends ConstantPoolValue {
+    private final String value;
     private final int hashCode;
 
-    public ConstantPoolObject(Reference value) { 
+    public ConstantPoolMethodType(String value) { 
         this.value = value; 
-        final int prime = 881;
+        final int prime = 29;
         int result = 1;
         result = prime * result + ((value == null) ? 0 : value.hashCode());
         this.hashCode = result;
     }
 
     @Override
-    public Reference getValue() {
+    public String getValue() {
         return this.value;
     }
 
@@ -42,7 +40,7 @@ public final class ConstantPoolObject extends ConstantPoolValue {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final ConstantPoolObject other = (ConstantPoolObject) obj;
+        final ConstantPoolMethodType other = (ConstantPoolMethodType) obj;
         if (this.value == null) {
             if (other.value != null) {
                 return false;
@@ -55,6 +53,6 @@ public final class ConstantPoolObject extends ConstantPoolValue {
 
     @Override
     public String toString() {
-        return this.value.toString();
+        return this.value;
     }
 }

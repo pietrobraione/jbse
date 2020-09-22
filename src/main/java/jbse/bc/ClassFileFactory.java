@@ -13,7 +13,7 @@ public abstract class ClassFileFactory implements Cloneable {
     protected abstract ClassFile newClassFileClass(int definingClassLoader, String className, byte[] bytecode, ClassFile superClass, ClassFile[] superInterfaces) 
     throws InvalidInputException, ClassFileIllFormedException;
     
-    protected abstract ClassFile newClassFileAnonymous(byte[] bytecode, ClassFile cf_JAVA_OBJECT, ConstantPoolValue[] cpPatches, ClassFile hostClass)
+    protected abstract ClassFile newClassFileAnonymous(ClassFile hostClass, byte[] bytecode, ClassFile superClass, ClassFile[] superInterfaces, Object[] cpPatches)
     throws InvalidInputException, ClassFileIllFormedException;
 
     protected final ClassFile newClassFileArray(String className, ClassFile memberClass, ClassFile cf_JAVA_OBJECT, ClassFile cf_JAVA_CLONEABLE, ClassFile cf_JAVA_SERIALIZABLE) 

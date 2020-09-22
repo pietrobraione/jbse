@@ -16,6 +16,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.FailureException;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.InvalidNumberOfOperandsException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -244,7 +245,8 @@ UP extends StrategyUpdate<R>> implements Action {
             this.cooker.cook(state);
         } catch (InvalidTypeException | InvalidOperatorException | 
         		 InvalidOperandException | ThreadStackEmptyException | 
-        		 RenameUnsupportedException e) {
+        		 RenameUnsupportedException | InvalidProgramCounterException | 
+        		 FastArrayAccessNotAllowedException e) {
             //this should never happen
             failExecution(e);
         }

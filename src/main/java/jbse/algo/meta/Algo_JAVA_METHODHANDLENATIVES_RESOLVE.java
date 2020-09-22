@@ -2,6 +2,7 @@ package jbse.algo.meta;
 
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.getDescriptorFromMemberName;
 import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.isSignaturePolymorphicMethodIntrinsic;
 import static jbse.algo.Util.throwNew;
@@ -11,11 +12,10 @@ import static jbse.algo.Util.getMemberNameFlagsMethod;
 import static jbse.algo.Util.isConstructor;
 import static jbse.algo.Util.isField;
 import static jbse.algo.Util.IS_FIELD;
-import static jbse.algo.Util.isInvokeInterface;
 import static jbse.algo.Util.isMethod;
 import static jbse.algo.Util.isSetter;
 import static jbse.algo.Util.JVM_RECOGNIZED_FIELD_MODIFIERS;
-import static jbse.algo.Util.linkMethod;
+import static jbse.algo.Util.ensureMethodLinked;
 import static jbse.algo.Util.REFERENCE_KIND_SHIFT;
 import static jbse.algo.Util.REF_getField;
 import static jbse.algo.Util.REF_getStatic;
@@ -24,7 +24,6 @@ import static jbse.algo.meta.Util.FAIL_JBSE;
 import static jbse.algo.meta.Util.getInstance;
 import static jbse.algo.meta.Util.INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION;
 import static jbse.algo.meta.Util.OK;
-import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.ILLEGAL_ARGUMENT_EXCEPTION;
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
@@ -34,9 +33,6 @@ import static jbse.bc.Signatures.JAVA_MEMBERNAME_CLAZZ;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_FLAGS;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_NAME;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_TYPE;
-import static jbse.bc.Signatures.JAVA_METHODTYPE;
-import static jbse.bc.Signatures.JAVA_METHODTYPE_METHODDESCRIPTOR;
-import static jbse.bc.Signatures.JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.NO_SUCH_FIELD_ERROR;
@@ -49,7 +45,6 @@ import static jbse.common.Type.toInternalName;
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
-import jbse.algo.Algorithm;
 import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
@@ -57,7 +52,6 @@ import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.algo.meta.Util.ErrorAction;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
-import jbse.bc.Snippet;
 import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
@@ -75,9 +69,7 @@ import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
-import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
@@ -136,16 +128,6 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             //gets the descriptor of the MemberName (field type)
             final Reference memberNameDescriptorReference = (Reference) memberNameObject.getFieldValue(JAVA_MEMBERNAME_TYPE);
             final Instance memberNameDescriptorObject = getInstance(state, memberNameDescriptorReference, "java.lang.invoke.MethodHandleNatives.resolve", "Object self.type", FAIL_JBSE /* TODO is it ok? */, THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
-            //From the source code of java.lang.invoke.MemberName the type field of a MemberName is either null 
-            //(if the field is not initialized), or a MethodType (if the MemberName is a method call), or a
-            //Class (if the MemberName is a field get/set or a type), or a String (all cases, if the field is 
-            //initialized but not yet converted to a MethodType/Class), or an array of (arrays of) classes 
-            //(only when MemberName is a method call, if the field is initialized but not yet converted to a 
-            //MethodType). See also the code of MemberName.getMethodType() and MemberName.getFieldType(), that 
-            //populate/normalize the type field. Apparently the assumptions of MethodHandles::resolve_MemberName 
-            //is that the type field is either a method type, or a class, or a String, see 
-            //hotspot:/src/share/vm/prims/methodHandles.cpp line 654 and the invoked MethodHandles::lookup_signature, 
-            //line 392.
 
             //gets the name of the MemberName (field name)
             final Instance memberNameNameObject = getInstance(state, memberNameObject.getFieldValue(JAVA_MEMBERNAME_NAME), "java.lang.invoke.MethodHandleNatives.resolve", "String self.name", FAIL_JBSE /* TODO is it ok? */, THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
@@ -169,19 +151,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 //memberNameDescriptorObject is an Instance of java.lang.invoke.MethodType
                 //or of java.lang.String
                 
-                //gets the descriptor
-                final String memberNameDescriptor;
-                if (JAVA_METHODTYPE.equals(memberNameDescriptorObject.getType().getClassName())) {
-                    memberNameDescriptor = getDescriptorFromMethodType(state, memberNameDescriptorReference);
-                } else if (JAVA_STRING.equals(memberNameDescriptorObject.getType().getClassName())) {
-                    //memberNameDescriptorObject is an Instance of java.lang.String:
-                    //gets its String value and puts it in memberNameDescriptor
-                    memberNameDescriptor = valueString(state, memberNameDescriptorObject);
-                } else {
-                    //memberNameDescriptorObject is neither a MethodType nor a String:
-                    //just fails
-                    throw new UndefinedResultException("The MemberName self parameter to java.lang.invoke.MethodHandleNatives.resolve represents a method invocation, but self.type is neither a MethodType nor a String.");
-                }
+                //gets the descriptor of the MemberName
+                final String memberNameDescriptor = getDescriptorFromMemberName(state, (Reference) this.data.operand(0));
                 if (memberNameDescriptor == null) {
                     //TODO who is to blame?
                     throwVerifyError(state, calc);
@@ -192,7 +163,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 final Signature methodToResolve = new Signature(memberNameContainerClass.getClassName(), memberNameDescriptor, memberNameName);
 
                 //performs resolution
-                final boolean isInterface = isInvokeInterface(memberNameFlags);
+                final boolean isInterface = memberNameContainerClass.isInterface(); 
                 this.resolvedClass = state.getClassHierarchy().resolveMethod(accessorClass, methodToResolve, isInterface, state.bypassStandardLoading(), memberNameContainerClass);
                 
                 final boolean methodIsSignaturePolymorphic = !isInterface && this.resolvedClass.hasOneSignaturePolymorphicMethodDeclaration(methodToResolve.getName());
@@ -200,9 +171,9 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 if (methodIsSignaturePolymorphicNonIntrinsic) {
                     //TODO is this block dead code???
                 	
-                    //links it, if it is the case
+                    //possibly links the method
                     final Signature polymorphicMethodSignatureSpecialized = new Signature(this.resolvedClass.getClassName(), methodToResolve.getDescriptor(), methodToResolve.getName());
-                    linkMethod(state, calc, (Reference) this.data.operand(1), accessorClass, polymorphicMethodSignatureSpecialized);
+                    ensureMethodLinked(state, calc, (Reference) this.data.operand(1), accessorClass, polymorphicMethodSignatureSpecialized);
                 
                     //if the method has an appendix throws an error, 
                     //see hotspot:/src/share/vm/prims/methodHandles.cpp, 
@@ -212,17 +183,17 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                      * on the actual arguments. Is it ok or should we use the non-specialized signature, i.e., 
                      * new Signature(this.resolvedClass.getClassName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR, methodToResolve.getName())?
                      */
-                    if (state.getAppendix(polymorphicMethodSignatureSpecialized) != null) {
+                    if (state.getMethodAppendix(polymorphicMethodSignatureSpecialized) != null) {
                         throwNew(state, calc, INTERNAL_ERROR);
                         exitFromAlgorithm();
                     }
                     
                     //returns the adapter instead of the resolved method
                     //TODO is it correct?
-                    final Instance invoker = getInstance(state, state.getAdapter(polymorphicMethodSignatureSpecialized), "java.lang.invoke.MethodHandleNatives.resolve", "invoker for the (signature polymorphic) MemberName self", FAIL_JBSE, FAIL_JBSE, FAIL_JBSE);
+                    final Reference invokerReference = state.getMethodAdapter(polymorphicMethodSignatureSpecialized);
+                    final Instance invoker = getInstance(state, invokerReference, "java.lang.invoke.MethodHandleNatives.resolve", "invoker for the (signature polymorphic) MemberName self", FAIL_JBSE, FAIL_JBSE, FAIL_JBSE);
                     final String invokerName = valueString(state, (Reference) invoker.getFieldValue(JAVA_MEMBERNAME_NAME));
-                    final Reference invokerMethodReference = (Reference) invoker.getFieldValue(JAVA_MEMBERNAME_TYPE);
-                    final String invokerDescriptor = getDescriptorFromMethodType(state, invokerMethodReference);
+                    final String invokerDescriptor = getDescriptorFromMemberName(state, invokerReference);
                     final Reference invokerClassRef = (Reference) invoker.getFieldValue(JAVA_MEMBERNAME_CLAZZ);
                     final ClassFile invokerClass = ((Instance_JAVA_CLASS) state.getObject(invokerClassRef)).representedClass();
                     this.resolvedClass = invokerClass;
@@ -304,63 +275,6 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             throwVerifyError(state, calc);
             exitFromAlgorithm();
         }
-    }
-    
-    /**
-     * Gets the {@code methodDescriptor} field of a {@code java.lang.invoke.MethodType}, 
-     * possibly populating the field if it is still {@code null}.
-     * 
-     * @param state a {@link State}.
-     * @param methodTypeReference a {@link Reference}. It must refer an {@link Instance}
-     *        of class {@code java.lang.invoke.MemberName}.
-     * @return the {@link String} value of the {@code methodDescriptor} field
-     *         of {@code methodType}.
-     * @throws InvalidInputException if {@code state == null} or {@code methodTypeReference == null}
-     *         or {@code methodTypeReference} is symbolic and unresolved, or {@code methodTypeReference} is
-     *         concrete and pointing to an empty heap slot, ot {@code methodTypeReference} is the {@link jbse.val.Null Null}
-     *         reference.
-     * @throws ThreadStackEmptyException if the {@code state}'s stack is empty.
-     * @throws InterruptException if the execution of this {@link Algorithm} must be interrupted.
-     * @throws FrozenStateException if {@code state} is frozen.
-     */
-    private static String getDescriptorFromMethodType(State state, Reference methodTypeReference) 
-    throws InvalidInputException, ThreadStackEmptyException, InterruptException, FrozenStateException {
-    	//gets the MethodType
-    	final Instance methodTypeInstance = (Instance) state.getObject(methodTypeReference);
-    	if (methodTypeInstance == null) {
-    		throw new InvalidInputException("The methodTypeReference parameter of getDescriptorFromMethodType method is a Null reference, or an unresolved symbolic reference, or an invalid concrete reference.");
-    	}
-    	
-        //gets the methodDescriptor field
-        final Reference memberNameDescriptorStringReference = (Reference) methodTypeInstance.getFieldValue(JAVA_METHODTYPE_METHODDESCRIPTOR);
-        if (memberNameDescriptorStringReference == null) {
-            //TODO missing field: who is to blame?
-            failExecution("Unexpected null value while accessing to MethodType self.type.methodDescriptor parameter to java.lang.invoke.MethodHandleNatives.resolve (missing field).");
-        }
-
-        //the methodDescriptor field of a MethodType is a cache: 
-        //If it is null, invoke java.lang.invoke.MethodType.toMethodDescriptorString()
-        //to fill it, and then repeat this bytecode
-        if (state.isNull(memberNameDescriptorStringReference)) {
-            try {
-                final Snippet snippet = state.snippetFactoryNoWrap()
-                    .addArg(methodTypeReference)
-                    .op_aload((byte) 0)
-                    .op_invokevirtual(JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING)
-                    .op_pop() //we cannot use the return value so we need to clean the stack
-                    .op_return()
-                    .mk();
-                state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang/invoke"); //zero offset so that upon return from the snippet will repeat the invocation of java.lang.invoke.MethodHandleNatives.resolve and reexecute this algorithm 
-                exitFromAlgorithm();
-            } catch (InvalidProgramCounterException | InvalidInputException e) {
-                //this should never happen
-                failExecution(e);
-            }
-        }
-
-        //now the methodDescriptor field is not null: gets  
-        //its String value
-        return valueString(state, memberNameDescriptorStringReference);
     }
     
     @Override

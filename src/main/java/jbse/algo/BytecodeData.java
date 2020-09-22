@@ -10,7 +10,9 @@ import static jbse.common.Util.byteCatShort;
 
 import java.util.function.Supplier;
 
+import jbse.bc.CallSiteSpecifier;
 import jbse.bc.Signature;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.Frame;
@@ -52,10 +54,12 @@ public abstract class BytecodeData {
     private Value varValue;
     private int jumpOffset;
     private int jumpTarget;
+    private boolean interfaceMethodSignature;
     private Signature signature;
     private String className;
     private char primitiveType;
     private SwitchTable switchTable;
+    private CallSiteSpecifier callSiteSpecifier;
 
     /**
      * Reads all the data for a bytecode. 
@@ -259,12 +263,8 @@ public abstract class BytecodeData {
      * @param state a {@link State}.
      * @param varSlot an {@code int}, the offset of the jump. 
      *        Usually it is itself an immediate.
-     * @throws FrozenStateException if the state is frozen.
-     * @throws InterruptException if the execution of the container
-     *         {@link Algorithm} must be interrupted.
      */
-    protected final void readJump(State state, int jumpOffset) 
-    throws FrozenStateException {
+    protected final void readJump(State state, int jumpOffset) {
         try {
             this.jumpOffset = jumpOffset;
             this.jumpTarget = state.getCurrentProgramCounter() + jumpOffset;
@@ -285,10 +285,9 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
-     * @throws FrozenStateException if the state is frozen.
      */
     protected final void readClassName(State state, Calculator calc, int classRefIndex)
-    throws InterruptException, ClasspathException, FrozenStateException {
+    throws InterruptException, ClasspathException {
         try {
             this.className = state.getCurrentClass().getClassSignature(classRefIndex);
         } catch (InvalidIndexException e) {
@@ -311,10 +310,9 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
-     * @throws FrozenStateException if the state is frozen.
      */
     protected final void readFieldSignature(State state, Calculator calc, int fieldRefIndex)
-    throws InterruptException, ClasspathException, FrozenStateException {
+    throws InterruptException, ClasspathException {
         try {
             this.signature = state.getCurrentClass().getFieldSignature(fieldRefIndex);
         } catch (InvalidIndexException e) {
@@ -337,11 +335,11 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
-     * @throws FrozenStateException if the state is frozen.
      */
     protected final void readInterfaceMethodSignature(State state, Calculator calc, int interfaceMethodRefIndex)
-    throws InterruptException, ClasspathException, FrozenStateException {
+    throws InterruptException, ClasspathException {
         try {
+        	this.interfaceMethodSignature = true;
             this.signature = state.getCurrentClass().getInterfaceMethodSignature(interfaceMethodRefIndex);
         } catch (InvalidIndexException e) {
             throwVerifyError(state, calc);
@@ -363,11 +361,11 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
-     * @throws FrozenStateException if the state is frozen.
      */
     protected final void readNoninterfaceMethodSignature(State state, Calculator calc, int noninterfaceMethodRefIndex)
-    throws InterruptException, ClasspathException, FrozenStateException {
+    throws InterruptException, ClasspathException {
         try {
+        	this.interfaceMethodSignature = false;
             this.signature = state.getCurrentClass().getMethodSignature(noninterfaceMethodRefIndex);
         } catch (InvalidIndexException e) {
             throwVerifyError(state, calc);
@@ -389,14 +387,15 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
-     * @throws FrozenStateException if the state is frozen.
      */
     protected final void readMethodSignature(State state, Calculator calc, int methodRefIndex)
-    throws InterruptException, ClasspathException, FrozenStateException {
+    throws InterruptException, ClasspathException {
         try {
+        	this.interfaceMethodSignature = false;
             this.signature = state.getCurrentClass().getMethodSignature(methodRefIndex);
         } catch (InvalidIndexException e1) {
             try {
+            	this.interfaceMethodSignature = true;
                 this.signature = state.getCurrentClass().getInterfaceMethodSignature(methodRefIndex);
             } catch (InvalidIndexException e) {
                 throwVerifyError(state, calc);
@@ -408,16 +407,17 @@ public abstract class BytecodeData {
             failExecution(e);
         }
     }
-
-    /**
-     * Sets a method signature. Used only when
-     * we want to dispatch manually a method invocation 
-     * so we want to force the content of the data object.
-     * 
-     * @param signature a {@link Signature}.
-     */
-    protected final void setMethodSignature(Signature signature) {
-        this.signature = signature;
+    
+    protected final void readCallSiteSpecifier(State state, Calculator calc, int cssRefIndex) 
+    throws InterruptException, ClasspathException {
+    	try {
+			this.callSiteSpecifier = state.getCurrentClass().getCallSiteSpecifier(cssRefIndex);
+        } catch (InvalidIndexException | ClassFileIllFormedException e) {
+            throwVerifyError(state, calc);
+            exitFromAlgorithm();
+        } catch (ThreadStackEmptyException e) {
+            failExecution(e);
+        }
     }
 
     /**
@@ -611,6 +611,19 @@ public abstract class BytecodeData {
     public Signature signature() {
         return this.signature;
     }
+    
+    /**
+     * Returns whether the signature read with 
+     * {@link #readFieldSignature(State, int) readFieldSignature}, 
+     * {@link #readInterfaceMethodSignature(State, int) readInterfaceMethodSignature}, or
+     * {@link #readNoninterfaceMethodSignature(State, int) readNoninterfaceMethodSignature}
+     * was an interface method signature or not.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean interfaceMethodSignature() {
+    	return this.interfaceMethodSignature;
+    }
 
     /**
      * Returns the primitive type set with
@@ -630,6 +643,16 @@ public abstract class BytecodeData {
      */
     public SwitchTable switchTable() {
         return this.switchTable;
+    }
+    
+    /**
+     * Returns the call site specifier set with
+     * {@link #readCallSiteSpecifier(State, Calculator, int) readCallSiteSpecifier}.
+     * 
+     * @return a {@link CallSiteSpecifier}.
+     */
+    public CallSiteSpecifier callSiteSpecifier() {
+    	return this.callSiteSpecifier;
     }
 
     /**

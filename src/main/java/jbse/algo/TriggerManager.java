@@ -156,8 +156,7 @@ public class TriggerManager {
                          BadClassFileVersionException | RenameUnsupportedException | WrongClassNameException | 
                          ClassFileNotAccessibleException | MethodNotFoundException | MethodCodeNotFoundException | 
                          InvalidSlotException | InvalidTypeException | InvalidInputException e) {
-                    //does nothing, falls through to skip 
-                    //the unfriendly method
+                    //does nothing, falls through to skip the unfriendly method
                     //TODO very ugly! should we throw an exception? are we sure that they are all not internal exceptions?
                 } catch (PleaseLoadClassException e) {
                     throw new NotYetImplementedException("Currently JBSE is unable to automatically load the class where a trigger implementation resides. Please load manually the class before trigger execution.");

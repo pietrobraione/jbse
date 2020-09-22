@@ -88,15 +88,19 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
                 throw new SymbolicValueNotAllowedException("The String className parameter to invocation of method jbse.base.Base.makeKlassSymbolic_do cannot be a symbolic String.");
             }
             this.classFile = state.getClassHierarchy().getClassFileClassArray(definingClassLoader, className);
+            if (this.classFile == null) {
+                //this should never happen
+                failExecution("Invoked method jbse.base.Base.makeKlassSymbolic_do for a class that has not been initialized (no classfile).");
+            }
             this.theKlass = state.getKlass(this.classFile);
             if (this.theKlass == null) {
                 //this should never happen
                 failExecution("Invoked method jbse.base.Base.makeKlassSymbolic_do for a class that has not been initialized (no Klass object).");
             }
 
-            this.cf_JAVA_CLASS = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLASS);
-            this.cf_JAVA_CLASSLOADER = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLASSLOADER);
-            this.cf_JAVA_THREAD = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_THREAD);
+            this.cf_JAVA_CLASS = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLASS); //surely loaded
+            this.cf_JAVA_CLASSLOADER = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLASSLOADER); //surely loaded
+            this.cf_JAVA_THREAD = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_THREAD); //surely loaded
 
         } catch (ClassCastException e) {
             throwVerifyError(state, this.ctx.getCalculator());

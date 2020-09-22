@@ -335,6 +335,12 @@ abstract class ClassFilePrimitive extends ClassFile {
     public String getMethodAnnotationParameterValueString(Signature methodSignature, String annotation, String parameter) {
         return null;
     }
+    
+    @Override
+    public ParameterInfo[] getMethodParameters(Signature methodSignature) 
+    throws MethodNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
 
     @Override
     public String[] getMethodThrownExceptions(Signature methodSignature) 
@@ -499,6 +505,12 @@ abstract class ClassFilePrimitive extends ClassFile {
     }
     
     @Override
+    public CallSiteSpecifier getCallSiteSpecifier(int callSiteSpecifierIndex) 
+    throws InvalidIndexException {
+        throw new InvalidIndexException(NO_CONSTANT_POOL);
+    }    
+
+    @Override
     public ClassFile getSuperclass() {
         return null;
     }
@@ -519,7 +531,7 @@ abstract class ClassFilePrimitive extends ClassFile {
     }
 
     @Override
-    public int getLocalVariableLength(Signature methodSignature)
+    public int getLocalVariableTableLength(Signature methodSignature)
     throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
     }

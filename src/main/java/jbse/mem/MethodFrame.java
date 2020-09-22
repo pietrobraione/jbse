@@ -107,9 +107,9 @@ public final class MethodFrame extends Frame implements Cloneable {
     }
 
     @Override
-    public void setLocalVariableValue(int slot, int currentPC, Value val) 
+    public void setLocalVariableValue(int slot, int currentProgramCounter, Value val) 
     throws InvalidSlotException {
-        this.localVariables.set(slot, currentPC, val);
+        this.localVariables.set(slot, currentProgramCounter, val);
     }
 
     @Override

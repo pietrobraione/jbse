@@ -1,10 +1,12 @@
 package jbse.algo.meta;
 
+import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
-import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Offsets.offsetInvoke;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM_VMENTRY;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME;
@@ -14,6 +16,8 @@ import static jbse.bc.Signatures.JAVA_METHODHANDLE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_FORM;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_STRING;
+import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
+import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.parametersNumber;
@@ -24,14 +28,23 @@ import java.util.Arrays;
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
+import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.bc.exc.BadClassFileVersionException;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
+import jbse.bc.exc.RenameUnsupportedException;
+import jbse.bc.exc.WrongClassNameException;
+import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance;
 import jbse.mem.Instance_JAVA_CLASS;
@@ -58,7 +71,7 @@ public final class Algo_JAVA_METHODHANDLE_INVOKEBASIC extends Algo_INVOKEMETA_No
 
 	@Override
 	protected void cookMore(State state) 
-	throws UndefinedResultException, SymbolicValueNotAllowedException, InvalidInputException {
+	throws UndefinedResultException, SymbolicValueNotAllowedException, InvalidInputException, InterruptException, ClasspathException {
 		try {
 			//gets 'this'
 			final Reference referenceThis = (Reference) this.data.operand(0);
@@ -67,7 +80,7 @@ public final class Algo_JAVA_METHODHANDLE_INVOKEBASIC extends Algo_INVOKEMETA_No
                 failExecution("Invoked method java.lang.invoke.MethodHandle.invokeBasic with null 'this' parameter.");
 			}
 			final Instance instanceThis = (Instance) state.getObject(referenceThis);
-	        final ClassFile cf_JAVA_METHODHANDLE = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_METHODHANDLE);
+	        final ClassFile cf_JAVA_METHODHANDLE = state.getClassHierarchy().loadCreateClass(JAVA_METHODHANDLE);
 	        if (cf_JAVA_METHODHANDLE == null) {
 	            failExecution("Could not find class java.lang.invoke.MethodHandle.");
 	        }
@@ -82,7 +95,7 @@ public final class Algo_JAVA_METHODHANDLE_INVOKEBASIC extends Algo_INVOKEMETA_No
 				throw new UndefinedResultException("The 'this' parameter to java.lang.invoke.MethodHandle.invokeBasic has null value for the field LambdaForm form.");
 			}
 			final Instance instanceForm = (Instance) state.getObject(referenceForm);
-	        final ClassFile cf_JAVA_LAMBDAFORM = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_LAMBDAFORM);
+	        final ClassFile cf_JAVA_LAMBDAFORM = state.getClassHierarchy().loadCreateClass(JAVA_LAMBDAFORM);
 	        if (cf_JAVA_LAMBDAFORM == null) {
 	        	//this should never happen
 	            failExecution("Could not find class java.lang.invoke.LambdaForm.");
@@ -97,7 +110,7 @@ public final class Algo_JAVA_METHODHANDLE_INVOKEBASIC extends Algo_INVOKEMETA_No
 				throw new UndefinedResultException("The 'this' parameter to java.lang.invoke.MethodHandle.invokeBasic has null value for the field Membername form.vmentry.");
 			}
 			final Instance instanceVmentry = (Instance) state.getObject(referenceVmentry);
-	        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME);
+	        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().loadCreateClass(JAVA_MEMBERNAME);
 	        if (cf_JAVA_MEMBERNAME == null) {
 	        	//this should never happen
 	            failExecution("Could not find class java.lang.invoke.MemberName.");
@@ -112,7 +125,7 @@ public final class Algo_JAVA_METHODHANDLE_INVOKEBASIC extends Algo_INVOKEMETA_No
 				throw new UndefinedResultException("The 'this' parameter to java.lang.invoke.MethodHandle.invokeBasic has null value for the field String form.vmentry.name.");
 			}
 			final Instance instanceName = (Instance) state.getObject(referenceName);
-	        final ClassFile cf_JAVA_STRING = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING);
+	        final ClassFile cf_JAVA_STRING = state.getClassHierarchy().loadCreateClass(JAVA_STRING);
 	        if (cf_JAVA_STRING == null) {
 	        	//this should never happen
 	            failExecution("Could not find class java.lang.String.");
@@ -139,10 +152,31 @@ public final class Algo_JAVA_METHODHANDLE_INVOKEBASIC extends Algo_INVOKEMETA_No
 	        final String descriptor = "(" + 
 	        		REFERENCE + JAVA_OBJECT + TYPEEND +  //the form to invoke
 	        		String.join("", Arrays.stream(splitParametersDescriptorSignature).map(jbse.common.Type::simplifyType).toArray(String[]::new)) +
-	        		")" + splitReturnValueDescriptorSignature;
+	        		")" + jbse.common.Type.simplifyType(splitReturnValueDescriptorSignature);
 			this.adapterSignature = new Signature(this.clazz.getClassName(), descriptor, name);
 		} catch (ClassCastException e) {
 			throw new UndefinedResultException(e);
+        } catch (ClassFileNotFoundException e) {
+            //TODO should this exception wrap a ClassNotFoundException?
+            throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR);
+            exitFromAlgorithm();
+        } catch (BadClassFileVersionException e) {
+            throwNew(state, this.ctx.getCalculator(), UNSUPPORTED_CLASS_VERSION_ERROR);
+            exitFromAlgorithm();
+        } catch (WrongClassNameException e) {
+        	//TODO should we wrap/throw a ClassNotFoundException?
+        	throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR); 
+            exitFromAlgorithm();
+        } catch (IncompatibleClassFileException e) {
+            throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            exitFromAlgorithm();
+        } catch (ClassFileIllFormedException e) {
+            //TODO is it ok?
+            throwVerifyError(state, this.ctx.getCalculator());
+            exitFromAlgorithm();
+		} catch (ClassFileNotAccessibleException | RenameUnsupportedException e) {
+			//this should never happen
+			failExecution(e);
 		}
 	}
 

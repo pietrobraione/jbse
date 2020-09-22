@@ -16,10 +16,12 @@ import static jbse.common.Type.isArray;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isReference;
 import static jbse.common.Type.isVoid;
+import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.splitParametersDescriptors;
 import static jbse.common.Type.splitReturnValueDescriptor;
 import static jbse.common.Type.toPrimitiveOrVoidCanonicalName;
 import static jbse.common.Type.toPrimitiveOrVoidInternalName;
+import static jbse.common.Type.TYPEEND;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -247,15 +249,15 @@ public final class ClassHierarchy implements Cloneable {
     throws InvalidInputException {
         //Note that initialization put all the following 
         //standard classes in the loaded class cache
-        final ClassFile cf_JAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT);
+        final ClassFile cf_JAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT); //surely loaded
         if (cf_JAVA_OBJECT == null) {
             throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".createClassFileArray was unable to find standard class java.lang.Object.");
         }
-        final ClassFile cf_JAVA_CLONEABLE = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLONEABLE);
+        final ClassFile cf_JAVA_CLONEABLE = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLONEABLE); //surely loaded
         if (cf_JAVA_CLONEABLE == null) {
             throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".createClassFileArray was unable to find standard class java.lang.Cloneable.");
         } 
-        final ClassFile cf_JAVA_SERIALIZABLE = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_SERIALIZABLE);
+        final ClassFile cf_JAVA_SERIALIZABLE = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_SERIALIZABLE); //surely loaded
         if (cf_JAVA_SERIALIZABLE == null) {
             throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".createClassFileArrays was unable to find standard class java.lang.Cloneable.");
         }
@@ -272,14 +274,15 @@ public final class ClassHierarchy implements Cloneable {
      *        a classloader.
      * @param classFile a {@link ClassFile} for the class to be added.
      * @throws InvalidInputException if {@code initiatingLoader} is invalid (negative),
-     *         or {@code classFile == null}, or {@code classFile.}{@link ClassFile#isPrimitiveOrVoid()}, or 
-     *         {@code classFile.}{@link ClassFile#isAnonymousUnregistered()}, or there is already a different
-     *         {@link ClassFile} in the loaded class cache for the pair
+     *         or {@code classFile == null}, or {@code classFile.}{@link ClassFile#isPrimitiveOrVoid() isPrimitiveOrVoid()}, or 
+     *         {@code classFile.}{@link ClassFile#isAnonymousUnregistered() isAnonymousUnregistered()}, 
+     *         or {@code classFile.}{@link ClassFile#isDummy() isDummy()}, 
+     *         or there is already a different {@link ClassFile} in the loaded class cache for the pair
      *         {@code (initiatingLoader, classFile.}{@link ClassFile#getClassName() getClassName}{@code ())}.
      */
     public void addClassFileClassArray(int initiatingLoader, ClassFile classFile) 
     throws InvalidInputException {
-        this.cfs.putLoadedClassCache(initiatingLoader, classFile);
+        this.cfs.putClassFile(initiatingLoader, classFile);
     }
     
     /**
@@ -296,7 +299,7 @@ public final class ClassHierarchy implements Cloneable {
      *         otherwise. 
      */
     public ClassFile getClassFileClassArray(int initiatingLoader, String className) {
-        return this.cfs.getLoadedClassCache(initiatingLoader, className);
+        return this.cfs.getClassFile(initiatingLoader, className);
     }
     
     /**
@@ -320,38 +323,43 @@ public final class ClassHierarchy implements Cloneable {
      * Creates a dummy {@link ClassFile} for an anonymous (in the sense of
      * {@link sun.misc.Unsafe#defineAnonymousClass}) class.
      * 
+     * @param hostClass a {@link ClassFile}, the host class for the
+     *        anonymous class.
      * @param bytecode a {@code byte[]}, the bytecode for the anonymous class.
      * @return a dummy {@link ClassFile} for the anonymous class.
      * @throws ClassFileIllFormedException if {@code bytecode} is ill-formed.
      * @throws InvalidInputException if {@code bytecode == null}.
      */
-    public ClassFile createClassFileAnonymousDummy(byte[] bytecode) 
+    public ClassFile createClassFileAnonymousDummy(ClassFile hostClass, byte[] bytecode) 
     throws ClassFileIllFormedException, InvalidInputException {
         final ClassFile retval =
-            this.f.newClassFileAnonymous(bytecode, null, null, null);
+            this.f.newClassFileAnonymous(hostClass, bytecode, null, null, null);
         return retval;
     }
 
     /**
-     * Adds a {@link ClassFile} for an anonymous class to this hierarchy.
+     * Creates a {@link ClassFile} for an anonymous (in the sense of
+     * {@link sun.misc.Unsafe#defineAnonymousClass}) class.
      *
      * @param classFile a dummy {@link ClassFile} created with a previous invocation 
      *        of {@link #createClassFileAnonymousDummy(byte[])}.
-     * @param cpPatches a {@link ConstantPoolValue}{@code []}; The i-th element of this
+     * @param superClass a {@link ClassFile} for {@code classFile}'s superclass. It must agree with 
+     *        {@code classFile.}{@link ClassFile#getSuperclassName() getSuperclassName()}.
+     * @param superInterfaces a {@link ClassFile}{@code []} for {@code classFile}'s superinterfaces. It must agree with 
+     *        {@code classFile.}{@link ClassFile#getSuperInterfaceNames() getSuperInterfaceNames()}.
+     * @param cpPatches a {@link Object}{@code []}; The i-th element of this
      *        array patches the i-th element in the constant pool defined
      *        by the {@code bytecode} (the two must agree). Note that 
      *        {@code cpPatches[0]} and all the {@code cpPatches[i]} with {@code i} equal 
      *        or greater than the size of the constant pool in {@code classFile} are ignored.
      *        It can be {@code null} to signify no patches.
-     * @param hostClass a {@link ClassFile}, the host class for the
-     *        anonymous class.
      * @return the {@link ClassFile} for the anonymous class; It will be different
      *         from {@code classFile} because it will have the host class set and
      *         the classpath patches applied.
      * @throws InvalidInputException  if any of the parameters has an invalid
      *         value.
      */
-    public ClassFile addClassFileAnonymous(ClassFile classFile, ClassFile hostClass, ConstantPoolValue[] cpPatches) 
+    public ClassFile createClassFileAnonymous(ClassFile classFile, ClassFile superClass, ClassFile[] superInterfaces, Object[] cpPatches) 
     throws InvalidInputException {
         if (classFile == null) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".addClassFileAnonymous() with a classFile parameter that has value null.");
@@ -359,20 +367,19 @@ public final class ClassHierarchy implements Cloneable {
         if (!classFile.isAnonymousUnregistered()) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".addClassFileAnonymous() with a classFile parameter that is not anonymous.");
         }
-        if (hostClass == null) {
-            throw new InvalidInputException("Invoked " + this.getClass().getName() + ".addClassFileAnonymous() with a hostClass parameter that has value null.");
-        }
         final ClassFile retVal;
         try {
-            retVal = this.f.newClassFileAnonymous(classFile.getBinaryFileContent(), loadCreateClass(JAVA_OBJECT), cpPatches, hostClass);
-        } catch (ClassFileIllFormedException | WrongClassNameException | ClassFileNotFoundException | 
-        		ClassFileNotAccessibleException | IncompatibleClassFileException | BadClassFileVersionException | 
-        		RenameUnsupportedException e) {
+            retVal = this.f.newClassFileAnonymous(classFile.getHostClass(), classFile.getBinaryFileContent(), superClass, superInterfaces, cpPatches);
+        } catch (ClassFileIllFormedException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-        this.cfs.putAnonymousClassCache(retVal);
         return retVal;
+    }
+    
+    @Deprecated
+    public void addClassFileAnonymous(ClassFile classFile) throws InvalidInputException {
+        this.cfs.putClassFileAnonymous(classFile);
     }
     
     /**
@@ -767,7 +774,7 @@ public final class ClassHierarchy implements Cloneable {
         
         //checks the version
         if (classDummy.getMajorVersion() > JAVA_8) {
-            throw new BadClassFileVersionException("The classfile for " + classDummy.getClassName() + " has unsupported version " + classDummy.getMajorVersion() + "." + classDummy.getMinorVersion() +".");
+            throw new BadClassFileVersionException("The classfile for " + classDummy.getClassName() + " has unsupported version " + classDummy.getMajorVersion() + "." + classDummy.getMinorVersion() + ".");
         }
         
         //checks the name
@@ -795,9 +802,46 @@ public final class ClassHierarchy implements Cloneable {
             }
         }
 
-        //creates a complete ClassFile for the class and registers it
+        //creates a complete ClassFile for the class, registers it and returns it
         final ClassFile retVal = createClassFileClass(classDummy, superClass, superInterfaces);
         addClassFileClassArray(definingClassLoader, retVal);
+        return retVal;
+    }
+    
+    public ClassFile defineClassAnonymous(byte[] bytecode, boolean bypassStandardLoading, ClassFile hostClass, Object[] cpPatches) 
+    throws InvalidInputException, ClassFileIllFormedException, BadClassFileVersionException, ClassFileNotFoundException, RenameUnsupportedException, 
+    WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException {
+        if (bytecode == null) {
+            throw new InvalidInputException("Invoked " + this.getClass().getName() + ".defineClassAnonymous with null bytecode.");
+        }
+        
+        //makes a dummy ClassFile
+        final ClassFile classDummy = createClassFileAnonymousDummy(hostClass, bytecode);
+        
+        //checks the version
+        if (classDummy.getMajorVersion() > JAVA_8) {
+            throw new BadClassFileVersionException("The classfile for " + classDummy.getClassName() + " has unsupported version " + classDummy.getMajorVersion() + "." + classDummy.getMinorVersion() + ".");
+        }
+
+        //uses the dummy ClassFile to recursively resolve all the immediate 
+        //ancestor classes
+        //TODO check circularity
+        final ClassFile superClass = (classDummy.getSuperclassName() == null ? null : resolveClass(classDummy, classDummy.getSuperclassName(), bypassStandardLoading));
+        if (superClass != null && superClass.isInterface()) {
+            throw new IncompatibleClassFileException("Superclass " + classDummy.getSuperclassName() + " of class " + classDummy.getClassName() + " actually is an interface.");
+        }
+        final List<String> superInterfaceNames = classDummy.getSuperInterfaceNames();
+        final ClassFile[] superInterfaces = new ClassFile[superInterfaceNames.size()];
+        for (int i = 0; i < superInterfaces.length; ++i) {
+            superInterfaces[i] = resolveClass(classDummy, superInterfaceNames.get(i), bypassStandardLoading);
+            if (!superInterfaces[i].isInterface()) {
+                throw new IncompatibleClassFileException("Superinterface " + superInterfaceNames.get(i) + " of class " + classDummy.getClassName() + " actually is not an interface.");
+            }
+        }
+        
+        //creates a complete ClassFile for the class, registers it and returns it
+        final ClassFile retVal = createClassFileAnonymous(classDummy, superClass, superInterfaces, cpPatches);
+        addClassFileAnonymous(retVal);
         return retVal;
     }
     
@@ -910,6 +954,11 @@ public final class ClassHierarchy implements Cloneable {
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, 
     BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException {
+    	//this handle the special case of an anonymous class that invokes itself
+    	if (accessor.isAnonymousUnregistered() && accessor.getClassName().equals(classSignature)) {
+    		return accessor;
+    	}
+    	
         //loads/creates the class for classSignature
         final int initiatingLoader = accessor.getDefiningClassLoader();
         final ClassFile accessed = loadCreateClass(initiatingLoader, classSignature, bypassStandardLoading);
@@ -1092,9 +1141,10 @@ public final class ClassHierarchy implements Cloneable {
      * 
      * @param accessor a {@link ClassFile}, the accessor's class.
      * @param methodSignature the {@link Signature} of the method to be resolved.  
-     * @param isInterface {@code true} iff the method to be resolved is required to be 
-     *        an interface method (i.e., if the bytecode which triggered the resolution
-     *        is invokeinterface).
+     * @param isInterface {@code true} iff the method to be resolved is  
+     *        an interface method (our interpretation is: if the reference from
+     *        the constant pool is a CONSTANT_InterfaceMethodref rather than
+     *        a CONSTANT_Methodref).
      * @param bypassStandardLoading a {@code boolean}; if it is {@code true} and the defining classloader
      *        of {@code accessor}
      *        is either {@link ClassLoaders#CLASSLOADER_EXT CLASSLOADER_EXT} or {@link ClassLoaders#CLASSLOADER_APP CLASSLOADER_APP}, 
@@ -1227,7 +1277,7 @@ public final class ClassHierarchy implements Cloneable {
         //the previous code does not do in the case of interfaces
         //(JVMS v8, section 5.4.3.4 step 3)
         if (accessed == null && isInterface) {
-            final ClassFile cfJAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT);
+            final ClassFile cfJAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT); //surely loaded
             if (cfJAVA_OBJECT == null) {
                 throw new InvalidInputException("Invoked " + this.getClass().getName() + ".resolveMethod before the class java.lang.Object were loaded.");
             }
@@ -1435,11 +1485,11 @@ public final class ClassHierarchy implements Cloneable {
      *         {@code accessor}.
      */
     public boolean isClassAccessible(ClassFile accessor, ClassFile accessed) {
-        //TODO this implementation is incomplete: some kinds of nested (member) classes may have all the visibility accessors. Also, the treatment of arrays might be wrong.
-        if (accessed.isPublic()) {
+        final boolean sameRuntimePackage = (accessor.getDefiningClassLoader() == accessed.getDefiningClassLoader() && accessed.getPackageName().equals(accessor.getPackageName()));
+        if (accessor.equals(accessed) || accessed.isPublic()) {
             return true;
-        } else { //cfAccessed.isPackage()
-            return (accessed.getDefiningClassLoader() == accessor.getDefiningClassLoader() && accessed.getPackageName().equals(accessor.getPackageName()));
+        } else {
+            return sameRuntimePackage;
         }
     }
 
@@ -1461,30 +1511,37 @@ public final class ClassHierarchy implements Cloneable {
     private boolean isFieldAccessible(ClassFile accessor, ClassFile accessed, ClassFile fieldSignatureClass, Signature fieldSignature) 
     throws FieldNotFoundException {
     	try {
-	        final boolean sameRuntimePackage = (accessor.getDefiningClassLoader() == accessed.getDefiningClassLoader() && accessed.getPackageName().equals(accessor.getPackageName()));
-	        if (accessed.isFieldPublic(fieldSignature)) {
+    		ClassFile accessorHost = accessor;
+    		while (accessorHost.isAnonymousUnregistered()) {
+    			accessorHost = accessorHost.getHostClass();
+    		}
+	        final boolean sameRuntimePackage = (accessorHost.getDefiningClassLoader() == accessed.getDefiningClassLoader() && accessed.getPackageName().equals(accessorHost.getPackageName()));
+	        if (accessor.equals(accessed) || accessed.isFieldPublic(fieldSignature)) {
 	            return true;
 	        } else if (accessed.isFieldProtected(fieldSignature)) {
 	            if (sameRuntimePackage) {
 	                return true;
-	            } else if (!accessor.isSubclass(accessed)) {
+	            } else if (!accessorHost.isSubclass(accessed)) {
 	                return false;
 	            } else if (accessed.isFieldStatic(fieldSignature)) {
 	                return true;
 	            } else {
-	                return accessor.isSubclass(fieldSignatureClass) || fieldSignatureClass.isSubclass(accessor);
+	                return accessorHost.isSubclass(fieldSignatureClass) || fieldSignatureClass.isSubclass(accessorHost);
 	            }
 	        } else if (accessed.isFieldPackage(fieldSignature)) {
 	            return sameRuntimePackage; 
 	        } else { //accessed.isFieldPrivate(fieldSignature)
-	            return (accessed.equals(accessor)); 
-	            //TODO there was a || accessor.isInner(accessed) clause but it is *wrong*!
+	            return (accessed.equals(accessorHost)); 
+	            //TODO there was a || accessorHost.isInner(accessed) clause but it is *wrong*!
 	        }
     	} catch (InvalidInputException e) {
     		//this should never happen, NullPointerException shall be thrown before
     		throw new UnexpectedInternalException(e);
     	}
     }
+    
+    private static final String JAVA_OBJECT_CLONE_DESCRIPTOR = "()" + REFERENCE + JAVA_OBJECT + TYPEEND;
+    private static final String JAVA_OBJECT_CLONE_NAME = "clone";
 
     /**
      * Checks whether a method is accessible to a class/interface
@@ -1504,24 +1561,33 @@ public final class ClassHierarchy implements Cloneable {
     private boolean isMethodAccessible(ClassFile accessor, ClassFile accessed, ClassFile methodSignatureClass, Signature methodSignature) 
     throws MethodNotFoundException {
     	try {
-    		final boolean sameRuntimePackage = (accessor.getDefiningClassLoader() == accessed.getDefiningClassLoader() && accessed.getPackageName().equals(accessor.getPackageName()));
-    		if (accessed.isMethodPublic(methodSignature)) {
+    	        //special case: the resolution class is an array class and the method is
+    	        //clone; in this case, treat it as a public method
+    	        if (JAVA_OBJECT_CLONE_DESCRIPTOR.equals(methodSignature.getDescriptor()) && JAVA_OBJECT_CLONE_NAME.equals(methodSignature.getName()) && methodSignatureClass.isArray()) {
+    	            return true;
+    	        }
+    		ClassFile accessorHost = accessor;
+    		while (accessorHost.isAnonymousUnregistered()) {
+    			accessorHost = accessorHost.getHostClass();
+    		}
+    		final boolean sameRuntimePackage = (accessorHost.getDefiningClassLoader() == accessed.getDefiningClassLoader() && accessed.getPackageName().equals(accessorHost.getPackageName()));
+    		if (accessor.equals(accessed) || accessed.isMethodPublic(methodSignature)) {
     			return true;
     		} else if (accessed.isMethodProtected(methodSignature)) {
     			if (sameRuntimePackage) {
     				return true;
-    			} else if (!accessor.isSubclass(accessed)) {
+    			} else if (!accessorHost.isSubclass(accessed)) {
     				return false;
     			} else if (accessed.isMethodStatic(methodSignature)) {
     				return true;
     			} else {
-    				return accessor.isSubclass(methodSignatureClass) || methodSignatureClass.isSubclass(accessor);
+    				return accessorHost.isSubclass(methodSignatureClass) || methodSignatureClass.isSubclass(accessorHost);
     			}
     		} else if (accessed.isMethodPackage(methodSignature)) {
     			return sameRuntimePackage;
     		} else { //accessed.isMethodPrivate(methodSignature)
-    			return (accessed.equals(accessor));
-    			//TODO there was a || accessor.isInner(accessed) clause but it is *wrong*!
+    			return (accessed.equals(accessorHost));
+    			//TODO there was a || accessorHost.isInner(accessed) clause but it is *wrong*!
     		}
     	} catch (InvalidInputException e) {
     		//this should never happen, NullPointerException shall be thrown before
@@ -1549,29 +1615,37 @@ public final class ClassHierarchy implements Cloneable {
         ClassFile retVal = null;
         
         try {
-            //step 1 and 2
-            for (ClassFile f : receiverClass.superclasses()) {
-                if (f.hasMethodDeclaration(methodSignature) && !f.isMethodStatic(methodSignature)) {
-                    retVal = f;
-                    
-                    //third run-time exception
-                    if (!retVal.isMethodPublic(methodSignature)) {
-                        throw new MethodNotAccessibleException(methodSignature.toString());
-                    }
+            //step 1
+        	if (receiverClass.hasMethodDeclaration(methodSignature) && !receiverClass.isMethodStatic(methodSignature)) {
+        		retVal = receiverClass;
+        		
+        		//third run-time exception
+        		if (!retVal.isMethodPublic(methodSignature)) {
+        			throw new MethodNotAccessibleException(methodSignature.toString());
+        		}
 
-                    //fourth run-time exception
-                    if (retVal.isMethodAbstract(methodSignature)) {
-                        throw new MethodAbstractException(methodSignature.toString());
-                    }
-                    
-                    break;
-                }
-            }
+        		//fourth run-time exception
+        		if (retVal.isMethodAbstract(methodSignature)) {
+        			throw new MethodAbstractException(methodSignature.toString());
+        		}
+        	}
+        	
+        	//step 2
+        	if (retVal == null) {
+        		final ClassFile receiverClassSuperclass = receiverClass.getSuperclass();
+        		if (receiverClassSuperclass != null) {
+        			try { 
+        				retVal = lookupMethodImplInterface(receiverClassSuperclass, resolutionClass, methodSignature);
+        			} catch (MethodAbstractException e) {
+        				retVal = null;
+        			}
+        		}
+        	}
 
             //step 3
             if (retVal == null) {
                 final Set<ClassFile> nonabstractMaxSpecMethods = 
-                    maximallySpecificSuperinterfaceMethods(resolutionClass, methodSignature, true);
+                    maximallySpecificSuperinterfaceMethods(receiverClass, methodSignature, true);
                 if (nonabstractMaxSpecMethods.size() == 0) {
                     //sixth run-time exception
                     throw new MethodAbstractException(methodSignature.toString());
@@ -1618,11 +1692,18 @@ public final class ClassHierarchy implements Cloneable {
         	//determines whether should start looking for the implementation in 
         	//the superclass of the current class (virtual semantics, for super 
         	//calls) or in the class of the resolved method (nonvirtual semantics, 
-        	//for <init> and private methods)
+        	//for <init> and private methods).
+        	//N.B. here we use the specification as described in the JVMS v.12 and
+        	//following ("The symbolic reference names a class (not an interface),
+        	//and that class is a superclass of the current class") rather than 
+        	//that of the JVMS v.8 to v.11 ("If the symbolic reference names a class 
+        	//(not an interface), then that class is a superclass of the current class")
+        	//because the former seems to be the correct one and the latter to be
+        	//a mistake.
         	final boolean useVirtualSemantics = 
         			(!"<init>".equals(methodSignature.getName()) &&
-        					(resolutionClass.isInterface() || (currentClass.getSuperclass() != null && currentClass.getSuperclass().isSubclass(resolutionClass))) && 
-        					currentClass.isSuperInvoke());
+        			(!resolutionClass.isInterface() && currentClass.getSuperclass() != null && currentClass.getSuperclass().isSubclass(resolutionClass)) && 
+        			currentClass.isSuperInvoke());
         	final ClassFile c = (useVirtualSemantics ? currentClass.getSuperclass() : resolutionClass);
         	if (c == null) {
         		throw new InvalidInputException("Invoked " + this.getClass().getName() + ".lookupMethodImplSpecial with a virtual invocation semantics (\"super\") but currentClass has not a superclass.");
@@ -1657,7 +1738,7 @@ public final class ClassHierarchy implements Cloneable {
 
         		//step 3
         		if (retVal == null && c.isInterface()) {
-        			final ClassFile cf_JAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT);
+        			final ClassFile cf_JAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT); //surely loaded
         			if (cf_JAVA_OBJECT == null) {
         				throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".lookupMethodImplSpecial was unable to find standard class java.lang.Object.");
         			}
@@ -1737,21 +1818,39 @@ public final class ClassHierarchy implements Cloneable {
         } else {
             ClassFile retVal = null;
             
-            //step 1 and 2
-            for (ClassFile f : receiverClass.superclasses()) {
-                if (f.hasMethodDeclaration(methodSignature) && !f.isMethodStatic(methodSignature)) {
-                    if (overrides(f, resolutionClass, methodSignature, methodSignature)) {
-                        retVal = f;
+            //step 1
+            if (receiverClass.hasMethodDeclaration(methodSignature) && !receiverClass.isMethodStatic(methodSignature)) {
+                if (overrides(receiverClass, resolutionClass, methodSignature, methodSignature)) {
+                    retVal = receiverClass;
 
-                        //third run-time exception
-                        if (retVal.isMethodAbstract(methodSignature)) {
-                            throw new MethodAbstractException(methodSignature.toString());
-                        }
-
-                        break;
+                    //third run-time exception
+                    if (retVal.isMethodAbstract(methodSignature)) {
+                        throw new MethodAbstractException(methodSignature.toString());
                     }
                 }
             }
+            
+            //step 2
+        	if (retVal == null) {
+        		final ClassFile receiverClassSuperclass = receiverClass.getSuperclass();
+        		if (receiverClassSuperclass != null) {
+        			for (ClassFile f : receiverClassSuperclass.superclasses()) {
+        	            if (f.hasMethodDeclaration(methodSignature) && !f.isMethodStatic(methodSignature)) {
+        	            	if (overrides(f, resolutionClass, methodSignature, methodSignature)) {
+        	            		retVal = f;
+
+        	            		//third run-time exception
+        	            		if (retVal.isMethodAbstract(methodSignature)) {
+        	            			throw new MethodAbstractException(methodSignature.toString());
+        	            		}
+
+        	            		break;
+        	            	}
+        	            }
+        			}
+        		}
+        	}
+
 
             //step 3
             if (retVal == null) {
@@ -1784,15 +1883,15 @@ public final class ClassHierarchy implements Cloneable {
      *         compatible with {@code target}.
      */
     public boolean isAssignmentCompatible(ClassFile source, ClassFile target) {       
-        final ClassFile cf_JAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT);
+        final ClassFile cf_JAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT); //surely loaded
         if (cf_JAVA_OBJECT == null) {
             throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".createClassFileArray was unable to find standard class java.lang.Object.");
         }
-        final ClassFile cf_JAVA_CLONEABLE = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLONEABLE);
+        final ClassFile cf_JAVA_CLONEABLE = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLONEABLE); //surely loaded
         if (cf_JAVA_CLONEABLE == null) {
             throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".createClassFileArray was unable to find standard class java.lang.Cloneable.");
         } 
-        final ClassFile cf_JAVA_SERIALIZABLE = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_SERIALIZABLE);
+        final ClassFile cf_JAVA_SERIALIZABLE = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_SERIALIZABLE); //surely loaded
         if (cf_JAVA_SERIALIZABLE == null) {
             throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".createClassFileArrays was unable to find standard class java.lang.Cloneable.");
         }

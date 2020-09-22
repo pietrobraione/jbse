@@ -9,9 +9,11 @@ import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETDECLAREDFIELDS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETDECLAREDMETHODS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETDECLARINGCLASS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETENCLOSINGMETHOD0;
+import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETINTERFACES0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETMODIFIERS;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETNAME0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETPRIMITIVECLASS;
+import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETPROTECTIONDOMAIN0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETRAWANNOTATIONS;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETSIGNERS;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETSUPERCLASS;
@@ -26,6 +28,7 @@ import static jbse.algo.Overrides.ALGO_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASSLOADER_FINDLOADEDCLASS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD;
 import static jbse.algo.Overrides.ALGO_JAVA_CRC32_UPDATEBYTES;
+import static jbse.algo.Overrides.ALGO_JAVA_EXECUTABLE_GETPARAMETERS0;
 import static jbse.algo.Overrides.ALGO_JAVA_INFLATER_END;
 import static jbse.algo.Overrides.ALGO_JAVA_INFLATER_GETADLER;
 import static jbse.algo.Overrides.ALGO_JAVA_INFLATER_INFLATEBYTES;
@@ -42,11 +45,14 @@ import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_GETMEMBERS;
 import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_INIT;
 import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET;
 import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_RESOLVE;
+import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_SETCALLSITETARGETNORMAL;
+import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_SETCALLSITETARGETVOLATILE;
 import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_CLONE;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_GETCLASS;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_HASHCODE;
 import static jbse.algo.Overrides.ALGO_JAVA_PACKAGE_GETSYSTEMPACKAGE0;
+import static jbse.algo.Overrides.ALGO_JAVA_PROCESSENVIRONMENT_ENVIRON;
 import static jbse.algo.Overrides.ALGO_JAVA_REFLECT_ARRAY_NEWARRAY;
 import static jbse.algo.Overrides.ALGO_JAVA_STRING_HASHCODE;
 import static jbse.algo.Overrides.ALGO_JAVA_STRING_INTERN;
@@ -106,11 +112,13 @@ import static jbse.algo.Overrides.ALGO_SUN_REFLECTION_GETCALLERCLASS;
 import static jbse.algo.Overrides.ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS;
 import static jbse.algo.Overrides.ALGO_SUN_UNIXNATIVEDISPATCHER_GETCWD;
 import static jbse.algo.Overrides.ALGO_SUN_UNIXNATIVEDISPATCHER_INIT;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_ALLOCATEINSTANCE;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_ALLOCATEMEMORY;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPINT;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPLONG;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_DEFINEANONYMOUSCLASS;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_DEFINECLASS;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_ENSURECLASSINITIALIZED;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_FREEMEMORY;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_GETBYTE;
@@ -122,10 +130,14 @@ import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PUTINT_O;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PUTLONG;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PUTOBJECT_O;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_STATICFIELDBASE;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_STATICFIELDOFFSET;
 import static jbse.algo.Overrides.ALGO_noclass_REGISTERLOADEDCLASS;
+import static jbse.algo.Overrides.ALGO_noclass_REGISTERMETHODHANDLE;
 import static jbse.algo.Overrides.ALGO_noclass_REGISTERMETHODTYPE;
 import static jbse.algo.Overrides.ALGO_noclass_SETSTANDARDCLASSLOADERSREADY;
-import static jbse.algo.Overrides.ALGO_noclass_STORELINKEDMETHODANDAPPENDIX;
+import static jbse.algo.Overrides.ALGO_noclass_STORELINKEDCALLSITEADAPTERANDAPPENDIX;
+import static jbse.algo.Overrides.ALGO_noclass_STORELINKEDMETHODADAPTERANDAPPENDIX;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_1;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_2;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION_1;
@@ -144,8 +156,10 @@ import static jbse.algo.Overrides.BASE_SUN_SIGNAL_HANDLE0;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ADDRESSSIZE;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYBASEOFFSET;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYINDEXSCALE;
+import static jbse.algo.Overrides.BASE_SUN_UNSAFE_FULLFENCE;
 import static jbse.algo.Overrides.BASE_SUN_URLCLASSPATH_GETLOOKUPCACHEURLS;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
+import static jbse.bc.Signatures.JAVA_ABSTRACTPIPELINE;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_1;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_2;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION_1;
@@ -153,6 +167,7 @@ import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION_
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT;
 import static jbse.bc.Signatures.JAVA_ARRAYDEQUE;
 import static jbse.bc.Signatures.JAVA_ARRAYLIST;
+import static jbse.bc.Signatures.JAVA_ARRAYS_LEGACYMERGESORT;
 import static jbse.bc.Signatures.JAVA_ATOMICLONG_VMSUPPORTSCS8;
 import static jbse.bc.Signatures.JAVA_ATTRIBUTES_NAME;
 import static jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE;
@@ -160,6 +175,7 @@ import static jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_FACTORY;
 import static jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIESDATA;
 import static jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIES_L;
 import static jbse.bc.Signatures.JAVA_BYTE_BYTECACHE;
+import static jbse.bc.Signatures.JAVA_CALLSITE;
 import static jbse.bc.Signatures.JAVA_CHARACTER_CHARACTERCACHE;
 import static jbse.bc.Signatures.JAVA_CHARSET_EXTENDEDPROVIDERHOLDER;
 import static jbse.bc.Signatures.JAVA_CLASS_DESIREDASSERTIONSTATUS0;
@@ -171,9 +187,11 @@ import static jbse.bc.Signatures.JAVA_CLASS_GETDECLAREDFIELDS0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETDECLAREDMETHODS0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETDECLARINGCLASS0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETENCLOSINGMETHOD0;
+import static jbse.bc.Signatures.JAVA_CLASS_GETINTERFACES0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETMODIFIERS;
 import static jbse.bc.Signatures.JAVA_CLASS_GETNAME0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETPRIMITIVECLASS;
+import static jbse.bc.Signatures.JAVA_CLASS_GETPROTECTIONDOMAIN0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETRAWANNOTATIONS;
 import static jbse.bc.Signatures.JAVA_CLASS_GETSIGNERS;
 import static jbse.bc.Signatures.JAVA_CLASS_GETSUPERCLASS;
@@ -190,14 +208,24 @@ import static jbse.bc.Signatures.JAVA_CLASSLOADER_FINDBUILTINLIB;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_FINDLOADEDCLASS0;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_NATIVELIBRARY_LOAD;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_REGISTERNATIVES;
+import static jbse.bc.Signatures.JAVA_CLASSVALUE_CLASSVALUEMAP;
+import static jbse.bc.Signatures.JAVA_COLLECTIONS_COPIESLIST;
+import static jbse.bc.Signatures.JAVA_COLLECTORS;
 import static jbse.bc.Signatures.JAVA_CRC32_UPDATEBYTES;
+import static jbse.bc.Signatures.JAVA_DELEGATINGMETHODHANDLE;
 import static jbse.bc.Signatures.JAVA_DIRECTBYTEBUFFER;
 import static jbse.bc.Signatures.JAVA_DIRECTLONGBUFFERU;
 import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE;
+import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_CONSTRUCTOR;
+import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_ENSUREINITIALIZED;
+import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_INTERFACE;
 import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_LAZY;
 import static jbse.bc.Signatures.JAVA_DOUBLE_DOUBLETORAWLONGBITS;
 import static jbse.bc.Signatures.JAVA_DOUBLE_LONGBITSTODOUBLE;
 import static jbse.bc.Signatures.JAVA_ENUM;
+import static jbse.bc.Signatures.JAVA_ENUMMAP;
+import static jbse.bc.Signatures.JAVA_ENUMSET;
+import static jbse.bc.Signatures.JAVA_EXECUTABLE_GETPARAMETERS0;
 import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR_INITIDS;
 import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR_SET;
 import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM_INITIDS;
@@ -207,7 +235,9 @@ import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM_OPEN0;
 import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM_READBYTES;
 import static jbse.bc.Signatures.JAVA_FILEOUTPUTSTREAM_INITIDS;
 import static jbse.bc.Signatures.JAVA_FILEOUTPUTSTREAM_WRITEBYTES;
+import static jbse.bc.Signatures.JAVA_FILEPERMISSION;
 import static jbse.bc.Signatures.JAVA_FLOAT_FLOATTORAWINTBITS;
+import static jbse.bc.Signatures.JAVA_HASHSET;
 import static jbse.bc.Signatures.JAVA_IDENTITYHASHMAP;
 import static jbse.bc.Signatures.JAVA_INFLATER;
 import static jbse.bc.Signatures.JAVA_INFLATER_END;
@@ -217,6 +247,8 @@ import static jbse.bc.Signatures.JAVA_INFLATER_INIT;
 import static jbse.bc.Signatures.JAVA_INFLATER_INITIDS;
 import static jbse.bc.Signatures.JAVA_INFLATER_RESET;
 import static jbse.bc.Signatures.JAVA_INFLATER_SETDICTIONARY;
+import static jbse.bc.Signatures.JAVA_INFOFROMMEMBERNAME;
+import static jbse.bc.Signatures.JAVA_INNERCLASSLAMBDAMETAFACTORY;
 import static jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR;
 import static jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR_2;
 import static jbse.bc.Signatures.JAVA_INVOKERS;
@@ -224,17 +256,28 @@ import static jbse.bc.Signatures.JAVA_JARFILE;
 import static jbse.bc.Signatures.JAVA_JARFILE_GETMETAINFENTRYNAMES;
 import static jbse.bc.Signatures.JAVA_JARVERIFIER;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM;
+import static jbse.bc.Signatures.JAVA_LAMBDAFORMBUFFER;
+import static jbse.bc.Signatures.JAVA_LAMBDAFORMEDITOR;
+import static jbse.bc.Signatures.JAVA_LAMBDAFORMEDITOR_TRANSFORM;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM_NAME;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM_NAMEDFUNCTION;
+import static jbse.bc.Signatures.JAVA_LAMBDAMETAFACTORY;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
+import static jbse.bc.Signatures.JAVA_LOCALE_1;
 import static jbse.bc.Signatures.JAVA_MAPPEDBYTEBUFFER;
+import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL_ARRAYACCESSOR;
+import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL_ASVARARGSCOLLECTOR;
+import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL_COUNTINGWRAPPER;
+import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL_LAZY;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_GETCONSTANT;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_GETMEMBERS;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_INIT;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_RESOLVE;
+import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_SETCALLSITETARGETNORMAL;
+import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_SETCALLSITETARGETVOLATILE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET;
 import static jbse.bc.Signatures.JAVA_METHODHANDLES;
 import static jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP;
@@ -247,6 +290,11 @@ import static jbse.bc.Signatures.JAVA_OBJECT_NOTIFYALL;
 import static jbse.bc.Signatures.JAVA_OBJECT_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_OPTIONAL;
 import static jbse.bc.Signatures.JAVA_PACKAGE_GETSYSTEMPACKAGE0;
+import static jbse.bc.Signatures.JAVA_PATTERN;
+import static jbse.bc.Signatures.JAVA_PROCESSENVIRONMENT;
+import static jbse.bc.Signatures.JAVA_PROCESSENVIRONMENT_ENVIRON;
+import static jbse.bc.Signatures.JAVA_REFERENCEPIPELINE_STATEFULOP;
+import static jbse.bc.Signatures.JAVA_REFERENCEPIPELINE_STATELESSOP;
 import static jbse.bc.Signatures.JAVA_REFLECT_ARRAY_NEWARRAY;
 import static jbse.bc.Signatures.JAVA_RUNTIME_AVAILABLEPROCESSORS;
 import static jbse.bc.Signatures.JAVA_SHORT;
@@ -301,6 +349,7 @@ import static jbse.bc.Signatures.JAVA_THROWABLE_FILLINSTACKTRACE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEDEPTH;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEELEMENT;
 import static jbse.bc.Signatures.JAVA_THROWABLE_SENTINELHOLDER;
+import static jbse.bc.Signatures.JAVA_TIMSORT;
 import static jbse.bc.Signatures.JAVA_TREESET;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_CANONICALIZE0;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_CHECKACCESS;
@@ -309,6 +358,7 @@ import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_GETLASTMODIFIEDTIME;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_GETLENGTH;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_INITIDS;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_LIST;
+import static jbse.bc.Signatures.JAVA_URI;
 import static jbse.bc.Signatures.JAVA_VOID;
 import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_CANONICALIZE0;
 import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_CANONICALIZEWITHPREFIX0;
@@ -367,9 +417,12 @@ import static jbse.bc.Signatures.JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPT
 import static jbse.bc.Signatures.JBSE_JAVA_MAP_REFINEONKEYANDBRANCH;
 import static jbse.bc.Signatures.JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH;
 import static jbse.bc.Signatures.JBSE_JAVA_MAP_NOTIFYEXECUTION;
+import static jbse.bc.Signatures.JDK_FRAME;
 import static jbse.bc.Signatures.JDK_TYPE;
 import static jbse.bc.Signatures.SUN_ASCIICASEINSENSITIVECOMPARATOR;
 import static jbse.bc.Signatures.SUN_JARINDEX;
+import static jbse.bc.Signatures.SUN_LOCALEPROVIDERADAPTER;
+import static jbse.bc.Signatures.SUN_LOCALEPROVIDERADAPTER_1;
 import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
 import static jbse.bc.Signatures.SUN_NATIVEMETHODACCESSORIMPL_INVOKE0;
 import static jbse.bc.Signatures.SUN_PERF;
@@ -379,11 +432,14 @@ import static jbse.bc.Signatures.SUN_PERFCOUNTER;
 import static jbse.bc.Signatures.SUN_PERFCOUNTER_CORECOUNTERS;
 import static jbse.bc.Signatures.SUN_REFLECTION_GETCALLERCLASS;
 import static jbse.bc.Signatures.SUN_REFLECTION_GETCLASSACCESSFLAGS;
+import static jbse.bc.Signatures.SUN_SECURITYCONSTANTS;
 import static jbse.bc.Signatures.SUN_SIGNAL_FINDSIGNAL;
 import static jbse.bc.Signatures.SUN_SIGNAL_HANDLE0;
 import static jbse.bc.Signatures.SUN_UNIXNATIVEDISPATCHER_GETCWD;
 import static jbse.bc.Signatures.SUN_UNIXNATIVEDISPATCHER_INIT;
+import static jbse.bc.Signatures.SUN_UNIXPATH;
 import static jbse.bc.Signatures.SUN_UNSAFE_ADDRESSSIZE;
+import static jbse.bc.Signatures.SUN_UNSAFE_ALLOCATEINSTANCE;
 import static jbse.bc.Signatures.SUN_UNSAFE_ALLOCATEMEMORY;
 import static jbse.bc.Signatures.SUN_UNSAFE_ARRAYBASEOFFSET;
 import static jbse.bc.Signatures.SUN_UNSAFE_ARRAYINDEXSCALE;
@@ -391,8 +447,10 @@ import static jbse.bc.Signatures.SUN_UNSAFE_COMPAREANDSWAPINT;
 import static jbse.bc.Signatures.SUN_UNSAFE_COMPAREANDSWAPLONG;
 import static jbse.bc.Signatures.SUN_UNSAFE_COMPAREANDSWAPOBJECT;
 import static jbse.bc.Signatures.SUN_UNSAFE_DEFINEANONYMOUSCLASS;
+import static jbse.bc.Signatures.SUN_UNSAFE_DEFINECLASS;
 import static jbse.bc.Signatures.SUN_UNSAFE_ENSURECLASSINITIALIZED;
 import static jbse.bc.Signatures.SUN_UNSAFE_FREEMEMORY;
+import static jbse.bc.Signatures.SUN_UNSAFE_FULLFENCE;
 import static jbse.bc.Signatures.SUN_UNSAFE_GETBYTE;
 import static jbse.bc.Signatures.SUN_UNSAFE_GETINT;
 import static jbse.bc.Signatures.SUN_UNSAFE_GETINTVOLATILE;
@@ -405,19 +463,28 @@ import static jbse.bc.Signatures.SUN_UNSAFE_PUTINTVOLATILE;
 import static jbse.bc.Signatures.SUN_UNSAFE_PUTLONG;
 import static jbse.bc.Signatures.SUN_UNSAFE_PUTOBJECT;
 import static jbse.bc.Signatures.SUN_UNSAFE_PUTOBJECTVOLATILE;
+import static jbse.bc.Signatures.SUN_UNSAFE_PUTORDEREDINT;
+import static jbse.bc.Signatures.SUN_UNSAFE_PUTORDEREDOBJECT;
 import static jbse.bc.Signatures.SUN_UNSAFE_REGISTERNATIVES;
 import static jbse.bc.Signatures.SUN_UNSAFE_SHOULDBEINITIALIZED;
+import static jbse.bc.Signatures.SUN_UNSAFE_STATICFIELDBASE;
+import static jbse.bc.Signatures.SUN_UNSAFE_STATICFIELDOFFSET;
+import static jbse.bc.Signatures.SUN_UNSAFEFIELDACCESSORIMPL;
 import static jbse.bc.Signatures.SUN_URLCLASSPATH_GETLOOKUPCACHEURLS;
 import static jbse.bc.Signatures.SUN_URLCLASSPATH_JARLOADER;
+import static jbse.bc.Signatures.SUN_UTIL;
+import static jbse.bc.Signatures.SUN_VALUECONVERSIONS;
 import static jbse.bc.Signatures.SUN_VERIFYACCESS;
 import static jbse.bc.Signatures.SUN_VERIFYTYPE;
 import static jbse.bc.Signatures.SUN_VM_INITIALIZE;
 import static jbse.bc.Signatures.SUN_WIN32ERRORMODE_SETERRORMODE;
 import static jbse.bc.Signatures.SUN_WRAPPER_FORMAT;
 import static jbse.bc.Signatures.noclass_REGISTERLOADEDCLASS;
+import static jbse.bc.Signatures.noclass_REGISTERMETHODHANDLE;
 import static jbse.bc.Signatures.noclass_REGISTERMETHODTYPE;
 import static jbse.bc.Signatures.noclass_SETSTANDARDCLASSLOADERSREADY;
-import static jbse.bc.Signatures.noclass_STORELINKEDMETHODANDAPPENDIX;
+import static jbse.bc.Signatures.noclass_STORELINKEDCALLSITEADAPTERANDAPPENDIX;
+import static jbse.bc.Signatures.noclass_STORELINKEDMETHODADAPTERANDAPPENDIX;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -644,9 +711,11 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_CLASS_GETDECLAREDMETHODS0,                     ALGO_JAVA_CLASS_GETDECLAREDMETHODS0);
             addMetaOverridden(JAVA_CLASS_GETDECLARINGCLASS0,                      ALGO_JAVA_CLASS_GETDECLARINGCLASS0);
             addMetaOverridden(JAVA_CLASS_GETENCLOSINGMETHOD0,                     ALGO_JAVA_CLASS_GETENCLOSINGMETHOD0);
+            addMetaOverridden(JAVA_CLASS_GETINTERFACES0,                          ALGO_JAVA_CLASS_GETINTERFACES0);
             addMetaOverridden(JAVA_CLASS_GETMODIFIERS,                            ALGO_JAVA_CLASS_GETMODIFIERS);
             addMetaOverridden(JAVA_CLASS_GETNAME0,                                ALGO_JAVA_CLASS_GETNAME0);
             addMetaOverridden(JAVA_CLASS_GETPRIMITIVECLASS,                       ALGO_JAVA_CLASS_GETPRIMITIVECLASS);
+            addMetaOverridden(JAVA_CLASS_GETPROTECTIONDOMAIN0,                    ALGO_JAVA_CLASS_GETPROTECTIONDOMAIN0);
             addMetaOverridden(JAVA_CLASS_GETRAWANNOTATIONS,                       ALGO_JAVA_CLASS_GETRAWANNOTATIONS);
             addMetaOverridden(JAVA_CLASS_GETSIGNERS,                              ALGO_JAVA_CLASS_GETSIGNERS);
             addMetaOverridden(JAVA_CLASS_GETSUPERCLASS,                           ALGO_JAVA_CLASS_GETSUPERCLASS);
@@ -666,6 +735,7 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_CRC32_UPDATEBYTES,                             ALGO_JAVA_CRC32_UPDATEBYTES);
             addMetaOverridden(JAVA_DOUBLE_DOUBLETORAWLONGBITS,                    ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(JAVA_DOUBLE_LONGBITSTODOUBLE,                       ALGO_INVOKEMETA_METACIRCULAR);
+            addMetaOverridden(JAVA_EXECUTABLE_GETPARAMETERS0,                     ALGO_JAVA_EXECUTABLE_GETPARAMETERS0);
             addMetaOverridden(JAVA_FILEDESCRIPTOR_INITIDS,                        ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(JAVA_FILEDESCRIPTOR_SET,                            ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(JAVA_FILEINPUTSTREAM_AVAILABLE,                     ALGO_JAVA_FILEINPUTSTREAM_AVAILABLE);
@@ -690,6 +760,8 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET,         ALGO_JAVA_METHODHANDLENATIVES_OBJECTFIELDOFFSET);
             addMetaOverridden(JAVA_METHODHANDLENATIVES_REGISTERNATIVES,           ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(JAVA_METHODHANDLENATIVES_RESOLVE,                   ALGO_JAVA_METHODHANDLENATIVES_RESOLVE);
+            addMetaOverridden(JAVA_METHODHANDLENATIVES_SETCALLSITETARGETNORMAL,   ALGO_JAVA_METHODHANDLENATIVES_SETCALLSITETARGETNORMAL);
+            addMetaOverridden(JAVA_METHODHANDLENATIVES_SETCALLSITETARGETVOLATILE, ALGO_JAVA_METHODHANDLENATIVES_SETCALLSITETARGETVOLATILE);
             addMetaOverridden(JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET,         ALGO_JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET);
             addMetaOverridden(JAVA_OBJECT_CLONE,                                  ALGO_JAVA_OBJECT_CLONE);
             addMetaOverridden(JAVA_OBJECT_GETCLASS,                               ALGO_JAVA_OBJECT_GETCLASS);
@@ -697,6 +769,7 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_OBJECT_NOTIFYALL,                              ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(JAVA_OBJECT_REGISTERNATIVES,                        ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(JAVA_PACKAGE_GETSYSTEMPACKAGE0,                     ALGO_JAVA_PACKAGE_GETSYSTEMPACKAGE0);
+            addMetaOverridden(JAVA_PROCESSENVIRONMENT_ENVIRON,                    ALGO_JAVA_PROCESSENVIRONMENT_ENVIRON);
             addMetaOverridden(JAVA_REFLECT_ARRAY_NEWARRAY,                        ALGO_JAVA_REFLECT_ARRAY_NEWARRAY);
             addBaseOverridden(JAVA_RUNTIME_AVAILABLEPROCESSORS,                   BASE_JAVA_RUNTIME_AVAILABLEPROCESSORS);
             addMetaOverridden(JAVA_STRICTMATH_ACOS,                               ALGO_INVOKEMETA_METACIRCULAR);
@@ -786,6 +859,7 @@ public final class ExecutionContext {
             addMetaOverridden(SUN_UNIXNATIVEDISPATCHER_GETCWD,                    ALGO_SUN_UNIXNATIVEDISPATCHER_GETCWD);
             addMetaOverridden(SUN_UNIXNATIVEDISPATCHER_INIT,                      ALGO_SUN_UNIXNATIVEDISPATCHER_INIT);
             addBaseOverridden(SUN_UNSAFE_ADDRESSSIZE,                             BASE_SUN_UNSAFE_ADDRESSSIZE);
+            addMetaOverridden(SUN_UNSAFE_ALLOCATEINSTANCE,                        ALGO_SUN_UNSAFE_ALLOCATEINSTANCE);
             addMetaOverridden(SUN_UNSAFE_ALLOCATEMEMORY,                          ALGO_SUN_UNSAFE_ALLOCATEMEMORY);
             addBaseOverridden(SUN_UNSAFE_ARRAYBASEOFFSET,                         BASE_SUN_UNSAFE_ARRAYBASEOFFSET);
             addBaseOverridden(SUN_UNSAFE_ARRAYINDEXSCALE,                         BASE_SUN_UNSAFE_ARRAYINDEXSCALE);
@@ -793,8 +867,10 @@ public final class ExecutionContext {
             addMetaOverridden(SUN_UNSAFE_COMPAREANDSWAPLONG,                      ALGO_SUN_UNSAFE_COMPAREANDSWAPLONG);
             addMetaOverridden(SUN_UNSAFE_COMPAREANDSWAPOBJECT,                    ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT);
             addMetaOverridden(SUN_UNSAFE_DEFINEANONYMOUSCLASS,                    ALGO_SUN_UNSAFE_DEFINEANONYMOUSCLASS);
+            addMetaOverridden(SUN_UNSAFE_DEFINECLASS,                             ALGO_SUN_UNSAFE_DEFINECLASS);
             addMetaOverridden(SUN_UNSAFE_ENSURECLASSINITIALIZED,                  ALGO_SUN_UNSAFE_ENSURECLASSINITIALIZED);
             addMetaOverridden(SUN_UNSAFE_FREEMEMORY,                              ALGO_SUN_UNSAFE_FREEMEMORY);
+            addBaseOverridden(SUN_UNSAFE_FULLFENCE,                               BASE_SUN_UNSAFE_FULLFENCE);
             addMetaOverridden(SUN_UNSAFE_GETBYTE,                                 ALGO_SUN_UNSAFE_GETBYTE);
             addMetaOverridden(SUN_UNSAFE_GETINT,                                  ALGO_SUN_UNSAFE_GETINT_O);
             addMetaOverridden(SUN_UNSAFE_GETINTVOLATILE,                          ALGO_SUN_UNSAFE_GETINT_O);
@@ -807,8 +883,12 @@ public final class ExecutionContext {
             addMetaOverridden(SUN_UNSAFE_PUTLONG,                                 ALGO_SUN_UNSAFE_PUTLONG);
             addMetaOverridden(SUN_UNSAFE_PUTOBJECT,                               ALGO_SUN_UNSAFE_PUTOBJECT_O);
             addMetaOverridden(SUN_UNSAFE_PUTOBJECTVOLATILE,                       ALGO_SUN_UNSAFE_PUTOBJECT_O);
+            addMetaOverridden(SUN_UNSAFE_PUTORDEREDINT,                           ALGO_SUN_UNSAFE_PUTINT_O);
+            addMetaOverridden(SUN_UNSAFE_PUTORDEREDOBJECT,                        ALGO_SUN_UNSAFE_PUTOBJECT_O);
             addMetaOverridden(SUN_UNSAFE_REGISTERNATIVES,                         ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(SUN_UNSAFE_SHOULDBEINITIALIZED,                     ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED);
+            addMetaOverridden(SUN_UNSAFE_STATICFIELDBASE,                         ALGO_SUN_UNSAFE_STATICFIELDBASE);
+            addMetaOverridden(SUN_UNSAFE_STATICFIELDOFFSET,                       ALGO_SUN_UNSAFE_STATICFIELDOFFSET);
             addBaseOverridden(SUN_URLCLASSPATH_GETLOOKUPCACHEURLS,                BASE_SUN_URLCLASSPATH_GETLOOKUPCACHEURLS);
             addMetaOverridden(SUN_VM_INITIALIZE,                                  ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(SUN_WIN32ERRORMODE_SETERRORMODE,                    ALGO_INVOKEMETA_METACIRCULAR);
@@ -854,10 +934,12 @@ public final class ExecutionContext {
             addMetaOverridden(JBSE_JAVA_MAP_NOTIFYEXECUTION,                 	  ALGO_JBSE_JAVA_MAP_NOTIFYEXECUTION);
             
             //jbse classless (pseudo)methods
-            addMetaOverridden(noclass_REGISTERLOADEDCLASS,          ALGO_noclass_REGISTERLOADEDCLASS);
-            addMetaOverridden(noclass_REGISTERMETHODTYPE,           ALGO_noclass_REGISTERMETHODTYPE);
-            addMetaOverridden(noclass_SETSTANDARDCLASSLOADERSREADY, ALGO_noclass_SETSTANDARDCLASSLOADERSREADY);
-            addMetaOverridden(noclass_STORELINKEDMETHODANDAPPENDIX, ALGO_noclass_STORELINKEDMETHODANDAPPENDIX);
+            addMetaOverridden(noclass_REGISTERLOADEDCLASS,                   ALGO_noclass_REGISTERLOADEDCLASS);
+            addMetaOverridden(noclass_REGISTERMETHODHANDLE,                  ALGO_noclass_REGISTERMETHODHANDLE);
+            addMetaOverridden(noclass_REGISTERMETHODTYPE,                    ALGO_noclass_REGISTERMETHODTYPE);
+            addMetaOverridden(noclass_SETSTANDARDCLASSLOADERSREADY,          ALGO_noclass_SETSTANDARDCLASSLOADERSREADY);
+            addMetaOverridden(noclass_STORELINKEDMETHODADAPTERANDAPPENDIX,   ALGO_noclass_STORELINKEDMETHODADAPTERANDAPPENDIX);
+            addMetaOverridden(noclass_STORELINKEDCALLSITEADAPTERANDAPPENDIX, ALGO_noclass_STORELINKEDCALLSITEADAPTERANDAPPENDIX);
         } catch (MetaUnsupportedException e) {
             throw new UnexpectedInternalException(e);
         }
@@ -1041,41 +1123,78 @@ public final class ExecutionContext {
     	}
         final String className = classFile.getClassName();
         return (
+        className.equals(JAVA_ABSTRACTPIPELINE) ||
         className.equals(JAVA_ARRAYDEQUE) ||
         className.equals(JAVA_ARRAYLIST) ||
+        className.equals(JAVA_ARRAYS_LEGACYMERGESORT) ||
         className.equals(JAVA_ATTRIBUTES_NAME) ||
         className.equals(JAVA_BYTE_BYTECACHE) ||
+        className.equals(JAVA_CALLSITE) ||
         className.equals(JAVA_CHARACTER_CHARACTERCACHE) ||
         className.equals(JAVA_CHARSET_EXTENDEDPROVIDERHOLDER) ||
+        className.equals(JAVA_CLASSVALUE_CLASSVALUEMAP) ||
+        className.equals(JAVA_COLLECTIONS_COPIESLIST) ||
+        className.equals(JAVA_COLLECTORS) ||
+        className.equals(JAVA_DELEGATINGMETHODHANDLE) ||
         className.equals(JAVA_DIRECTBYTEBUFFER) ||
+        className.equals(JAVA_DIRECTMETHODHANDLE_CONSTRUCTOR) ||
+        className.equals(JAVA_DIRECTMETHODHANDLE_ENSUREINITIALIZED) ||
+        className.equals(JAVA_DIRECTMETHODHANDLE_INTERFACE) ||
         className.equals(JAVA_DIRECTMETHODHANDLE_LAZY) || //apparently
         className.equals(JAVA_DIRECTLONGBUFFERU) || 
+        className.equals(JAVA_ENUMMAP) || 
+        className.equals(JAVA_ENUMSET) || 
+        className.equals(JAVA_FILEPERMISSION) || //apparently 
+        className.equals(JAVA_HASHSET) || 
         className.equals(JAVA_IDENTITYHASHMAP) || 
         className.equals(JAVA_INFLATER) ||
+        className.equals(JAVA_INFOFROMMEMBERNAME) || 
+        className.equals(JAVA_INNERCLASSLAMBDAMETAFACTORY) || //almost, the only impure members are counter (an atomic integer that is used to give unique names) and dumper (used to debugging purposes only)
         className.equals(JAVA_INVOKERBYTECODEGENERATOR_2) ||
         className.equals(JAVA_JARFILE) || 
         className.equals(JAVA_JARVERIFIER) || 
         className.equals(JAVA_LAMBDAFORM) || 
+        className.equals(JAVA_LAMBDAFORMBUFFER) || 
+        className.equals(JAVA_LAMBDAFORMEDITOR) || 
+        className.equals(JAVA_LAMBDAFORMEDITOR_TRANSFORM) || 
         className.equals(JAVA_LAMBDAFORM_NAME) || 
+        className.equals(JAVA_LAMBDAMETAFACTORY) || 
         className.equals(JAVA_LINKEDLIST) || 
         className.equals(JAVA_LINKEDLIST_ENTRY) ||
+        className.equals(JAVA_LOCALE_1) ||
         className.equals(JAVA_MAPPEDBYTEBUFFER) || 
+        className.equals(JAVA_METHODHANDLEIMPL_ARRAYACCESSOR) || //lazily (its cache of array accessor method handles is lazily but monotonically filled)
+        className.equals(JAVA_METHODHANDLEIMPL_ASVARARGSCOLLECTOR) ||
+        className.equals(JAVA_METHODHANDLEIMPL_COUNTINGWRAPPER) || //almost surely
+        className.equals(JAVA_METHODHANDLEIMPL_LAZY) || //apparently
         className.equals(JAVA_METHODTYPEFORM) || 
         className.equals(JAVA_OPTIONAL) || 
+        className.equals(JAVA_PATTERN) || 
+        className.equals(JAVA_REFERENCEPIPELINE_STATEFULOP) || 
+        className.equals(JAVA_REFERENCEPIPELINE_STATELESSOP) || 
         className.equals(JAVA_SHORT) || 
         className.equals(JAVA_SHORT_SHORTCACHE) || 
         className.equals(JAVA_STANDARDCHARSETS) || 
+        className.equals(JAVA_TIMSORT) ||
         className.equals(JAVA_TREESET) ||
         className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
+        className.equals(JAVA_URI) || 
         className.equals(JAVA_VOID) || 
         className.equals(JAVA_ZIPFILE) || 
+        className.equals(JDK_FRAME) || 
         className.equals(JDK_TYPE) || 
         className.equals(SUN_ASCIICASEINSENSITIVECOMPARATOR) ||
         className.equals(SUN_JARINDEX) ||
+        className.equals(SUN_LOCALEPROVIDERADAPTER) ||
+        className.equals(SUN_LOCALEPROVIDERADAPTER_1) ||
         className.equals(SUN_PERF) ||
         className.equals(SUN_PERFCOUNTER) ||
         className.equals(SUN_PERFCOUNTER_CORECOUNTERS) ||
+        className.equals(SUN_SECURITYCONSTANTS) ||
+        className.equals(SUN_UNSAFEFIELDACCESSORIMPL) ||
         className.equals(SUN_URLCLASSPATH_JARLOADER) ||
+        className.equals(SUN_UTIL) || //apparently
+        className.equals(SUN_VALUECONVERSIONS) || //lazily (its cache of value conversion method handles is lazily but monotonically filled)
         className.equals(SUN_VERIFYACCESS) ||
         className.equals(SUN_VERIFYTYPE) ||
         className.equals(SUN_WRAPPER_FORMAT) ||
@@ -1098,8 +1217,10 @@ public final class ExecutionContext {
     	addPostInitInvariantClassName(JAVA_METHODHANDLES); //can be considered as it were pure (all final except ZERO_MHS and IDENTITY_MHS that are caches) 
     	addPostInitInvariantClassName(JAVA_METHODHANDLES_LOOKUP); //can be considered as it were pure (all final including PUBLIC_LOOKUP and IMPL_LOOKUP that are instances of Lookup - that is immutable - and except LOOKASIDE_TABLE, that seems to be a sort of cache) 
     	addPostInitInvariantClassName(JAVA_METHODTYPE); //can be considered as it were pure (all final except internTable and objectOnlyTypes that are caches) 
+    	addPostInitInvariantClassName(JAVA_PROCESSENVIRONMENT); //necessary for bootstrapping of invokedynamic-related stuff 
     	addPostInitInvariantClassName(JAVA_SIMPLEMETHODHANDLE); //necessary for method handles
         //addPostInitInvariantClassName(SUN_LAUNCHERHELPER); //necessary to JVM bootstrap (is it really?)
+        addPostInitInvariantClassName(SUN_UNIXPATH); //necessary to invokedynamic
     }
     
     private void addPostInitInvariantClassName(String className) {

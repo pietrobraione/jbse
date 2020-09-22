@@ -13,7 +13,7 @@ public final class ConstantPoolClass extends ConstantPoolValue {
 
     public ConstantPoolClass(String value) { 
         this.value = value; 
-        final int prime = 11;
+        final int prime = 21;
         int result = 1;
         result = prime * result + ((value == null) ? 0 : value.hashCode());
         this.hashCode = result;

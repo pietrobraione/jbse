@@ -16,12 +16,13 @@ import jbse.bc.exc.RenameUnsupportedException;
 
 /**
  * A {@link ClassFile} that can be created on-the-fly for code
- * snippets.
+ * snippets. It is an anonymous class in the sense of {@link sun.misc.Unsafe#defineAnonymousClass}.
  * 
  * @author Pietro Braione
  */
 public class ClassFileSnippetNoWrap extends ClassFile {
 	final Snippet snippet;
+	final ClassFile hostClass;
     final int definingClassLoader;
     final String packageName;
     final String className;
@@ -30,17 +31,16 @@ public class ClassFileSnippetNoWrap extends ClassFile {
      * Constructor.
      * 
      * @param snippet a {@link Snippet}.
-     * @param definingClassLoader an {@code int}, the defining classloader 
+     * @param hostClass a {@code ClassFile}, the host class 
      *        assumed for this {@link ClassFileSnippetNoWrap}.
-     * @param packageName a {@code String}, the name of the package where this
-     *        {@link ClassFileSnippetNoWrap} must be assumed to reside.
      * @param className a {@code String}, the name of this
      *        {@link ClassFileSnippetNoWrap}. It must be unique in the dynamic package.
      */
-    public ClassFileSnippetNoWrap(Snippet snippet, int definingClassLoader, String packageName, String className) {
+    public ClassFileSnippetNoWrap(Snippet snippet, ClassFile hostClass, String className) {
         this.snippet = snippet;
-        this.definingClassLoader = definingClassLoader;
-        this.packageName = packageName;
+        this.hostClass = hostClass;
+        this.definingClassLoader = hostClass.getDefiningClassLoader();
+        this.packageName = hostClass.getPackageName();
         this.className = className;
     }
     
@@ -186,12 +186,12 @@ public class ClassFileSnippetNoWrap extends ClassFile {
     
     @Override
     public boolean isAnonymousUnregistered() {
-        return false;
+        return true;
     }
     
     @Override
     public ClassFile getHostClass() {
-        return null;
+        return this.hostClass;
     }
 
     @Override
@@ -304,9 +304,16 @@ public class ClassFileSnippetNoWrap extends ClassFile {
     throws MethodNotFoundException {
     	throw new MethodNotFoundException(methodSignature.toString());
     }
+    
+    @Override
+    public ParameterInfo[] getMethodParameters(Signature methodSignature) 
+    throws MethodNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
 
     @Override
-    public String[] getMethodThrownExceptions(Signature methodSignature) throws MethodNotFoundException {
+    public String[] getMethodThrownExceptions(Signature methodSignature) 
+    throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
     }
 
@@ -468,6 +475,11 @@ public class ClassFileSnippetNoWrap extends ClassFile {
     }
     
     @Override
+    public CallSiteSpecifier getCallSiteSpecifier(int index) throws InvalidIndexException {
+        throw new InvalidIndexException("Constant pool index " + index + " does not exist in snippet.");
+    }    
+
+    @Override
     public ClassFile getSuperclass() {
         return null;
     }
@@ -488,7 +500,7 @@ public class ClassFileSnippetNoWrap extends ClassFile {
     }
 
     @Override
-    public int getLocalVariableLength(Signature methodSignature)
+    public int getLocalVariableTableLength(Signature methodSignature)
     throws MethodNotFoundException, MethodCodeNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
     }

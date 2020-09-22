@@ -1,5 +1,7 @@
 package jbse.algo;
 
+import static jbse.algo.Util.ensureInstance_JAVA_METHODHANDLE;
+import static jbse.algo.Util.ensureInstance_JAVA_METHODTYPE;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.invokeClassLoaderLoadClass;
@@ -18,9 +20,13 @@ import java.util.function.Supplier;
 
 import jbse.bc.ClassFile;
 import jbse.bc.ConstantPoolClass;
+import jbse.bc.ConstantPoolMethodHandle;
+import jbse.bc.ConstantPoolMethodType;
+import jbse.bc.ConstantPoolObject;
 import jbse.bc.ConstantPoolPrimitive;
 import jbse.bc.ConstantPoolString;
 import jbse.bc.ConstantPoolValue;
+import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
@@ -99,6 +105,20 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     final ClassFile resolvedClass = state.getClassHierarchy().resolveClass(currentClass, classSignature, state.bypassStandardLoading());
                     state.ensureInstance_JAVA_CLASS(calc, resolvedClass);
                     this.val = state.referenceToInstance_JAVA_CLASS(resolvedClass);
+                } else if (cpv instanceof ConstantPoolMethodType) {
+                	final String descriptor = ((ConstantPoolMethodType) cpv).getValue();
+                	final ClassFile[] descriptorResolved = state.getClassHierarchy().resolveMethodType(currentClass, descriptor, state.bypassStandardLoading());
+                	ensureInstance_JAVA_METHODTYPE(state, calc, descriptorResolved);
+                	this.val = state.referenceToInstance_JAVA_METHODTYPE(descriptorResolved);
+                } else if (cpv instanceof ConstantPoolMethodHandle) {
+                	final ConstantPoolMethodHandle cpvMH = (ConstantPoolMethodHandle) cpv;
+                	final int refKind = cpvMH.getKind();
+                	final Signature sig = cpvMH.getValue();
+                	final ClassFile callee = state.getClassHierarchy().resolveClass(currentClass, sig.getClassName(), state.bypassStandardLoading());
+                	final String descriptor = sig.getDescriptor();
+                	final ClassFile[] descriptorResolved = state.getClassHierarchy().resolveMethodType(currentClass, descriptor, state.bypassStandardLoading());
+                	ensureInstance_JAVA_METHODHANDLE(state, calc, currentClass, refKind, callee, descriptorResolved, sig.getName());
+                	this.val = state.referenceToInstance_JAVA_METHODHANDLE(refKind, callee, descriptorResolved, sig.getName());
                 } else if (cpv instanceof ConstantPoolObject) {
                     this.val = ((ConstantPoolObject) cpv).getValue();
                 } else {

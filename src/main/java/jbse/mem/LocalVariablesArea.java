@@ -7,8 +7,9 @@ import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.INT;
 import static jbse.common.Type.isCat_1;
 import static jbse.common.Type.isPrimitiveIntegral;
-import static jbse.common.Type.REFERENCE;
+import static jbse.common.Type.KNOWN;
 import static jbse.common.Type.NULLREF;
+import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.UNKNOWN;
 
@@ -85,22 +86,22 @@ class LocalVariablesArea implements Cloneable {
      * Stores a value into a specific slot of the local variable area.
      * 
      * @param slot an {@code int}, the slot of the local variable.
-     * @param currentPC the current program counter; if the local variable
+     * @param currentProgramCounter the current program counter; if the local variable
      *        table contains type information about the local variable, this
      *        is used to check type conformance of the access.
      * @param val the {@link Value} to be stored.  
      * @throws InvalidSlotException when {@code slot} is out of range or
      *         {@code val}'s type is incompatible with the slot's type.
      */
-    void set(int slot, int currentPC, Value val) throws InvalidSlotException {
+    void set(int slot, int currentProgramCounter, Value val) throws InvalidSlotException {
         final int nslots = (isCat_1(val.getType()) ? 1 : 2);
         if (slot < 0 || slot > this.lvt.getSlots() - nslots) {
-            throw new InvalidSlotException("slot number " + slot + " is out of range");
+            throw new InvalidSlotException("Slot number " + slot + " is out of range.");
         }
 
-        final Row r = this.lvt.row(slot, currentPC);
+        final Row r = this.lvt.row(slot, currentProgramCounter);
         if (!slotMayReceive(r, val)) {
-            throw new InvalidSlotException("slot number " + slot + " has wrong type");
+            throw new InvalidSlotException("Slot number " + slot + " has wrong type.");
         }
 
         if (nslots == 2) {
@@ -119,15 +120,15 @@ class LocalVariablesArea implements Cloneable {
         if (r == null) {
             return true;
         } else {
-            char slotType = r.descriptor.charAt(0);
-            char valueType = val.getType();
-            return (slotType == valueType || 
+            final char slotType = r.descriptor.charAt(0);
+            final char valueType = val.getType();
+            return (slotType == UNKNOWN || valueType == KNOWN || 
+            		slotType == valueType ||
                    (isPrimitiveIntegral(slotType) && isCat_1(slotType) && valueType == INT) || 
                    ((slotType == REFERENCE || slotType == ARRAYOF) && (valueType == REFERENCE || valueType == NULLREF)) || //note that references to arrays may have type REFERENCE!!!! 
                    ((r.descriptor.equals(REFERENCE_JAVA_OBJECT) ||
                      r.descriptor.equals(REFERENCE_JAVA_CLONEABLE) ||
                      r.descriptor.equals(REFERENCE_JAVA_SERIALIZABLE)) && valueType == ARRAYOF));
-            //TODO should we allow slots with UNKNOWN type to receive values?
         }
     }
 
@@ -145,7 +146,7 @@ class LocalVariablesArea implements Cloneable {
         //and we try to read at slot x+1. 
         // TODO investigate the JVM spec and decide what to do.
         if (retVal == null) {
-            throw new InvalidSlotException("slot " + slot + " was not written");
+            throw new InvalidSlotException("Slot " + slot + " was not written.");
         }
 
         //the next case should never happen in verified code, however 
@@ -168,7 +169,7 @@ class LocalVariablesArea implements Cloneable {
     /**
      * Returns all the slots of the local variable area.
      * 
-     * @return a {@link Set}<code>&lt;</code>{@link Integer}<code>&gt;</code> 
+     * @return a {@link Set}{@code <}{@link Integer}{@code >} 
      *         containing all the valid slot numbers of this local variable
      *         area.
      */

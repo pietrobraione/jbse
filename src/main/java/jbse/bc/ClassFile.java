@@ -1,6 +1,7 @@
 package jbse.bc;
 
 import static jbse.bc.Signatures.ASSERTIONDISABLED_NAME;
+import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
@@ -18,6 +19,7 @@ import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 import jbse.bc.exc.AttributeNotFoundException;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
@@ -673,6 +675,21 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     throws MethodNotFoundException;
     
     /**
+     * Given the signature of a method, returns the information on its 
+     * parameters according to the associated {@code MethodParameters_attribute}. 
+     * 
+     * @param methodSignature a method's {@link Signature}.
+     * @return a {@link ParameterInfo}{@code []}. The order of the parameters 
+     *         is the same as that in {@code method signature}. If the method
+     *         has an implicit {@code this} parameter, its {@link ParameterInfo}
+     *         has position {@code 0}. If {@code methodSignature} has no associated 
+     *         {@code MethodParameters_attribute} this method returns {@code null}.
+     * @throws MethodNotFoundException iff the method does not exist in the class.
+     */
+    public abstract ParameterInfo[] getMethodParameters(Signature methodSignature)
+    throws MethodNotFoundException;
+
+    /**
      * Returns the list of the exception that a method declares to throw.
      * 
      * @param methodSignature the {@link Signature} of a method.
@@ -740,21 +757,6 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     throws MethodNotFoundException, MethodCodeNotFoundException;    
 
     /**
-     * Returns a method's {@link LineNumberTable}. 
-     * 
-     * @param methodSignature a method's {@link Signature}.
-     * @return the {@link LineNumberTable} for the method with signature {@code methodSignature}.
-     *         If {@code methodSignature}'s name is signature polymorphic in this 
-     *         class the method must succeed for all the polymorphic variants of the
-     *         signature and return the {@link LineNumberTable} for the 
-     *         {@code (Object...)Object} declared variant.
-     * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
-     * @throws MethodCodeNotFoundException iff the method has not the Code attribute.
-     */
-    public abstract LineNumberTable getLineNumberTable(Signature methodSignature) 
-    throws MethodNotFoundException, MethodCodeNotFoundException;    
-
-    /**
      * Returns the length of the local variable table of a method.
      * 
      * @param methodSignature a method's {@link Signature}.
@@ -770,8 +772,33 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * @throws MethodCodeNotFoundException iff the method has not the 
      *         Code attribute.
      */
-    public abstract int getLocalVariableLength(Signature methodSignature) 
+    public abstract int getLocalVariableTableLength(Signature methodSignature) 
     throws MethodNotFoundException, MethodCodeNotFoundException;
+    
+    public static class ParameterInfo {
+    	public final String name;
+    	public final int accessFlags;
+    	
+    	public ParameterInfo(String name, int accessFlags) {
+    		this.name = name;
+    		this.accessFlags = accessFlags;
+    	}
+    }
+    
+    /**
+     * Returns a method's {@link LineNumberTable}. 
+     * 
+     * @param methodSignature a method's {@link Signature}.
+     * @return the {@link LineNumberTable} for the method with signature {@code methodSignature}.
+     *         If {@code methodSignature}'s name is signature polymorphic in this 
+     *         class the method must succeed for all the polymorphic variants of the
+     *         signature and return the {@link LineNumberTable} for the 
+     *         {@code (Object...)Object} declared variant.
+     * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
+     * @throws MethodCodeNotFoundException iff the method has not the Code attribute.
+     */
+    public abstract LineNumberTable getLineNumberTable(Signature methodSignature) 
+    throws MethodNotFoundException, MethodCodeNotFoundException;    
 
     /**
      * Returns the length of the bytecode of a method.
@@ -807,7 +834,7 @@ public abstract class ClassFile implements Comparable<ClassFile> {
         //variable table from information on the method's signature
         boolean isStatic = isMethodStatic(methodSignature);
         final String[] parDescList = splitParametersDescriptors(methodSignature.getDescriptor());
-        final LocalVariableTable lvt = new LocalVariableTable(getLocalVariableLength(methodSignature));
+        final LocalVariableTable lvt = new LocalVariableTable(getLocalVariableTableLength(methodSignature));
         int i = 0;
         short slot = 0;
         if (!isStatic) {
@@ -871,16 +898,20 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     throws MethodNotFoundException, MethodCodeNotFoundException;
 
     /**
-     * Returns a constant pool value (only for primitive, String, Uf8 or Class constants).
+     * Returns a constant pool value (only for primitive, String, Uf8, Class, MethodType, 
+     * or MethodHandle constants).
      * 
      * @param index an {@code int}, a constant pool index.
      * @return a {@link ConstantPoolValue} for the value contained in the constant pool 
      *         at the index, if such value is a primitive, String, Utf8 or Class.
      * @throws InvalidIndexException iff the constant pool has less entries than {@code index}, or
      *         {@code index} does not refer to a CONSTANT_Integer, CONSTANT_Long, CONSTANT_Float,
-     *         CONSTANT_Double, CONSTANT_Utf8, CONSTANT_String, or CONSTANT_Class.
+     *         CONSTANT_Double, CONSTANT_Utf8, CONSTANT_String, CONSTANT_Class, CONSTANT_MethodType, 
+     *         CONSTANT_MethodHandle.
+     * @throws ClassFileIllFormedException if the class file is ill formed.
      */
-    public abstract ConstantPoolValue getValueFromConstantPool(int index) throws InvalidIndexException;
+    public abstract ConstantPoolValue getValueFromConstantPool(int index) 
+    throws InvalidIndexException, ClassFileIllFormedException;
 
     /**
      * Checks whether the class declares a field.
@@ -1006,14 +1037,13 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
      * @throws AttributeNotFoundException iff {@link #hasFieldConstantValue}{@code (fieldSignature) == false}.
      * @throws InvalidIndexException iff the access to the constant pool fails.
+     * @throws ClassFileIllFormedException iff the class file is ill-formed.
      */
     public final ConstantPoolValue fieldConstantValue(Signature fieldSignature) 
-    throws FieldNotFoundException, AttributeNotFoundException, InvalidIndexException {
+    throws FieldNotFoundException, AttributeNotFoundException, InvalidIndexException, 
+    ClassFileIllFormedException {
         final int index = fieldConstantValueIndex(fieldSignature);
         final ConstantPoolValue retVal = getValueFromConstantPool(index);
-        if (retVal instanceof ConstantPoolClass) {
-            throw new InvalidIndexException(entryInvalidMessage(index));
-        }
         return retVal;
     }
 
@@ -1185,7 +1215,7 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     public abstract Signature getInterfaceMethodSignature(int methodRef) throws InvalidIndexException;
 
     /**
-     * Given an index of the constant table of CONSTANT_Class type, returns the signature 
+     * Given an index of the constant pool of CONSTANT_Class type, returns the signature 
      * of the class.
      * 
      * @param classRef the CONSTANT_Class of searched class.
@@ -1194,6 +1224,18 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      *         in the class constant pool.
      */
     public abstract String getClassSignature(int classRef) throws InvalidIndexException;
+    
+    /**
+     * Given an index of the constant pool of CONSTANT_InvokeDynamic type, returns the 
+     * call site specifier.
+     * 
+     * @param callSiteSpecifierIndex the CONSTANT_InvokeDynamic index in the constant pool.
+     * @return a {@link CallSiteSpecifier}.
+     * @throws InvalidIndexException iff {@code callSiteSpecifierIndex} is not the index of 
+     *         a valid CONSTANT_InvokeDynamic in the class constant pool.
+     * @throws ClassFileIllFormedException  iff the class file is ill-formed.
+     */
+    public abstract CallSiteSpecifier getCallSiteSpecifier(int callSiteSpecifierIndex) throws InvalidIndexException, ClassFileIllFormedException;
     
     /**
      * Returns the superclass.
@@ -1245,7 +1287,9 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     	if (sup == null) {
     		throw new InvalidInputException("Invoked ClassFile.isSubclass with null parameter.");
     	}
-        if (isArray() && sup.isArray()) {
+    	if (JAVA_OBJECT.equals(sup.getClassName())) {
+    	    return true; //every class/interface is subclass of java.lang.Object
+    	} else if (isArray() && sup.isArray()) {
             final ClassFile subMember = getMemberClass(); 
             final ClassFile supMember = sup.getMemberClass();
             if (subMember.isPrimitiveOrVoid() && supMember.isPrimitiveOrVoid()) {
