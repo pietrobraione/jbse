@@ -30,7 +30,8 @@ import jbse.val.Simplex;
 import jbse.val.Value;
 
 /**
- * Meta-level implementation of {@link sun.misc.Unsafe#getObjectVolatile(Object, long)}.
+ * Meta-level implementation of {@link sun.misc.Unsafe#getObject(Object, long)} and
+ * {@link sun.misc.Unsafe#getObjectVolatile(Object, long)}.
  * 
  * @author Pietro Braione
  */

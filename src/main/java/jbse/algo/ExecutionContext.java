@@ -112,6 +112,7 @@ import static jbse.algo.Overrides.ALGO_SUN_REFLECTION_GETCALLERCLASS;
 import static jbse.algo.Overrides.ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS;
 import static jbse.algo.Overrides.ALGO_SUN_UNIXNATIVEDISPATCHER_GETCWD;
 import static jbse.algo.Overrides.ALGO_SUN_UNIXNATIVEDISPATCHER_INIT;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_ADDRESSSIZE;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_ALLOCATEINSTANCE;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_ALLOCATEMEMORY;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPINT;
@@ -126,6 +127,7 @@ import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_GETINT_O;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_GETLONG;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_GETOBJECT_O;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PAGESIZE;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PUTINT_O;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PUTLONG;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PUTOBJECT_O;
@@ -153,10 +155,11 @@ import static jbse.algo.Overrides.BASE_JAVA_THREAD_ISALIVE;
 import static jbse.algo.Overrides.BASE_JBSE_ANALYSIS_ISRUNBYJBSE;
 import static jbse.algo.Overrides.BASE_SUN_SIGNAL_FINDSIGNAL;
 import static jbse.algo.Overrides.BASE_SUN_SIGNAL_HANDLE0;
-import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ADDRESSSIZE;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYBASEOFFSET;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYINDEXSCALE;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_FULLFENCE;
+import static jbse.algo.Overrides.BASE_SUN_UNSAFE_PARK;
+import static jbse.algo.Overrides.BASE_SUN_UNSAFE_UNPARK;
 import static jbse.algo.Overrides.BASE_SUN_URLCLASSPATH_GETLOOKUPCACHEURLS;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Signatures.JAVA_ABSTRACTPIPELINE;
@@ -280,6 +283,7 @@ import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_SETCALLSITETARGETNORMA
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_SETCALLSITETARGETVOLATILE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_STATICFIELDOFFSET;
 import static jbse.bc.Signatures.JAVA_METHODHANDLES;
+import static jbse.bc.Signatures.JAVA_METHODHANDLES_1;
 import static jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP;
 import static jbse.bc.Signatures.JAVA_METHODTYPE;
 import static jbse.bc.Signatures.JAVA_METHODTYPEFORM;
@@ -458,6 +462,8 @@ import static jbse.bc.Signatures.SUN_UNSAFE_GETLONG;
 import static jbse.bc.Signatures.SUN_UNSAFE_GETOBJECT;
 import static jbse.bc.Signatures.SUN_UNSAFE_GETOBJECTVOLATILE;
 import static jbse.bc.Signatures.SUN_UNSAFE_OBJECTFIELDOFFSET;
+import static jbse.bc.Signatures.SUN_UNSAFE_PAGESIZE;
+import static jbse.bc.Signatures.SUN_UNSAFE_PARK;
 import static jbse.bc.Signatures.SUN_UNSAFE_PUTINT;
 import static jbse.bc.Signatures.SUN_UNSAFE_PUTINTVOLATILE;
 import static jbse.bc.Signatures.SUN_UNSAFE_PUTLONG;
@@ -469,11 +475,13 @@ import static jbse.bc.Signatures.SUN_UNSAFE_REGISTERNATIVES;
 import static jbse.bc.Signatures.SUN_UNSAFE_SHOULDBEINITIALIZED;
 import static jbse.bc.Signatures.SUN_UNSAFE_STATICFIELDBASE;
 import static jbse.bc.Signatures.SUN_UNSAFE_STATICFIELDOFFSET;
+import static jbse.bc.Signatures.SUN_UNSAFE_UNPARK;
 import static jbse.bc.Signatures.SUN_UNSAFEFIELDACCESSORIMPL;
 import static jbse.bc.Signatures.SUN_URLCLASSPATH_GETLOOKUPCACHEURLS;
 import static jbse.bc.Signatures.SUN_URLCLASSPATH_JARLOADER;
 import static jbse.bc.Signatures.SUN_UTIL;
 import static jbse.bc.Signatures.SUN_VALUECONVERSIONS;
+import static jbse.bc.Signatures.SUN_VALUECONVERSIONS_1;
 import static jbse.bc.Signatures.SUN_VERIFYACCESS;
 import static jbse.bc.Signatures.SUN_VERIFYTYPE;
 import static jbse.bc.Signatures.SUN_VM_INITIALIZE;
@@ -858,7 +866,7 @@ public final class ExecutionContext {
             addBaseOverridden(SUN_SIGNAL_HANDLE0,                                 BASE_SUN_SIGNAL_HANDLE0);
             addMetaOverridden(SUN_UNIXNATIVEDISPATCHER_GETCWD,                    ALGO_SUN_UNIXNATIVEDISPATCHER_GETCWD);
             addMetaOverridden(SUN_UNIXNATIVEDISPATCHER_INIT,                      ALGO_SUN_UNIXNATIVEDISPATCHER_INIT);
-            addBaseOverridden(SUN_UNSAFE_ADDRESSSIZE,                             BASE_SUN_UNSAFE_ADDRESSSIZE);
+            addMetaOverridden(SUN_UNSAFE_ADDRESSSIZE,                             ALGO_SUN_UNSAFE_ADDRESSSIZE);
             addMetaOverridden(SUN_UNSAFE_ALLOCATEINSTANCE,                        ALGO_SUN_UNSAFE_ALLOCATEINSTANCE);
             addMetaOverridden(SUN_UNSAFE_ALLOCATEMEMORY,                          ALGO_SUN_UNSAFE_ALLOCATEMEMORY);
             addBaseOverridden(SUN_UNSAFE_ARRAYBASEOFFSET,                         BASE_SUN_UNSAFE_ARRAYBASEOFFSET);
@@ -878,6 +886,8 @@ public final class ExecutionContext {
             addMetaOverridden(SUN_UNSAFE_GETOBJECT,                               ALGO_SUN_UNSAFE_GETOBJECT_O);
             addMetaOverridden(SUN_UNSAFE_GETOBJECTVOLATILE,                       ALGO_SUN_UNSAFE_GETOBJECT_O);
             addMetaOverridden(SUN_UNSAFE_OBJECTFIELDOFFSET,                       ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET);
+            addMetaOverridden(SUN_UNSAFE_PAGESIZE,                                ALGO_SUN_UNSAFE_PAGESIZE);
+            addBaseOverridden(SUN_UNSAFE_PARK,                                    BASE_SUN_UNSAFE_PARK);
             addMetaOverridden(SUN_UNSAFE_PUTINT,                                  ALGO_SUN_UNSAFE_PUTINT_O);
             addMetaOverridden(SUN_UNSAFE_PUTINTVOLATILE,                          ALGO_SUN_UNSAFE_PUTINT_O);
             addMetaOverridden(SUN_UNSAFE_PUTLONG,                                 ALGO_SUN_UNSAFE_PUTLONG);
@@ -889,6 +899,7 @@ public final class ExecutionContext {
             addMetaOverridden(SUN_UNSAFE_SHOULDBEINITIALIZED,                     ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED);
             addMetaOverridden(SUN_UNSAFE_STATICFIELDBASE,                         ALGO_SUN_UNSAFE_STATICFIELDBASE);
             addMetaOverridden(SUN_UNSAFE_STATICFIELDOFFSET,                       ALGO_SUN_UNSAFE_STATICFIELDOFFSET);
+            addBaseOverridden(SUN_UNSAFE_UNPARK,                                  BASE_SUN_UNSAFE_UNPARK);
             addBaseOverridden(SUN_URLCLASSPATH_GETLOOKUPCACHEURLS,                BASE_SUN_URLCLASSPATH_GETLOOKUPCACHEURLS);
             addMetaOverridden(SUN_VM_INITIALIZE,                                  ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(SUN_WIN32ERRORMODE_SETERRORMODE,                    ALGO_INVOKEMETA_METACIRCULAR);
@@ -1004,8 +1015,9 @@ public final class ExecutionContext {
      *        stores in this execution contest a safety 
      *        copy of it.
      */
-    public void setStateInitial(State stateInitial) {
+    public void switchInitial(State stateInitial) {
         this.stateInitial = stateInitial.clone();
+        this.stateTree.setBreadthModePostInitial();
     }
 
     /**
@@ -1167,6 +1179,7 @@ public final class ExecutionContext {
         className.equals(JAVA_METHODHANDLEIMPL_ASVARARGSCOLLECTOR) ||
         className.equals(JAVA_METHODHANDLEIMPL_COUNTINGWRAPPER) || //almost surely
         className.equals(JAVA_METHODHANDLEIMPL_LAZY) || //apparently
+        className.equals(JAVA_METHODHANDLES_1) ||
         className.equals(JAVA_METHODTYPEFORM) || 
         className.equals(JAVA_OPTIONAL) || 
         className.equals(JAVA_PATTERN) || 
@@ -1195,6 +1208,7 @@ public final class ExecutionContext {
         className.equals(SUN_URLCLASSPATH_JARLOADER) ||
         className.equals(SUN_UTIL) || //apparently
         className.equals(SUN_VALUECONVERSIONS) || //lazily (its cache of value conversion method handles is lazily but monotonically filled)
+        className.equals(SUN_VALUECONVERSIONS_1) ||
         className.equals(SUN_VERIFYACCESS) ||
         className.equals(SUN_VERIFYTYPE) ||
         className.equals(SUN_WRAPPER_FORMAT) ||

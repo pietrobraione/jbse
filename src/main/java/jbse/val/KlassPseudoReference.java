@@ -44,10 +44,10 @@ public final class KlassPseudoReference extends ReferenceSymbolic {
     
     @Override
     public boolean hasContainer(Symbolic s) {
-		if (s == null) {
-			throw new NullPointerException();
-		}
-		return equals(s);
+        if (s == null) {
+            throw new NullPointerException();
+        }
+        return equals(s);
     }
     
     @Override

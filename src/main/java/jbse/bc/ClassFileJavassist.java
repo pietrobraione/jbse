@@ -1232,7 +1232,7 @@ public class ClassFileJavassist extends ClassFile {
     	if (p == null) {
     		return null;
     	}
-    	final ParameterInfo[] retVal = new ParameterInfo[p.length()];
+    	final ParameterInfo[] retVal = new ParameterInfo[p.size()];
     	for (int i = 0; i < retVal.length; ++i) {
     		retVal[i] = new ParameterInfo(this.cp.getUtf8Info(p.name(i)), p.accessFlags(i));
     	}

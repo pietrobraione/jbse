@@ -1,11 +1,15 @@
 package jbse.algo.meta;
 
+import static jbse.algo.Util.checkOverridingMethodFits;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.lookupMethodImpl;
+import static jbse.algo.Util.lookupMethodImplOverriding;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
+import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.Offsets.offsetInvoke;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
@@ -28,9 +32,13 @@ import java.util.function.Supplier;
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
+import jbse.algo.exc.BaseUnsupportedException;
+import jbse.algo.exc.MetaUnsupportedException;
+import jbse.algo.exc.NotYetImplementedException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.bc.ClassFile;
+import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
 import jbse.bc.Snippet;
 import jbse.bc.exc.BadClassFileVersionException;
@@ -43,16 +51,19 @@ import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
+import jbse.bc.exc.PleaseLoadClassException;
 import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.mem.Array;
+import jbse.mem.HeapObjekt;
 import jbse.mem.Instance;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
+import jbse.mem.exc.InvalidNumberOfOperandsException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -76,6 +87,7 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
 	private boolean isLinkStatic;          //set by setLinkFeatures
     private ClassFile methodImplClass;     //set by cookMore
     private Signature methodImplSignature; //set by cookMore
+    private boolean isMethodImplNative;    //set by cookMore
     private Value[] parameters;            //set by cookMore
     
     public void setLinkFeatures(boolean isLinkInterface, boolean isLinkSpecial, boolean isLinkStatic) {
@@ -93,7 +105,7 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
 	protected void cookMore(State state) 
 	throws UndefinedResultException, SymbolicValueNotAllowedException, 
 	ThreadStackEmptyException, InterruptException, InvalidInputException, 
-	RenameUnsupportedException, ClasspathException {
+	RenameUnsupportedException, ClasspathException, BaseUnsupportedException, MetaUnsupportedException {
 		final Calculator calc = this.ctx.getCalculator();
 		try {
 			//gets the trailing MemberName
@@ -209,31 +221,77 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
 				                     receiverClass);
 	            this.methodImplSignature = 
 	                    new Signature(this.methodImplClass.getClassName(), descriptor, name);
+	            this.isMethodImplNative = this.methodImplClass.isMethodNative(this.methodImplSignature);
             } catch (IncompatibleClassFileException | MethodNotAccessibleException | 
             		 MethodAbstractException | MethodNotFoundException e) {
             	throw new UndefinedResultException(e);
             }
             
-    		final boolean isVarargs = this.methodImplClass.isMethodVarargs(this.methodImplSignature);
-    		if (isVarargs) {
-    			final int actualParametersNumber = parametersNumber(this.methodImplSignature.getDescriptor(), this.isLinkStatic);
-    			this.parameters = new Value[actualParametersNumber];
+            //in the case of varargs methods, if the number of operands is more than the 
+            //number of parameters in the method signature, or the last operand is not a vararg
+            //array type, decides to boxe the last parameters in a varargs array. 
+            //Remember to exclude the trailing MemberName, that shall *not* be passed
+            //as a parameter to the invoked method!!!
+    		final boolean boxVarargs;
+			ClassFile varargsArrayClass = null;
+			final int formalParametersNumber = parametersNumber(this.methodImplSignature.getDescriptor(), this.isLinkStatic);
+    		if (this.methodImplClass.isMethodVarargs(this.methodImplSignature)) {
+				final String[] methodImplDescriptorSplit = splitParametersDescriptors(this.methodImplSignature.getDescriptor());
+				final String varargsArrayType = methodImplDescriptorSplit[methodImplDescriptorSplit.length - 1];
+				try {
+					varargsArrayClass = state.getClassHierarchy().resolveClass(state.getCurrentClass(), varargsArrayType, state.bypassStandardLoading());
+				} catch (PleaseLoadClassException e) {
+		            invokeClassLoaderLoadClass(state, calc, e);
+		            exitFromAlgorithm();
+				}
+    			if (numOperands().get() - 1 > formalParametersNumber) {
+    				boxVarargs = true;
+    			} else {
+    				final Value lastArgument = this.data.operands()[numOperands().get() - 2];
+    				if (lastArgument instanceof Reference) {
+    					final Reference lastArgumentRef = (Reference) lastArgument;
+    					final HeapObjekt lastArgumentObj = state.getObject(lastArgumentRef);
+    					if (lastArgumentObj instanceof Array) {
+    						final Array lastArgumentArray = (Array) lastArgumentObj;
+    						if (state.getClassHierarchy().isAssignmentCompatible(lastArgumentArray.getType(), varargsArrayClass)) {
+    							boxVarargs = false;
+    						} else {
+    							boxVarargs = true;
+    						}
+    					} else {
+        					//the last argument is not a varargs array
+        					boxVarargs = true;
+    					}
+    				} else {
+    					//the last argument is not a varargs array
+    					boxVarargs = true;
+    				}
+    			}
+    		} else {
+    			boxVarargs = false;
+    		}
+
+    		//builds the parameters array (again, remember to exclude the trailing operand, 
+    		//that is not passed as a parameter)
+    		if (boxVarargs) {	
+    			this.parameters = new Value[formalParametersNumber];
     			System.arraycopy(this.data.operands(), 0, this.parameters, 0, this.parameters.length - 1);
-    			final String[] methodImplDescriptorSplit = splitParametersDescriptors(this.methodImplSignature.getDescriptor());
-    			final String varargsArrayType = methodImplDescriptorSplit[methodImplDescriptorSplit.length - 1];
-    			final ClassFile varargsArrayClass = state.getClassHierarchy().loadCreateClass(varargsArrayType);
-    			final int arrayLength = numOperands().get() - actualParametersNumber;
+    			final int arrayLength = numOperands().get() - formalParametersNumber;
     			final ReferenceConcrete referenceVarargsArray = state.createArray(calc, null, calc.valInt(arrayLength), varargsArrayClass);
     			final Array varargsArray = (Array) state.getObject(referenceVarargsArray);
-    			final int start = actualParametersNumber - 1;
+    			final int start = formalParametersNumber - 1;
     			for (int i = 0; i < arrayLength; ++i) {
     				varargsArray.setFast(calc.valInt(i), this.data.operands()[start + i]);
     			}
-    			this.parameters[actualParametersNumber - 1] = referenceVarargsArray;
+    			this.parameters[formalParametersNumber - 1] = referenceVarargsArray;
     		} else {
     			this.parameters = new Value[numOperands().get() - 1];
     			System.arraycopy(this.data.operands(), 0, this.parameters, 0, this.parameters.length);
     		}
+    		
+            //looks for a base-level or meta-level overriding implementation, 
+            //and in case considers it instead
+            findOverridingImpl(state);
 		} catch (ClassCastException e) {
 			throw new UndefinedResultException(e);
         } catch (ClassFileNotFoundException e) {
@@ -257,17 +315,41 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
             throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (MethodNotFoundException | FastArrayAccessNotAllowedException | 
-        		InvalidTypeException | WrongClassNameException e) {
+        		InvalidTypeException | WrongClassNameException | InvalidNumberOfOperandsException e) {
            	//this should never happen
            	failExecution(e);
 		}
+	}
+	
+	private void findOverridingImpl(State state) throws BaseUnsupportedException, MetaUnsupportedException, InterruptException, 
+    ClasspathException, ThreadStackEmptyException, InvalidInputException, InvalidNumberOfOperandsException {
+        final Signature methodSignatureOverriding = lookupMethodImplOverriding(state, this.ctx, this.methodImplClass, this.methodImplSignature, this.isLinkInterface, this.isLinkSpecial, this.isLinkStatic, this.isMethodImplNative, true);
+        if (methodSignatureOverriding == null) {
+            return;
+        }
+
+        try {
+            final ClassHierarchy hier = state.getClassHierarchy();
+            final ClassFile classFileMethodOverriding = hier.getClassFileClassArray(CLASSLOADER_APP, methodSignatureOverriding.getClassName()); //if lookup of overriding method succeeded, the class is surely loaded
+            checkOverridingMethodFits(state, this.methodImplClass, this.methodImplSignature, classFileMethodOverriding, methodSignatureOverriding);
+            this.methodImplClass = classFileMethodOverriding;
+            this.methodImplSignature = methodSignatureOverriding;
+        } catch (MethodNotFoundException e) {
+            throw new BaseUnsupportedException(e);
+        }
 	}
 
 	@Override
 	protected StrategyUpdate<DecisionAlternative_NONE> updater() {
 		return (state, alt) -> {
-            //builds the parameters
 			try {
+	            //if the method is native, fails (should have an 
+	            //overriding implementation)
+                if (this.methodImplClass.isMethodNative(this.methodImplSignature)) {
+                    throw new NotYetImplementedException("Method " + this.methodImplSignature + " is native and has no overriding implementation.");
+                }
+                
+                //pushes the frame
 				state.pushFrame(this.ctx.getCalculator(), this.methodImplClass, this.methodImplSignature, false, offsetInvoke(false), this.parameters);
             } catch (InvalidProgramCounterException | InvalidSlotException | InvalidTypeException e) {
                 //TODO is it ok?

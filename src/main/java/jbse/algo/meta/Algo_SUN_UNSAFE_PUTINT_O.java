@@ -22,7 +22,8 @@ import jbse.val.Simplex;
 import jbse.val.Value;
 
 /**
- * Meta-level implementation of {@link sun.misc.Unsafe#putInt(Object, long, int)}.
+ * Meta-level implementation of {@link sun.misc.Unsafe#putInt(Object, long, int)} and 
+ * {@link sun.misc.Unsafe#putIntVolatile(Object, long, int)}.
  * 
  * @author Pietro Braione
  */

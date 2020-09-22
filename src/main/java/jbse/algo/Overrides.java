@@ -129,6 +129,7 @@ public final class Overrides {
     public static final String ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS             = internalClassName(jbse.algo.meta.Algo_SUN_REFLECTION_GETCLASSACCESSFLAGS.class.getName());
     public static final String ALGO_SUN_UNIXNATIVEDISPATCHER_GETCWD                = internalClassName(jbse.algo.meta.Algo_SUN_UNIXNATIVEDISPATCHER_GETCWD.class.getName());
     public static final String ALGO_SUN_UNIXNATIVEDISPATCHER_INIT                  = internalClassName(jbse.algo.meta.Algo_SUN_UNIXNATIVEDISPATCHER_INIT.class.getName());
+    public static final String ALGO_SUN_UNSAFE_ADDRESSSIZE                         = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_ADDRESSSIZE.class.getName());
     public static final String ALGO_SUN_UNSAFE_ALLOCATEINSTANCE                    = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_ALLOCATEINSTANCE.class.getName());
     public static final String ALGO_SUN_UNSAFE_ALLOCATEMEMORY                      = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_ALLOCATEMEMORY.class.getName());
     public static final String ALGO_SUN_UNSAFE_COMPAREANDSWAPINT                   = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_COMPAREANDSWAPINT.class.getName());
@@ -143,6 +144,7 @@ public final class Overrides {
     public static final String ALGO_SUN_UNSAFE_GETLONG                             = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETLONG.class.getName());
     public static final String ALGO_SUN_UNSAFE_GETOBJECT_O                         = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETOBJECT_O.class.getName());
     public static final String ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET                   = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_OBJECTFIELDOFFSET.class.getName());
+    public static final String ALGO_SUN_UNSAFE_PAGESIZE                            = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_PAGESIZE.class.getName());
     public static final String ALGO_SUN_UNSAFE_PUTINT_O                            = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_PUTINT_O.class.getName());
     public static final String ALGO_SUN_UNSAFE_PUTLONG                             = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_PUTLONG.class.getName());
     public static final String ALGO_SUN_UNSAFE_PUTOBJECT_O                         = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_PUTOBJECT_O.class.getName());
@@ -244,10 +246,6 @@ public final class Overrides {
         new Signature(JBSE_BASE, 
                       "(" + INT + LONG + ")" + LONG, 
                       "base_SUN_SIGNAL_HANDLE0");
-    public static final Signature BASE_SUN_UNSAFE_ADDRESSSIZE =
-        new Signature(JBSE_BASE, 
-                      "(" + REFERENCE + SUN_UNSAFE + TYPEEND + ")" + INT, 
-                      "base_SUN_UNSAFE_ADDRESSSIZE");
     public static final Signature BASE_SUN_UNSAFE_ARRAYBASEOFFSET =
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + SUN_UNSAFE + TYPEEND + REFERENCE + JAVA_CLASS + TYPEEND + ")" + INT, 
@@ -264,6 +262,14 @@ public final class Overrides {
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + SUN_UNSAFE + TYPEEND + REFERENCE + JAVA_FIELD + TYPEEND + ")" + LONG, 
                       "base_SUN_UNSAFE_OBJECTFIELDOFFSET");
+    public static final Signature BASE_SUN_UNSAFE_PARK =
+        new Signature(JBSE_BASE, 
+                      "(" + REFERENCE + SUN_UNSAFE + TYPEEND + BOOLEAN + LONG + ")" + VOID, 
+                      "base_SUN_UNSAFE_PARK");
+    public static final Signature BASE_SUN_UNSAFE_UNPARK =
+        new Signature(JBSE_BASE, 
+                     "(" + REFERENCE + SUN_UNSAFE + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, 
+                     "base_SUN_UNSAFE_UNPARK");
     public static final Signature BASE_SUN_URLCLASSPATH_GETLOOKUPCACHEURLS =
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + JAVA_CLASSLOADER + TYPEEND + ")" + ARRAYOF + REFERENCE + JAVA_URL + TYPEEND, 

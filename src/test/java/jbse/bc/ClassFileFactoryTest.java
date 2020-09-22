@@ -498,8 +498,8 @@ public class ClassFileFactoryTest {
         ClassFile c = f.newClassFileClass(0, className, b, null, null);
         assertFalse(c.isPublic());
         assertFalse(c.isProtected());
-        assertFalse(c.isPackage());
-        assertTrue(c.isPrivate());
+        assertTrue(c.isPackage());
+        assertFalse(c.isPrivate());
     }
 
     /**

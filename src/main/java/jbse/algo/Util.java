@@ -144,6 +144,7 @@ import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
+import jbse.mem.exc.InvalidNumberOfOperandsException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -1134,6 +1135,10 @@ public final class Util {
      * @param isSpecial {@code true} iff the method is declared special.
      * @param isStatic {@code true} iff the method is declared static.
      * @param isNative {@code true} iff the method is declared native.
+     * @param doPop {@code true} iff in the case of a meta-level overriding
+     *        implementation the topmost item on the operand stack must be 
+     *        popped before transferring control (necessary to the implementation 
+     *        of {@code MethodHandle.linkToXxxx} methods).
      * @return {@code null} if no overriding implementation exists, otherwise the
      *         {@link Signature} of a base-level overriding method.
      * @throws InvalidInputException if {@code state == null || ctx == null || 
@@ -1148,9 +1153,11 @@ public final class Util {
      * @throws InterruptException if the execution fails or a meta-level implementation is found, 
      *         in which case the current {@link Algorithm} is interrupted with the 
      *         {@link Algorithm} for the overriding implementation as continuation. 
+     * @throws InvalidNumberOfOperandsException if there are no operands on {@code state}'s operand stack
+     *         and {@code doPop == true}.
      */
-    public static Signature lookupMethodImplOverriding(State state, ExecutionContext ctx, ClassFile implementationClass, Signature methodSignatureImplementation, boolean isInterface, boolean isSpecial, boolean isStatic, boolean isNative) 
-    throws InvalidInputException, MetaUnsupportedException, InterruptException, ClasspathException, ThreadStackEmptyException, BaseUnsupportedException {
+    public static Signature lookupMethodImplOverriding(State state, ExecutionContext ctx, ClassFile implementationClass, Signature methodSignatureImplementation, boolean isInterface, boolean isSpecial, boolean isStatic, boolean isNative, boolean doPop) 
+    throws InvalidInputException, MetaUnsupportedException, InterruptException, ClasspathException, ThreadStackEmptyException, BaseUnsupportedException, InvalidNumberOfOperandsException {
         if (state == null || ctx == null || methodSignatureImplementation == null) {
             throw new InvalidInputException("Invoked " + Util.class.getName() + ".lookupMethodImplOverriding with a null parameter.");
         }
@@ -1174,6 +1181,9 @@ public final class Util {
                 if (ctx.dispatcherMeta.isMeta(implementationClass, methodSignatureImplementation)) {
                     final Algo_INVOKEMETA<?, ?, ?, ?> algo = ctx.dispatcherMeta.select(methodSignatureImplementation);
                     algo.setFeatures(isInterface, isSpecial, isStatic, isNative, methodSignatureImplementation);
+                    if (doPop) {
+                    	state.popOperand();
+                    }
                     continueWith(algo);
                 }
             } catch (MethodNotFoundException e) {
@@ -1471,7 +1481,7 @@ public final class Util {
                 state.createArray(calc, null, calc.valInt(stackDepth), cf_arrayJAVA_STACKTRACEELEMENT);
             final Array theArray = (Array) state.getObject(refToArray);
             exc.setFieldValue(JAVA_THROWABLE_BACKTRACE, refToArray);
-            int i = 0;
+            int i = stackDepth - 1;
             for (Frame f : state.getStack()) {
                 if (f instanceof SnippetFrameNoWrap) {
                     continue; //skips
@@ -1504,7 +1514,7 @@ public final class Util {
                 stackTraceElement.setFieldValue(JAVA_STACKTRACEELEMENT_METHODNAME,     state.referenceToStringLiteral(methodName));
 
                 //sets the array
-                theArray.setFast(calc.valInt(i++), steReference);
+                theArray.setFast(calc.valInt(i--), steReference);
             }
         } catch (HeapMemoryExhaustedException e) {
             //just gives up

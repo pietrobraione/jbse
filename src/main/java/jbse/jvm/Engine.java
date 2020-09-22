@@ -181,7 +181,7 @@ public class Engine implements AutoCloseable {
 
     		//in the case the state is initial does some operations
     		if (atInitialState()) {
-    			this.ctx.setStateInitial(this.currentState);
+    			this.ctx.switchInitial(this.currentState);
         		this.vom.init(this);
     		}
 
@@ -326,7 +326,7 @@ public class Engine implements AutoCloseable {
         	//cleans, stores and creates a branch for the initial state
     	    if (atInitialState()) {
     			this.currentState.gc();
-    			this.ctx.setStateInitial(this.currentState);
+    			this.ctx.switchInitial(this.currentState);
         		this.vom.init(this);
     	    	this.ctx.stateTree.addStateInitial(this.currentState);
     	    }
