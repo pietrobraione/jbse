@@ -1309,7 +1309,7 @@ public final class Run {
     private static final String ERROR_ENGINE_INIT_INITIAL_STATE = "Failed initialization of the symbolic execution.";
 
     /** Error: failure of the decision procedure. */
-    private static final String ERROR_ENGINE_DECISION_PROCEDURE = "Unexpected failure of the decision procedude.";
+    private static final String ERROR_ENGINE_DECISION_PROCEDURE = "Unexpected failure of the decision procedure.";
 
     /**
      * Error: unable to quit engine, because unable to quit the decision
