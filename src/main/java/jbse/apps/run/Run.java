@@ -992,9 +992,9 @@ public final class Run {
     			}
     			try {
     				if (this.parameters.getGuidanceType() == GuidanceType.JBSE) {
-    					this.guidance = new DecisionProcedureGuidanceJBSE(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
+    					this.guidance = new DecisionProcedureGuidanceJBSE(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature(), this.parameters.getGuidedNumberOfHits());
     				} else if (this.parameters.getGuidanceType() == GuidanceType.JDI) {
-    					this.guidance = new DecisionProcedureGuidanceJDI(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
+    					this.guidance = new DecisionProcedureGuidanceJDI(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature(), this.parameters.getGuidedNumberOfHits());
     				} else {
     					throw new UnexpectedInternalException(ERROR_DECISION_PROCEDURE_GUIDANCE_UNRECOGNIZED + this.parameters.getGuidanceType().toString());
     				}

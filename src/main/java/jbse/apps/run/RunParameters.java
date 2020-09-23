@@ -435,6 +435,9 @@ public final class RunParameters implements Cloneable {
 
     /** The signature of the driver method when guided == true. */
     private Signature driverSignature = null;
+    
+    /** The number of hits when guided == true. */
+    private int numberOfHits = 1;
 
     /**
      * Constructor.
@@ -2420,6 +2423,37 @@ public final class RunParameters implements Cloneable {
         }
         this.guided = true;
         this.driverSignature = new Signature(driverClass, "()V", driverName); 
+    }
+    
+    /**
+     * Sets the number of invocations of the method set 
+     * by {@link #setMethodSignature} from the driver
+     * method set by {@link #setGuided} after which
+     * concrete setup of inputs stops and symbolic execution 
+     * of the method set by {@link #setMethodSignature} starts.
+     * 
+     * @param numberOfHits an {@code int}. If {@code numberOfHits <= 0}
+     *        it is set to {@code 1}.
+     */
+    public void setGuidedNumberOfHits(int numberOfHits) {
+        if (numberOfHits <= 0) {
+            this.numberOfHits = 1;
+        } else {
+            this.numberOfHits = numberOfHits;
+        }
+    }
+    
+    /**
+     * Returns the number of invocations of the method set 
+     * by {@link #setMethodSignature} from the driver
+     * method set by {@link #setGuided} after which
+     * concrete setup of inputs stops and symbolic execution 
+     * of the method set by {@link #setMethodSignature} starts.
+     * 
+     * @return an {@code int} equal to or greater than one.
+     */
+    public int getGuidedNumberOfHits() {
+        return this.numberOfHits;
     }
 
     /**
