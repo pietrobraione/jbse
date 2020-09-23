@@ -71,7 +71,7 @@ import jbse.val.exc.InvalidTypeException;
  * in the state reached by the private JVM.
  */
 public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
-    private final JVM jvm;
+    protected final JVM jvm;
     private final HashSet<Object> seen = new HashSet<>();
     private boolean guiding;    
 

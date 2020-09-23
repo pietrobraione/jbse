@@ -138,6 +138,8 @@ implements Map<K,V>, Cloneable, Serializable {
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean containsKey(Object key) {
+		notifyMethodExecution();
+
 		//checks if the key is on the list of absent keys
 		if (this.absentKeys.contains((K) key)) {
 			return false;
@@ -218,6 +220,8 @@ implements Map<K,V>, Cloneable, Serializable {
 	@SuppressWarnings("unchecked")
 	@Override
 	public V get(Object key) {
+		notifyMethodExecution();
+
 		//checks if the key is in the list of absent keys
 		if (this.absentKeys.contains((K) key)) {
 			return null;
@@ -268,6 +272,8 @@ implements Map<K,V>, Cloneable, Serializable {
 	@SuppressWarnings("unchecked")
 	@Override
 	public V put(K key, V value) {
+		notifyMethodExecution();
+
 		if (this.isInitial) {
 			//initial maps are immutable
 			metaThrowUnexpectedInternalException("Tried to put a value in an initial map.");
@@ -351,6 +357,8 @@ implements Map<K,V>, Cloneable, Serializable {
 	@SuppressWarnings("unchecked")
 	@Override
 	public V remove(Object key) {
+		notifyMethodExecution();
+
 		if (this.isInitial) {
 			//initial maps are immutable
 			metaThrowUnexpectedInternalException("Tried to remove a value from an initial map.");
@@ -1161,6 +1169,7 @@ implements Map<K,V>, Cloneable, Serializable {
 	 * 
 	 * @param key the key.
 	 */
+	private native void notifyMethodExecution();
 	private native void refineOnKeyAndBranch(K key);
 
 	/**
