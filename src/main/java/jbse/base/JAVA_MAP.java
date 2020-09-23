@@ -1162,6 +1162,8 @@ implements Map<K,V>, Cloneable, Serializable {
 	 */
 	private native void makeInitial();
 
+        private native void notifyMethodExecution();
+	
 	/**
 	 * Causes symbolic execution to branch on the two cases:
 	 * A key is present/absent in an initial map. Can be invoked
@@ -1169,7 +1171,6 @@ implements Map<K,V>, Cloneable, Serializable {
 	 * 
 	 * @param key the key.
 	 */
-	private native void notifyMethodExecution();
 	private native void refineOnKeyAndBranch(K key);
 
 	/**

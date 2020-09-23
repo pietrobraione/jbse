@@ -106,7 +106,7 @@ import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_MAKEINITIAL;
 import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION;
 import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH;
 import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH;
-import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_NOTIFYEXECUTION;
+import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_NOTIFYMETHODEXECUTION;
 import static jbse.algo.Overrides.ALGO_SUN_CONSTANTPOOL_GETUTF8AT0;
 import static jbse.algo.Overrides.ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
 import static jbse.algo.Overrides.ALGO_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0;
@@ -966,7 +966,7 @@ public final class ExecutionContext {
             //jbse.base.JAVA_MAP methods (actually remapped to java.util.HashMap)
             addMetaOverridden(JBSE_JAVA_MAP_MAKEINITIAL,                          ALGO_JBSE_JAVA_MAP_MAKEINITIAL);
             addMetaOverridden(JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION, ALGO_JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION);
-            addMetaOverridden(JBSE_JAVA_MAP_NOTIFYMETHODEXECUTION,                ALGO_JBSE_JAVA_MAP_NOTIFYEXECUTION);
+            addMetaOverridden(JBSE_JAVA_MAP_NOTIFYMETHODEXECUTION,                ALGO_JBSE_JAVA_MAP_NOTIFYMETHODEXECUTION);
             addMetaOverridden(JBSE_JAVA_MAP_REFINEONKEYANDBRANCH,                 ALGO_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH);
             addMetaOverridden(JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH,     ALGO_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH);
             
