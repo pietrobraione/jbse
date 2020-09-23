@@ -675,7 +675,9 @@ public final class EngineParameters implements Cloneable {
      * containing all the trigger rules that
      * must be used.
      * 
-     * @return a {@link TriggerRulesRepo}.
+     * @return a {@link TriggerRulesRepo}. It
+     *         is a safety copy of the one stored
+     *         in this {@link EngineParameters} object.
      */
     public TriggerRulesRepo getTriggerRulesRepo() {
         final TriggerRulesRepo retVal = this.triggerRulesRepo.clone();
@@ -683,6 +685,16 @@ public final class EngineParameters implements Cloneable {
         	retVal.addExpandTo("java/util/HashMap", "(?!{°}*java/util/HashMap:initialMap{EOL}){°}*", "java/util/HashMap", new Signature("java/util/HashMap", "(Ljava/util/HashMap;)V", "initSymbolic"), "{$REF}");
         }
         return retVal;
+    }
+
+    /**
+     * Returns the {@link TriggerRulesRepo} 
+     * stored in this {@link EngineParameters} object.
+     * 
+     * @return a {@link TriggerRulesRepo}.
+     */
+    public TriggerRulesRepo getTriggerRulesRepoRaw() {
+	return this.triggerRulesRepo;
     }
     
     /**

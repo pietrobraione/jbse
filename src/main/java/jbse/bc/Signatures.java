@@ -57,6 +57,7 @@ public final class Signatures {
     public static final String JAVA_COMPARABLE               = "java/lang/Comparable";
     public static final String JAVA_CONSTRUCTOR              = "java/lang/reflect/Constructor";
     public static final String JAVA_CRC32                    = "java/util/zip/CRC32";
+    public static final String JAVA_DEFLATER                 = "java/util/zip/Deflater";
     public static final String JAVA_DELEGATINGMETHODHANDLE   = "java/lang/invoke/DelegatingMethodHandle";
     public static final String JAVA_DIRECTBYTEBUFFER         = "java/nio/DirectByteBuffer";
     public static final String JAVA_DIRECTLONGBUFFERU        = "java/nio/DirectLongBufferU";
@@ -127,12 +128,15 @@ public final class Signatures {
     public static final String JAVA_PACKAGE                  = "java/lang/Package";
     public static final String JAVA_PARAMETER                = "java/lang/reflect/Parameter";
     public static final String JAVA_PATTERN                  = "java/util/regex/Pattern";
+    public static final String JAVA_PLAINDATAGRAMSOCKETIMPL  = "java/net/PlainDatagramSocketImpl";
+    public static final String JAVA_PLAINSOCKETIMPL          = "java/net/PlainSocketImpl";
     public static final String JAVA_PRINTSTREAM              = "java/io/PrintStream";
     public static final String JAVA_PRIVILEGEDACTION         = "java/security/PrivilegedAction";
     public static final String JAVA_PRIVILEGEDEXCEPTIONACTION = "java/security/PrivilegedExceptionAction";
     public static final String JAVA_PROCESSENVIRONMENT       = "java/lang/ProcessEnvironment";
     public static final String JAVA_PROPERTIES               = "java/util/Properties";
     public static final String JAVA_PROTECTIONDOMAIN         = "java/security/ProtectionDomain";
+    public static final String JAVA_RANDOMACCESSFILE         = "java/io/RandomAccessFile";
     public static final String JAVA_REFERENCE                = "java/lang/ref/Reference";
     public static final String JAVA_REFERENCEPIPELINE_STATEFULOP  = "java/util/stream/ReferencePipeline$StatefulOp";
     public static final String JAVA_REFERENCEPIPELINE_STATELESSOP = "java/util/stream/ReferencePipeline$StatelessOp";
@@ -282,6 +286,8 @@ public final class Signatures {
         new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getDeclaringClass0");
     public static final Signature JAVA_CLASS_GETENCLOSINGMETHOD0 =
         new Signature(JAVA_CLASS, "()" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND, "getEnclosingMethod0");
+    public static final Signature JAVA_CLASS_GETGENERICSIGNATURE0 =
+        new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_STRING + TYPEEND, "getGenericSignature0");
     public static final Signature JAVA_CLASS_GETINTERFACES0 =
         new Signature(JAVA_CLASS, "()" + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND, "getInterfaces0");
     public static final Signature JAVA_CLASS_GETMODIFIERS =
@@ -328,8 +334,12 @@ public final class Signatures {
         new Signature(JAVA_CLASSLOADER_NATIVELIBRARY, "(" + REFERENCE + JAVA_STRING + TYPEEND + BOOLEAN + ")" + VOID, "load");
     public static final Signature JAVA_CLASSLOADER_REGISTERNATIVES =
         new Signature(JAVA_CLASSLOADER, "()" + VOID, "registerNatives");
+    public static final Signature JAVA_CRC32_UPDATE =
+        new Signature(JAVA_CRC32, "(" + INT + INT + ")" + INT, "update");
     public static final Signature JAVA_CRC32_UPDATEBYTES =
         new Signature(JAVA_CRC32, "(" + INT + ARRAYOF + BYTE + INT + INT +")" + INT, "updateBytes");
+    public static final Signature JAVA_DEFLATER_INITIDS =
+        new Signature(JAVA_DEFLATER, "()" + VOID, "initIDs");
     public static final Signature JAVA_DIRECTBYTEBUFFER_INIT =
         new Signature(JAVA_DIRECTBYTEBUFFER, "(" + LONG + INT + ")" + VOID, "<init>");
     public static final Signature JAVA_DOUBLE_DOUBLETORAWLONGBITS =
@@ -436,14 +446,24 @@ public final class Signatures {
         new Signature(JAVA_OBJECT, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getClass");
     public static final Signature JAVA_OBJECT_HASHCODE =
         new Signature(JAVA_OBJECT, "()" + INT, "hashCode");
+    public static final Signature JAVA_OBJECT_NOTIFY =
+        new Signature(JAVA_OBJECT, "()" + VOID, "notify");
     public static final Signature JAVA_OBJECT_NOTIFYALL =
         new Signature(JAVA_OBJECT, "()" + VOID, "notifyAll");
     public static final Signature JAVA_OBJECT_REGISTERNATIVES =
         new Signature(JAVA_OBJECT, "()" + VOID, "registerNatives");
+    public static final Signature JAVA_OBJECT_WAIT =
+        new Signature(JAVA_OBJECT, "(" + LONG + ")" + VOID, "wait");
     public static final Signature JAVA_PACKAGE_GETSYSTEMPACKAGE0 =
         new Signature(JAVA_PACKAGE, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, "getSystemPackage0");
+    public static final Signature JAVA_PLAINDATAGRAMSOCKETIMPL_INIT =
+        new Signature(JAVA_PLAINDATAGRAMSOCKETIMPL, "()" + VOID, "init");
+    public static final Signature JAVA_PLAINSOCKETIMPL_INITPROTO =
+        new Signature(JAVA_PLAINSOCKETIMPL, "()" + VOID, "initProto");
     public static final Signature JAVA_PROCESSENVIRONMENT_ENVIRON =
         new Signature(JAVA_PROCESSENVIRONMENT, "()" + ARRAYOF + ARRAYOF + BYTE, "environ");
+    public static final Signature JAVA_RANDOMACCESSFILE_INITIDS =
+        new Signature(JAVA_RANDOMACCESSFILE, "()" + VOID, "initIDs");
     public static final Signature JAVA_REFLECT_ARRAY_NEWARRAY =
         new Signature(JAVA_REFLECT_ARRAY, "(" + REFERENCE + JAVA_CLASS + TYPEEND + INT + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "newArray");
     public static final Signature JAVA_RUNTIME_AVAILABLEPROCESSORS = 
@@ -630,6 +650,8 @@ public final class Signatures {
         new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + LONG, "getEntrySize");
     public static final Signature JAVA_ZIPFILE_GETENTRYTIME = 
         new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + LONG, "getEntryTime");
+    public static final Signature JAVA_ZIPFILE_GETNEXTENTRY = 
+        new Signature(JAVA_ZIPFILE, "(" + LONG + INT + ")" + LONG, "getNextEntry");
     public static final Signature JAVA_ZIPFILE_GETTOTAL = 
         new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + INT, "getTotal");
     public static final Signature JAVA_ZIPFILE_INITIDS = 
@@ -728,6 +750,8 @@ public final class Signatures {
     	new Signature(JAVA_HASHMAP, "()" + VOID, "makeInitial");
     public static final Signature JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION = 
     	new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + VOID, "metaThrowUnexpectedInternalException");
+    public static final Signature JBSE_JAVA_MAP_NOTIFYMETHODEXECUTION = 
+    		new Signature(JAVA_HASHMAP, "()" + VOID, "notifyMethodExecution");
     public static final Signature JBSE_JAVA_MAP_REFINEIN = 
     	new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineIn");
     public static final Signature JBSE_JAVA_MAP_REFINEONKEYANDBRANCH = 
@@ -736,8 +760,10 @@ public final class Signatures {
     	new Signature(JAVA_HASHMAP, "(" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOnKeyCombinationsAndBranch");
     public static final Signature JBSE_JAVA_MAP_REFINEOUTKEY = 
     	new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOutKey");
-    public static final Signature JBSE_JAVA_MAP_NOTIFYEXECUTION = 
-    		new Signature(JAVA_HASHMAP, "(" + ")" + VOID, "notifyMethodExecution");
+    public static final Signature SUN_CONSTANTPOOL_GETUTF8AT0 = 
+        new Signature(SUN_CONSTANTPOOL, 
+                      "(" + REFERENCE + JAVA_OBJECT + TYPEEND + INT + ")" + REFERENCE + JAVA_STRING + TYPEEND, 
+                      "getUTF8At0");
     public static final Signature SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 = 
         new Signature(SUN_NATIVECONSTRUCTORACCESSORIMPL, 
                       "(" + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 
