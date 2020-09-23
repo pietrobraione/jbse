@@ -291,17 +291,29 @@ public final class Base {
     }
     
     /**
-     * Overriding implementation of several {@code registerNatives()} methods.
+     * Used as overriding implementation of several {@code registerNatives()}, 
+     * {@code initIDs()}, and other native static initialization methods.
      */
-    private static void base_REGISTERNATIVES() {
+    private static void doNothing() {
         return;
     }
     
     /**
-     * Overriding implementation of {@link java.lang.Object#notify()}.
+     * Overriding implementation of {@link java.lang.Object#notify()} and
+     * {@link java.lang.Object#notifyAll()}.
      * @see java.lang.Object#notify()
+     * @see java.lang.Object#notifyAll()
      */
     private static void base_JAVA_OBJECT_NOTIFY(Object _this) {
+        //no concurrency
+        return;
+    }
+    
+    /**
+     * Overriding implementation of {@link java.lang.Object#wait(long)}.
+     * @see java.lang.Object#wait(long)
+     */
+    private static void base_JAVA_OBJECT_WAIT(Object _this, long timeout) {
         //no concurrency
         return;
     }

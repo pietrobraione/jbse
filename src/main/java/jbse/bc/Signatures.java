@@ -57,6 +57,7 @@ public final class Signatures {
     public static final String JAVA_COMPARABLE               = "java/lang/Comparable";
     public static final String JAVA_CONSTRUCTOR              = "java/lang/reflect/Constructor";
     public static final String JAVA_CRC32                    = "java/util/zip/CRC32";
+    public static final String JAVA_DEFLATER                 = "java/util/zip/Deflater";
     public static final String JAVA_DELEGATINGMETHODHANDLE   = "java/lang/invoke/DelegatingMethodHandle";
     public static final String JAVA_DIRECTBYTEBUFFER         = "java/nio/DirectByteBuffer";
     public static final String JAVA_DIRECTLONGBUFFERU        = "java/nio/DirectLongBufferU";
@@ -127,12 +128,15 @@ public final class Signatures {
     public static final String JAVA_PACKAGE                  = "java/lang/Package";
     public static final String JAVA_PARAMETER                = "java/lang/reflect/Parameter";
     public static final String JAVA_PATTERN                  = "java/util/regex/Pattern";
+    public static final String JAVA_PLAINDATAGRAMSOCKETIMPL  = "java/net/PlainDatagramSocketImpl";
+    public static final String JAVA_PLAINSOCKETIMPL          = "java/net/PlainSocketImpl";
     public static final String JAVA_PRINTSTREAM              = "java/io/PrintStream";
     public static final String JAVA_PRIVILEGEDACTION         = "java/security/PrivilegedAction";
     public static final String JAVA_PRIVILEGEDEXCEPTIONACTION = "java/security/PrivilegedExceptionAction";
     public static final String JAVA_PROCESSENVIRONMENT       = "java/lang/ProcessEnvironment";
     public static final String JAVA_PROPERTIES               = "java/util/Properties";
     public static final String JAVA_PROTECTIONDOMAIN         = "java/security/ProtectionDomain";
+    public static final String JAVA_RANDOMACCESSFILE         = "java/io/RandomAccessFile";
     public static final String JAVA_REFERENCE                = "java/lang/ref/Reference";
     public static final String JAVA_REFERENCEPIPELINE_STATEFULOP  = "java/util/stream/ReferencePipeline$StatefulOp";
     public static final String JAVA_REFERENCEPIPELINE_STATELESSOP = "java/util/stream/ReferencePipeline$StatelessOp";
@@ -330,8 +334,12 @@ public final class Signatures {
         new Signature(JAVA_CLASSLOADER_NATIVELIBRARY, "(" + REFERENCE + JAVA_STRING + TYPEEND + BOOLEAN + ")" + VOID, "load");
     public static final Signature JAVA_CLASSLOADER_REGISTERNATIVES =
         new Signature(JAVA_CLASSLOADER, "()" + VOID, "registerNatives");
+    public static final Signature JAVA_CRC32_UPDATE =
+        new Signature(JAVA_CRC32, "(" + INT + INT + ")" + INT, "update");
     public static final Signature JAVA_CRC32_UPDATEBYTES =
         new Signature(JAVA_CRC32, "(" + INT + ARRAYOF + BYTE + INT + INT +")" + INT, "updateBytes");
+    public static final Signature JAVA_DEFLATER_INITIDS =
+        new Signature(JAVA_DEFLATER, "()" + VOID, "initIDs");
     public static final Signature JAVA_DIRECTBYTEBUFFER_INIT =
         new Signature(JAVA_DIRECTBYTEBUFFER, "(" + LONG + INT + ")" + VOID, "<init>");
     public static final Signature JAVA_DOUBLE_DOUBLETORAWLONGBITS =
@@ -444,10 +452,18 @@ public final class Signatures {
         new Signature(JAVA_OBJECT, "()" + VOID, "notifyAll");
     public static final Signature JAVA_OBJECT_REGISTERNATIVES =
         new Signature(JAVA_OBJECT, "()" + VOID, "registerNatives");
+    public static final Signature JAVA_OBJECT_WAIT =
+        new Signature(JAVA_OBJECT, "(" + LONG + ")" + VOID, "wait");
     public static final Signature JAVA_PACKAGE_GETSYSTEMPACKAGE0 =
         new Signature(JAVA_PACKAGE, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, "getSystemPackage0");
+    public static final Signature JAVA_PLAINDATAGRAMSOCKETIMPL_INIT =
+        new Signature(JAVA_PLAINDATAGRAMSOCKETIMPL, "()" + VOID, "init");
+    public static final Signature JAVA_PLAINSOCKETIMPL_INITPROTO =
+        new Signature(JAVA_PLAINSOCKETIMPL, "()" + VOID, "initProto");
     public static final Signature JAVA_PROCESSENVIRONMENT_ENVIRON =
         new Signature(JAVA_PROCESSENVIRONMENT, "()" + ARRAYOF + ARRAYOF + BYTE, "environ");
+    public static final Signature JAVA_RANDOMACCESSFILE_INITIDS =
+        new Signature(JAVA_RANDOMACCESSFILE, "()" + VOID, "initIDs");
     public static final Signature JAVA_REFLECT_ARRAY_NEWARRAY =
         new Signature(JAVA_REFLECT_ARRAY, "(" + REFERENCE + JAVA_CLASS + TYPEEND + INT + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "newArray");
     public static final Signature JAVA_RUNTIME_AVAILABLEPROCESSORS = 

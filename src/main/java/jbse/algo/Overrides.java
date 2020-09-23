@@ -188,6 +188,7 @@ public final class Overrides {
     
     //Overriding base-level implementation of standard methods
     private static final String JBSE_BASE = internalClassName(jbse.base.Base.class.getName());
+    public static final Signature BASE_DONOTHING = new Signature(JBSE_BASE, "()" + VOID, "doNothing");
     public static final Signature BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_1 = 
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + JAVA_PRIVILEGEDEXCEPTIONACTION + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 
@@ -228,6 +229,10 @@ public final class Overrides {
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, 
                       "base_JAVA_OBJECT_NOTIFY");
+    public static final Signature BASE_JAVA_OBJECT_WAIT = 
+        new Signature(JBSE_BASE, 
+                      "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + ")" + VOID, 
+                      "base_JAVA_OBJECT_WAIT");
     public static final Signature BASE_JAVA_RUNTIME_AVAILABLEPROCESSORS = 
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + JAVA_RUNTIME + TYPEEND + ")" + INT, 
@@ -244,10 +249,6 @@ public final class Overrides {
         new Signature(JBSE_BASE, 
                       "()" + BOOLEAN, 
                       "base_JBSE_ANALYSIS_ISRUNBYJBSE");
-    public static final Signature BASE_REGISTERNATIVES =
-        new Signature(JBSE_BASE, 
-                      "()" + VOID, 
-                      "base_REGISTERNATIVES");
     public static final Signature BASE_SUN_SIGNAL_FINDSIGNAL =
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + INT, 
