@@ -114,7 +114,7 @@ public class SettingsReader {
      *        will add, rather than replace, to previous data in it.
      */
     public void fillEngineParameters(EngineParameters params) {
-        fillRulesTrigger(params.getTriggerRulesRepo());
+        fillRulesTrigger(params.getTriggerRulesRepoRaw());
         fillExpansionBackdoor(params.getExpansionBackdoor());
     }
 
