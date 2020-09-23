@@ -116,7 +116,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 	 * @throws InvalidInputException if {@code component == null}.
 	 */
 	public DecisionProcedureGuidanceJDI(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature) 
-			throws GuidanceException, InvalidInputException {
+	throws GuidanceException, InvalidInputException {
 		this(component, calc, runnerParameters, stopSignature, 1);
 	}
 
@@ -129,19 +129,36 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 	 *        The constructor modifies this object by adding the {@link Runner.Actions}s
 	 *        necessary to the execution.
 	 * @param stopSignature the {@link Signature} of a method. The guiding concrete execution 
-	 *        will stop at the entry of the {@code numberOfHits}-th invocation of the 
-	 *        method whose signature is {@code stopSignature}, and the reached state will be 
-	 *        used as the initial one.
+	 *        will stop at the entry of the {@code numberOfHits}-th nonrecursive invocation of 
+	 *        the method whose signature is {@code stopSignature}, and the reached state will 
+	 *        be used to answer queries.
 	 * @param numberOfHits an {@code int} greater or equal to one.
 	 * @throws GuidanceException if something fails during creation (and the caller
 	 *         is to blame).
 	 * @throws InvalidInputException if {@code component == null}.
 	 */
 	public DecisionProcedureGuidanceJDI(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits) 
-			throws GuidanceException, InvalidInputException {
+	throws GuidanceException, InvalidInputException {
 		super(component, new JVMJDI(calc, runnerParameters, stopSignature, numberOfHits));
 	}
 
+	/**
+	 * Calculates the number of nonrecursive hits of a method.
+	 *  
+	 * @param runnerParameters the {@link RunnerParameters} of a concrete execution.
+	 * @param stopSignature the {@link Signature} of a method.
+	 * @return an {@code int} that amounts to the total number of nonrecursive 
+	 *         invocations of the method whose signature is {@code stopSignature} 
+	 *         from the concrete execution started by {@code runnerParameters}.
+	 * @throws GuidanceException if something fails during creation (and the caller
+	 *         is to blame).
+	 */
+        public static int countNonRecursiveHits(RunnerParameters runnerParameters, Signature stopSignature) 
+        throws GuidanceException {
+                final JVMJDI jdiCompleteExecution = new JVMJDI(runnerParameters, stopSignature);
+                return jdiCompleteExecution.hitCounter;
+        }
+        
 	private static class JVMJDI extends JVM {
 		private static final String ERROR_BAD_PATH = "Failed accessing through a memory access path: ";
 
@@ -164,16 +181,6 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		private Map<SymbolicApply, SymbolicApplyJVMJDI> symbolicApplyCache = new HashMap<>();
 		private Map<String, List<String>> symbolicApplyOperatorOccurrences = new HashMap<>();
 		private String currentHashMapModelMethod;
-		
-		public static int countNonRecursiveHits(Iterable<Path> classPath, String startClassName, String startMethodName, Signature stopSignature) 
-		throws GuidanceException {
-			RunnerParameters params = new RunnerParameters();
-			classPath.forEach(p -> params.addUserClasspath(p));
-			params.setMethodSignature(startClassName, "()V", startMethodName);
-			JVMJDI jdiCompleteExecution = new JVMJDI(params, stopSignature);
-			return jdiCompleteExecution.hitCounter;
-		}
-
 		
 		public JVMJDI(RunnerParameters runnerParameters, Signature stopSignature) 
 		throws GuidanceException {
@@ -739,7 +746,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		private static Value JAVA_MAP_Utils_getJDIValueInitalMapField(ThreadReference currentThread, Object o) {
 			ObjectReference initialMapRef = (com.sun.jdi.ObjectReference) o;
 			try {
-				Value intialMapClone = initialMapRef.invokeMethod(currentThread, initialMapRef.referenceType().methodsByName("clone").get(0), Collections.EMPTY_LIST, ObjectReference.INVOKE_SINGLE_THREADED);
+				Value intialMapClone = initialMapRef.invokeMethod(currentThread, initialMapRef.referenceType().methodsByName("clone").get(0), Collections.emptyList(), ObjectReference.INVOKE_SINGLE_THREADED);
 				return intialMapClone;
 			} catch (InvalidTypeException | ClassNotLoadedException | IncompatibleThreadStateException | InvocationException e) {
 				throw new UnexpectedInternalException(e);

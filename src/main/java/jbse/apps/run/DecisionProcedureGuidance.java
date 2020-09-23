@@ -79,9 +79,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
      * Builds the {@link DecisionProcedureGuidance}.
      *
      * @param component the component {@link DecisionProcedure} it decorates.
-     * @param calc a {@link Calculator}.
      * @param jvm a {@link JVM}.
-     * @param numberOfHits an {@code int} greater or equal to one.
      * @throws GuidanceException if something fails during creation (and the caller
      *         is to blame).
      * @throws InvalidInputException if {@code component == null}.
