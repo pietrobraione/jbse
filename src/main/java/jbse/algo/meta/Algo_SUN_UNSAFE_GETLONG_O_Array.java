@@ -66,7 +66,8 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Meta-level implementation of {@link sun.misc.Unsafe#getLongVolatile(Object, long)} 
+ * Meta-level implementation of {@link sun.misc.Unsafe#getLong(Object, long)}
+ * and {@link sun.misc.Unsafe#getLongVolatile(Object, long)} 
  * in the case the object to read into is an array.
  */
 //TODO refactor together with Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array and Algo_SUN_UNSAFE_GETINTVOLATILE_Array???

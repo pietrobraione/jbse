@@ -48,7 +48,7 @@ public final class Algo_SUN_UNSAFE_PUTLONG_O extends Algo_INVOKEMETA_Nonbranchin
         	this.obj = state.getObject(objRef);
         }
         if (this.obj == null) {
-            throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.getLongVolatile.");
+            throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.putLong.");
         }
 
         //gets and checks the offset parameter
