@@ -275,19 +275,13 @@ UP extends StrategyUpdate<R>> implements Action {
                     this.refiner.refine(stateCurrent, result);
                 }
 
-		//pops the operands from the operand stack
-		try {
-		    stateCurrent.popOperands(this.numOperands.get());
-		} catch (ThreadStackEmptyException | InvalidNumberOfOperandsException e) {
-		    //this should never happen
-		    failExecution(e);
-		}
-                
+                //pops the operands from the operand stack
+            	stateCurrent.popOperands(this.numOperands.get());
+
             	//initializes lazily this.updated
                 if (this.updater == null) {
                     this.updater = updater();
                 }
-                
 
                 //completes the bytecode semantics
                 this.updater.update(stateCurrent, result);
@@ -295,7 +289,7 @@ UP extends StrategyUpdate<R>> implements Action {
                 interrupt = e;
             } catch (InvalidInputException | InvalidTypeException | 
                      InvalidOperatorException | InvalidOperandException | 
-                     ThreadStackEmptyException e) {
+                     ThreadStackEmptyException | InvalidNumberOfOperandsException e) {
                 //this should never happen
                 failExecution(e);
             }
