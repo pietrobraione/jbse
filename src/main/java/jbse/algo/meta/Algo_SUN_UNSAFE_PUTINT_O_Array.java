@@ -56,14 +56,14 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 this.arrayReference = (Reference) this.data.operand(1);
                 this.index = (Simplex) calc.push((Simplex) this.data.operand(2)).narrow(INT).pop();
                 this.valueToStore = this.data.operand(3);
-                Array array = (Array) state.getObject(this.arrayReference);
+                final Array array = (Array) state.getObject(this.arrayReference);
                 this.inRange = array.inRange(calc, this.index);
                 this.outOfRange = array.outOfRange(calc, this.index);
 
                 //checks
                 final ClassFile arrayType = array.getType();
                 if (!arrayType.getMemberClass().getClassName().equals("int")) {
-                    throw new UndefinedResultException("The Object o parameter to sun.misc.Unsafe.putIntXxxx was an array whose member type is not int.");
+                    throw new UndefinedResultException("The Object o parameter to sun.misc.Unsafe.putInt[Volatile] was an array whose member type is not int.");
                 }
             } catch (ClassCastException | InvalidTypeException e) {
                 //this should never happen now
@@ -98,7 +98,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
             if (alt.isInRange()) {
                 storeInArray(state, this.ctx, this.arrayReference, this.index, this.valueToStore);
             } else {
-                throw new UndefinedResultException("The long offset parameter to sun.misc.Unsafe.putIntXxxx was out of range w.r.t. the Object o (array) parameter.");
+                throw new UndefinedResultException("The long offset parameter to sun.misc.Unsafe.putInt[Volatile] was out of range w.r.t. the Object o (array) parameter.");
             }
         };
     }

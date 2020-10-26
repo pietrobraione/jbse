@@ -29,11 +29,12 @@ import jbse.val.Simplex;
 import jbse.val.Value;
 
 /**
- * Meta-level implementation of {@link sun.misc.Unsafe#getIntVolatile(Object, long)}.
+ * Meta-level implementation of {@link sun.misc.Unsafe#getInt(Object, long)} and 
+ * {@link sun.misc.Unsafe#getIntVolatile(Object, long)}.
  * 
  * @author Pietro Braione
  */
-//TODO refactor together with Algo_SUN_UNSAFE_GETOBJECTVOLATILE
+//TODO refactor together with Algo_SUN_UNSAFE_GETOBJECT_O
 public final class Algo_SUN_UNSAFE_GETINT_O extends Algo_INVOKEMETA_Nonbranching {
     private final Algo_SUN_UNSAFE_GETINT_O_Array algoArray = new Algo_SUN_UNSAFE_GETINT_O_Array();
     private Value read; //set by cookMore
@@ -54,12 +55,12 @@ public final class Algo_SUN_UNSAFE_GETINT_O extends Algo_INVOKEMETA_Nonbranching
             if (objRef instanceof KlassPseudoReference) {
             	obj = state.getKlass(((KlassPseudoReference) objRef).getClassFile());
             } else if (state.isNull(objRef)) {
-                throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getIntVolatile was null.");
+                throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getInt[Volatile] was null.");
             } else {
             	obj = state.getObject(objRef);
             }
             if (obj == null) {
-                throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.getIntVolatile.");
+                throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.getInt[Volatile].");
             }
 
             //gets and checks the offset parameter
@@ -68,7 +69,7 @@ public final class Algo_SUN_UNSAFE_GETINT_O extends Algo_INVOKEMETA_Nonbranching
             if (ofstPrimitive instanceof Simplex) {
                 ofst = ((Long) ((Simplex) ofstPrimitive).getActualValue()).intValue();
             } else {
-                throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.getIntVolatile cannot be a symbolic value");
+                throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.getInt[Volatile] cannot be a symbolic value");
             }
 
             if (obj instanceof Array) {
@@ -79,12 +80,12 @@ public final class Algo_SUN_UNSAFE_GETINT_O extends Algo_INVOKEMETA_Nonbranching
             if (obj.hasOffset(ofst)) {
                 this.read = obj.getFieldValue(ofst);
             } else {
-                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getIntVolatile was not a slot number of the object parameter.");
+                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getInt[Volatile] was not a slot number of the object parameter.");
             }
             
             //checks the value
             if (this.read.getType() != INT) {
-                throw new UndefinedResultException("The value read by sun.misc.Unsafe.getIntVolatile was not an int.");
+                throw new UndefinedResultException("The value read by sun.misc.Unsafe.getInt[Volatile] was not an int.");
             }
         } catch (ClassCastException e) {
             throwVerifyError(state, this.ctx.getCalculator());

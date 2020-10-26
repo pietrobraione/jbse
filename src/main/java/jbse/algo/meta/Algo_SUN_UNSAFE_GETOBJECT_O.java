@@ -35,7 +35,7 @@ import jbse.val.Value;
  * 
  * @author Pietro Braione
  */
-//TODO refactor together with Algo_SUN_UNSAFE_GETINTVOLATILE
+//TODO refactor together with Algo_SUN_UNSAFE_GETINT_O
 public final class Algo_SUN_UNSAFE_GETOBJECT_O extends Algo_INVOKEMETA_Nonbranching {
     private final Algo_SUN_UNSAFE_GETOBJECT_O_Array algoArray = new Algo_SUN_UNSAFE_GETOBJECT_O_Array();
     private Value read; //set by cookMore
@@ -56,12 +56,12 @@ public final class Algo_SUN_UNSAFE_GETOBJECT_O extends Algo_INVOKEMETA_Nonbranch
             if (objRef instanceof KlassPseudoReference) {
             	obj = state.getKlass(((KlassPseudoReference) objRef).getClassFile());
             } else if (state.isNull(objRef)) {
-                throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getObjectVolatile was null.");
+                throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getObject[Volatile] was null.");
             } else {
             	obj = state.getObject(objRef);
             }
             if (obj == null) {
-                throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.getObjectVolatile.");
+                throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.getObject[Volatile].");
             }
 
             //gets and checks the offset parameter
@@ -70,7 +70,7 @@ public final class Algo_SUN_UNSAFE_GETOBJECT_O extends Algo_INVOKEMETA_Nonbranch
             if (ofstPrimitive instanceof Simplex) {
                 ofst = ((Long) ((Simplex) ofstPrimitive).getActualValue()).intValue();
             } else {
-                throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.getObjectVolatile cannot be a symbolic value.");
+                throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.getObject[Volatile] cannot be a symbolic value.");
             }
             
             if (obj instanceof Array) {
@@ -81,12 +81,12 @@ public final class Algo_SUN_UNSAFE_GETOBJECT_O extends Algo_INVOKEMETA_Nonbranch
             if (obj.hasOffset(ofst)) {
                 this.read = obj.getFieldValue(ofst);
             } else {
-                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getObjectVolatile was not a slot number of the object parameter");
+                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getObject[Volatile] was not a slot number of the object parameter");
             }
             
             //checks the read value
             if (this.read.getType() != REFERENCE && this.read.getType() != NULLREF) {
-                throw new UndefinedResultException("The value read by sun.misc.Unsafe.getObjectVolatile was not a reference or null");
+                throw new UndefinedResultException("The value read by sun.misc.Unsafe.getObject[Volatile] was not a reference or null");
             }
         } catch (ClassCastException e) {
             throwVerifyError(state, this.ctx.getCalculator());
