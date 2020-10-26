@@ -43,12 +43,12 @@ public final class Algo_SUN_UNSAFE_PUTLONG_O extends Algo_INVOKEMETA_Nonbranchin
         if (objRef instanceof KlassPseudoReference) {
         	this.obj = state.getKlass(((KlassPseudoReference) objRef).getClassFile());
         } else if (state.isNull(objRef)) {
-            throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.putLong was null.");
+            throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.putLong[Volatile] was null.");
         } else {
         	this.obj = state.getObject(objRef);
         }
         if (this.obj == null) {
-            throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.putLong.");
+            throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.putLong[Volatile].");
         }
 
         //gets and checks the offset parameter
@@ -56,12 +56,12 @@ public final class Algo_SUN_UNSAFE_PUTLONG_O extends Algo_INVOKEMETA_Nonbranchin
         if (ofstPrimitive instanceof Simplex) {
             this.ofst = ((Long) ((Simplex) ofstPrimitive).getActualValue()).intValue();
         } else {
-            throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.putLong cannot be a symbolic value.");
+            throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.putLong[Volatile] cannot be a symbolic value.");
         }
 
         //checks
         if (!this.obj.hasOffset(this.ofst)) {
-            throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.putLong was not a slot number of the object parameter.");
+            throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.putLong[Volatile] was not a slot number of the object parameter.");
         }
 
         if (this.obj instanceof Array) {

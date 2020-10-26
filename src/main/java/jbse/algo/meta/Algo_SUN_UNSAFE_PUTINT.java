@@ -26,7 +26,7 @@ public final class Algo_SUN_UNSAFE_PUTINT extends Algo_INVOKEMETA_Nonbranching {
             throw new SymbolicValueNotAllowedException("sun.misc.Unsafe.putInt cannot be invoked with a symbolic argument");
         }
         final long memoryAddress = ((Long) ((Simplex) this.data.operand(1)).getActualValue()).longValue();
-        final int value = ((Long) ((Simplex) this.data.operand(2)).getActualValue()).intValue();
+        final int value = ((Integer) ((Simplex) this.data.operand(2)).getActualValue()).intValue();
         unsafe().putInt(memoryAddress, value);
     }
     

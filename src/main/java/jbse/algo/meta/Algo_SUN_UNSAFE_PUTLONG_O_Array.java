@@ -54,7 +54,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 this.arrayReference = (Reference) this.data.operand(1);
                 this.index = (Simplex) calc.push((Simplex) this.data.operand(2)).narrow(INT).pop();
                 this.valueToStore = this.data.operand(3);
-                Array array = (Array) state.getObject(this.arrayReference);
+                final Array array = (Array) state.getObject(this.arrayReference);
                 this.inRange = array.inRange(calc, this.index);
                 this.outOfRange = array.outOfRange(calc, this.index);
 

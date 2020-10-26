@@ -32,7 +32,7 @@ import jbse.val.Value;
  * Meta-level implementation of {@link sun.misc.Unsafe#getLong(Object, long)}
  * and {@link sun.misc.Unsafe#getLongVolatile(Object, long)}.
  */
-//TODO refactor together with Algo_SUN_UNSAFE_GETOBJECTVOLATILE and Algo_SUN_UNSAFE_GETINTVOLATILE???
+//TODO refactor together with Algo_SUN_UNSAFE_GETOBJECT_O and Algo_SUN_UNSAFE_GETINT_O
 public final class Algo_SUN_UNSAFE_GETLONG_O extends Algo_INVOKEMETA_Nonbranching {
     private final Algo_SUN_UNSAFE_GETLONG_O_Array algoArray = new Algo_SUN_UNSAFE_GETLONG_O_Array();
     private Value read; //set by cookMore
@@ -53,12 +53,12 @@ public final class Algo_SUN_UNSAFE_GETLONG_O extends Algo_INVOKEMETA_Nonbranchin
             if (objRef instanceof KlassPseudoReference) {
             	obj = state.getKlass(((KlassPseudoReference) objRef).getClassFile());
             } else if (state.isNull(objRef)) {
-                throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getLongVolatile was null.");
+                throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getLong[Volatile] was null.");
             } else {
             	obj = state.getObject(objRef);
             }
             if (obj == null) {
-                throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.getLongVolatile.");
+                throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.getLong[Volatile].");
             }
 
             //gets and checks the offset parameter
@@ -67,7 +67,7 @@ public final class Algo_SUN_UNSAFE_GETLONG_O extends Algo_INVOKEMETA_Nonbranchin
             if (ofstPrimitive instanceof Simplex) {
                 ofst = ((Long) ((Simplex) ofstPrimitive).getActualValue()).intValue();
             } else {
-                throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.getLongVolatile cannot be a symbolic value");
+                throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.getLong[Volatile] cannot be a symbolic value");
             }
             
             if (obj instanceof Array) {
@@ -78,12 +78,12 @@ public final class Algo_SUN_UNSAFE_GETLONG_O extends Algo_INVOKEMETA_Nonbranchin
             if (obj.hasOffset(ofst)) {
                 this.read = obj.getFieldValue(ofst);
             } else {
-                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getLongVolatile was not a slot number of the object parameter.");
+                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getLong[Volatile] was not a slot number of the object parameter.");
             }
             
             //checks the value
             if (this.read.getType() != LONG) {
-                throw new UndefinedResultException("The value read by sun.misc.Unsafe.getLongVolatile was not a long.");
+                throw new UndefinedResultException("The value read by sun.misc.Unsafe.getLong[Volatile] was not a long.");
             }
         } catch (ClassCastException e) {
             throwVerifyError(state, this.ctx.getCalculator());

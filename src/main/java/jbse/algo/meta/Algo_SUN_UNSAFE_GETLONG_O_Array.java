@@ -70,7 +70,7 @@ import jbse.val.exc.InvalidTypeException;
  * and {@link sun.misc.Unsafe#getLongVolatile(Object, long)} 
  * in the case the object to read into is an array.
  */
-//TODO refactor together with Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array and Algo_SUN_UNSAFE_GETINTVOLATILE_Array???
+//TODO refactor together with Algo_SUN_UNSAFE_GETOBJECT_O_Array and Algo_SUN_UNSAFE_GETINT_O_Array
 public final class Algo_SUN_UNSAFE_GETLONG_O_Array extends Algo_INVOKEMETA<
 DecisionAlternative_XALOAD,
 StrategyDecide<DecisionAlternative_XALOAD>, 
@@ -102,7 +102,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 array = (Array) state.getObject(this.myObjectRef);
                 final ClassFile arrayType = array.getType();
                 if (!arrayType.getMemberClass().getClassName().equals("long")) {
-                    throw new UndefinedResultException("The Object o parameter to sun.misc.Unsafe.getLongVolatile was an array whose member type is not long");
+                    throw new UndefinedResultException("The Object o parameter to sun.misc.Unsafe.getLong[Volatile] was an array whose member type is not long");
                 }
             } catch (ClassCastException e) {
                 //this should never happen now
@@ -239,7 +239,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 try {
                     final Value valToPush;
                     if (isPrimitive(valMaterializedType) && !isPrimitiveOpStack(valMaterializedType)) {
-                        valToPush = calc.push((Primitive) valMaterialized).widen(LONG).pop();
+                        valToPush = calc.push((Primitive) valMaterialized).widen(INT).pop();
                     } else {
                         valToPush = valMaterialized;
                     }
@@ -269,7 +269,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             @Override
             public void updateOut(State s, DecisionAlternative_XALOAD_Out dao) 
             throws UndefinedResultException {
-                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getLongVolatile was not a correct index for the object (array) parameter");
+                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getLong[Volatile] was not a correct index for the object (array) parameter");
             }
         };
     }
