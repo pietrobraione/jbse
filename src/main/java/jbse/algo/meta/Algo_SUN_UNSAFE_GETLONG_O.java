@@ -3,8 +3,7 @@ package jbse.algo.meta;
 import static jbse.algo.Util.continueWith;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.throwVerifyError;
-import static jbse.common.Type.NULLREF;
-import static jbse.common.Type.REFERENCE;
+import static jbse.common.Type.LONG;
 
 import java.util.function.Supplier;
 
@@ -30,14 +29,12 @@ import jbse.val.Simplex;
 import jbse.val.Value;
 
 /**
- * Meta-level implementation of {@link sun.misc.Unsafe#getObject(Object, long)} and
- * {@link sun.misc.Unsafe#getObjectVolatile(Object, long)}.
- * 
- * @author Pietro Braione
+ * Meta-level implementation of {@link sun.misc.Unsafe#getLong(Object, long)}
+ * and {@link sun.misc.Unsafe#getLongVolatile(Object, long)}.
  */
-//TODO refactor together with Algo_SUN_UNSAFE_GETINT_O
-public final class Algo_SUN_UNSAFE_GETOBJECT_O extends Algo_INVOKEMETA_Nonbranching {
-    private final Algo_SUN_UNSAFE_GETOBJECT_O_Array algoArray = new Algo_SUN_UNSAFE_GETOBJECT_O_Array();
+//TODO refactor together with Algo_SUN_UNSAFE_GETOBJECT_O and Algo_SUN_UNSAFE_GETINT_O
+public final class Algo_SUN_UNSAFE_GETLONG_O extends Algo_INVOKEMETA_Nonbranching {
+    private final Algo_SUN_UNSAFE_GETLONG_O_Array algoArray = new Algo_SUN_UNSAFE_GETLONG_O_Array();
     private Value read; //set by cookMore
 
     @Override
@@ -47,7 +44,7 @@ public final class Algo_SUN_UNSAFE_GETOBJECT_O extends Algo_INVOKEMETA_Nonbranch
 
     @Override
     protected void cookMore(State state)
-    throws ThreadStackEmptyException, DecisionException, ClasspathException,
+    throws ThreadStackEmptyException, DecisionException, ClasspathException, 
     CannotManageStateException, InterruptException, FrozenStateException {
         try {           
             //gets and checks the object parameter
@@ -56,12 +53,12 @@ public final class Algo_SUN_UNSAFE_GETOBJECT_O extends Algo_INVOKEMETA_Nonbranch
             if (objRef instanceof KlassPseudoReference) {
             	obj = state.getKlass(((KlassPseudoReference) objRef).getClassFile());
             } else if (state.isNull(objRef)) {
-                throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getObject[Volatile] was null.");
+                throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getLong[Volatile] was null.");
             } else {
             	obj = state.getObject(objRef);
             }
             if (obj == null) {
-                throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.getObject[Volatile].");
+                throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.getLong[Volatile].");
             }
 
             //gets and checks the offset parameter
@@ -70,23 +67,23 @@ public final class Algo_SUN_UNSAFE_GETOBJECT_O extends Algo_INVOKEMETA_Nonbranch
             if (ofstPrimitive instanceof Simplex) {
                 ofst = ((Long) ((Simplex) ofstPrimitive).getActualValue()).intValue();
             } else {
-                throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.getObject[Volatile] cannot be a symbolic value.");
+                throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.getLong[Volatile] cannot be a symbolic value");
             }
             
             if (obj instanceof Array) {
                 continueWith(this.algoArray);
             }
-
+            
             //reads the value
             if (obj.hasOffset(ofst)) {
                 this.read = obj.getFieldValue(ofst);
             } else {
-                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getObject[Volatile] was not a slot number of the object parameter");
+                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getLong[Volatile] was not a slot number of the object parameter.");
             }
             
-            //checks the read value
-            if (this.read.getType() != REFERENCE && this.read.getType() != NULLREF) {
-                throw new UndefinedResultException("The value read by sun.misc.Unsafe.getObject[Volatile] was not a reference or null");
+            //checks the value
+            if (this.read.getType() != LONG) {
+                throw new UndefinedResultException("The value read by sun.misc.Unsafe.getLong[Volatile] was not a long.");
             }
         } catch (ClassCastException e) {
             throwVerifyError(state, this.ctx.getCalculator());
@@ -101,3 +98,4 @@ public final class Algo_SUN_UNSAFE_GETOBJECT_O extends Algo_INVOKEMETA_Nonbranch
         };
     }
 }
+

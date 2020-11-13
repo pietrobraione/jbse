@@ -25,14 +25,12 @@ import jbse.val.Value;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Meta-level implementation of {@link sun.misc.Unsafe#putInt(Object, long, int)} and 
- * {@link sun.misc.Unsafe#putIntVolatile(Object, long, int)} 
+ * Meta-level implementation of {@link sun.misc.Unsafe#putLong(Object, long, long)} and 
+ * {@link sun.misc.Unsafe#putLongVolatile(Object, long, long)} 
  * in the case the object to write into is an array.
- * 
- * @author Pietro Braione
  */
 //TODO heavily copied from Algo_XASTORE: Refactor and merge 
-public final class Algo_SUN_UNSAFE_PUTINT_O_Array extends Algo_INVOKEMETA<
+public final class Algo_SUN_UNSAFE_PUTLONG_O_Array extends Algo_INVOKEMETA<
 DecisionAlternative_XASTORE,
 StrategyDecide<DecisionAlternative_XASTORE>, 
 StrategyRefine<DecisionAlternative_XASTORE>, 
@@ -62,8 +60,8 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
 
                 //checks
                 final ClassFile arrayType = array.getType();
-                if (!arrayType.getMemberClass().getClassName().equals("int")) {
-                    throw new UndefinedResultException("The Object o parameter to sun.misc.Unsafe.putInt[Volatile] was an array whose member type is not int.");
+                if (!arrayType.getMemberClass().getClassName().equals("long")) {
+                    throw new UndefinedResultException("The Object o parameter to sun.misc.Unsafe.putLongXxxx was an array whose member type is not long.");
                 }
             } catch (ClassCastException | InvalidTypeException e) {
                 //this should never happen now
@@ -98,7 +96,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
             if (alt.isInRange()) {
                 storeInArray(state, this.ctx, this.arrayReference, this.index, this.valueToStore);
             } else {
-                throw new UndefinedResultException("The long offset parameter to sun.misc.Unsafe.putInt[Volatile] was out of range w.r.t. the Object o (array) parameter.");
+                throw new UndefinedResultException("The long offset parameter to sun.misc.Unsafe.putLongXxxx was out of range w.r.t. the Object o (array) parameter.");
             }
         };
     }

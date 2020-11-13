@@ -104,7 +104,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 array = (Array) state.getObject(this.myObjectRef);
                 final ClassFile arrayMemberType = array.getType().getMemberClass();
                 if (!arrayMemberType.isReference() && !arrayMemberType.isArray()) {
-                    throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getObjectVolatile was an array whose member type is not a reference type.");
+                    throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getObject[Volatile] was an array whose member type is not a reference type.");
                 }
             } catch (ClassCastException e) {
                 //this should never happen now
@@ -273,7 +273,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             @Override
             public void updateOut(State s, DecisionAlternative_XALOAD_Out dao) 
             throws UndefinedResultException {
-                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getObjectVolatile was not a correct index for the object (array) parameter");
+                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getObject[Volatile] was not a correct index for the object (array) parameter");
             }
         };
     }

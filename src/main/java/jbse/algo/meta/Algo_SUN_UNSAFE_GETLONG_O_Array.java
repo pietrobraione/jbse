@@ -14,6 +14,7 @@ import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
 import static jbse.common.Type.INT;
+import static jbse.common.Type.LONG;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isPrimitiveOpStack;
 
@@ -65,15 +66,12 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Meta-level implementation of {@link sun.misc.Unsafe#getInt(Object, long)} and 
- * {@link sun.misc.Unsafe#getIntVolatile(Object, long)} in the case the object 
- * to read into is an array.
- * 
- * @author Pietro Braione
+ * Meta-level implementation of {@link sun.misc.Unsafe#getLong(Object, long)}
+ * and {@link sun.misc.Unsafe#getLongVolatile(Object, long)} 
+ * in the case the object to read into is an array.
  */
-//TODO heavily copied from Algo_XALOAD and Algo_XYLOAD_GETX: Refactor and merge 
-//TODO refactor together with Algo_SUN_UNSAFE_GETOBJECT_O_Array
-public final class Algo_SUN_UNSAFE_GETINT_O_Array extends Algo_INVOKEMETA<
+//TODO refactor together with Algo_SUN_UNSAFE_GETOBJECT_O_Array and Algo_SUN_UNSAFE_GETINT_O_Array
+public final class Algo_SUN_UNSAFE_GETLONG_O_Array extends Algo_INVOKEMETA<
 DecisionAlternative_XALOAD,
 StrategyDecide<DecisionAlternative_XALOAD>, 
 StrategyRefine<DecisionAlternative_XALOAD>, 
@@ -103,8 +101,8 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             try {
                 array = (Array) state.getObject(this.myObjectRef);
                 final ClassFile arrayType = array.getType();
-                if (!arrayType.getMemberClass().getClassName().equals("int")) {
-                    throw new UndefinedResultException("The Object o parameter to sun.misc.Unsafe.getInt[Volatile] was an array whose member type is not int.");
+                if (!arrayType.getMemberClass().getClassName().equals("long")) {
+                    throw new UndefinedResultException("The Object o parameter to sun.misc.Unsafe.getLong[Volatile] was an array whose member type is not long");
                 }
             } catch (ClassCastException e) {
                 //this should never happen now
@@ -120,6 +118,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
 
     @Override
     protected StrategyDecide<DecisionAlternative_XALOAD> decider() {
+        //TODO unify with Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array and Algo_SUN_UNSAFE_GETINTVOLATILE_Array???
         return (state, result) -> { 
             //builds the ArrayAccessInfos by reading the array
             final List<ArrayAccessInfo> arrayAccessInfos = getFromArray(state, this.ctx.getCalculator(), this.myObjectRef, this.index);
@@ -196,7 +195,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 //augments the path condition
             	final Expression accessExpression = altResolved.getArrayAccessExpressionSimplified();
             	if (accessExpression != null) {
-            		state.assume(Algo_SUN_UNSAFE_GETINT_O_Array.this.ctx.getCalculator().simplify(Algo_SUN_UNSAFE_GETINT_O_Array.this.ctx.decisionProcedure.simplify(accessExpression)));
+            		state.assume(Algo_SUN_UNSAFE_GETLONG_O_Array.this.ctx.getCalculator().simplify(Algo_SUN_UNSAFE_GETLONG_O_Array.this.ctx.decisionProcedure.simplify(accessExpression)));
             	}
 
                 //if the value is fresh, it writes it back in the array
@@ -214,7 +213,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 try {
                 	final Expression accessExpression = altOut.getArrayAccessExpressionSimplified();
                 	if (accessExpression != null) {
-                		state.assume(Algo_SUN_UNSAFE_GETINT_O_Array.this.ctx.getCalculator().simplify(Algo_SUN_UNSAFE_GETINT_O_Array.this.ctx.decisionProcedure.simplify(accessExpression)));
+                		state.assume(Algo_SUN_UNSAFE_GETLONG_O_Array.this.ctx.getCalculator().simplify(Algo_SUN_UNSAFE_GETLONG_O_Array.this.ctx.decisionProcedure.simplify(accessExpression)));
                 	}
 				} catch (DecisionException e) { //TODO propagate exception (...and replace with a better exception)
 					//this should never happen
@@ -230,7 +229,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             public void updateResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved) 
             throws DecisionException, InterruptException, MissingTriggerParameterException, 
             ClasspathException, NotYetImplementedException, InvalidOperandException, InvalidInputException {
-            	final Calculator calc = Algo_SUN_UNSAFE_GETINT_O_Array.this.ctx.getCalculator();
+            	final Calculator calc = Algo_SUN_UNSAFE_GETLONG_O_Array.this.ctx.getCalculator();
                 //possibly materializes the value
                 final Value val = altResolved.getValueToLoad();
                 final Value valMaterialized = possiblyMaterialize(state, val);
@@ -254,7 +253,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 //manages triggers
                 try {
                     final boolean someTriggerFrameLoaded = 
-                        Algo_SUN_UNSAFE_GETINT_O_Array.this.ctx.triggerManager.loadTriggerFrames(state, calc, altResolved, Algo_SUN_UNSAFE_GETINT_O_Array.this.programCounterUpdate.get());
+                        Algo_SUN_UNSAFE_GETLONG_O_Array.this.ctx.triggerManager.loadTriggerFrames(state, calc, altResolved, Algo_SUN_UNSAFE_GETLONG_O_Array.this.programCounterUpdate.get());
                     if (someTriggerFrameLoaded) {
                         exitFromAlgorithm();
                     }
@@ -270,7 +269,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             @Override
             public void updateOut(State s, DecisionAlternative_XALOAD_Out dao) 
             throws UndefinedResultException {
-                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getInt[Volatile] was not a correct index for the object (array) parameter");
+                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getLong[Volatile] was not a correct index for the object (array) parameter");
             }
         };
     }
@@ -285,3 +284,4 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
         return () -> INVOKESPECIALSTATICVIRTUAL_OFFSET;
     }
 }
+

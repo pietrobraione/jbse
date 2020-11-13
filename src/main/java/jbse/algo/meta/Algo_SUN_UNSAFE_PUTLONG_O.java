@@ -22,13 +22,11 @@ import jbse.val.Simplex;
 import jbse.val.Value;
 
 /**
- * Meta-level implementation of {@link sun.misc.Unsafe#putInt(Object, long, int)} and 
- * {@link sun.misc.Unsafe#putIntVolatile(Object, long, int)}.
- * 
- * @author Pietro Braione
+ * Meta-level implementation of {@link sun.misc.Unsafe#putLong(Object, long, long)} and 
+ * {@link sun.misc.Unsafe#putLongVolatile(Object, long, long)}.
  */
-public final class Algo_SUN_UNSAFE_PUTINT_O extends Algo_INVOKEMETA_Nonbranching {
-	private final Algo_SUN_UNSAFE_PUTINT_O_Array algoArray = new Algo_SUN_UNSAFE_PUTINT_O_Array();
+public final class Algo_SUN_UNSAFE_PUTLONG_O extends Algo_INVOKEMETA_Nonbranching {
+	private final Algo_SUN_UNSAFE_PUTLONG_O_Array algoArray = new Algo_SUN_UNSAFE_PUTLONG_O_Array();
 	private Objekt obj;
 	private int ofst;
 	
@@ -45,12 +43,12 @@ public final class Algo_SUN_UNSAFE_PUTINT_O extends Algo_INVOKEMETA_Nonbranching
         if (objRef instanceof KlassPseudoReference) {
         	this.obj = state.getKlass(((KlassPseudoReference) objRef).getClassFile());
         } else if (state.isNull(objRef)) {
-            throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.putInt[Volatile] was null.");
+            throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.putLong[Volatile] was null.");
         } else {
         	this.obj = state.getObject(objRef);
         }
         if (this.obj == null) {
-            throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.putInt[Volatile].");
+            throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.putLong[Volatile].");
         }
 
         //gets and checks the offset parameter
@@ -58,12 +56,12 @@ public final class Algo_SUN_UNSAFE_PUTINT_O extends Algo_INVOKEMETA_Nonbranching
         if (ofstPrimitive instanceof Simplex) {
             this.ofst = ((Long) ((Simplex) ofstPrimitive).getActualValue()).intValue();
         } else {
-            throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.putInt[Volatile] cannot be a symbolic value.");
+            throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.putLong[Volatile] cannot be a symbolic value.");
         }
 
         //checks
         if (!this.obj.hasOffset(this.ofst)) {
-            throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.putInt[Volatile] was not a slot number of the object parameter.");
+            throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.putLong[Volatile] was not a slot number of the object parameter.");
         }
 
         if (this.obj instanceof Array) {
