@@ -1022,6 +1022,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 	}
 
 	public void notifyExecutionOfHashMapModelMethod(Signature currentMethodSignature, Signature[] callCtx) {
+		if (callCtx.length > 2 && 
+				callCtx[callCtx.length - 1].getClassName().equals("java/util/HashMap") && 
+				callCtx[callCtx.length - 2].getClassName().equals("java/util/HashMap")) {
+			return; // skip notifications from nested calls within hash map models
+		}
 		List<String> prevHits = ((JVMJDI) this.jvm).symbolicApplyOperatorOccurrences.get(currentMethodSignature.toString());
 		if (prevHits == null) {
 			prevHits = new ArrayList<>();
