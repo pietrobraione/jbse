@@ -71,6 +71,7 @@ import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.MethodExitRequest;
 
+import jbse.base.JAVA_MAP_Utils;
 import jbse.bc.Offsets;
 import jbse.bc.Signature;
 import jbse.common.exc.InvalidInputException;
@@ -628,7 +629,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			 * However, this can become expensive if there are many invocations of ReferenceSymbolicApply 
 			 * uninterpreted functions. 			  
 			 */
-			if (JAVA_MAP_Utils_isSymbolicApplyOnInitialMap(symbolicApply)) {
+			if (JAVA_MAP_Utils.isSymbolicApplyOnInitialMap((jbse.val.Value) symbolicApply)) {
 				final String op = this.currentHashMapModelMethod; //the operator is containsKey, but we need to move into the jbse.base.JAVA_MAP method where containskey is being evaluated to obtain the proper value of the key
 				final List<String> hits = this.symbolicApplyOperatorOccurrences.get(op);
 				SymbolicMemberField initialMap = (SymbolicMemberField) symbolicApply.getArgs()[0];
@@ -697,8 +698,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
 		private com.sun.jdi.Value getJDIValueField(SymbolicMemberField origin, Object o) 
 		throws GuidanceException {
-			if (JAVA_MAP_Utils_isInitialMapField(origin)) {
-				return JAVA_MAP_Utils_getJDIValueInitalMapField(getCurrentThread(), o);
+			if (JAVA_MAP_Utils.isInitialMapField((jbse.val.Value) origin)) {
+				return cloneInitialMap(getCurrentThread(), o);
 			}
 			final String fieldName = origin.getFieldName();
 			if (o instanceof com.sun.jdi.ReferenceType) {
@@ -736,17 +737,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			}
 		}
 		
-		private static boolean JAVA_MAP_Utils_isInitialMapField(Object origin) {
-			if (true /* TODO: add a check on the JBSE parameter related to using abstract HashMaps. Is it active?*/ && origin instanceof SymbolicMemberField) {
-				SymbolicMemberField originMemberField = (SymbolicMemberField) origin;
-				if (binaryClassName(originMemberField.getFieldClass()).equals("java.util.HashMap") && originMemberField.getFieldName().equals("initialMap")) {
-					return true;
-				}
-			}
-			return false;
-		}
-
-		private static Value JAVA_MAP_Utils_getJDIValueInitalMapField(ThreadReference currentThread, Object o) {
+		private static Value cloneInitialMap(ThreadReference currentThread, Object o) {
 			ObjectReference initialMapRef = (com.sun.jdi.ObjectReference) o;
 			try {
 				Value intialMapClone = initialMapRef.invokeMethod(currentThread, initialMapRef.referenceType().methodsByName("clone").get(0), Collections.emptyList(), ObjectReference.INVOKE_SINGLE_THREADED);
@@ -756,19 +747,6 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			}
 		}
 
-		private static boolean JAVA_MAP_Utils_isSymbolicApplyOnInitialMap(SymbolicApply symbolicApply) throws GuidanceException {
-			jbse.val.Value[] args = symbolicApply.getArgs();
-			if (args.length > 0 && JAVA_MAP_Utils_isInitialMapField(args[0])) {
-				if (!symbolicApply.getOperator().equals("java/util/Map:(Ljava/lang/Object;)Z:containsKey")) {
-					throw new GuidanceException("Path condition refers to unexpected symbolicApply on a symbolic map: " + symbolicApply.getOperator());
-				}
-				return true;
-			} else {
-				return false;
-			}
-					
-		}
-		
 		public int getCurrentCodeIndex() throws GuidanceException {
 			return (int) getCurrentLocation().codeIndex();
 		}
@@ -1022,11 +1000,6 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 	}
 
 	public void notifyExecutionOfHashMapModelMethod(Signature currentMethodSignature, Signature[] callCtx) {
-		if (callCtx.length > 2 && 
-				callCtx[callCtx.length - 1].getClassName().equals("java/util/HashMap") && 
-				callCtx[callCtx.length - 2].getClassName().equals("java/util/HashMap")) {
-			return; // skip notifications from nested calls within hash map models
-		}
 		List<String> prevHits = ((JVMJDI) this.jvm).symbolicApplyOperatorOccurrences.get(currentMethodSignature.toString());
 		if (prevHits == null) {
 			prevHits = new ArrayList<>();
@@ -1035,6 +1008,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		String callCtxString = callCtx[0].toString();
 		for (int i = 1; i < callCtx.length; ++i) {
 			callCtxString += InitialMapSymbolicApplyJVMJDI.callContextSeparator + callCtx[i];
+			if (callCtx[i].getClassName().equals("java/util/HashMap")) {
+				if (i != callCtx.length - 1) {
+					return; // skip notifications from nested calls within hash map models
+				}
+			}
 		}
 		prevHits.add(callCtxString);
 		((JVMJDI) this.jvm).currentHashMapModelMethod = currentMethodSignature.toString();
