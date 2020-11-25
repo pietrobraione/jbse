@@ -88,7 +88,8 @@ public final class Overrides {
     public static final String ALGO_JAVA_OBJECT_GETCLASS                           = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_GETCLASS.class.getName());
     public static final String ALGO_JAVA_OBJECT_HASHCODE                           = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_HASHCODE.class.getName());
     public static final String ALGO_JAVA_PACKAGE_GETSYSTEMPACKAGE0                 = internalClassName(jbse.algo.meta.Algo_JAVA_PACKAGE_GETSYSTEMPACKAGE0.class.getName());
-    public static final String ALGO_JAVA_PROCESSENVIRONMENT_ENVIRON                = internalClassName(jbse.algo.meta.Algo_JAVA_PROCESSENVIRONMENT_ENVIRON.class.getName());    
+    public static final String ALGO_JAVA_PROCESSENVIRONMENT_ENVIRON                = internalClassName(jbse.algo.meta.Algo_JAVA_PROCESSENVIRONMENT_ENVIRON.class.getName());
+    public static final String ALGO_JAVA_RANDOMACCESSFILE_OPEN0                    = internalClassName(jbse.algo.meta.Algo_JAVA_RANDOMACCESSFILE_OPEN0.class.getName());
     public static final String ALGO_JAVA_REFLECT_ARRAY_NEWARRAY                    = internalClassName(jbse.algo.meta.Algo_JAVA_REFLECT_ARRAY_NEWARRAY.class.getName());
     public static final String ALGO_JAVA_STRING_HASHCODE                           = internalClassName(jbse.algo.meta.Algo_JAVA_STRING_HASHCODE.class.getName());
     public static final String ALGO_JAVA_STRING_INTERN                             = internalClassName(jbse.algo.meta.Algo_JAVA_STRING_INTERN.class.getName());
@@ -144,6 +145,7 @@ public final class Overrides {
     public static final String ALGO_SUN_UNSAFE_ENSURECLASSINITIALIZED              = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_ENSURECLASSINITIALIZED.class.getName());
     public static final String ALGO_SUN_UNSAFE_FREEMEMORY                          = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_FREEMEMORY.class.getName());
     public static final String ALGO_SUN_UNSAFE_GETBYTE                             = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETBYTE.class.getName());
+    public static final String ALGO_SUN_UNSAFE_GETINT                              = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETINT.class.getName());
     public static final String ALGO_SUN_UNSAFE_GETINT_O                            = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETINT_O.class.getName());
     public static final String ALGO_SUN_UNSAFE_GETLONG                             = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETLONG.class.getName());
     public static final String ALGO_SUN_UNSAFE_GETLONG_O                           = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETLONG_O.class.getName());

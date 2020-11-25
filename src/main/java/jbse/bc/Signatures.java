@@ -38,6 +38,7 @@ public final class Signatures {
     public static final String JAVA_BOUNDMETHODHANDLE_FACTORY = "java/lang/invoke/BoundMethodHandle$Factory";
     public static final String JAVA_BOUNDMETHODHANDLE_SPECIESDATA = "java/lang/invoke/BoundMethodHandle$SpeciesData";
     public static final String JAVA_BOUNDMETHODHANDLE_SPECIES_L   = "java/lang/invoke/BoundMethodHandle$Species_L";
+    public static final String JAVA_BUFFEREDIMAGE            = "java/awt/image/BufferedImage";
     public static final String JAVA_BYTE                     = "java/lang/Byte";
     public static final String JAVA_BYTE_BYTECACHE           = "java/lang/Byte$ByteCache";
     public static final String JAVA_BYTEBUFFER               = "java/nio/ByteBuffer";
@@ -272,6 +273,8 @@ public final class Signatures {
         new Signature(JAVA_ACCESSCONTROLLER, "()" + REFERENCE + JAVA_ACCESSCONTROLCONTEXT + TYPEEND, "getStackAccessControlContext");
     public static final Signature JAVA_ATOMICLONG_VMSUPPORTSCS8 =
         new Signature(JAVA_ATOMICLONG, "()" + BOOLEAN, "VMSupportsCS8");
+    public static final Signature JAVA_BUFFEREDIMAGE_INITIDS =
+    		new Signature(JAVA_BUFFEREDIMAGE, "()" + VOID, "initIDs");
     public static final Signature JAVA_CLASS_DESIREDASSERTIONSTATUS0 =
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + BOOLEAN, "desiredAssertionStatus0");
     public static final Signature JAVA_CLASS_FORNAME0 =
@@ -478,8 +481,12 @@ public final class Signatures {
         new Signature(JAVA_PLAINSOCKETIMPL, "()" + VOID, "initProto");
     public static final Signature JAVA_PROCESSENVIRONMENT_ENVIRON =
         new Signature(JAVA_PROCESSENVIRONMENT, "()" + ARRAYOF + ARRAYOF + BYTE, "environ");
+    public static final Signature JAVA_RANDOMACCESSFILE_FD = 
+    	new Signature(JAVA_RANDOMACCESSFILE, "" + REFERENCE + JAVA_FILEDESCRIPTOR + TYPEEND, "fd");
     public static final Signature JAVA_RANDOMACCESSFILE_INITIDS =
         new Signature(JAVA_RANDOMACCESSFILE, "()" + VOID, "initIDs");
+    public static final Signature JAVA_RANDOMACCESSFILE_OPEN0 =
+    	new Signature(JAVA_RANDOMACCESSFILE, "(" + REFERENCE + JAVA_STRING + TYPEEND + INT + ")" + VOID, "open0");
     public static final Signature JAVA_REFLECT_ARRAY_NEWARRAY =
         new Signature(JAVA_REFLECT_ARRAY, "(" + REFERENCE + JAVA_CLASS + TYPEEND + INT + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "newArray");
     public static final Signature JAVA_RUNTIME_AVAILABLEPROCESSORS = 
@@ -839,6 +846,8 @@ public final class Signatures {
     public static final Signature SUN_UNSAFE_GETBYTE = 
         new Signature(SUN_UNSAFE, "(" + LONG + ")" + BYTE, "getByte");
     public static final Signature SUN_UNSAFE_GETINT = 
+    	new Signature(SUN_UNSAFE, "(" + LONG + ")" + INT, "getInt");
+    public static final Signature SUN_UNSAFE_GETINT_O = 
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + ")" + INT, "getInt");
     public static final Signature SUN_UNSAFE_GETINTVOLATILE = 
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + ")" + INT, "getIntVolatile");
