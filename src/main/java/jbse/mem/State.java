@@ -26,6 +26,7 @@ import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -105,6 +106,7 @@ public final class State implements Cloneable {
     //gets reflectively some fields for later access
     private static final Field FIS_PATH;
     private static final Field FOS_PATH;
+    private static final Field RAF_PATH;
     private static final Field FIS_IN;
     private static final Field FOS_OUT;
     private static final Field FILEDESCRIPTOR_FD;
@@ -117,6 +119,7 @@ public final class State implements Cloneable {
         try {
             FIS_PATH = FileInputStream.class.getDeclaredField("path");
             FOS_PATH = FileOutputStream.class.getDeclaredField("path");
+            RAF_PATH = RandomAccessFile.class.getDeclaredField("path");
             FIS_IN = FilterInputStream.class.getDeclaredField("in");
             FOS_OUT = FilterOutputStream.class.getDeclaredField("out");
             FILEDESCRIPTOR_FD = FileDescriptor.class.getDeclaredField("fd");
@@ -269,6 +272,22 @@ public final class State implements Cloneable {
         
         Inflater(long address, boolean nowrap) {
             this(address, nowrap, null, 0, 0);
+        }
+    }
+    
+    /**
+     * Class used to wrap {@link RandomAccessFile} information.
+     * 
+     * @author Pietro Braione
+     *
+     */
+    private static final class RandomAccessFileWrapper {
+        final RandomAccessFile raf;
+        final String modeString;
+        
+        RandomAccessFileWrapper(RandomAccessFile raf, String modeString) {
+            this.raf = raf;
+            this.modeString = modeString;
         }
     }
     
@@ -744,7 +763,7 @@ public final class State implements Cloneable {
             //registers the stderr
             setFile(this.errFileId, err);
         } catch (IllegalArgumentException | IllegalAccessException | 
-        		 FrozenStateException | IOException e) {
+        InvalidInputException | IOException e) {
             throw new UnexpectedInternalException(e);
         }
     }
@@ -1426,35 +1445,77 @@ public final class State implements Cloneable {
      * 
      * @param id a {@code long}, either a file descriptor cast to {@code long} 
      *        (if we are on a Unix-like platform) or a file handle (if we are on Windows).
-     * @return a {@link FileInputStream} of a {@link FileOutputStream}, or
+     * @return a {@link FileInputStream}, or a {@link FileOutputStream}, or a {@link RandomAccessFile}, or
      *         {@code null} if {@code id} is not the descriptor/handle
      *         of an open file previously associated with a call to {@link #setFile(long, Object)}.
      * @throws FrozenStateException if the state is frozen.
      */
     public Object getFile(long id) throws FrozenStateException {
     	if (this.frozen) {
-    		throw new FrozenStateException();
+    	    throw new FrozenStateException();
     	}
-        return this.files.get(Long.valueOf(id));
+        final Object obj = this.files.get(Long.valueOf(id));
+        if (obj instanceof RandomAccessFileWrapper) {
+            return ((RandomAccessFileWrapper) obj).raf;
+        } else {
+            return obj;
+        }
     }
     
     /**
-     * Associates a file stream to an open file.
+     * Associates a {@link FileInputStream} to an open file id.
      * 
      * @param id a {@code long}, either a file descriptor cast to {@code long} 
      *        (if we are on a Unix-like platform) or a file handle (if we are on Windows).
-     * @param fileStream a {@link FileInputStream} or a {@link FileOutputStream} 
-     *        (if it is not an instance of one of these types the method does
-     *        nothing).
-     * @throws FrozenStateException if the state is frozen.
+     * @param file a {@link FileInputStream}.
+     * @throws InvalidInputException if {@code file == null} or the state is frozen.
      */
-    public void setFile(long id, Object fileStream) throws FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        if (fileStream instanceof FileInputStream || fileStream instanceof FileOutputStream) {
-            this.files.put(Long.valueOf(id), fileStream);
+    public void setFile(long id, FileInputStream file) throws InvalidInputException {
+        if (file == null) {
+            throw new InvalidInputException("Invoked State.setFile with a null FileInputStream file parameter.");
         }
+    	if (this.frozen) {
+    	    throw new FrozenStateException();
+    	}
+    	this.files.put(Long.valueOf(id), file);
+    }
+    
+    /**
+     * Associates a {@link FileOutputStream} to an open file id.
+     * 
+     * @param id a {@code long}, either a file descriptor cast to {@code long} 
+     *        (if we are on a Unix-like platform) or a file handle (if we are on Windows).
+     * @param file a {@link FileOutputStream}.
+     * @throws InvalidInputException if {@code file == null} or the state is frozen.
+     */
+    public void setFile(long id, FileOutputStream file) throws InvalidInputException {
+        if (file == null) {
+            throw new InvalidInputException("Invoked State.setFile with a null FileOutputStream file parameter.");
+        }
+        if (this.frozen) {
+            throw new FrozenStateException();
+        }
+        this.files.put(Long.valueOf(id), file);
+    }
+    
+    /**
+     * Associates a {@link RandomAccessFile} to an open file id.
+     * 
+     * @param id a {@code long}, either a file descriptor cast to {@code long} 
+     *        (if we are on a Unix-like platform) or a file handle (if we are on Windows).
+     * @param file a {@link RandomAccessFile}.
+     * @param modeString a {@link String}, 
+     * @throws InvalidInputException if {@code file == null} or {@code modeString == null} or 
+     *         the state is frozen.
+     */
+    public void setFile(long id, RandomAccessFile file, String modeString) throws InvalidInputException {
+        if (file == null || modeString == null) {
+            throw new InvalidInputException("Invoked State.setFile with a null RandomAccessFile file or String modeString parameter.");
+        }
+        if (this.frozen) {
+            throw new FrozenStateException();
+        }
+        this.files.put(Long.valueOf(id), new RandomAccessFileWrapper(file, modeString));
     }
     
     /**
@@ -1467,7 +1528,7 @@ public final class State implements Cloneable {
      */
     public void removeFile(long id) throws FrozenStateException {
     	if (this.frozen) {
-    		throw new FrozenStateException();
+    	    throw new FrozenStateException();
     	}
         this.files.remove(Long.valueOf(id));
     }
@@ -4429,7 +4490,7 @@ public final class State implements Cloneable {
                         fisClone.skip(fisThis.getChannel().position());
                     }
                     o.files.put(entry.getKey(), fisClone);
-                } else { //entry.getValue() instanceof FileOutputStream
+                } else if (entry.getValue() instanceof FileOutputStream) {
                     final FileOutputStream fosClone;
                     if (entry.getKey() == this.outFileId ||  entry.getKey() == this.errFileId) {
                         fosClone = (FileOutputStream) entry.getValue();
@@ -4439,6 +4500,11 @@ public final class State implements Cloneable {
                         fosClone = new FileOutputStream(path);
                     }
                     o.files.put(entry.getKey(), fosClone);
+                } else { //entry.getValue() instanceof RandomAccessFileWrapper
+                    final RandomAccessFileWrapper rafWrapperThis = (RandomAccessFileWrapper) entry.getValue();
+                    final String path = (String) RAF_PATH.get(rafWrapperThis.raf);
+                    final RandomAccessFile rafClone = new RandomAccessFile(path, rafWrapperThis.modeString);
+                    o.files.put(entry.getKey(), new RandomAccessFileWrapper(rafClone, rafWrapperThis.modeString));
                 }
             }
         } catch (IllegalArgumentException | IllegalAccessException | IOException e) {
@@ -4581,8 +4647,10 @@ public final class State implements Cloneable {
             try {
                 if (file instanceof FileInputStream) {
                     ((FileInputStream) file).close();
-                } else { //file instanceof FileOutputStream
+                } else if (file instanceof FileOutputStream) {
                     ((FileOutputStream) file).close();
+                } else { //file instanceof RandomAccessFileWrapper
+                    ((RandomAccessFileWrapper) file).raf.close();
                 }
             } catch (IOException e) {
                 //go on with the next file

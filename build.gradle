@@ -25,6 +25,7 @@ group = 'jbse'
 version = '0.10.0-SNAPSHOT'
 description = 'JBSE'
 sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'

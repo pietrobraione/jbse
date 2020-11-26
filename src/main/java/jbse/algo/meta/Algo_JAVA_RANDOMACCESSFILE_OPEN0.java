@@ -38,10 +38,16 @@ import jbse.val.Simplex;
  */
 
 public final class Algo_JAVA_RANDOMACCESSFILE_OPEN0 extends Algo_INVOKEMETA_Nonbranching {
+    private static final int O_RDONLY = 1;
+    private static final int O_RDWR =   2;
+    private static final int O_SYNC =   4;
+    private static final int O_DSYNC =  8;
+    
     private Instance fileDescriptor; //set by cookMore
     private int fd; //set by cookMore
     private boolean onWindows; //set by cookMore
     private long handle; //set by cookMore
+    private String modeString; //set by cookMore
     private RandomAccessFile raf; //set by cookMore
     
     @Override
@@ -87,14 +93,22 @@ public final class Algo_JAVA_RANDOMACCESSFILE_OPEN0 extends Algo_INVOKEMETA_Nonb
             }
             final int mode = (((Integer) ((Simplex) _mode).getActualValue()).intValue());
             
-            //opens a RandomAccessFile in read-write mode or in read-only mode
+            //opens a RandomAccessFile
+            if ((mode & O_RDONLY) != 0) {
+                this.modeString = "r";
+            } else if ((mode & O_RDWR) != 0) {
+                if ((mode & O_SYNC) != 0) {
+                    this.modeString = "rws";
+                } else if ((mode & O_DSYNC) != 0) {
+                    this.modeString = "rwd";
+                } else {
+                    this.modeString = "rw";
+                }
+            } else {
+                this.modeString = "r";
+            }
             try {
-            	if (mode == 2) {
-            		this.raf = new RandomAccessFile(path, "rw");
-            	}
-            	else {
-            		this.raf = new RandomAccessFile(path, "r");
-            	}
+            	this.raf = new RandomAccessFile(path, this.modeString);
             } catch (FileNotFoundException e) {
                 throwNew(state, calc, FILE_NOT_FOUND_EXCEPTION);
                 exitFromAlgorithm();
@@ -139,11 +153,9 @@ public final class Algo_JAVA_RANDOMACCESSFILE_OPEN0 extends Algo_INVOKEMETA_Nonb
             //associates in state the file descriptor to the RandomAccessFile
             //created to access the file at the meta-level
             if (this.onWindows) {
-            	//TODO state.setFile doesn't handle RandomAccessFile
-            	state.setFile(this.handle, this.raf);
+            	state.setFile(this.handle, this.raf, this.modeString);
             } else {
-            	//TODO state.setFile doesn't handle RandomAccessFile
-            	state.setFile(this.fd, this.raf);
+            	state.setFile(this.fd, this.raf, this.modeString);
             }
         };
     }
