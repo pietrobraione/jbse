@@ -11,7 +11,7 @@ repositories {
         url = 'https://repo.maven.apache.org/maven2'
     }
     flatDir {
-    	dirs "${System.getProperty('java.home')}/../lib", 'libs'
+    	dirs "/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home/lib", 'libs'
     }
 }
 

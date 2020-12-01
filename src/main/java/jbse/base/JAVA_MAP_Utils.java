@@ -1,6 +1,8 @@
 package jbse.base;
 
 import static jbse.common.Type.binaryClassName;
+import static jbse.bc.Signatures.JAVA_MAP_CONTAINSKEY;
+import static jbse.bc.Signatures.JAVA_MAP_GET;
 
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Clause;
@@ -17,9 +19,11 @@ import jbse.val.SymbolicApply;
 import jbse.val.SymbolicMemberField;
 import jbse.val.Value;
 
-public class JAVA_MAP_Utils {
+public final class JAVA_MAP_Utils {
 	public final static String INITIAL_MAP_FIELD_NAME = "initialMap";
-	
+	public final static String INITIAL_MAP_FIELD_FULL = ".java/util/HashMap:" + INITIAL_MAP_FIELD_NAME;
+	public final static String GET_SIGIL = "::GET(";
+
 	public static boolean isInitialMapField(Value value) {
 		if (!(value instanceof SymbolicMemberField)) {
 			return false;
@@ -32,8 +36,8 @@ public class JAVA_MAP_Utils {
 			return false;
 		}
 	}
-	
-	
+
+
 	public static boolean isSymbolicApplyOnInitialMap(Value value) {
 		if (!(value instanceof SymbolicApply)) {
 			return false;
@@ -41,7 +45,7 @@ public class JAVA_MAP_Utils {
 		final SymbolicApply symbolicApply = (SymbolicApply) value;
 		final Value[] args = symbolicApply.getArgs();
 		if (args.length > 0 && JAVA_MAP_Utils.isInitialMapField(args[0])) {
-			if (!symbolicApply.getOperator().equals("java/util/Map:(Ljava/lang/Object;)Z:containsKey")) {
+			if (!symbolicApply.getOperator().equals(JAVA_MAP_CONTAINSKEY.toString())) {
 				throw new UnexpectedInternalException("Path condition refers to unexpected symbolicApply on a symbolic map: " + symbolicApply.getOperator());
 			}
 			return true;
@@ -49,7 +53,7 @@ public class JAVA_MAP_Utils {
 			return false;
 		}				
 	}
-	
+
 	public static boolean assumptionViolated(Clause clause) {
 		if (clause instanceof ClauseAssumeReferenceSymbolic) {
 			final ReferenceSymbolic ref = ((ClauseAssumeReferenceSymbolic) clause).getReference(); 
@@ -70,15 +74,28 @@ public class JAVA_MAP_Utils {
 	}
 
 	public static String possiblyAdaptMapModelSymbols(String origin) {
-		if (origin.contains(".java/util/HashMap:" + INITIAL_MAP_FIELD_NAME)) {
-			origin = origin.replace(".java/util/HashMap:" + INITIAL_MAP_FIELD_NAME, "");
+		final String originNoInitialMap;
+		if (origin.contains(INITIAL_MAP_FIELD_FULL)) {
+			originNoInitialMap = origin.replace(INITIAL_MAP_FIELD_FULL, "");
+		} else {
+			originNoInitialMap = origin;
 		}
-		if (origin.contains("::GET(")) {
-			final String mapRef = origin.substring(0, origin.indexOf("::GET("));
-			String keyRef = origin.substring(origin.indexOf("::GET(") + 6);
+		final String retVal;
+		if (originNoInitialMap.contains(GET_SIGIL)) {
+			final String mapRef = originNoInitialMap.substring(0, originNoInitialMap.indexOf(GET_SIGIL));
+			String keyRef = originNoInitialMap.substring(originNoInitialMap.indexOf(GET_SIGIL) + GET_SIGIL.length());
 			keyRef = keyRef.substring(0, keyRef.indexOf(')'));
-			origin = "<java/util/Map:(Ljava/lang/Object;)Ljava/lang/Object;:get@" + mapRef + "," + keyRef + ">";
+			retVal = "<" + JAVA_MAP_GET.toString() + "@" + mapRef + "," + keyRef + ">";
+		} else {
+			retVal = originNoInitialMap;
 		}
-		return origin;
-	}	
+		return retVal;
+	}
+	
+    /**
+     * Do not instantiate it! 
+     */
+	private JAVA_MAP_Utils() {
+        //intentionally empty
+	}
 }

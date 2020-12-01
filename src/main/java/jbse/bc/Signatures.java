@@ -402,7 +402,9 @@ public final class Signatures {
     public static final Signature JAVA_JARFILE_GETMETAINFENTRYNAMES =
         new Signature(JAVA_JARFILE, "()" + ARRAYOF + REFERENCE + JAVA_STRING + TYPEEND, "getMetaInfEntryNames");
     public static final Signature JAVA_MAP_CONTAINSKEY =
-            new Signature(JAVA_MAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + BOOLEAN, "containsKey");
+        new Signature(JAVA_MAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + BOOLEAN, "containsKey");
+    public static final Signature JAVA_MAP_GET =
+        new Signature(JAVA_MAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "get");
     public static final Signature JAVA_MEMBERNAME_GETTYPE =
         new Signature(JAVA_MEMBERNAME, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "getType");
     public static final Signature JAVA_METHOD_INVOKE =
@@ -1203,5 +1205,4 @@ public final class Signatures {
     private Signatures() {
         //intentionally empty
     }
-
 }
