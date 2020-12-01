@@ -12,7 +12,7 @@ JBSE allows the inputs of a Java program to be either concrete values (usual Jav
 
 Right now JBSE can be installed only by building it from source. Formal releases will be available when JBSE will be more feature-ready and stable. JBSE is built with Gradle version 6.7.1, that is included in the repository.
 
-## Dependencies
+### Dependencies
 
 JBSE has several dependencies. It must be built using a JDK version 8 - neither less, nor more. We suggest to use the latest [AdoptOpenJDK](https://adoptopenjdk.net/) v8 with HotSpot JVM (note that the JDK with the OpenJ9 JVM currently does not work, because there are some slight differences in the standard library classes). The Gradle wrapper `gradlew` included in the repository will take care to select the right version of Gradle and of the JDK. Gradle will automatically resolve and use the following compile-time-only dependency:
 
@@ -26,7 +26,7 @@ The runtime dependencies that are automatically resolved by Gradle and included 
 
 There is an additional runtime dependency that is not handled by Gradle so you will need to fix it manually. JBSE needs to interact at runtime with an external numeric solver for pruning infeasible program paths. JBSE works well with [Z3](https://github.com/Z3Prover/z3) and [CVC4](https://cvc4.cs.stanford.edu/), but any SMT solver that is compatible with the SMTLIB v2 standard and supports the AUFNIRA logic should work. Both Z3 and CVC4 are distributed as standalone binaries and can be installed almost everywhere. We strongly advise to use Z3 because it is what we routinely use.
 
-## Working under Eclipse
+### Working under Eclipse
 
 If you want to work (as us) under Eclipse 2020-09 for Java Developers, you are lucky: All the plugins that are necessary to import JBSE under Eclipse and make it work are already present in the distribution. The only caveat is that, since starting from version 2020-09 Eclipse requires at least Java 11 to run, you will need to install both Java 11 and Java 8. Gradle will automatically select the right version of Java when building JBSE. Note that If you use a different flavor, or an earlier version, of Eclipse you might need to install the egit and the Buildship plugins, both available in the Eclipse Marketplace. After that, you are ready to import JBSE under Eclipse:
 
@@ -36,13 +36,13 @@ If you want to work (as us) under Eclipse 2020-09 for Java Developers, you are l
 * Switch to the Git perspective. If you cloned the Github JBSE repository from the command line, you can import the clone under Eclipse by clicking under the Git Repositories view the button for adding an existing repository. Otherwise you can clone the  repository by clicking the clone button, again available under the Git Repositories view. Eclipse does *not* want you to clone the repository under your Eclipse workspace, and instead wants you to follow the standard git convention of putting the git repositories in a `git` subdirectory of your home directory. If you clone the repository from a console, please follow this standard (if you clone the repository from the git perspective Eclipse will do this for you).
 * Switch back to the Java perspective and from the main menu select File > Import... In the Select the Import Wizard window that pops up choose the Gradle > Existing Gradle Project wizard and press the Next button twice. In the Import Gradle Project window that is displayed, enter in the Project root directory field the path to the JBSE cloned git repository, and then press the Finish button to confirm. Now your workspace should have one Java project named `jbse`.
 
-## Building JBSE
+### Building JBSE
 
 Once cloned the git repository and ensured the dependencies, you need to fix a couple of things that Gradle is not able to fix by itself. Gradle will not build the JBSE jar unless the (very small) JUnit test suite under the `src/test` directory passes. All tests should pass with no problem (we do regression testing before every commit), with the exception of the tests in the class `jbse.dec.DecisionProcedureTest` that require that you fix the path to the Z3 executable. You must modify line 46 and replace `/opt/local/bin/z3` with your local path to the Z3 executable. Once fixed this path, it should be enough to run the build Gradle task by invoking `gradlew build` from the command line, and JBSE should build without any other fuss.
 
 If you work under Eclipse, consider that the Buildship Gradle plugin is not completely able to configure the imported projects automatically. As a consequence, after the import you will see some compilation errors due to the fact that the JBSE project did not generate some source files yet. Fix the situation as follows: In the Gradle Tasks view double-click on the jbse > build > build task to build JBSE with Gradle for the first time. Then, right-click the jbse project in the Package Explorer, and in the contextual menu that pops up select Gradle > Refresh Gradle Project. After that, you should see no more errors. From this moment you can rebuild JBSE by double clicking again on the jbse > build > build task in the Gradle Task view. You should not need to refresh the Gradle project anymore, unless you modify the `build.gradle` or `settings.gradle` files.
 
-## Deploying JBSE
+### Deploying JBSE
 
 The `gradlew build` command will produce a jar file `build/libs/jbse-<VERSION>.jar` that also includes the `jbse.meta` package and its subpackages, containing the API that the code under analysis can invoke to issue assertions, assumptions, and otherwise control the analysis process itself. The jar file does not include the runtime dependencies (Javassist and `tools.jar`), so you need to deploy them together with it. To ease deployment, Gradle will also build an uber-jar `build/libs/jbse-<VERSION>-shaded.jar` containing Javassist (but not `tools.jar`). To avoid conflicts the uber jar renames the `javassist` package as `jbse.javassist`.
 
@@ -199,54 +199,62 @@ Finally, run `RunIf.main`. The `out/runIf_z3.txt` file will contain something li
 ```
 This is the Java Bytecode Symbolic Executor's Run Tool (JBSE v.0.10.0-SNAPSHOT).
 Connecting to Z3 at /opt/local/bin/z3.
-Starting symbolic execution of method smalldemos/ifx/IfExample:(I)V:m at Sat Dec 15 10:06:40 CET 2018.
+Starting symbolic execution of method smalldemos/ifx/IfExample:(I)V:m at Tue Dec 01 18:30:22 CET 2020.
 .1.1[22] 
 Leaf state
 Path condition: 
-	{R0} == Object[4727] (fresh) &&
-	{V3} > 0 &&
+	{R0} == Object[4471] (fresh) &&
+	({V0}) > (0)
 	where:
 	{R0} == {ROOT}:this &&
-	{V3} == {ROOT}:x
+	{V0} == {ROOT}:x
+Static store: {
+	
+}
 Heap: {
-	Object[4727]: {
+	Object[4471]: {
 		Origin: {ROOT}:this
-		Class: (2, smalldemos/ifx/IfExample)
-		Field[0]: Name: b, Type: Z, Value: true (type: Z)
-		Field[1]: Name: a, Type: Z, Value: true (type: Z)
+		Class: (2,smalldemos/ifx/IfExample)
+		Field[0]: Name: a, Type: Z, Value: true (type: Z)
+		Field[1]: Name: b, Type: Z, Value: true (type: Z)
 	}
+	
 }
 
-.1.1 trace is safe.
+.1.1[22] path is safe.
 .1.2[20] 
 Leaf state
 Path condition: 
-	{R0} == Object[4727] (fresh) &&
-	{V3} <= 0 &&
+	{R0} == Object[4471] (fresh) &&
+	({V0}) <= (0)
 	where:
 	{R0} == {ROOT}:this &&
-	{V3} == {ROOT}:x
+	{V0} == {ROOT}:x
+Static store: {
+	
+}
 Heap: {
-	Object[4727]: {
+	Object[4471]: {
 		Origin: {ROOT}:this
-		Class: smalldemos/ifx/IfExample
-		Field[0]: Name: b, Type: Z, Value: false (type: Z)
-		Field[1]: Name: a, Type: Z, Value: false (type: Z)
+		Class: (2,smalldemos/ifx/IfExample)
+		Field[0]: Name: a, Type: Z, Value: false (type: Z)
+		Field[1]: Name: b, Type: Z, Value: false (type: Z)
 	}
+	
 }
 
-.1.2 trace is safe.
-Symbolic execution finished at Sat Dec 15 10:06:43 CET 2018.
-Analyzed states: 729958, Analyzed traces: 2, Safe: 2, Unsafe: 0, Out of scope: 0, Violating assumptions: 0, Unmanageable: 0.
-Elapsed time: 2 sec 620 msec, Average speed: 278609 states/sec, Elapsed time in decision procedure: 7 msec (0,27% of total).
+.1.2[20] path is safe.
+Symbolic execution finished at Tue Dec 01 18:30:24 CET 2020.
+Analyzed states: 637453, Analyzed pre-initial states: 637409, Analyzed paths: 2, Safe: 2, Unsafe: 0, Out of scope: 0, Violating assumptions: 0, Unmanageable: 0.
+Elapsed time: 1 sec 843 msec, Elapsed pre-initial phase time: 1 sec 806 msec, Average speed: 345877 states/sec, Average post-initial phase speed: 1189 states/sec, Elapsed time in decision procedure: 9 msec (0,49% of total).
 ```
 
 Let's analyze the output.
-* `{V0}`, `{V1}`, `{V2}`... (primitives) and `{R0}`, `{R1}`, `{R2}`... (references) are the symbolic initial values of the program inputs. To track down which initial value a symbol correspond to (what we call the symbol's *origin*) you may read the `Path condition:` section of a final symbolic state. After the `where:` row you will find a sequence of equations that associate some of the symbols with their origins. The list is incomplete, but it contains the associations we care of. For instance you can see that `{R0} == {ROOT}:this`; `{ROOT}` is a moniker for the *root frame*, i.e., the invocation frame of the initial method `m`, and `this` indicates the "this" parameter. Overall, the equation means that the origin of `{R0}` is the instance of the `IfExample` class to which the `m` message is sent. Similarly, `{V3} == {ROOT}:x` indicates that `{V2}` is the value of the `x` parameter of the initial `m(x)` invocation.
-* `.1.1[22]` and `.1.2[20]` are the identifiers of the final (*leaf*) symbolic states, i.e., the states that return from the initial call to `m`. The state identifiers follow the structure of the symbolic execution. The initial state has always identifier `.1[0]`, and its immediate successors have identifiers `.1[1]`, `.1[2]`, etc. until JBSE must take some decision involving symbolic values. In this example, JBSE takes the first decision when it hits the first `if (x > 0)` statement. Since at that point of the execution `x` has still value `{V3}` and JBSE has not yet made any assumption on the possible value of `{V3}`, two outcomes are possible: Either `{V3} > 0`, and the execution takes the "then" branch, or `{V3} <= 0`, and the execution takes the "else" branch. JBSE therefore produces *two* successor states, gives them the identifiers `.1.1[0]` and `.1.2[0]`, and adds the assumptions `{V3} > 0` and `{V3} <= 0` to their respective *path conditions*. A path condition gathers all the assumptions on the symbolic inputs that JBSE had to introduce when assuming that the execution follows a given trace. When the execution of the `.1.1` trace hits the second `if` statement, JBSE detects that the execution cannot take the "else" branch (otherwise, the path condition would be `... {V3} > 0 && ... {V3} <= 0 ...`, that has no solutions for any value of `{V3}`) and does *not* create another branch. Similarly for the `.1.2` trace.
-* The two leaf states can be used to extract summaries for `m`. A summary is extracted from the path condition and the values of the variables and objects fields of a leaf state. In our example from the `.1.1[22]` leaf we can extrapolate that `{V3} > 0 => {R0}.a == true && {R0}.b == true`, and from `.1.2[20]` that `{V3} <= 0 => {R0}.a == false && {R0}.b == false`. This proves that for *every* possible value of the `x` parameter the execution of `m` always satisfies the assertion. 
-* Beware! The dump shows the *final*, not the *initial* state of the symbolic execution. For example, `Object[0]` is the initial `this` object (the path clause `{R0} == Object[0]` states this), but the values of its fields displayed at `.1.1[22]` and `.1.2[20]` are the values of the fields at that final states. The initial, symbolic values of these fields are lost because the code under analysis never uses them. If you want to display all the details of the initial state you should select a step show mode that also prints the initial state.
-* The last rows report some statistics. Here we are interested in the total number of traces (two traces, as discussed above), the number of safe traces, i.e., the traces that pass all the assertions (also two as expected), and the number of unsafe traces, that falsify some assertion (zero as expected).
+* `{V0}`, `{V1}`, `{V2}`... (primitives) and `{R0}`, `{R1}`, `{R2}`... (references) are the symbolic initial values of the program inputs. To track down which initial value a symbol correspond to (what we call the symbol's *origin*) you may read the `Path condition:` section of a final symbolic state. After the `where:` row you will find a sequence of equations that associate some of the symbols with their origins. The list is incomplete, but it contains the associations we care of. For instance you can see that `{R0} == {ROOT}:this`; `{ROOT}` is a moniker for the *root frame*, i.e., the invocation frame of the initial method `m`, and `this` indicates the "this" parameter. Overall, the equation means that the origin of `{R0}` is the instance of the `IfExample` class to which the `m` message is sent. Similarly, `{V0} == {ROOT}:x` indicates that `{V0}` is the value of the `x` parameter of the initial `m(x)` invocation.
+* `.1.1[22]` and `.1.2[20]` are the identifiers of the final (*leaf*) symbolic states, i.e., the states that return from the initial call to `m`. The state identifiers follow the structure of the symbolic execution. The initial state has always identifier `.1[0]`, and its immediate successors have identifiers `.1[1]`, `.1[2]`, etc. until JBSE must take some decision involving symbolic values. In this example, JBSE takes the first decision when it hits the first `if (x > 0)` statement. Since at that point of the execution `x` has still value `{V0}` and JBSE has not yet made any assumption on the possible value of `{V0}`, two outcomes are possible: Either `{V0} > 0`, and the execution takes the "then" branch, or `{V0} <= 0`, and the execution takes the "else" branch. JBSE therefore produces *two* successor states, gives them the identifiers `.1.1[0]` and `.1.2[0]`, and adds the assumptions `{V0} > 0` and `{V0} <= 0` to their respective *path conditions*. A path condition gathers all the assumptions on the symbolic inputs that JBSE had to introduce when assuming that the execution follows a given path. When the execution of the `.1.1` path hits the second `if` statement, JBSE detects that the execution cannot take the "else" branch (otherwise, the path condition would be `... {V0} > 0 && ... {V0} <= 0 ...`, that has no solutions for any value of `{V0}`) and does *not* create another branch. Similarly for the `.1.2` path.
+* The two leaf states can be used to extract summaries for `m`. A summary is extracted from the path condition and the values of the variables and objects fields of a leaf state. In our example from the `.1.1[22]` leaf we can extrapolate that `{V0} > 0 => {R0}.a == true && {R0}.b == true`, and from `.1.2[20]` that `{V0} <= 0 => {R0}.a == false && {R0}.b == false`. This proves that for *every* possible value of the `x` parameter the execution of `m` always satisfies the assertion. 
+* Beware! The dump shows the *final*, not the *initial* state of the symbolic execution. For example, `Object[0]` is the initial `this` object (the path clause `{R0} == Object[0]` states this), but the values of its fields displayed at `.1.1[22]` and `.1.2[20]` are the values of the fields at that final states. The initial, symbolic values of these fields are lost because the code under analysis never uses them. If you want to display all the details of the initial state a step show mode exists that also prints the initial state.
+* The last rows report some statistics. Here we are interested in the total number of paths (two paths, as discussed above), the number of safe paths, i.e., the paths that pass all the assertions (also two as expected), and the number of unsafe paths, that falsify some assertion (zero as expected).
 
 ### Introducing assumptions
 
@@ -270,21 +278,22 @@ When JBSE hits an `assume` method invocation it evaluates its argument, then it 
 
 ```
 ...
-.1.2 trace violates an assumption.
-Symbolic execution finished at Sat Dec 15 10:26:55 CET 2018.
-Analyzed states: 729950, Analyzed traces: 2, Safe: 1, Unsafe: 0, Out of scope: 0, Violating assumptions: 1, Unmanageable: 0.
-Elapsed time: 2 sec 625 msec, Average speed: 278076 states/sec, Elapsed time in decision procedure: 7 msec (0,27% of total).
+.1.2[4] path violates an assumption.
+Symbolic execution finished at Tue Dec 01 18:48:54 CET 2020.
+Analyzed states: 637445, Analyzed pre-initial states: 637409, Analyzed paths: 2, Safe: 1, Unsafe: 0, Out of scope: 0, Violating assumptions: 1, Unmanageable: 0.
+Elapsed time: 1 sec 794 msec, Elapsed pre-initial phase time: 1 sec 756 msec, Average speed: 355320 states/sec, Average post-initial phase speed: 947 states/sec, Elapsed time in decision procedure: 6 msec (0,33% of total).
+
 ```
 
-The traces are still two, but now one is reported as a trace violating an assumption. Putting the `assume` invocation at the entry of `m` ensures that the useless traces are discarded as soon as possible.
+The paths are still two, but now one is reported as violating an assumption. Putting the `assume` invocation at the entry of `m` ensures that the useless paths are discarded as soon as possible.
 
-In some cases this is all one needs, usually when one needs to constrain symbolic *numeric* input values. When we want to enforce assumptions on symbolic *reference* inputs, the `Analysis.assume` method is in most cases unsuitable. The reason is,  `Analysis.assume` evaluates its argument when it is invoked, which is OK for symbolic numeric inputs, but on symbolic references may cause an explosion in the number of paths. Let us consider, for example, a case where the method to be analyzed operates on a parameter `list` with class `List`. The class implements the singly-linked list data structure, where nodes have class `Node` and store values with type `Object`. Let's say we want to assume that the fourth value in the list is not `null`. If we follow the previous pattern and inject at the method entry point the statement `assume(list.header.next.next.next.value != null)`, the first thing JBSE will do when executing the method is to access `{ROOT}:list`, then `{ROOT}:list.header`, then `{ROOT}:list.header.next`, then `{ROOT}:list.header.next.next` and then `{ROOT}:list.header.next.next.next`. All these references are symbolic, and any heap access might potentially rise a `NullPointerException`. JBSE therefore must split cases and analyze what happens when any of the above references is either `null` or not `null` right at the entry of the method. Actually, JBSE does more than this: It analyzes whether any of the above references is either alias (i.e., equal to) or not alias of *any other one*. This usually causes an early combinatorial explosion of the total number of paths to be analyzed, of which just one is pruned by the `assume` invocation. A possible way to avoid the issue is moving the `assume` later in the code, close to the points where `{ROOT}:list.header.next.next.next.value` is accessed for the first time, a procedure that is in general complex and error-prone. It would be much better if the symbolic executor were automatically able to impose the assumption's constraint and prune the trace only when, and if, the reference is first accessed during symbolic execution. Another issue is that in some cases we would like to express assumptions over an arbitrarily big set of symbolic references. If, for example, we would like to assume that `list` does not store `null` values at *any* position, we should specify that *all* the symbolic references `{ROOT}:list.header.value`, `{ROOT}:list.header.next.value`, `{ROOT}:list.header.next.next.value`... are not `null`. A similar problem arises if we want to specify that the singly-linked list `list` has no loops. Expressing this kind of constraints by using `Analysis.assume` is impossible in many cases, and impractical in almost all the others.
+In some cases this is all one needs, usually when one needs to constrain symbolic *numeric* input values. When we want to enforce assumptions on symbolic *reference* inputs, the `Analysis.assume` method is in most cases unsuitable. The reason is,  `Analysis.assume` evaluates its argument when it is invoked, which is OK for symbolic numeric inputs, but on symbolic references may cause an explosion in the number of paths. Let us consider, for example, a case where the method to be analyzed operates on a parameter `list` with class `List`. The class implements the singly-linked list data structure, where nodes have class `Node` and store values with type `Object`. Let's say we want to assume that the fourth value in the list is not `null`. If we follow the previous pattern and inject at the method entry point the statement `assume(list.header.next.next.next.value != null)`, the first thing JBSE will do when executing the method is to access `{ROOT}:list`, then `{ROOT}:list.header`, then `{ROOT}:list.header.next`, then `{ROOT}:list.header.next.next` and then `{ROOT}:list.header.next.next.next`. All these references are symbolic, and any heap access might potentially rise a `NullPointerException`. JBSE therefore must split cases and analyze what happens when any of the above references is either `null` or not `null` right at the entry of the method. Actually, JBSE does more than this: It analyzes whether any of the above references is either alias (i.e., equal to) or not alias of *any other one*. This usually causes an early combinatorial explosion of the total number of paths to be analyzed, of which just one is pruned by the `assume` invocation. A possible way to avoid the issue is moving the `assume` later in the code, close to the points where `{ROOT}:list.header.next.next.next.value` is accessed for the first time, a procedure that is in general complex and error-prone. It would be much better if the symbolic executor were automatically able to impose the assumption's constraint and prune the trace only when, and if, the reference is accessed for the first time during symbolic execution. Another issue is that in some cases we would like to express assumptions over an arbitrarily big set of symbolic references. If, for example, we would like to assume that `list` does not store `null` values at *any* position, we should specify that *all* the symbolic references `{ROOT}:list.header.value`, `{ROOT}:list.header.next.value`, `{ROOT}:list.header.next.next.value`... are not `null`. A similar problem arises if we want to specify that the singly-linked list `list` has no loops. Expressing this kind of constraints by using `Analysis.assume` is impossible in most cases, and impractical in almost all the others.
 
 JBSE implements a number of techniques that empower its users by allowing them to specify rich classes of assumptions on the heap shape, while keeping the number of analyzed traces under control. Analyzing them in details is beyond the scope of this brief introduction to JBSE. We will just say that the key techniques implemented by JBSE are:
 
-* [Conservative repOk methods](http://dx.doi.org/10.1145/1013886.1007526): By annotating with `jbse.meta.annotations.ConservativeRepOk` a parameterless method with boolean return type, JBSE will recognize it as a conservative repOk method for all the objects of that class. JBSE will execute it every time it assumes a new path condition clause. JBSE will pass as `this` parameter it a copy of the (symbolic) initial state specialized on the current path condition plus the new clause. The method must inspect the state and check whether it does not satisfy the assumption (in this case the method must return `false`) or it still might (in this case the method must *conservatively* return true).
-* [LICS rules](http://dx.doi.org/10.1145/2491411.2491433): A LICS rule has a head and a tail. The head is a regular expression specifying a set of symbolic references, the tail specifies a constraint on them. For instance, the rule `{ROOT}:list.header(.next)*.value not null` specifies that all the values stored in `list` are not null, and the rule `{ROOT}:list.header(.next)* aliases nothing` forbids the `next` references of the nodes in `list` to point to the nodes whose existence JBSE assumed earlier in the trace, thus excluding the presence of loops in the chain of nodes.
-* [Triggers](http://dx.doi.org/10.1145/2491411.2491433): Triggers are user-defined instrumentation methods that we ask JBSE to execute right after adding to the path condition an assumption on a symbolic reference belonging to a set specified by a regular expression. Triggers are meant to be used for updating ghost variables and enforcing assumptions that cannot be expressed by LICS rules alone. For example, if `list` has a `size` field we can enforce the precondition that `size` is equal to the number of `Node`s in the list by establishing a relationship between the initial value of `size` and the number of the nodes that JBSE progressively assumes to be present in the list during the symbolic execution. It is sufficient to inject the following instrumentation code in the `List` class:
+* [Conservative repOk methods](https://doi.org/10.1145/1013886.1007526): By annotating with `jbse.meta.annotations.ConservativeRepOk` a parameterless method with boolean return type, JBSE will recognize it as a conservative repOk method for all the objects of that class. JBSE will execute it every time it assumes a new path condition clause. JBSE will pass as `this` parameter it a copy of the (symbolic) initial state specialized on the current path condition plus the new clause. The method must inspect the state and check whether it does not satisfy the assumption (in this case the method must return `false`) or it still might (in this case the method must *conservatively* return true).
+* [LICS rules](https://doi.org/10.1145/2491411.2491433): A LICS rule has a head and a tail. The head is a regular expression specifying a set of symbolic references, the tail specifies a constraint on them. For instance, the rule `{ROOT}:list.header(.next)*.value not null` specifies that all the values stored in `list` are not null, and the rule `{ROOT}:list.header(.next)* aliases nothing` forbids the `next` references of the nodes in `list` to point to the nodes whose existence JBSE assumed earlier in the trace, thus excluding the presence of loops in the chain of nodes.
+* [Triggers](https://doi.org/10.1145/2491411.2491433): Triggers are user-defined instrumentation methods that we ask JBSE to execute right after adding to the path condition an assumption on a symbolic reference belonging to a set specified by a regular expression. Triggers are meant to be used for updating ghost variables and enforcing assumptions that cannot be expressed by LICS rules alone. For example, if `list` has a `size` field we can enforce the precondition that `size` is equal to the number of `Node`s in the list by establishing a relationship between the initial value of `size` and the number of the nodes that JBSE progressively assumes to be present in the list during the symbolic execution. It is sufficient to inject the following instrumentation code in the `List` class:
 
 ```Java
 import static jbse.meta.Analysis.assume;
