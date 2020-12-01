@@ -112,7 +112,7 @@ public class RunIf {
     ...
     private static void set(RunParameters p) {
         p.addUserClasspath("./bin");
-        p.setJBSELibPath("/home/guest/jbse/target/classes");
+        p.setJBSELibPath("/home/guest/jbse/build/libs/jbse-0.10.0-SNAPSHOT.jar");
         ...
     }
 }
@@ -126,7 +126,7 @@ public class RunIf {
     ...
     private static void set(RunParameters p) {
         p.addUserClasspath("./bin");
-        p.setJBSELibPath("/home/guest/jbse/target/classes");
+        p.setJBSELibPath("/home/guest/jbse/build/libs/jbse-0.10.0-SNAPSHOT.jar");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         ...
     }
@@ -145,7 +145,7 @@ public class RunIf {
     ...
     private static void set(RunParameters p) {
         p.addUserClasspath("./bin");
-        p.setJBSELibPath("/home/guest/jbse/target/classes");
+        p.setJBSELibPath("/home/guest/jbse/build/libs/jbse-0.10.0-SNAPSHOT.jar");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         p.setDecisionProcedureType(Z3);
         p.setExternalDecisionProcedurePath("/opt/local/bin/z3");
@@ -162,7 +162,7 @@ public class RunIf {
     ...
     private static void set(RunParameters p) {
         p.addUserClasspath("./bin");
-        p.setJBSELibPath("/home/guest/jbse/target/classes");
+        p.setJBSELibPath("/home/guest/jbse/build/libs/jbse-0.10.0-SNAPSHOT.jar");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         p.setDecisionProcedureType(Z3);
         p.setExternalDecisionProcedurePath("/opt/local/bin/z3");
@@ -183,7 +183,7 @@ public class RunIf {
     ...
     private static void set(RunParameters p) {
         p.addUserClasspath("./bin");
-        p.setJBSELibPath("/home/guest/jbse/target/classes");
+        p.setJBSELibPath("/home/guest/jbse/build/libs/jbse-0.10.0-SNAPSHOT.jar");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         p.setDecisionProcedureType(Z3);
         p.setExternalDecisionProcedurePath("/opt/local/bin/z3");
@@ -197,7 +197,7 @@ public class RunIf {
 Finally, run `RunIf.main`. The `out/runIf_z3.txt` file will contain something like this:
 
 ```
-This is the Java Bytecode Symbolic Executor's Run Tool (JBSE v.0.9.0-SNAPSHOT).
+This is the Java Bytecode Symbolic Executor's Run Tool (JBSE v.0.10.0-SNAPSHOT).
 Connecting to Z3 at /opt/local/bin/z3.
 Starting symbolic execution of method smalldemos/ifx/IfExample:(I)V:m at Sat Dec 15 10:06:40 CET 2018.
 .1.1[22] 
