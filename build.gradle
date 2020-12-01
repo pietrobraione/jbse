@@ -1,17 +1,23 @@
 plugins {
     id 'java'
-    id 'maven'
     id 'eclipse'
     id 'ca.coglinc2.javacc' version '3.0.0'
-    id 'com.github.johnrengelman.shadow' version '4.0.3'
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
 }
 
+def javaVersion = JavaLanguageVersion.of(8)
+def javaHome = javaToolchains.compilerFor { languageVersion = javaVersion }.get().metadata.installationPath.asFile.toString()
+
 repositories {
-    maven {
-        url = 'https://repo.maven.apache.org/maven2'
-    }
+    mavenCentral()
     flatDir {
-    	dirs "/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home/lib", 'libs'
+    	dirs "${javaHome}/lib", 'libs'
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = javaVersion
     }
 }
 
@@ -24,8 +30,6 @@ dependencies {
 group = 'jbse'
 version = '0.10.0-SNAPSHOT'
 description = 'JBSE'
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
@@ -58,6 +62,6 @@ jar {
                    'Specification-Version': '1.8',
                    'Implementation-Title': description,
                    'Implementation-Vendor': 'University of Milano-Bicocca',
-                   'Implementation-Version': version
+                   'Implementation-Version': archiveVersion
     }
 }
