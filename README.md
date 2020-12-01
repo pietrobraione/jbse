@@ -24,7 +24,7 @@ The runtime dependencies that are automatically resolved by Gradle and included 
 * The `tools.jar` library, that is part of every JDK 8 setup (note, *not* of the JRE).
 * [Javassist](http://jboss-javassist.github.io/javassist/), that is used by JBSE for all the bytecode manipulation tasks. JBSE relies on a patched version of Javassist that is included in the `libs` folder.
 
-There is an additional runtime dependencies that is not handled by Gradle so you will need to fix it manually. JBSE needs to interact at runtime with an external numeric solver for pruning infeasible program paths. JBSE works well with [Z3](https://github.com/Z3Prover/z3) and [CVC4](https://cvc4.cs.stanford.edu/), but any SMT solver that is compatible with the SMTLIB v2 standard and supports the AUFNIRA logic should work. Both Z3 and CVC4 are distributed as standalone binaries and can be installed almost everywhere. We strongly advise to use Z3 because it is what we routinely use.
+There is an additional runtime dependency that is not handled by Gradle so you will need to fix it manually. JBSE needs to interact at runtime with an external numeric solver for pruning infeasible program paths. JBSE works well with [Z3](https://github.com/Z3Prover/z3) and [CVC4](https://cvc4.cs.stanford.edu/), but any SMT solver that is compatible with the SMTLIB v2 standard and supports the AUFNIRA logic should work. Both Z3 and CVC4 are distributed as standalone binaries and can be installed almost everywhere. We strongly advise to use Z3 because it is what we routinely use.
 
 ## Working under Eclipse
 
@@ -104,14 +104,15 @@ public class RunIf {
 
 Well, that's not *exactly* all. Which parameters should we set, and how?
 
-First, JBSE is a Java Virtual Machine. As with any Java Virtual Machine, be it symbolic or not, we must specify the classpath where JBSE will find the binaries of the program to be executed, the so-called user classpath. In this case the user classpath will contain two paths, one for the target `smalldemos.ifx.IfExample` class, and one for the `jbse.meta.Analysis` class that contains the `ass3rt` method invoked by `m`. Note that under Eclipse all the binaries are emitted to a hidden `bin` project directory, and that the implicit execution directory of an Eclipse project is the project root directory. This means that, if the current directory is the home of the `example` project, and if the `jbse` git repository clone is at `/home/guest/jbse`, the required paths should be approximately as follows:
+First, JBSE is a Java Virtual Machine. As with any Java Virtual Machine, be it symbolic or not, we must specify the classpath where JBSE will find the binaries of the program to be executed, the so-called user classpath. In this case the user classpath will contain just one path pointing to the target `smalldemos.ifx.IfExample` class. This because to indicate to JBSE the path to the `jbse.meta.Analysis` class that contains the `ass3rt` method invoked by `m` we need to use a different method, `setJBSELibPath`. We can find the path of the target class by observing that under Eclipse all the binaries are emitted to a hidden `bin` project directory, and that the implicit execution directory of an Eclipse project is the project root directory. This means that, if the current directory is the home of the `example` project, and if the `jbse` git repository clone is at `/home/guest/jbse`, the required paths should be approximately as follows:
 
 ```Java
 ...
 public class RunIf {
     ...
     private static void set(RunParameters p) {
-        p.addUserClasspath("./bin", "/home/guest/jbse/target/classes");
+        p.addUserClasspath("./bin");
+        p.setJBSELibPath("/home/guest/jbse/target/classes");
         ...
     }
 }
@@ -124,7 +125,8 @@ Note that `addUserClasspath` is a varargs method, so you can list as many path s
 public class RunIf {
     ...
     private static void set(RunParameters p) {
-        p.addUserClasspath("./bin", "/home/guest/jbse/target/classes");
+        p.addUserClasspath("./bin");
+        p.setJBSELibPath("/home/guest/jbse/target/classes");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         ...
     }
@@ -142,7 +144,8 @@ import static jbse.apps.run.RunParameters.DecisionProcedureType.Z3;
 public class RunIf {
     ...
     private static void set(RunParameters p) {
-        p.addUserClasspath("./bin", "/home/guest/jbse/target/classes");
+        p.addUserClasspath("./bin");
+        p.setJBSELibPath("/home/guest/jbse/target/classes");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         p.setDecisionProcedureType(Z3);
         p.setExternalDecisionProcedurePath("/opt/local/bin/z3");
@@ -158,7 +161,8 @@ Now that we have set the essential parameters we turn to the parameters that cus
 public class RunIf {
     ...
     private static void set(RunParameters p) {
-        p.addUserClasspath("./bin", "/home/guest/jbse/target/classes");
+        p.addUserClasspath("./bin");
+        p.setJBSELibPath("/home/guest/jbse/target/classes");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         p.setDecisionProcedureType(Z3);
         p.setExternalDecisionProcedurePath("/opt/local/bin/z3");
@@ -178,7 +182,8 @@ import static jbse.apps.run.RunParameters.StepShowMode.LEAVES;
 public class RunIf {
     ...
     private static void set(RunParameters p) {
-        p.addUserClasspath("./bin", "/home/guest/jbse/target/classes");
+        p.addUserClasspath("./bin");
+        p.setJBSELibPath("/home/guest/jbse/target/classes");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         p.setDecisionProcedureType(Z3);
         p.setExternalDecisionProcedurePath("/opt/local/bin/z3");
