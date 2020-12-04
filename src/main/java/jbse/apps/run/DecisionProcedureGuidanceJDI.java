@@ -389,12 +389,12 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		}
 
 		private void trySetBreakPoint(Signature sig, int offset) throws GuidanceException {
-			String stopClassName = sig.getClassName();
-			String stopMethodName = sig.getName();
-			String stopMethodDescr = sig.getDescriptor();
+			final String stopClassName = sig.getClassName();
+			final String stopMethodName = sig.getName();
+			final String stopMethodDescr = sig.getDescriptor();
 			if (this.alreadyLoadedClasses.containsKey(stopClassName)) {
-				ReferenceType classType = this.alreadyLoadedClasses.get(stopClassName);
-				List<Method> methods = classType.methodsByName(stopMethodName);
+				final ReferenceType classType = this.alreadyLoadedClasses.get(stopClassName);
+				final List<Method> methods = classType.methodsByName(stopMethodName);
 				for (Method m: methods) {
 					if (stopMethodDescr.equals(m.signature())) {
 						//System.out.println("** Set breakpoint at: " + m.locationOfCodeIndex(offset));
