@@ -1162,7 +1162,7 @@ implements Map<K,V>, Cloneable, Serializable {
 	 */
 	private native void makeInitial();
 
-        private native void notifyMethodExecution();
+	private native void notifyMethodExecution();
 	
 	/**
 	 * Causes symbolic execution to branch on the two cases:
