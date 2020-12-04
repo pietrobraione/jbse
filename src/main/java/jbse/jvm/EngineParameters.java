@@ -683,6 +683,7 @@ public final class EngineParameters implements Cloneable {
         final TriggerRulesRepo retVal = this.triggerRulesRepo.clone();
         if (getUseHashMapModel()) {
         	retVal.addExpandTo("java/util/HashMap", "(?!{°}*java/util/HashMap:initialMap{EOL}){°}*", "java/util/HashMap", new Signature("java/util/HashMap", "(Ljava/util/HashMap;)V", "initSymbolic"), "{$REF}");
+        	retVal.addExpandTo("java/util/Map", "(?!{°}*java/util/HashMap:initialMap{EOL}){°}*", "java/util/HashMap", new Signature("java/util/HashMap", "(Ljava/util/HashMap;)V", "initSymbolic"), "{$REF}");
         }
         return retVal;
     }
