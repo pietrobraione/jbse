@@ -307,24 +307,24 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     private void updateExpansionBackdoor(State state, ReferenceSymbolic refToLoad) throws GuidanceException {
-        final String refType = className(refToLoad.getStaticType());
-        final String objType = this.jvm.typeOfObject(refToLoad);
-        if (objType != null && !refType.equals(objType)) {
-            state.getClassHierarchy().addToExpansionBackdoor(refType, objType);
-            try {
-                final ClassFile cf = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, objType, true);
-                state.ensureKlassSymbolic(this.calc, cf);
-                final Klass k = state.getKlass(cf);
-                super.pushAssumption(new ClauseAssumeClassInitialized(cf, k));
-            } catch (DecisionException | ClassFileNotFoundException | ClassFileIllFormedException | 
-                     ClassFileNotAccessibleException | IncompatibleClassFileException | 
-                     BadClassFileVersionException | WrongClassNameException e) {
-                throw new GuidanceException(e);
-            } catch (InvalidInputException | RenameUnsupportedException | PleaseLoadClassException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
-        }
+    	try {
+    		final String refType = mostPreciseResolutionClassName(state, refToLoad);
+    		final String objType = this.jvm.typeOfObject(refToLoad);
+    		if (objType != null && !refType.equals(objType)) {
+    			state.getClassHierarchy().addToExpansionBackdoor(refType, objType);
+    			final ClassFile cf = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, objType, true);
+    			state.ensureKlassSymbolic(this.calc, cf);
+    			final Klass k = state.getKlass(cf);
+    			super.pushAssumption(new ClauseAssumeClassInitialized(cf, k));
+    		}
+    	} catch (DecisionException | ClassFileNotFoundException | ClassFileIllFormedException | 
+    	ClassFileNotAccessibleException | IncompatibleClassFileException | 
+    	BadClassFileVersionException | WrongClassNameException e) {
+    		throw new GuidanceException(e);
+    	} catch (InvalidInputException | RenameUnsupportedException | PleaseLoadClassException e) {
+    		//this should never happen
+    		throw new UnexpectedInternalException(e);
+    	}
     }
 
     private void filter(State state, ReferenceSymbolic readReference, DecisionAlternative_XYLOAD_GETX_Unresolved dar, Iterator<?> it) 

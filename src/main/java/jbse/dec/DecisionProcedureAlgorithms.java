@@ -1201,8 +1201,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
         //the only compatible resolution of the reference is null)
         //TODO loading the class of the reference, invoking getPossibleAliases and getPossibleExpansions introduces unwanted dependence on State
         final ClassFile refToResolveClass;
-        try {                               
-            refToResolveClass = mostPreciseResolutionClass(state, refToResolve);  
+        try {                    
+            refToResolveClass = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, mostPreciseResolutionClassName(state, refToResolve), true);  
             //TODO instead of rethrowing exceptions (class file not found, ill-formed or unaccessible) just set refToResolveTypeIsSatInitialized to false??
         } catch (PleaseLoadClassException e) {
             //this should never happen since we bypassed standard loading
@@ -1255,7 +1255,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
         return partialReferenceResolution;
     }
     
-    private ClassFile mostPreciseResolutionClass(State state, ReferenceSymbolic refToResolve) 
+    protected final String mostPreciseResolutionClassName(State state, ReferenceSymbolic refToResolve) 
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, 
     IncompatibleClassFileException, PleaseLoadClassException, BadClassFileVersionException, RenameUnsupportedException, 
     WrongClassNameException {
@@ -1280,7 +1280,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
     		//TODO really?
     		mostPreciseResolutionClassName = staticClassName;
     	}
-    	return state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, mostPreciseResolutionClassName, true);
+    	return mostPreciseResolutionClassName;
     }
     
     private String solveTypeInformation(State state, ReferenceSymbolic refToResolve, String staticClassName, String typeParameter) 
