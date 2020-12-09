@@ -71,7 +71,6 @@ import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.MethodExitRequest;
 
-import jbse.base.JAVA_MAP_Utils;
 import jbse.bc.Offsets;
 import jbse.bc.Signature;
 import jbse.common.exc.InvalidInputException;
@@ -1012,6 +1011,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 				if (i != callCtx.length - 1) {
 					return; // skip notifications from nested calls within hash map models
 				}
+			} else if (callCtx[i].getClassName().equals("java/util/concurrent/ConcurrentHashMap")) {
+				//TODO per Gio
 			}
 		}
 		prevHits.add(callCtxString);

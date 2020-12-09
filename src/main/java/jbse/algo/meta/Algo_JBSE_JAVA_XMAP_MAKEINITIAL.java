@@ -21,13 +21,14 @@ import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
 /**
- * Meta-level implementation of {@link jbse.base.JAVA_MAP#makeInitial(Object)}.
+ * Meta-level implementation of {@link jbse.base.JAVA_MAP#makeInitial(Object)} and 
+ * {@link jbse.base.JAVA_CONCURRENTMAP#makeInitial(Object)}.
  *  
  * @author Pietro Braione
  *
  */
 //TODO this is really ugly! Possibly delete and do as with arrays, i.e., all objects are created symbolic/initial upon construction and never need to change from concrete to symbolic and to noninitial to initial.
-public final class Algo_JBSE_JAVA_MAP_MAKEINITIAL extends Algo_INVOKEMETA_Nonbranching {
+public final class Algo_JBSE_JAVA_XMAP_MAKEINITIAL extends Algo_INVOKEMETA_Nonbranching {
 	private Reference thisRef; //set by cookMore
 
     @Override
@@ -42,14 +43,14 @@ public final class Algo_JBSE_JAVA_MAP_MAKEINITIAL extends Algo_INVOKEMETA_Nonbra
         try {           
             //gets the "this" object
             this.thisRef = (Reference) this.data.operand(0);
-            if (state.isNull(thisRef)) {
+            if (state.isNull(this.thisRef)) {
                 //this should never happen
-                failExecution("The 'this' parameter to jbse.base.JAVA_MAP.makeInitial method is null.");
+                failExecution("The 'this' parameter to jbse.base.JAVA_[CONCURRENT]MAP.makeInitial method is null.");
             }
             final Objekt thisObj = state.getObject(this.thisRef);
             if (thisObj == null) {
                 //this should never happen
-                failExecution("The 'this' parameter to jbse.base.JAVA_MAP.makeInitial method is symbolic and unresolved.");
+                failExecution("The 'this' parameter to jbse.base.JAVA_[CONCURRENT]MAP.makeInitial method is symbolic and unresolved.");
             }            
         } catch (ClassCastException e) {
             throwVerifyError(state, this.ctx.getCalculator());

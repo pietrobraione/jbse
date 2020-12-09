@@ -684,6 +684,8 @@ public final class EngineParameters implements Cloneable {
         if (getUseHashMapModel()) {
         	retVal.addExpandTo("java/util/HashMap", "(?!{°}*java/util/HashMap:initialMap{EOL}){°}*", "java/util/HashMap", new Signature("java/util/HashMap", "(Ljava/util/HashMap;)V", "initSymbolic"), "{$REF}");
         	retVal.addExpandTo("java/util/Map", "(?!{°}*java/util/HashMap:initialMap{EOL}){°}*", "java/util/HashMap", new Signature("java/util/HashMap", "(Ljava/util/HashMap;)V", "initSymbolic"), "{$REF}");
+        	retVal.addExpandTo("java/util/concurrent/ConcurrentHashMap", "(?!{°}*java/util/concurrent/ConcurrentHashMap:initialMap{EOL}){°}*", "java/util/concurrent/ConcurrentHashMap", new Signature("java/util/concurrent/ConcurrentHashMap", "(Ljava/util/concurrent/ConcurrentHashMap;)V", "initSymbolic"), "{$REF}");
+        	retVal.addExpandTo("java/util/Map", "(?!{°}*java/util/concurrent/ConcurrentHashMap:initialMap{EOL}){°}*", "java/util/concurrent/ConcurrentHashMap", new Signature("java/util/concurrent/ConcurrentHashMap", "(Ljava/util/concurrent/ConcurrentHashMap;)V", "initSymbolic"), "{$REF}");
         }
         return retVal;
     }
@@ -1155,6 +1157,7 @@ public final class EngineParameters implements Cloneable {
     	final HashMap<String, String> retVal = new HashMap<>();
     	if (this.useHashMapModel) {
     		retVal.put("java/util/HashMap", "jbse/base/JAVA_MAP");
+    		retVal.put("java/util/concurrent/ConcurrentHashMap", "jbse/base/JAVA_CONCURRENTMAP");
     	}
     	return retVal;
     }

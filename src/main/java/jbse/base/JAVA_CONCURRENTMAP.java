@@ -14,19 +14,20 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
 
 /**
- * Model class for class {@link java.util.HashMap}. 
+ * Model class for class {@link java.util.concurrent.ConcurrentHashMap}.
  * 
  * @author Pietro Braione
  *
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  */
-public class JAVA_MAP<K, V>  extends AbstractMap<K,V>
-implements Map<K,V>, Cloneable, Serializable {
+public class JAVA_CONCURRENTMAP<K, V>  extends AbstractMap<K,V>
+implements ConcurrentMap<K,V>, Serializable {
 
-	private static final long serialVersionUID = 362498820763181265L; //same as HashMap
+    private static final long serialVersionUID = 7249069246763182397L;
 
 	private static abstract class Node { }
 
@@ -71,9 +72,9 @@ implements Map<K,V>, Cloneable, Serializable {
 
 	/** 
 	 * Used only when isInitial == false; the initial map that backs this map, if 
-	 * this map is symbolic, otherwise it is set to null.
+	 * this map is concrete, otherwise it is set to null.
 	 */
-	private JAVA_MAP<K, V> initialMap;
+	private JAVA_CONCURRENTMAP<K, V> initialMap;
 
 	/**
 	 * The size of the map.
@@ -94,20 +95,22 @@ implements Map<K,V>, Cloneable, Serializable {
 
 	// Constructors
 
-	private static final int MAXIMUM_CAPACITY = 1 << 30;
-	private static final float DEFAULT_LOAD_FACTOR = 0.75f;
-	private static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16
+	public JAVA_CONCURRENTMAP() {
+		this(0);
+	}
 
+	public JAVA_CONCURRENTMAP(int initialCapacity) {
+		this(initialCapacity, 1.0f);
+	}
 
-	public JAVA_MAP(int initialCapacity, float loadFactor) {
-		if (initialCapacity < 0)
-			throw new IllegalArgumentException("Illegal initial capacity: " +
-					initialCapacity);
-		if (initialCapacity > MAXIMUM_CAPACITY)
-			initialCapacity = MAXIMUM_CAPACITY;
-		if (loadFactor <= 0 || Float.isNaN(loadFactor))
-			throw new IllegalArgumentException("Illegal load factor: " +
-					loadFactor);
+    public JAVA_CONCURRENTMAP(int initialCapacity, float loadFactor) {
+        this(initialCapacity, loadFactor, 1);
+    }
+
+    public JAVA_CONCURRENTMAP(int initialCapacity,
+                              float loadFactor, int concurrencyLevel) {
+        if (!(loadFactor > 0.0f) || initialCapacity < 0 || concurrencyLevel <= 0)
+            throw new IllegalArgumentException();
 		this.isInitial = false;
 		this.initialHashCode = 0;
 		this.absentKeys = new ArrayList<>();
@@ -116,17 +119,9 @@ implements Map<K,V>, Cloneable, Serializable {
 		this.size = 0;
 		this.root = new NodeEmpty();
 		this.numNodes = 0;
-	}
+    }
 
-	public JAVA_MAP(int initialCapacity) {
-		this(initialCapacity, DEFAULT_LOAD_FACTOR);
-	}
-
-	public JAVA_MAP() {
-		this(DEFAULT_INITIAL_CAPACITY);
-	}
-
-	public JAVA_MAP(Map<? extends K, ? extends V> m) {
+	public JAVA_CONCURRENTMAP(Map<? extends K, ? extends V> m) {
 		this();
 		putAll(m);
 	}
@@ -155,15 +150,15 @@ implements Map<K,V>, Cloneable, Serializable {
 
 		//if not absent, checks in the nodes
 		if (key == null) {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
+				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
 				if (np.key == null) {
 					return true;
 				}
 			}
 		} else {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
+				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
 				if (key.equals(np.key)) {
 					return true;
 				}
@@ -195,15 +190,15 @@ implements Map<K,V>, Cloneable, Serializable {
 
 		//if not absent, checks in the nodes
 		if (value == null) {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
+				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
 				if (np.value == null) {
 					return true;
 				}
 			}
 		} else {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
+				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
 				if (value.equals(np.value)) {
 					return true;
 				}
@@ -237,15 +232,15 @@ implements Map<K,V>, Cloneable, Serializable {
 
 		//if not absent, checks in the nodes
 		if (key == null) {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
+				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
 				if (np.key == null) {
 					return np.value;
 				}
 			}
 		} else {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
+				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
 				if (key.equals(np.key)) {
 					return np.value;
 				}
@@ -290,16 +285,16 @@ implements Map<K,V>, Cloneable, Serializable {
 		//looks for a matching NodePair in this.root.(next)*
 		NodePair<K, V> matchingPair = null;
 		if (key == null) {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
+				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
 				if (np.key == null) {
 					matchingPair = np;
 					break;
 				}
 			}
 		} else {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
+				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
 				if (key.equals(np.key)) {
 					matchingPair = np;
 					break;
@@ -332,16 +327,16 @@ implements Map<K,V>, Cloneable, Serializable {
 				//if the key surely is in the initial map, add the new mapping and 
 				//return the value it had in the initial map
 				if (key == null) {
-					for (Node nInitial = this.initialMap.root; nInitial instanceof JAVA_MAP.NodePair; nInitial = ((JAVA_MAP.NodePair<K, V>) nInitial).next) {
-						final NodePair<K, V> npInitial = (JAVA_MAP.NodePair<K, V>) nInitial;
+					for (Node nInitial = this.initialMap.root; nInitial instanceof JAVA_CONCURRENTMAP.NodePair; nInitial = ((JAVA_CONCURRENTMAP.NodePair<K, V>) nInitial).next) {
+						final NodePair<K, V> npInitial = (JAVA_CONCURRENTMAP.NodePair<K, V>) nInitial;
 						if (npInitial.key == null) {
 							addNode(key, value);
 							return npInitial.value;
 						}
 					}
 				} else {
-					for (Node nInitial = this.initialMap.root; nInitial instanceof JAVA_MAP.NodePair; nInitial = ((JAVA_MAP.NodePair<K, V>) nInitial).next) {
-						final NodePair<K, V> npInitial = (JAVA_MAP.NodePair<K, V>) nInitial;
+					for (Node nInitial = this.initialMap.root; nInitial instanceof JAVA_CONCURRENTMAP.NodePair; nInitial = ((JAVA_CONCURRENTMAP.NodePair<K, V>) nInitial).next) {
+						final NodePair<K, V> npInitial = (JAVA_CONCURRENTMAP.NodePair<K, V>) nInitial;
 						if (key.equals(npInitial.key)) {
 							addNode(key, value);
 							return npInitial.value;
@@ -380,19 +375,19 @@ implements Map<K,V>, Cloneable, Serializable {
 		//looks for a matching NodePair in this.root.(next)*
 		NodePair<K, V> matchingPairPrev = null, matchingPair = null;
 		if (key == null) {
-			for (Node nPrev = null, n = this.root; n instanceof JAVA_MAP.NodePair; nPrev = n, n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (Node nPrev = null, n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; nPrev = n, n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
+				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
 				if (np.key == null) {
-					matchingPairPrev = (JAVA_MAP.NodePair<K, V>) nPrev;
+					matchingPairPrev = (JAVA_CONCURRENTMAP.NodePair<K, V>) nPrev;
 					matchingPair = np;
 					break;
 				}
 			}
 		} else {
-			for (Node nPrev = null, n = this.root; n instanceof JAVA_MAP.NodePair; nPrev = n, n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (Node nPrev = null, n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; nPrev = n, n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
+				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
 				if (key.equals(np.key)) {
-					matchingPairPrev = (JAVA_MAP.NodePair<K, V>) nPrev;
+					matchingPairPrev = (JAVA_CONCURRENTMAP.NodePair<K, V>) nPrev;
 					matchingPair = np;
 					break;
 				}
@@ -418,8 +413,8 @@ implements Map<K,V>, Cloneable, Serializable {
 				//if the key surely is in the initial map, adjust size and
 				//return the associated value
 				if (key == null) {
-					for (Node nInitial = this.initialMap.root; nInitial instanceof JAVA_MAP.NodePair; nInitial = ((JAVA_MAP.NodePair<K, V>) nInitial).next) {
-						final NodePair<K, V> npInitial = (JAVA_MAP.NodePair<K, V>) nInitial;
+					for (Node nInitial = this.initialMap.root; nInitial instanceof JAVA_CONCURRENTMAP.NodePair; nInitial = ((JAVA_CONCURRENTMAP.NodePair<K, V>) nInitial).next) {
+						final NodePair<K, V> npInitial = (JAVA_CONCURRENTMAP.NodePair<K, V>) nInitial;
 						if (npInitial.key == null) {
 							this.absentKeys.add((K) key);						
 							--this.size;
@@ -427,8 +422,8 @@ implements Map<K,V>, Cloneable, Serializable {
 						}
 					}
 				} else {
-					for (Node nInitial = this.initialMap.root; nInitial instanceof JAVA_MAP.NodePair; nInitial = ((JAVA_MAP.NodePair<K, V>) nInitial).next) {
-						final NodePair<K, V> npInitial = (JAVA_MAP.NodePair<K, V>) nInitial;
+					for (Node nInitial = this.initialMap.root; nInitial instanceof JAVA_CONCURRENTMAP.NodePair; nInitial = ((JAVA_CONCURRENTMAP.NodePair<K, V>) nInitial).next) {
+						final NodePair<K, V> npInitial = (JAVA_CONCURRENTMAP.NodePair<K, V>) nInitial;
 						if (key.equals(npInitial.key)) {
 							this.absentKeys.add((K) key);						
 							--this.size;
@@ -525,7 +520,7 @@ implements Map<K,V>, Cloneable, Serializable {
 
 		@Override
 		public boolean contains(Object o) {
-			return JAVA_MAP.this.containsKey(o);
+			return JAVA_CONCURRENTMAP.this.containsKey(o);
 		}
 
 		@Override
@@ -573,8 +568,8 @@ implements Map<K,V>, Cloneable, Serializable {
 
 		@Override
 		public boolean remove(Object o) {
-			final boolean retVal = JAVA_MAP.this.containsKey(o);
-			JAVA_MAP.this.remove(o);
+			final boolean retVal = JAVA_CONCURRENTMAP.this.containsKey(o);
+			JAVA_CONCURRENTMAP.this.remove(o);
 			return retVal;
 		}
 
@@ -648,7 +643,7 @@ implements Map<K,V>, Cloneable, Serializable {
 
 		@Override
 		public boolean contains(Object o) {
-			return JAVA_MAP.this.containsValue(o);
+			return JAVA_CONCURRENTMAP.this.containsValue(o);
 		}
 
 		@Override
@@ -774,12 +769,12 @@ implements Map<K,V>, Cloneable, Serializable {
 	private class JAVA_SET_ENTRY implements Set<Map.Entry<K, V>> {
 		@Override
 		public int size() {
-			return JAVA_MAP.this.size();
+			return JAVA_CONCURRENTMAP.this.size();
 		}
 
 		@Override
 		public boolean isEmpty() {
-			return JAVA_MAP.this.isEmpty();
+			return JAVA_CONCURRENTMAP.this.isEmpty();
 		}
 
 		@Override
@@ -791,10 +786,10 @@ implements Map<K,V>, Cloneable, Serializable {
 				return false;
 			}
 			final Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
-			if (!JAVA_MAP.this.containsKey(e.getKey())) {
+			if (!JAVA_CONCURRENTMAP.this.containsKey(e.getKey())) {
 				return false;
 			}
-			final Object mapValue = JAVA_MAP.this.get(e.getKey());
+			final Object mapValue = JAVA_CONCURRENTMAP.this.get(e.getKey());
 			if (mapValue == null) {
 				return e.getValue() == null;
 			} else {
@@ -806,11 +801,11 @@ implements Map<K,V>, Cloneable, Serializable {
 		public Iterator<Map.Entry<K, V>> iterator() {
 			return new Iterator<Map.Entry<K,V>>() {
 				private boolean scanningInitialMap = false;
-				private Node current = JAVA_MAP.this.root;
+				private Node current = JAVA_CONCURRENTMAP.this.root;
 
 				@Override
 				public boolean hasNext() {
-					return (this.current instanceof JAVA_MAP.NodePair);
+					return (this.current instanceof JAVA_CONCURRENTMAP.NodePair);
 				}
 
 				@SuppressWarnings("unchecked")
@@ -819,7 +814,7 @@ implements Map<K,V>, Cloneable, Serializable {
 					if (!hasNext()) {
 						throw new NoSuchElementException();
 					}
-					final NodePair<K, V> currentPair = (JAVA_MAP.NodePair<K, V>) this.current;
+					final NodePair<K, V> currentPair = (JAVA_CONCURRENTMAP.NodePair<K, V>) this.current;
 					final K key = currentPair.key;
 					final V value = currentPair.value;
 					final Entry<K, V> retVal = new Map.Entry<K, V>() {
@@ -867,22 +862,22 @@ implements Map<K,V>, Cloneable, Serializable {
 
 					if (this.scanningInitialMap) {
 						//if we are in the initial map, we must also skip all entries that are overridden
-						//by other (already emitted) ones - i.e., by the entries in JAVA_MAP.this.root.(next)*
+						//by other (already emitted) ones - i.e., by the entries in JAVA_CONCURRENTMAP.this.root.(next)*
 						scanForNotAlreadyEmitted:
-							while (this.current instanceof JAVA_MAP.NodePair) {
-								final NodePair<K, V> npCurrent = (JAVA_MAP.NodePair<K, V>) this.current;
+							while (this.current instanceof JAVA_CONCURRENTMAP.NodePair) {
+								final NodePair<K, V> npCurrent = (JAVA_CONCURRENTMAP.NodePair<K, V>) this.current;
 								final K keyCurrent = npCurrent.key;
 								if (keyCurrent == null) {
-									for (Node n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-										final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+									for (Node n = JAVA_CONCURRENTMAP.this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
+										final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
 										if (np.key == null) {
 											this.current = npCurrent.next;
 											continue scanForNotAlreadyEmitted;
 										}
 									}
 								} else {
-									for (Node n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-										final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+									for (Node n = JAVA_CONCURRENTMAP.this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
+										final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
 										if (keyCurrent.equals(np.key)) {
 											this.current = npCurrent.next;
 											continue scanForNotAlreadyEmitted;
@@ -891,10 +886,10 @@ implements Map<K,V>, Cloneable, Serializable {
 								}
 								break;
 							}
-					} else if (this.current instanceof JAVA_MAP.NodeEmpty && JAVA_MAP.this.initialMap != null) {
-						//if we are at the end of JAVA_MAP.this.root.(next)*, continue 
+					} else if (this.current instanceof JAVA_CONCURRENTMAP.NodeEmpty && JAVA_CONCURRENTMAP.this.initialMap != null) {
+						//if we are at the end of JAVA_CONCURRENTMAP.this.root.(next)*, continue 
 						//with the initial map (if present)
-						this.current = JAVA_MAP.this.initialMap.root;
+						this.current = JAVA_CONCURRENTMAP.this.initialMap.root;
 						this.scanningInitialMap = true;
 					}
 
@@ -907,12 +902,12 @@ implements Map<K,V>, Cloneable, Serializable {
 					if (!hasNext()) {
 						throw new IllegalStateException();
 					}
-					final NodePair<K, V> currentBeforeRemovalPair = (JAVA_MAP.NodePair<K, V>) this.current;
+					final NodePair<K, V> currentBeforeRemovalPair = (JAVA_CONCURRENTMAP.NodePair<K, V>) this.current;
 					final K key = currentBeforeRemovalPair.key;
-					JAVA_MAP.this.remove(key);
+					JAVA_CONCURRENTMAP.this.remove(key);
 					if (!this.scanningInitialMap) {
 						//check if currentBeforeRemovalPair is still there
-						for (Node n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+						for (Node n = JAVA_CONCURRENTMAP.this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
 							if (n == currentBeforeRemovalPair) {
 								//still present
 								return;
@@ -953,7 +948,7 @@ implements Map<K,V>, Cloneable, Serializable {
 				final Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
 				final Object key = e.getKey();
 				final Object value = e.getValue();
-				return JAVA_MAP.this.remove(key, value);
+				return JAVA_CONCURRENTMAP.this.remove(key, value);
 			}
 			return false;
 		}
@@ -1009,7 +1004,7 @@ implements Map<K,V>, Cloneable, Serializable {
 
 		@Override
 		public void clear() {
-			JAVA_MAP.this.clear();
+			JAVA_CONCURRENTMAP.this.clear();
 		}
 
 	}
@@ -1042,8 +1037,8 @@ implements Map<K,V>, Cloneable, Serializable {
 		//calculates the hash code for the entries added
 		//after the start of the symbolic execution
 		int hashCode = 0;
-		for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-			final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+		for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
+			final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
 			hashCode += np.pairHashCode();
 		}
 
@@ -1068,21 +1063,21 @@ implements Map<K,V>, Cloneable, Serializable {
 		//the initial map
 		final ArrayList<K> notRefined = new ArrayList<>();
 		findNotRefinedNodes:
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
+				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
 				if (this.initialMap.absentKeys.contains(np.key)) {
 					continue findNotRefinedNodes;
 				}
 				if (np.key == null) {
-					for (Node nRefinement = this.initialMap.root; nRefinement instanceof JAVA_MAP.NodePair; nRefinement = ((JAVA_MAP.NodePair<K, V>) nRefinement).next) {
-						final NodePair<K, V> npRefinement = (JAVA_MAP.NodePair<K, V>) nRefinement;
+					for (Node nRefinement = this.initialMap.root; nRefinement instanceof JAVA_CONCURRENTMAP.NodePair; nRefinement = ((JAVA_CONCURRENTMAP.NodePair<K, V>) nRefinement).next) {
+						final NodePair<K, V> npRefinement = (JAVA_CONCURRENTMAP.NodePair<K, V>) nRefinement;
 						if (npRefinement.key == null) {
 							continue findNotRefinedNodes;
 						}
 					}
 				} else {
-					for (Node nRefinement = this.initialMap.root; nRefinement instanceof JAVA_MAP.NodePair; nRefinement = ((JAVA_MAP.NodePair<K, V>) nRefinement).next) {
-						final NodePair<K, V> npRefinement = (JAVA_MAP.NodePair<K, V>) nRefinement;
+					for (Node nRefinement = this.initialMap.root; nRefinement instanceof JAVA_CONCURRENTMAP.NodePair; nRefinement = ((JAVA_CONCURRENTMAP.NodePair<K, V>) nRefinement).next) {
+						final NodePair<K, V> npRefinement = (JAVA_CONCURRENTMAP.NodePair<K, V>) nRefinement;
 						if (np.key.equals(npRefinement.key)) {
 							continue findNotRefinedNodes;
 						}
@@ -1099,8 +1094,8 @@ implements Map<K,V>, Cloneable, Serializable {
 
 		//finally, subtract from the hash code all the hashes of pairs
 		//in the initial map
-		for (Node nRefinement = this.initialMap.root; nRefinement instanceof JAVA_MAP.NodePair; nRefinement = ((JAVA_MAP.NodePair<K, V>) nRefinement).next) {
-			final NodePair<K, V> npRefinement = (JAVA_MAP.NodePair<K, V>) nRefinement;
+		for (Node nRefinement = this.initialMap.root; nRefinement instanceof JAVA_CONCURRENTMAP.NodePair; nRefinement = ((JAVA_CONCURRENTMAP.NodePair<K, V>) nRefinement).next) {
+			final NodePair<K, V> npRefinement = (JAVA_CONCURRENTMAP.NodePair<K, V>) nRefinement;
 			hashCode -= npRefinement.pairHashCode();
 		}
 
@@ -1111,37 +1106,29 @@ implements Map<K,V>, Cloneable, Serializable {
 
 	//TODO here we accept all the default implementations. Should we define lazier ones?
 	
-	// Clone
-	
-	@SuppressWarnings("unchecked")
-    @Override
-    public Object clone() {
-        final JAVA_MAP<K,V> result;
-        try {
-			result = (JAVA_MAP<K,V>) super.clone();
-		} catch (CloneNotSupportedException e) {
-            // this shouldn't happen, since we are Cloneable
-            throw new InternalError(e);
-		}
-        result.absentKeys = new ArrayList<>(this.absentKeys);
-        result.root = new NodeEmpty();
-        NodePair<K, V> dest = null;
-        for (Node src = this.root; src instanceof NodePair<?, ?>; src = ((NodePair<K, V>) src).next) {
-        	final NodePair<K, V> newNodePair = new NodePair<>();
-        	newNodePair.key = ((NodePair<K, V>) src).key;
-        	newNodePair.value = ((NodePair<K, V>) src).value;
-        	if (dest == null) {
-        		newNodePair.next = result.root;
-        		result.root = newNodePair;
-        	} else {
-        		newNodePair.next = dest.next;
-        		dest.next = newNodePair;
-        	}
-        	dest = newNodePair;
-        }
-        return result;
+	// Abstract methods of ConcurrentMap
+
+	//TODO here we accept all the default implementations in Map. Should we define lazier ones?
+
+	@Override
+	public V putIfAbsent(K key, V value) {
+		return super.putIfAbsent(key, value);
 	}
-        
+
+	@Override
+	public boolean remove(Object key, Object value) {
+		return super.remove(key, value);
+	}
+
+	@Override
+	public boolean replace(K key, V oldValue, V newValue) {
+		return super.replace(key, oldValue, newValue);
+	}
+
+	@Override
+	public V replace(K key, V value) {
+		return super.replace(key, value);
+	}
 
 	// Private methods
 
@@ -1160,7 +1147,7 @@ implements Map<K,V>, Cloneable, Serializable {
 	 * map {@code this.initialMap} that backs the map, and that 
 	 * represents the map as it was in the initial state. 
 	 * 
-	 * @param tthis the {@link JAVA_MAP} to initialize. While {@code tthis}
+	 * @param tthis the {@link JAVA_CONCURRENTMAP} to initialize. While {@code tthis}
 	 * is mutable, {@code tthis.initialMap} will be immutable, will be 
 	 * shared by all the clones of {@code tthis}, and will be progressively 
 	 * refined upon access to {@code tthis} introduces assumptions on the 
@@ -1168,9 +1155,9 @@ implements Map<K,V>, Cloneable, Serializable {
 	 * 
 	 * @throws IllegalArgumentException if this map is not symbolic.
 	 */
-	private static <KK, VV> void initSymbolic(JAVA_MAP<KK, VV> tthis) {
+	private static <KK, VV> void initSymbolic(JAVA_CONCURRENTMAP<KK, VV> tthis) {
 		if (!isSymbolic(tthis)) {
-			throw new IllegalArgumentException("Attempted to invoke " + JAVA_MAP.class.getCanonicalName() + ".initSymbolic on a concrete map.");
+			throw new IllegalArgumentException("Attempted to invoke " + JAVA_CONCURRENTMAP.class.getCanonicalName() + ".initSymbolic on a concrete map.");
 		}
 		assume(isResolvedByExpansion(tthis));
 		assume(isResolvedByExpansion(tthis.initialMap));
@@ -1249,7 +1236,7 @@ implements Map<K,V>, Cloneable, Serializable {
 	 */
 	private void refineIn(K key, V value) {
 		if (!this.isInitial) {
-			metaThrowUnexpectedInternalException("Tried to refine a JAVA_MAP that is not initial.");
+			metaThrowUnexpectedInternalException("Tried to refine a JAVA_CONCURRENTMAP that is not initial.");
 		}
 		if (this.absentKeys.contains(key)) {
 			ignore(); //contradiction found
@@ -1275,18 +1262,18 @@ implements Map<K,V>, Cloneable, Serializable {
 	@SuppressWarnings("unchecked")
 	private void refineOutKey(K key) {
 		if (!this.isInitial) {
-			metaThrowUnexpectedInternalException("Tried to refine a JAVA_MAP that is not initial.");
+			metaThrowUnexpectedInternalException("Tried to refine a JAVA_CONCURRENTMAP that is not initial.");
 		}
 		if (key == null) {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
+				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
 				if (np.key == null) {
 					ignore(); //contradiction found
 				}
 			}
 		} else {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
+				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
 				if (key.equals(np.key)) {
 					ignore(); //contradiction found
 				}
@@ -1306,18 +1293,18 @@ implements Map<K,V>, Cloneable, Serializable {
 	@SuppressWarnings("unchecked")
 	private void refineOutValue(V value) {
 		if (!this.isInitial) {
-			metaThrowUnexpectedInternalException("Tried to refine a JAVA_MAP that is not initial.");
+			metaThrowUnexpectedInternalException("Tried to refine a JAVA_CONCURRENTMAP that is not initial.");
 		}
 		if (value == null) {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
+				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
 				if (np.value == null) {
 					ignore(); //contradiction found
 				}
 			}
 		} else {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
+				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
 				if (value.equals(np.value)) {
 					ignore(); //contradiction found
 				}

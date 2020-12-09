@@ -5,8 +5,8 @@ import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.bc.Signatures.JAVA_MAP_CONTAINSKEY;
-import static jbse.bc.Signatures.JBSE_JAVA_MAP_REFINEIN;
-import static jbse.bc.Signatures.JBSE_JAVA_MAP_REFINEOUTKEY;
+import static jbse.bc.Signatures.JBSE_JAVA_CONCURRENTMAP_REFINEIN;
+import static jbse.bc.Signatures.JBSE_JAVA_CONCURRENTMAP_REFINEOUTKEY;
 import static jbse.common.Type.BOOLEAN;
 import static jbse.common.Type.INT;
 
@@ -36,11 +36,11 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Meta-level implementation of {@link jbse.base.JAVA_MAP#refineOnKeyCombinationsAndBranch(Object...)}.
+ * Meta-level implementation of {@link jbse.base.JAVA_CONCURRENTMAP#refineOnKeyCombinationsAndBranch(Object...)}.
  * 
  * @author Pietro Braione
  */
-public final class Algo_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH extends Algo_INVOKEMETA<
+public final class Algo_JBSE_JAVA_CONCURRENTMAP_REFINEONKEYCOMBINATIONSANDBRANCH extends Algo_INVOKEMETA<
 DecisionAlternative_JAVA_MAP,
 StrategyDecide<DecisionAlternative_JAVA_MAP>, 
 StrategyRefine<DecisionAlternative_JAVA_MAP>, 
@@ -64,30 +64,30 @@ StrategyUpdate<DecisionAlternative_JAVA_MAP>> {
             	this.thisReference = (ReferenceSymbolic) this.data.operand(0);
                 if (state.isNull(this.thisReference)) {
                     //this should never happen
-                    failExecution("The 'this' parameter to jbse.base.JAVA_MAP.refineOnKeyCombinationsAndBranch method is null.");
+                    failExecution("The 'this' parameter to jbse.base.JAVA_CONCURRENTMAP.refineOnKeyCombinationsAndBranch method is null.");
                 }
                 this.map = (Instance) state.getObject(this.thisReference);
                 if (this.map == null) {
                     //this should never happen
-                    failExecution("The 'this' parameter to jbse.base.JAVA_MAP.refineOnKeyCombinationsAndBranch method is symbolic and unresolved.");
+                    failExecution("The 'this' parameter to jbse.base.JAVA_CONCURRENTMAP.refineOnKeyCombinationsAndBranch method is symbolic and unresolved.");
                 }
                 this.keysReference = (Reference) this.data.operand(1);
                 if (state.isNull(this.keysReference)) {
                     //this should never happen
-                    failExecution("The 'keys' parameter to jbse.base.JAVA_MAP.refineOnKeyCombinationsAndBranch method is null.");
+                    failExecution("The 'keys' parameter to jbse.base.JAVA_CONCURRENTMAP.refineOnKeyCombinationsAndBranch method is null.");
                 }
                 final Array keysArray = (Array) state.getObject(this.keysReference);
                 if (keysArray == null) {
                     //this should never happen
-                    failExecution("The 'keys' parameter to jbse.base.JAVA_MAP.refineOnKeyCombinationsAndBranch method is symbolic and unresolved.");
+                    failExecution("The 'keys' parameter to jbse.base.JAVA_CONCURRENTMAP.refineOnKeyCombinationsAndBranch method is symbolic and unresolved.");
                 }
                 if (keysArray.isSymbolic() || !keysArray.hasSimpleRep()) {
                     //this should never happen
-                    failExecution("The 'keys' parameter to jbse.base.JAVA_MAP.refineOnKeyCombinationsAndBranch method is a symbolic array, or has not a simple representation.");
+                    failExecution("The 'keys' parameter to jbse.base.JAVA_CONCURRENTMAP.refineOnKeyCombinationsAndBranch method is a symbolic array, or has not a simple representation.");
                 }
                 this.numKeys = ((Integer) ((Simplex) keysArray.getLength()).getActualValue()).intValue();
                 if (this.numKeys > 10) { //TODO make this limit parametric
-                	throw new MetaUnsupportedException("Excessive branching of jbse.base.JAVA_MAP.refineOnKeyCombinationsAndBranch, 2^" + this.numKeys + " branches necessary.");
+                	throw new MetaUnsupportedException("Excessive branching of jbse.base.JAVA_CONCURRENTMAP.refineOnKeyCombinationsAndBranch, 2^" + this.numKeys + " branches necessary.");
                 }
                 
                 final Primitive[] keyIn = new Primitive[this.numKeys];
@@ -151,7 +151,7 @@ StrategyUpdate<DecisionAlternative_JAVA_MAP>> {
         				state.pushOperand(this.thisReference);
         				state.pushOperand(key);
         				snippet = state.snippetFactoryWrap()
-        						.op_invokevirtual(JBSE_JAVA_MAP_REFINEOUTKEY)
+        						.op_invokevirtual(JBSE_JAVA_CONCURRENTMAP_REFINEOUTKEY)
         						.op_return()
         						.mk();
         			} else {
@@ -160,7 +160,7 @@ StrategyUpdate<DecisionAlternative_JAVA_MAP>> {
         				state.pushOperand(key);
         				state.pushOperand(value);
         				snippet = state.snippetFactoryWrap()
-        						.op_invokevirtual(JBSE_JAVA_MAP_REFINEIN)
+        						.op_invokevirtual(JBSE_JAVA_CONCURRENTMAP_REFINEIN)
         						.op_return()
         						.mk();
         			}

@@ -57,6 +57,7 @@ public final class Signatures {
     public static final String JAVA_COLLECTORS               = "java/util/stream/Collectors";
     public static final String JAVA_COLORMODEL               = "java/awt/image/ColorModel";
     public static final String JAVA_COMPARABLE               = "java/lang/Comparable";
+    public static final String JAVA_CONCURRENTHASHMAP        = "java/util/concurrent/ConcurrentHashMap";
     public static final String JAVA_CONSTRUCTOR              = "java/lang/reflect/Constructor";
     public static final String JAVA_CRC32                    = "java/util/zip/CRC32";
     public static final String JAVA_DEFLATER                 = "java/util/zip/Deflater";
@@ -771,6 +772,20 @@ public final class Signatures {
         new Signature(JBSE_BASE, "(" + INT + REFERENCE + JAVA_STRING + TYPEEND +")" + VOID, "makeKlassSymbolic");
     public static final Signature JBSE_BASE_MAKEKLASSSYMBOLIC_DO = 
         new Signature(JBSE_BASE, "(" + INT + REFERENCE + JAVA_STRING + TYPEEND +")" + VOID, "makeKlassSymbolic_do");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_MAKEINITIAL = 
+        new Signature(JAVA_CONCURRENTHASHMAP, "()" + VOID, "makeInitial");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_METATHROWUNEXPECTEDINTERNALEXCEPTION = 
+        new Signature(JAVA_CONCURRENTHASHMAP, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + VOID, "metaThrowUnexpectedInternalException");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_NOTIFYMETHODEXECUTION = 
+        new Signature(JAVA_CONCURRENTHASHMAP, "()" + VOID, "notifyMethodExecution");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_REFINEIN = 
+        new Signature(JAVA_CONCURRENTHASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineIn");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_REFINEONKEYANDBRANCH = 
+        new Signature(JAVA_CONCURRENTHASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOnKeyAndBranch");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_REFINEONKEYCOMBINATIONSANDBRANCH = 
+        new Signature(JAVA_CONCURRENTHASHMAP, "(" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOnKeyCombinationsAndBranch");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_REFINEOUTKEY = 
+        new Signature(JAVA_CONCURRENTHASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOutKey");
     public static final Signature JBSE_JAVA_MAP_MAKEINITIAL = 
     	new Signature(JAVA_HASHMAP, "()" + VOID, "makeInitial");
     public static final Signature JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION = 

@@ -21,12 +21,13 @@ import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
 /**
- * Meta-level implementation of {@link jbse.base.JAVA_MAP#metaThrowUnexpectedInternalException(String)}.
+ * Meta-level implementation of {@link jbse.base.JAVA_MAP#metaThrowUnexpectedInternalException(String)} and
+ * {@link jbse.base.JAVA_CONCURRENTMAP#metaThrowUnexpectedInternalException(String)}.
  *  
  * @author Pietro Braione
  *
  */
-public final class Algo_JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION extends Algo_INVOKEMETA_Nonbranching {
+public final class Algo_JBSE_JAVA_XMAP_METATHROWUNEXPECTEDINTERNALEXCEPTION extends Algo_INVOKEMETA_Nonbranching {
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 1;
@@ -41,11 +42,11 @@ public final class Algo_JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION exten
             final Reference msgReference = (Reference) this.data.operand(0);
             if (state.isNull(msgReference)) {
                 //this should never happen
-                failExecution("The 'message' parameter to jbse.base.JAVA_MAP.metaThrowUnexpectedInternalException method is null.");
+                failExecution("The 'message' parameter to jbse.base.JAVA_[CONCURRENT]MAP.metaThrowUnexpectedInternalException method is null.");
             }
             final String msg = valueString(state, msgReference);
             if (msg == null) {
-                throw new SymbolicValueNotAllowedException("The 'message' parameter to jbse.base.JAVA_MAP.metaThrowUnexpectedInternalException method is not a simple String.");
+                throw new SymbolicValueNotAllowedException("The 'message' parameter to jbse.base.JAVA_[CONCURRENT]MAP.metaThrowUnexpectedInternalException method is not a simple String.");
             }
             
             //throws

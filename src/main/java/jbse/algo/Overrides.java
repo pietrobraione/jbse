@@ -178,12 +178,14 @@ public final class Overrides {
     public static final String ALGO_JBSE_BASE_CLINIT                        = internalClassName(jbse.algo.meta.Algo_JBSE_BASE_CLINIT.class.getName());
     public static final String ALGO_JBSE_BASE_MAKEKLASSSYMBOLIC_DO          = internalClassName(jbse.algo.meta.Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO.class.getName());
 
-    //Overriding meta-level implementations of jbse.base.JAVA_MAP methods
-    public static final String ALGO_JBSE_JAVA_MAP_MAKEINITIAL                          = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_MAP_MAKEINITIAL.class.getName());
-    public static final String ALGO_JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION.class.getName());
-    public static final String ALGO_JBSE_JAVA_MAP_NOTIFYMETHODEXECUTION                = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_MAP_NOTIFYMETHODEXECUTION.class.getName());
-    public static final String ALGO_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH                 = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH.class.getName());
-    public static final String ALGO_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH     = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH.class.getName());
+    //Overriding meta-level implementations of jbse.base.JAVA_MAP and jbse.base.JAVA_CONCURRENTMAP methods
+    public static final String ALGO_JBSE_JAVA_CONCURRENTMAP_REFINEONKEYANDBRANCH             = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_CONCURRENTMAP_REFINEONKEYANDBRANCH.class.getName());
+    public static final String ALGO_JBSE_JAVA_CONCURRENTMAP_REFINEONKEYCOMBINATIONSANDBRANCH = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_CONCURRENTMAP_REFINEONKEYCOMBINATIONSANDBRANCH.class.getName());
+    public static final String ALGO_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH                       = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH.class.getName());
+    public static final String ALGO_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH           = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH.class.getName());
+    public static final String ALGO_JBSE_JAVA_XMAP_MAKEINITIAL                               = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_XMAP_MAKEINITIAL.class.getName());
+    public static final String ALGO_JBSE_JAVA_XMAP_METATHROWUNEXPECTEDINTERNALEXCEPTION      = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_XMAP_METATHROWUNEXPECTEDINTERNALEXCEPTION.class.getName());
+    public static final String ALGO_JBSE_JAVA_XMAP_NOTIFYMETHODEXECUTION                     = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_XMAP_NOTIFYMETHODEXECUTION.class.getName());
     
     //Overriding meta-level implementations of JBSE classless (pseudo)methods
     public static final String ALGO_noclass_REGISTERLOADEDCLASS                   = internalClassName(jbse.algo.meta.Algo_noclass_REGISTERLOADEDCLASS.class.getName());

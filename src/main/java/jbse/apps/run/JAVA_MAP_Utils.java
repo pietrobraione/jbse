@@ -1,4 +1,4 @@
-package jbse.base;
+package jbse.apps.run;
 
 import static jbse.common.Type.binaryClassName;
 import static jbse.bc.Signatures.JAVA_MAP_CONTAINSKEY;
