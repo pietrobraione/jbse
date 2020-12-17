@@ -571,7 +571,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 					final SymbolicApply javaMapContainsKeySymbolicApply;
 					try {
 						javaMapContainsKeySymbolicApply = (SymbolicApply) calc.applyFunctionPrimitive(BOOLEAN, refSymbolicMemberMapValue.getHistoryPoint(), 
-								JAVA_MAP_CONTAINSKEY.toString(), refSymbolicMemberMapValue.getContainer(), refSymbolicMemberMapValue.getKey()).pop();
+								JAVA_MAP_CONTAINSKEY.toString(), refSymbolicMemberMapValue.getContainer(), refSymbolicMemberMapValue.getKey()).pop(); //TODO: concurrent?
 					} catch (NoSuchElementException | jbse.val.exc.InvalidTypeException | InvalidInputException e) {
 						throw new UnexpectedInternalException(e);
 					}
@@ -1007,13 +1007,19 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		String callCtxString = callCtx[0].toString();
 		for (int i = 1; i < callCtx.length; ++i) {
 			callCtxString += InitialMapSymbolicApplyJVMJDI.callContextSeparator + callCtx[i];
-			if (callCtx[i].getClassName().equals("java/util/HashMap")) {
-				if (i != callCtx.length - 1) {
-					return; // skip notifications from nested calls within hash map models
+			
+			try {
+				Class<?> clazz = Class.forName(binaryClassName(callCtx[i].getClassName()));
+				for (Class<?> interf: clazz.getInterfaces()) {
+					if (interf.getName().equals("java.util.Map")) {
+						if (i != callCtx.length - 1) {
+							return; // skip notifications from nested calls within hash map models
+						}
+					}
 				}
-			} else if (callCtx[i].getClassName().equals("java/util/concurrent/ConcurrentHashMap")) {
-				//TODO per Gio
+			} catch (ClassNotFoundException e) {
 			}
+			
 		}
 		prevHits.add(callCtxString);
 		((JVMJDI) this.jvm).currentHashMapModelMethod = currentMethodSignature.toString();
