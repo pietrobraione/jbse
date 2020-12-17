@@ -28,11 +28,17 @@ public final class JAVA_MAP_Utils {
 			return false;
 		}
 		final SymbolicMemberField originMemberField = (SymbolicMemberField) value;
-		if (!originMemberField.getFieldName().equals(INITIAL_MAP_FIELD_NAME)) {
+		if (originMemberField.getFieldName().equals(INITIAL_MAP_FIELD_NAME) 
+			&& classImplementsJavaUtilMap(originMemberField.getFieldClass())) {
+			return true;
+		} else {
 			return false;
 		}
+	}
+
+	public static boolean classImplementsJavaUtilMap(String className) {
 		try {
-			Class<?> clazz = Class.forName(binaryClassName(originMemberField.getFieldClass()));
+			Class<?> clazz = Class.forName(binaryClassName(className));
 			for (Class<?> interf: clazz.getInterfaces()) {
 				if (interf.getName().equals("java.util.Map")) {
 					return true;
@@ -41,7 +47,6 @@ public final class JAVA_MAP_Utils {
 		} catch (ClassNotFoundException e) { }
 		return false;
 	}
-
 
 	public static boolean isSymbolicApplyOnInitialMap(Value value) {
 		if (!(value instanceof SymbolicApply)) {

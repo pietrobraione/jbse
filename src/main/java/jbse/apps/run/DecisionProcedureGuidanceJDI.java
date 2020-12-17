@@ -1007,19 +1007,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		String callCtxString = callCtx[0].toString();
 		for (int i = 1; i < callCtx.length; ++i) {
 			callCtxString += InitialMapSymbolicApplyJVMJDI.callContextSeparator + callCtx[i];
-			
-			try {
-				Class<?> clazz = Class.forName(binaryClassName(callCtx[i].getClassName()));
-				for (Class<?> interf: clazz.getInterfaces()) {
-					if (interf.getName().equals("java.util.Map")) {
-						if (i != callCtx.length - 1) {
-							return; // skip notifications from nested calls within hash map models
-						}
-					}
+			if (JAVA_MAP_Utils.classImplementsJavaUtilMap(callCtx[i].getClassName())) {
+				if (i != callCtx.length - 1) {
+					return; // skip notifications from nested calls within hash map models
 				}
-			} catch (ClassNotFoundException e) {
-			}
-			
+			}	
 		}
 		prevHits.add(callCtxString);
 		((JVMJDI) this.jvm).currentHashMapModelMethod = currentMethodSignature.toString();
