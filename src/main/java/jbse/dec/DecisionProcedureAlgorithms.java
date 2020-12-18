@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
 
+import jbse.algo.InterruptException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
@@ -33,6 +34,7 @@ import jbse.bc.exc.PleaseLoadClassException;
 import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.Type;
+import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.SolverEquationGenericTypes.Apply;
@@ -47,6 +49,8 @@ import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
 import jbse.mem.Util;
+import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Out;
 import jbse.tree.DecisionAlternative_XALOAD_Resolved;
@@ -752,11 +756,20 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions cannot access
      *         one of its superclass/superinterfaces.
+     * @throws ContradictionException in the case of guidance procedures during class 
+     *         initialization of backdoor expansions.
+     * @throws InterruptException in the case of guidance procedures during class 
+     *         initialization of backdoor expansions.
+     * @throws HeapMemoryExhaustedException in the case of guidance procedures during class 
+     *         initialization of backdoor expansions.
+     * @throws ClasspathException in the case of guidance procedures during class 
+     *         initialization of backdoor expansions.
      */
     public Outcome resolve_XLOAD_GETX(State state, Value valToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result) 
     throws InvalidInputException, DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
     BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
-    IncompatibleClassFileException, ClassFileNotAccessibleException {
+    IncompatibleClassFileException, ClassFileNotAccessibleException, ClasspathException, HeapMemoryExhaustedException,
+    InterruptException, ContradictionException {
         if (state == null || valToLoad == null || result == null) {
             throw new InvalidInputException("resolve_XLOAD_GETX invoked with a null parameter.");
         }
@@ -808,12 +821,20 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions cannot access
      *         one of its superclass/superinterfaces.
+     * @throws ContradictionException in the case of guidance procedures during class 
+     *         initialization of backdoor expansions.
+     * @throws InterruptException in the case of guidance procedures during class 
+     *         initialization of backdoor expansions.
+     * @throws HeapMemoryExhaustedException in the case of guidance procedures during class 
+     *         initialization of backdoor expansions.
+     * @throws ClasspathException in the case of guidance procedures during class 
+     *         initialization of backdoor expansions.
      * @see {@link #resolve_XLOAD_GETX(State, Value, SortedSet) resolve_XLOAD_GETX}.
      */
     protected Outcome resolve_XLOAD_GETX_Unresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
     throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
     BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
-    IncompatibleClassFileException, ClassFileNotAccessibleException {
+    IncompatibleClassFileException, ClassFileNotAccessibleException, ClasspathException, HeapMemoryExhaustedException, InterruptException, ContradictionException {
         try {
             final boolean partialReferenceResolution = 
             doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XLOAD_GETX(), result);
@@ -921,12 +942,20 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions cannot access
      *         one of its superclass/superinterfaces.
+     * @throws ContradictionException in the case of guidance procedures during class 
+     *         initialization of backdoor expansions.
+     * @throws InterruptException in the case of guidance procedures during class 
+     *         initialization of backdoor expansions.
+     * @throws HeapMemoryExhaustedException in the case of guidance procedures during class 
+     *         initialization of backdoor expansions.
+     * @throws ClasspathException in the case of guidance procedures during class 
+     *         initialization of backdoor expansions.
      */
     //TODO should be final?
     public Outcome resolve_XALOAD(State state, List<ArrayAccessInfo> arrayAccessInfos, SortedSet<DecisionAlternative_XALOAD> result, List<ReferenceSymbolic> nonExpandedRefs)
     throws InvalidInputException, DecisionException, ClassFileNotFoundException, 
     ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, 
-    WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException {
+    WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, ClasspathException, HeapMemoryExhaustedException, InterruptException, ContradictionException {
         if (state == null || arrayAccessInfos == null || result == null || nonExpandedRefs == null) {
             throw new InvalidInputException("resolve_XALOAD invoked with a null parameter.");
         }
@@ -1106,12 +1135,20 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions cannot access
      *         one of its superclass/superinterfaces.
+     * @throws ContradictionException in the case of guidance procedures during class 
+     *         initialization of backdoor expansions.
+     * @throws InterruptException in the case of guidance procedures during class 
+     *         initialization of backdoor expansions.
+     * @throws HeapMemoryExhaustedException in the case of guidance procedures during class 
+     *         initialization of backdoor expansions.
+     * @throws ClasspathException in the case of guidance procedures during class 
+     *         initialization of backdoor expansions.
      * @see {@link #resolve_XALOAD(State, List, SortedSet) resolve_XALOAD}.
      */
     protected Outcome resolve_XALOAD_Unresolved(State state, ArrayAccessInfo arrayAccessInfo, SortedSet<DecisionAlternative_XALOAD> result)
     throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
     BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
-    IncompatibleClassFileException, ClassFileNotAccessibleException {
+    IncompatibleClassFileException, ClassFileNotAccessibleException, ClasspathException, HeapMemoryExhaustedException, InterruptException, ContradictionException {
         try {
             final boolean accessConcrete = (arrayAccessInfo.accessExpression == null);
             final Primitive accessExpressionSpecialized = (accessConcrete ? null : this.calc.push(arrayAccessInfo.accessExpression).replace(arrayAccessInfo.indexFormal, arrayAccessInfo.indexActual).pop());

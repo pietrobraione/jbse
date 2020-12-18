@@ -1,5 +1,6 @@
 package jbse.apps.run;
 
+import jbse.algo.ExecutionContext;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.Signature;
@@ -62,6 +63,7 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
      *        will stop at the entry of the first invocation of the method whose 
      *        signature is {@code stopSignature}, and the reached state will be used 
      *        to answer queries.
+     * @param ctx an {@link ExecutionContext}.
      * @throws GuidanceException if something fails during creation (and the caller
      *         is to blame).
      * @throws InvalidInputException if {@code component == null}.

@@ -307,6 +307,9 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
                 } catch (ClassFileNotAccessibleException e) {
                     throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
                     exitFromAlgorithm();
+                } catch (HeapMemoryExhaustedException e) {
+                    throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
+                    exitFromAlgorithm();
                 } catch (ClassFileIllFormedException e) {
                     throwVerifyError(state, this.ctx.getCalculator());
                     exitFromAlgorithm();

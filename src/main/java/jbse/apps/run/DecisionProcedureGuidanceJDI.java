@@ -71,6 +71,7 @@ import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.MethodExitRequest;
 
+import jbse.algo.ExecutionContext;
 import jbse.bc.Offsets;
 import jbse.bc.Signature;
 import jbse.common.exc.InvalidInputException;
@@ -115,7 +116,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 	 *         is to blame).
 	 * @throws InvalidInputException if {@code component == null}.
 	 */
-	public DecisionProcedureGuidanceJDI(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature) 
+	public DecisionProcedureGuidanceJDI(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, ExecutionContext ctx) 
 	throws GuidanceException, InvalidInputException {
 		this(component, calc, runnerParameters, stopSignature, 1);
 	}

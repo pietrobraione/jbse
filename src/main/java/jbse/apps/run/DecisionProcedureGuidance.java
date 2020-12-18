@@ -1,13 +1,15 @@
 package jbse.apps.run;
 
+import static jbse.algo.Util.ensureClassInitialized;
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
-import static jbse.common.Type.className;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.SortedSet;
 
+import jbse.algo.ExecutionContext;
+import jbse.algo.InterruptException;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileVersionException;
@@ -18,6 +20,7 @@ import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
 import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
+import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
@@ -25,13 +28,13 @@ import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.RunnerParameters;
 import jbse.mem.Clause;
-import jbse.mem.ClauseAssumeClassInitialized;
 import jbse.mem.ClauseAssumeExpands;
-import jbse.mem.Klass;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
 import jbse.mem.State.Phase;
+import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FrozenStateException;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Unresolved;
@@ -73,6 +76,7 @@ import jbse.val.exc.InvalidTypeException;
 public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
     protected final JVM jvm;
     private final HashSet<Object> seen = new HashSet<>();
+    private ExecutionContext ctx; //TODO remove the dependency from ExecutionContext
     private boolean guiding;    
 
     /**
@@ -89,7 +93,12 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         super(component);
         goFastAndImprecise(); //disables theorem proving of component until guidance ends
         this.jvm = jvm;
+        this.ctx = null;
         this.guiding = true;
+    }
+    
+    public final void setExecutionContext(ExecutionContext ctx) {
+    	this.ctx = ctx;
     }
     
     /**
@@ -253,7 +262,8 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     protected final Outcome resolve_XLOAD_GETX_Unresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
     throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
     BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
-    IncompatibleClassFileException, ClassFileNotAccessibleException {
+    IncompatibleClassFileException, ClassFileNotAccessibleException,
+    ClasspathException, HeapMemoryExhaustedException, InterruptException, ContradictionException {
         updateExpansionBackdoor(state, refToLoad);
         final Outcome retVal = super.resolve_XLOAD_GETX_Unresolved(state, refToLoad, result);
         if (this.guiding) {
@@ -287,7 +297,8 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     protected final Outcome resolve_XALOAD_Unresolved(State state, ArrayAccessInfo arrayAccessInfo, SortedSet<DecisionAlternative_XALOAD> result)
     throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
     BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
-    IncompatibleClassFileException, ClassFileNotAccessibleException {
+    IncompatibleClassFileException, ClassFileNotAccessibleException,
+    ClasspathException, HeapMemoryExhaustedException, InterruptException, ContradictionException {
         final ReferenceSymbolic readReference = (ReferenceSymbolic) arrayAccessInfo.readValue;
         updateExpansionBackdoor(state, readReference);
         final Outcome retVal = super.resolve_XALOAD_Unresolved(state, arrayAccessInfo, result);
@@ -306,16 +317,16 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         return retVal;
     }
 
-    private void updateExpansionBackdoor(State state, ReferenceSymbolic refToLoad) throws GuidanceException {
+    private void updateExpansionBackdoor(State state, ReferenceSymbolic refToLoad) 
+    throws GuidanceException, ClasspathException, HeapMemoryExhaustedException, 
+    InterruptException, ContradictionException {
     	try {
     		final String refType = mostPreciseResolutionClassName(state, refToLoad);
     		final String objType = this.jvm.typeOfObject(refToLoad);
     		if (objType != null && !refType.equals(objType)) {
     			state.getClassHierarchy().addToExpansionBackdoor(refType, objType);
-    			final ClassFile cf = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, objType, true);
-    			state.ensureKlassSymbolic(this.calc, cf);
-    			final Klass k = state.getKlass(cf);
-    			super.pushAssumption(new ClauseAssumeClassInitialized(cf, k));
+				final ClassFile cf = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, objType, true);
+    			ensureClassInitialized(state, cf, this.ctx);
     		}
     	} catch (DecisionException | ClassFileNotFoundException | ClassFileIllFormedException | 
     	ClassFileNotAccessibleException | IncompatibleClassFileException | 

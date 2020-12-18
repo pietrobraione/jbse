@@ -19,6 +19,7 @@ import jbse.algo.InterruptException;
 import jbse.algo.Action;
 import jbse.algo.Action_START;
 import jbse.algo.exc.CannotManageStateException;
+import jbse.apps.run.DecisionProcedureGuidance;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -189,6 +190,12 @@ public class Engine implements AutoCloseable {
             final Collection<Clause> currentAssumptions = this.currentState.getPathCondition();
     		this.ctx.decisionProcedure.setAssumptions(currentAssumptions);
     		this.currentState.resetLastPathConditionClauses();
+    		
+    		//if the decision procedure is a guidance decision procedure,
+    		//set the execution context
+    		if (this.ctx.decisionProcedure instanceof DecisionProcedureGuidance) {
+    			((DecisionProcedureGuidance) this.ctx.decisionProcedure).setExecutionContext(this.ctx);
+    		}
         } catch (InvalidInputException | ThreadStackEmptyException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
