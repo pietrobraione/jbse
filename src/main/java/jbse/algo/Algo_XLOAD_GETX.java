@@ -91,12 +91,11 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
             	//this should never happen
             	failExecution(e);
 			}
-            this.someRefNotExpanded = o.noReferenceExpansion();
-            if (this.someRefNotExpanded) {
+            this.someReferencePartiallyResolved = o.partialReferenceResolution();
+            if (this.someReferencePartiallyResolved) {
                 try {
                     final ReferenceSymbolic refToLoad = (ReferenceSymbolic) this.valToLoad;
-                    this.nonExpandedRefTypes = refToLoad.getStaticType();
-                    this.nonExpandedRefOrigins = refToLoad.asOriginString();
+                    this.partiallyResolvedReferences.add(refToLoad);
                 } catch (ClassCastException e) {
                     //this should never happen
                     failExecution(e);

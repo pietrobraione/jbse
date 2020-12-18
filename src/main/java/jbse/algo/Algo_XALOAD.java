@@ -15,7 +15,6 @@ import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -135,9 +134,8 @@ StrategyUpdate_XALOAD> {
             
             //invokes the decision procedure
             Outcome o = null; //to keep the compiler happy
-            final ArrayList<ReferenceSymbolic> nonExpandedRefs = new ArrayList<>();
             try {
-                o = this.ctx.decisionProcedure.resolve_XALOAD(state, arrayAccessInfos, result, nonExpandedRefs);
+                o = this.ctx.decisionProcedure.resolve_XALOAD(state, arrayAccessInfos, result, this.partiallyResolvedReferences);
             //TODO the next catch blocks should disappear, see comments on removing exceptions in jbse.dec.DecisionProcedureAlgorithms.doResolveReference
             } catch (ClassFileNotFoundException exc) {
                 //TODO this exception should wrap a ClassNotFoundException
@@ -167,17 +165,7 @@ StrategyUpdate_XALOAD> {
             }
             
             //stores info about the non expanded references
-            this.someRefNotExpanded = o.noReferenceExpansion();
-            if (this.someRefNotExpanded) {
-                boolean first = true; //just for formatting
-                this.nonExpandedRefTypes = "";
-                this.nonExpandedRefOrigins = "";
-                for (ReferenceSymbolic ref : nonExpandedRefs) {
-                    this.nonExpandedRefTypes += (first ? "" : ", ") + ref.getStaticType();
-                    this.nonExpandedRefOrigins += (first ? "" : ", ") + ref.asOriginString();
-                    first = false;
-                }
-            }
+            this.someReferencePartiallyResolved = o.partialReferenceResolution();
             
             return o;
         };

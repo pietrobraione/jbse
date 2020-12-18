@@ -4,6 +4,8 @@ import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 
@@ -21,6 +23,7 @@ import jbse.mem.exc.InvalidNumberOfOperandsException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative;
+import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidOperatorException;
 import jbse.val.exc.InvalidTypeException;
@@ -179,38 +182,26 @@ UP extends StrategyUpdate<R>> implements Action {
     }
 
     /** 
-     * Checks whether some reference was not 
-     * expanded by resolution during {@link #exec}.
+     * Checks whether some reference was partially
+     * resolved during {@link #exec}.
      * 
      * @return {@code true} if some reference was 
-     * resolved but not expanded, {@code false}
-     * otherwise (i.e., no reference was resolved
-     * or all the resolved references were expanded).
+     * partially resolved, {@code false}
+     * otherwise (i.e., all the references were 
+     * either not resolved or resolved fully).
      */
-    public boolean someReferenceNotExpanded() { 
-        return false; 
-    }
-
-    //TODO improve the two methods that follow (possibly return a java.util.List of the References)
-
-    /**
-     * Returns a list of the origins of the nonexpanded
-     * references origins.
-     * 
-     * @return a {@link String}.
-     */
-    public String nonExpandedReferencesOrigins() { 
-        return null; 
+    public boolean someReferencePartiallyResolved() { 
+        return false; //default implementation
     }
 
     /**
-     * Returns a list of the origins of the nonexpanded
-     * references types.
+     * Returns a {@link List} of the partially resolved 
+     * references.
      * 
-     * @return a {@link String}.
+     * @return a {@link List}{@code <}{@link ReferenceSymbolic}{@code >}.
      */
-    public String nonExpandedReferencesTypes() { 
-        return null; 
+    public List<ReferenceSymbolic> partiallyResolvedReferences() { 
+        return Collections.emptyList(); //default implementation
     }
 
     protected ExecutionContext ctx; //just caches across a call of exec (note that this makes Algorithms nonreentrant!)

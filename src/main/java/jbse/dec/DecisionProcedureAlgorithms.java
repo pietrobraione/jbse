@@ -140,18 +140,18 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
         FFF(false, false, false);
 
         private final boolean shouldRefine;
-        private final boolean noReferenceExpansion;
+        private final boolean partialReferenceResolution;
         private final boolean branchingDecision;
 
         private Outcome(boolean shouldRefine, boolean branchingDecision) {
             this.shouldRefine = shouldRefine;
-            this.noReferenceExpansion = false;
+            this.partialReferenceResolution = false;
             this.branchingDecision = branchingDecision;
         }
 
         private Outcome(boolean shouldRefine, boolean noReferenceExpansion, boolean branchingDecision) {
             this.shouldRefine = shouldRefine;
-            this.noReferenceExpansion = noReferenceExpansion;
+            this.partialReferenceResolution = noReferenceExpansion;
             this.branchingDecision = branchingDecision;
         }
 
@@ -222,22 +222,19 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
         }
 
         /**
-         * Is a reference resolution partial (because it has not been expanded)?
+         * Is a reference resolution partial?
          * 
-         * @return {@code true} iff a reference resolution is suspect because
-         *         <em>partial</em>, i.e., because the reference is not resolved
-         *         by expansion. This happens when no concrete 
-         *         class is compatible with a symbolic reference's static type according to
-         *         the symbolic execution's constraints (which is an indicator of
-         *         badly specified constraints), or because the constraints forbid  
-         *         the reference to be expanded (which might be the consequence of a 
-         *         representation invariant of the data structure).
+         * @return {@code true} iff a symbolic reference resolution is suspect because
+         *         <em>partial</em>, i.e., the reference was not resolved
+         *         by expansion because no concrete class was found in the classpath 
+         *         that is type-compatible with the symbolic reference and assumed to 
+         *         be not pre-initialized.
          */
-        public boolean noReferenceExpansion() {
+        public boolean partialReferenceResolution() {
             if (this == TT || this == TF || this == FT || this == FF) {
-                throw new UnexpectedInternalException(this.toString() + " carries no reference expansion information."); //TODO throw a better exception
+                throw new UnexpectedInternalException(this.toString() + " carries no partial reference resolution information."); //TODO throw a better exception
             }
-            return this.noReferenceExpansion;
+            return this.partialReferenceResolution;
         }
 
         /**
@@ -976,8 +973,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
             }
             
             //if the current resolution did not expand a reference, then records it
-            someReferenceNotExpanded = someReferenceNotExpanded || o.noReferenceExpansion();
-            if (o.noReferenceExpansion()) {
+            someReferenceNotExpanded = someReferenceNotExpanded || o.partialReferenceResolution();
+            if (o.partialReferenceResolution()) {
                 nonExpandedRefs.add((ReferenceSymbolic) arrayAccessInfo.readValue);
             }
 
@@ -1194,7 +1191,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *            will update by adding to it all the decision alternatives 
      *            representing all the valid expansions of {@code notInitializedRef}.
      * @return {@code true} iff the resolution of the reference is 
-     *         partial (see {@link Outcome#noReferenceExpansion()}).
+     *         partial (see {@link Outcome#partialReferenceResolution()}).
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
      * @throws ClassFileNotFoundException when 
@@ -1272,10 +1269,12 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
                                                       " (" + refToResolve.asOriginString() + ") has a bad type " + refToResolve.getStaticType() + ".");
             }
             for (ClassFile expansionClass : possibleExpansions) {
-                if (isSatInitialized(expansionClass) && isSatExpands(refToResolve, expansionClass)) {
-                    final DE e = factory.createAlternativeRefExpands(refToResolve, expansionClass, branchCounter);
-                    result.add(e);
+                if (isSatInitialized(expansionClass)) {
                     partialReferenceResolution = false;
+                	if (isSatExpands(refToResolve, expansionClass)) {
+                        final DE e = factory.createAlternativeRefExpands(refToResolve, expansionClass, branchCounter);
+                        result.add(e);
+                    }
                 }
                 ++branchCounter;
             }

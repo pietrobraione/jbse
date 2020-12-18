@@ -67,6 +67,7 @@ import jbse.rewr.RewriterCalculatorRewriting;
 import jbse.rewr.RewriterOperationOnSimplex;
 import jbse.tree.StateTree.BranchPoint;
 import jbse.val.PrimitiveSymbolic;
+import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
 
 /**
@@ -374,9 +375,9 @@ public final class Run {
             
             //if a resolved reference has not been expanded, prints a warning
             if (Run.this.parameters.getShowWarnings() && 
-                getEngine().someReferenceNotExpanded()) {
+                getEngine().someReferencePartiallyResolved()) {
                 Run.this.log(currentState.getBranchIdentifier() + "[" + currentState.getSequenceNumber() + "]" + " " +
-                             getEngine().getNonExpandedReferencesOrigins() +
+                             String.join(", ",getEngine().getPartiallyResolvedReferences().stream().map(ReferenceSymbolic::asOriginString).toArray(String[]::new)) +
                              WARNING_PARTIAL_REFERENCE_RESOLUTION);
             }
             
@@ -1248,8 +1249,8 @@ public final class Run {
     private static final String WARNING_PARAMETERS_UNRECOGNIZABLE_VARIABLE = "Unrecognizable variable will not be observed: ";
 
     /** Warning: partial reference resolution (part 2). */
-    private static final String WARNING_PARTIAL_REFERENCE_RESOLUTION = " not expanded. It may be a " +
-    "hint of too strong user-defined constraints, possibly correct when enforcing redundancy by representation invariant.";
+    private static final String WARNING_PARTIAL_REFERENCE_RESOLUTION = " not expanded, because no concrete, compatible, pre-initialized " + 
+    "class was found.";
 
     /** Warning: timeout. */
     private static final String WARNING_TIMEOUT = "Timeout.";
