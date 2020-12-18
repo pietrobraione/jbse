@@ -3638,17 +3638,17 @@ public final class State implements Cloneable {
     		throw new FrozenStateException();
     	}
         if (referenceSymbolic == null) {
-            throw new InvalidInputException("Attempted to invoke State.assumeExpandsAlreadyPresent with a null referenceSymbolic.");
+            throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeExpandsAlreadyPresent with a null referenceSymbolic.");
         }
         if (resolved(referenceSymbolic)) {
-            throw new ContradictionException("Attempted to invoke State.assumeExpandsAlreadyPresent with an already resolved referenceSymbolic.");
+            throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".assumeExpandsAlreadyPresent with an already resolved referenceSymbolic.");
         }
         final HeapObjekt freshObject = this.heap.getObject(freshObjectPosition);
         if (freshObject == null) {
-            throw new InvalidInputException("Attempted to invoke State.assumeExpandsAlreadyPresent with a freshObjectPosition where no object is stored.");
+            throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeExpandsAlreadyPresent with a freshObjectPosition where no object is stored.");
         }
         if (!freshObject.isSymbolic()) {
-            throw new InvalidInputException("Attempted to invoke State.assumeExpandsAlreadyPresent with a freshObjectPosition where a concrete object is stored.");
+            throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeExpandsAlreadyPresent with a freshObjectPosition where a concrete object is stored.");
         }
         
     	possiblyReset();
@@ -3678,14 +3678,14 @@ public final class State implements Cloneable {
     		throw new FrozenStateException();
     	}
         if (referenceSymbolic == null) {
-            throw new InvalidInputException("Attempted to invoke State.assumeAliases with a null referenceSymbolic.");
+            throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeAliases with a null referenceSymbolic.");
         }
         if (resolved(referenceSymbolic)) {
-            throw new ContradictionException("Attempted to invoke State.assumeAliases with an already resolved referenceSymbolic.");
+            throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".assumeAliases with an already resolved referenceSymbolic.");
         }
         final HeapObjekt aliasObject = getObjectInitial(aliasOrigin);
         if (aliasObject == null) {
-            throw new InvalidInputException("Attempted to invoke State.assumeAliases with an aliasOrigin that does not refer to any initial object.");
+            throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeAliases with an aliasOrigin that does not refer to any initial object.");
         }
         
     	possiblyReset();
@@ -3711,10 +3711,10 @@ public final class State implements Cloneable {
     		throw new FrozenStateException();
     	}
         if (referenceSymbolic == null) {
-            throw new InvalidInputException("Attempted to invoke State.assumeNull with a null referenceSymbolic.");
+            throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeNull with a null referenceSymbolic.");
         }
         if (resolved(referenceSymbolic)) {
-            throw new ContradictionException("Attempted to invoke State.assumeNull with an already resolved referenceSymbolic.");
+            throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".assumeNull with an already resolved referenceSymbolic.");
         }
         
     	possiblyReset();
@@ -3740,7 +3740,7 @@ public final class State implements Cloneable {
     		throw new FrozenStateException();
     	}
         if (classFile == null || klass == null) {
-            throw new InvalidInputException("Attempted to invoke State.assumeClassInitialized with a null classFile or klass parameter.");
+            throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeClassInitialized with a null classFile or klass parameter.");
         }
         
     	possiblyReset();
@@ -3764,7 +3764,7 @@ public final class State implements Cloneable {
     		throw new FrozenStateException();
     	}
         if (classFile == null) {
-            throw new InvalidInputException("Attempted to invoke State.assumeClassNotInitialized with a null classFile.");
+            throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeClassNotInitialized with a null classFile.");
         }
         
     	possiblyReset();
@@ -4128,13 +4128,16 @@ public final class State implements Cloneable {
      *         {@code this}.
      * @throws FrozenStateException if the state is frozen.
      */
+    //TODO this method doesn't work with arrays and maps!!!
     public void refine(State stateRefining) throws CannotRefineException, FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        //TODO this method doesn't work with arrays and maps!!!
+    	
+    	//the three components of stateRefining that we need
         final HistoryPoint refiningHistoryPoint = stateRefining.historyPoint;
         final PathCondition refiningPathCondition = stateRefining.pathCondition;
+        final SymbolFactory refiningSymbolFactory = stateRefining.symbolFactory;
 
         //checks that stateRefining refines this state, and 
         //gets an iterator to the additional clauses
@@ -4166,10 +4169,12 @@ public final class State implements Cloneable {
             } //else do nothing
         }
 
+        //TODO refine arrays and model maps (the initial ones)!!!
+        
         //updates the symbol factory
-        this.symbolFactory = stateRefining.symbolFactory.clone();
+        this.symbolFactory = refiningSymbolFactory.clone();
 
-        //finally, updates the path condition
+        //updates the path condition
         this.pathCondition = refiningPathCondition.clone();
     }
 

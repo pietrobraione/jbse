@@ -198,6 +198,15 @@ public final class Engine implements AutoCloseable {
 
     //public methods (operations)
     
+    /**
+     * Returns this {@link Engine}'s {@link ExecutionContext}.
+     * 
+     * @return an {@link ExecutionContext}.
+     */
+    public ExecutionContext getExecutionContext() {
+    	return this.ctx;
+    }
+    
     /** 
      * Checks whether the current state is the last
      * pre-initial state, i.e., the last state before 
