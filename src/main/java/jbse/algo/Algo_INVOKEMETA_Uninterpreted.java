@@ -6,8 +6,14 @@ import static jbse.common.Type.parametersNumber;
 
 import java.util.function.Supplier;
 
+import jbse.mem.Array;
+import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.Variable;
+import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Primitive;
+import jbse.val.Reference;
 import jbse.val.Value;
 
 /**
@@ -35,7 +41,7 @@ public final class Algo_INVOKEMETA_Uninterpreted extends Algo_INVOKEMETA_Nonbran
     }
 
     @Override
-    protected void cookMore(State state) throws InterruptException {
+    protected void cookMore(State state) throws InterruptException, FrozenStateException {
     	//if this algorithm is overriding a native method, the only
     	//possible alternative is trying to execute it metacircularly
     	if (this.isOverriddenMethodNative) {
@@ -43,24 +49,51 @@ public final class Algo_INVOKEMETA_Uninterpreted extends Algo_INVOKEMETA_Nonbran
     		continueWith(this.algo_INVOKEMETA_Metacircular);
     	}            
 
-    	//calculates whether the parameters are all concrete
+    	//calculates whether the parameters are all simple
+    	//(i.e., concrete if they are numeric, containing
+    	//concrete values in their slots if they are objects)
     	final Value[] args = this.data.operands();
-    	boolean allConcrete = true;
+    	boolean allSimple = true;
     	for (int i = 0; i < args.length; ++i) {
-    		if (args[i].isSymbolic()) {
-    			allConcrete = false;
+    		if (args[i] instanceof Primitive && args[i].isSymbolic()) {
+    			allSimple = false;
     			break;
+    		} else if (args[i] instanceof Reference) {
+    			if (!isSimple(state, (Reference) args[i])) {
+    				allSimple = false;
+    				break;
+    			}
     		}
     	}
 
     	//if all parameters are concrete, executes the overridden method,
     	//otherwise falls back to a metacircular invocation
-    	if (allConcrete) {
+    	if (allSimple) {
     		continueWithBaseLevelImpl(state, this.isInterface, this.isSpecial, this.isStatic);
     	} else {
     		this.algo_INVOKEMETA_Metacircular.setFeatures(this.isInterface, this.isSpecial, this.isStatic, this.isOverriddenMethodNative, this.methodSignatureImplementation);
     		continueWith(this.algo_INVOKEMETA_Metacircular);
     	}
+    }
+    
+    private static boolean isSimple(State state, Reference objRef) throws FrozenStateException {
+		if (state.isNull(objRef)) {
+			return true;
+		}
+		final Objekt obj = state.getObject(objRef);
+		if (obj instanceof Array) {
+			return ((Array) obj).isSimple();
+		} else {
+			for (Variable var : obj.fields().values()) {
+				final Value val = var.getValue();
+				if (val instanceof Primitive && val.isSymbolic()) {
+					return false;
+				} else if (val instanceof Reference && !isSimple(state, (Reference) val)) {
+					return false;
+				}
+			}
+			return true;
+		}
     }
 
 	@Override
