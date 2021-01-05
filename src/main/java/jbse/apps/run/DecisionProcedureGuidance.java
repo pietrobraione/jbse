@@ -372,7 +372,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
     
     private void clearSeen() {
-        this.seen.clear();;
+        this.seen.clear();
     }
     
     @Override
