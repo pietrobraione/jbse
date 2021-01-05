@@ -11,6 +11,7 @@ import java.util.SortedSet;
 import jbse.algo.ExecutionContext;
 import jbse.algo.InterruptException;
 import jbse.bc.ClassFile;
+import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
@@ -83,7 +84,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
      * Builds the {@link DecisionProcedureGuidance}.
      *
      * @param component the component {@link DecisionProcedure} it decorates.
-     * @param jvm a {@link JVM}.
+     * @param jvm a (guiding) {@link JVM}.
      * @throws GuidanceException if something fails during creation (and the caller
      *         is to blame).
      * @throws InvalidInputException if {@code component == null}.
@@ -259,18 +260,19 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     @Override
-    protected final Outcome resolve_XLOAD_GETX_Unresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
+    protected final Outcome resolve_XLOAD_GETX_Unresolved(ClassHierarchy hier, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
     throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
     BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException,
     ClasspathException, HeapMemoryExhaustedException, InterruptException, ContradictionException {
-        updateExpansionBackdoor(state, refToLoad);
-        final Outcome retVal = super.resolve_XLOAD_GETX_Unresolved(state, refToLoad, result);
+    	final State currentState = this.currentStateSupplier.get();
+        updateExpansionBackdoor(currentState, refToLoad);
+        final Outcome retVal = super.resolve_XLOAD_GETX_Unresolved(hier, refToLoad, result);
         if (this.guiding) {
             final Iterator<DecisionAlternative_XLOAD_GETX> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_XYLOAD_GETX_Unresolved dar = (DecisionAlternative_XYLOAD_GETX_Unresolved) it.next();
-                filter(state, refToLoad, dar, it);
+                filter(currentState, refToLoad, dar, it);
             }
         }
         return retVal;
@@ -294,14 +296,15 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     @Override
-    protected final Outcome resolve_XALOAD_Unresolved(State state, ArrayAccessInfo arrayAccessInfo, SortedSet<DecisionAlternative_XALOAD> result)
+    protected final Outcome resolve_XALOAD_Unresolved(ClassHierarchy hier, ArrayAccessInfo arrayAccessInfo, SortedSet<DecisionAlternative_XALOAD> result)
     throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
     BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException,
     ClasspathException, HeapMemoryExhaustedException, InterruptException, ContradictionException {
+    	final State currentState = this.currentStateSupplier.get();
         final ReferenceSymbolic readReference = (ReferenceSymbolic) arrayAccessInfo.readValue;
-        updateExpansionBackdoor(state, readReference);
-        final Outcome retVal = super.resolve_XALOAD_Unresolved(state, arrayAccessInfo, result);
+        updateExpansionBackdoor(currentState, readReference);
+        final Outcome retVal = super.resolve_XALOAD_Unresolved(hier, arrayAccessInfo, result);
         if (this.guiding) {
             final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
             while (it.hasNext()) {
@@ -310,7 +313,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                 if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
                     it.remove();
                 } else {
-                    filter(state, readReference, dar, it);
+                    filter(currentState, readReference, dar, it);
                 }
             }
         }
@@ -321,7 +324,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     throws GuidanceException, ClasspathException, HeapMemoryExhaustedException, 
     InterruptException, ContradictionException {
     	try {
-    		final String refType = mostPreciseResolutionClassName(state, refToLoad);
+    		final String refType = mostPreciseResolutionClassName(this.currentStateSupplier.get().getClassHierarchy(), refToLoad);
     		final String objType = this.jvm.typeOfObject(refToLoad);
     		if (objType != null && !refType.equals(objType)) {
     			state.getClassHierarchy().addToExpansionBackdoor(refType, objType);

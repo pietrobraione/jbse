@@ -39,10 +39,12 @@ public final class DecisionProcedureConservativeRepOk extends DecisionProcedureC
         this.checker = new InitialHeapChecker(checkerParameters, ConservativeRepOk.class, checkMethods);
     }
 
+    @Override
     public void setInitialStateSupplier(Supplier<State> initialStateSupplier) {
         this.checker.setInitialStateSupplier(initialStateSupplier);
     }
 
+    @Override
     public void setCurrentStateSupplier(Supplier<State> currentStateSupplier) {
         this.checker.setCurrentStateSupplier(currentStateSupplier);
     }

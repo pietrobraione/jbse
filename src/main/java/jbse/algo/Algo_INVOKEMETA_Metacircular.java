@@ -290,7 +290,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
                 o = Outcome.FFF;
             } else {
                 try {
-                    o = this.ctx.decisionProcedure.resolve_XLOAD_GETX(state, this.valToLoad, result);
+                    o = this.ctx.decisionProcedure.resolve_XLOAD_GETX(this.valToLoad, result);
                     //TODO the next catch blocks should disappear, see comments on removing exceptions in jbse.dec.DecisionProcedureAlgorithms.doResolveReference
                 } catch (ClassFileNotFoundException e) {
                     //TODO this exception should wrap a ClassNotFoundException

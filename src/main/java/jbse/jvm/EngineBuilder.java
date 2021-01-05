@@ -102,7 +102,14 @@ public class EngineBuilder {
 	        //sets the observers
 	        setObservers(vom, parameters);
 	
-	        return new Engine(ctx, vom);
+	        //creates the engine
+	        final Engine retVal = new Engine(ctx, vom);
+	        
+	        //sets the state suppliers for the decision procedure
+	        parameters.getDecisionProcedure().setInitialStateSupplier(retVal::getInitialState);
+	        parameters.getDecisionProcedure().setCurrentStateSupplier(retVal::getCurrentState);
+	        
+	        return retVal;
     	} catch (IOException e) {
     		throw new CannotBuildEngineException(e);
     	}

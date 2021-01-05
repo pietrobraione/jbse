@@ -965,8 +965,6 @@ public final class Run {
     			@SuppressWarnings("resource")
     			final DecisionProcedureConservativeRepOk dec = 
     			new DecisionProcedureConservativeRepOk(core, checkerParameters, this.parameters.getConservativeRepOks());
-    			dec.setInitialStateSupplier(this::getInitialState); 
-    			dec.setCurrentStateSupplier(this::getCurrentState); 
     			core = dec;
     		}
 

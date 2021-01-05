@@ -129,7 +129,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             Outcome o = null; //to keep the compiler happy
             final ArrayList<ReferenceSymbolic> nonExpandedRefs = new ArrayList<>(); //dummy
             try {
-                o = this.ctx.decisionProcedure.resolve_XALOAD(state, arrayAccessInfos, result, nonExpandedRefs);
+                o = this.ctx.decisionProcedure.resolve_XALOAD(arrayAccessInfos, result, nonExpandedRefs);
             //TODO the next catch blocks should disappear, see comments on removing exceptions in jbse.dec.DecisionProcedureAlgorithms.doResolveReference
             } catch (ClassFileNotFoundException exc) {
                 throwNew(state, this.ctx.getCalculator(), CLASS_NOT_FOUND_EXCEPTION);

@@ -4,6 +4,7 @@ import static jbse.val.Rewriter.applyRewriters;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import jbse.bc.ClassFile;
@@ -422,7 +423,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     }
 
     @Override
-    public final Collection<Clause> getAssumptions() throws DecisionException {
+    public final List<Clause> getAssumptions() throws DecisionException {
         //the farthest element in the chain has
         //the most simplified assumptions
         if (hasNext()) {
@@ -441,7 +442,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @return see {@link #getAssumptions()}.
      * @throws DecisionException upon failure.
      */
-    protected Collection<Clause> getAssumptionsLocal() 
+    protected List<Clause> getAssumptionsLocal() 
     throws DecisionException {
         throw new DecisionException(NO_ASSUMPTION_ERROR); //TODO throw a better exception
     }

@@ -1,6 +1,7 @@
 package jbse.apps;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import jbse.bc.ClassFile;
@@ -85,10 +86,10 @@ public class DecisionProcedureDecoratorTimer extends DecisionProcedureDecorator 
     }
 
     @Override
-    public Collection<Clause> getAssumptions() 
+    public List<Clause> getAssumptions() 
     throws DecisionException {
         startTimer();
-        final Collection<Clause> result = super.getAssumptions();
+        final List<Clause> result = super.getAssumptions();
         stopTimer();
         return result;
     }
