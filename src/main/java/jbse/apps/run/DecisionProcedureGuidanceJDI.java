@@ -1007,13 +1007,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		String callCtxString = callCtx[0].toString();
 		for (int i = 1; i < callCtx.length; ++i) {
 			callCtxString += InitialMapSymbolicApplyJVMJDI.callContextSeparator + callCtx[i];
-			if (callCtx[i].getClassName().equals("java/util/HashMap")) {
+			if (JAVA_MAP_Utils.classImplementsJavaUtilMap(callCtx[i].getClassName())) {
 				if (i != callCtx.length - 1) {
 					return; // skip notifications from nested calls within hash map models
 				}
-			} else if (callCtx[i].getClassName().equals("java/util/concurrent/ConcurrentHashMap")) {
-				//TODO per Gio
-			}
+			}	
 		}
 		prevHits.add(callCtxString);
 		((JVMJDI) this.jvm).currentHashMapModelMethod = currentMethodSignature.toString();

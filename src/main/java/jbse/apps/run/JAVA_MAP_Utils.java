@@ -21,7 +21,6 @@ import jbse.val.Value;
 
 public final class JAVA_MAP_Utils {
 	public final static String INITIAL_MAP_FIELD_NAME = "initialMap";
-	public final static String INITIAL_MAP_FIELD_FULL = ".java/util/HashMap:" + INITIAL_MAP_FIELD_NAME;
 	public final static String GET_SIGIL = "::GET(";
 
 	public static boolean isInitialMapField(Value value) {
@@ -29,14 +28,25 @@ public final class JAVA_MAP_Utils {
 			return false;
 		}
 		final SymbolicMemberField originMemberField = (SymbolicMemberField) value;
-		if (binaryClassName(originMemberField.getFieldClass()).equals("java.util.HashMap") 
-		&& originMemberField.getFieldName().equals(INITIAL_MAP_FIELD_NAME)) {
+		if (originMemberField.getFieldName().equals(INITIAL_MAP_FIELD_NAME) 
+			&& classImplementsJavaUtilMap(originMemberField.getFieldClass())) {
 			return true;
 		} else {
 			return false;
 		}
 	}
 
+	public static boolean classImplementsJavaUtilMap(String className) {
+		try {
+			Class<?> clazz = Class.forName(binaryClassName(className));
+			for (Class<?> interf: clazz.getInterfaces()) {
+				if (interf.getName().equals("java.util.Map")) {
+					return true;
+				}	
+			}
+		} catch (ClassNotFoundException e) { }
+		return false;
+	}
 
 	public static boolean isSymbolicApplyOnInitialMap(Value value) {
 		if (!(value instanceof SymbolicApply)) {
@@ -44,7 +54,7 @@ public final class JAVA_MAP_Utils {
 		}
 		final SymbolicApply symbolicApply = (SymbolicApply) value;
 		final Value[] args = symbolicApply.getArgs();
-		if (args.length > 0 && JAVA_MAP_Utils.isInitialMapField(args[0])) {
+		if (args.length > 0 && isInitialMapField(args[0])) {
 			if (!symbolicApply.getOperator().equals(JAVA_MAP_CONTAINSKEY.toString())) {
 				throw new UnexpectedInternalException("Path condition refers to unexpected symbolicApply on a symbolic map: " + symbolicApply.getOperator());
 			}
@@ -76,9 +86,10 @@ public final class JAVA_MAP_Utils {
 
 	//solo sushi-lib
 	public static String possiblyAdaptMapModelSymbols(String origin) {
+		final String INITIAL_MAP_FIELD_FULL = "\\.[^\\.]*Map:" + INITIAL_MAP_FIELD_NAME;
 		final String originNoInitialMap;
-		if (origin.contains(INITIAL_MAP_FIELD_FULL)) {
-			originNoInitialMap = origin.replace(INITIAL_MAP_FIELD_FULL, "");
+		if (origin.matches(".*" + INITIAL_MAP_FIELD_FULL + ".*")) {
+			originNoInitialMap = origin.replaceAll(INITIAL_MAP_FIELD_FULL, "");
 		} else {
 			originNoInitialMap = origin;
 		}
