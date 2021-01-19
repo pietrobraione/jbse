@@ -28,6 +28,8 @@ import static jbse.common.Type.splitReturnValueDescriptor;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 
 import jbse.algo.exc.CannotAccessImplementationReflectively;
@@ -105,9 +107,8 @@ StrategyRefine<DecisionAlternative_XLOAD_GETX>,
 StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     private boolean isVoid; //set by cookMore
     private Value valToLoad; //set by cookMore
-    private boolean someRefNotExpanded; //set by decider
-    private String nonExpandedRefTypes; //set by decider
-    private String nonExpandedRefOrigins; //set by decider
+    private boolean someReferencePartiallyResolved; //set by decider
+    private ArrayList<ReferenceSymbolic> partiallyResolvedReferences; //set by decider
 
     @Override
     protected final Supplier<Integer> numOperands() {
@@ -285,11 +286,11 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
             Outcome o = null; //to keep the compiler happy
             if (this.valToLoad == null) {
                 result.add(new DecisionAlternative_XLOAD_GETX_Resolved(null));
-                this.someRefNotExpanded = false;
+                this.someReferencePartiallyResolved = false;
                 o = Outcome.FFF;
             } else {
                 try {
-                    o = this.ctx.decisionProcedure.resolve_XLOAD_GETX(state, this.valToLoad, result);
+                    o = this.ctx.decisionProcedure.resolve_XLOAD_GETX(this.valToLoad, result);
                     //TODO the next catch blocks should disappear, see comments on removing exceptions in jbse.dec.DecisionProcedureAlgorithms.doResolveReference
                 } catch (ClassFileNotFoundException e) {
                     //TODO this exception should wrap a ClassNotFoundException
@@ -307,6 +308,9 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
                 } catch (ClassFileNotAccessibleException e) {
                     throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
                     exitFromAlgorithm();
+                } catch (HeapMemoryExhaustedException e) {
+                    throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
+                    exitFromAlgorithm();
                 } catch (ClassFileIllFormedException e) {
                     throwVerifyError(state, this.ctx.getCalculator());
                     exitFromAlgorithm();
@@ -314,12 +318,12 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
                 	//this should never happen
                 	failExecution(e);
                 }
-                this.someRefNotExpanded = o.noReferenceExpansion();
-                if (this.someRefNotExpanded) {
+                this.someReferencePartiallyResolved = o.partialReferenceResolution();
+                if (this.someReferencePartiallyResolved) {
                     try {
+                        this.partiallyResolvedReferences = new ArrayList<>();
                         final ReferenceSymbolic refToLoad = (ReferenceSymbolic) this.valToLoad;
-                        this.nonExpandedRefTypes = refToLoad.getStaticType();
-                        this.nonExpandedRefOrigins = refToLoad.asOriginString();
+                        this.partiallyResolvedReferences.add(refToLoad);
                     } catch (ClassCastException e) {
                         failExecution(e);
                     }
@@ -431,17 +435,12 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     }
 
     @Override
-    public final boolean someReferenceNotExpanded() { 
-        return this.someRefNotExpanded; 
+    public boolean someReferencePartiallyResolved() { 
+        return this.someReferencePartiallyResolved; 
     }
 
     @Override
-    public final String nonExpandedReferencesTypes() { 
-        return this.nonExpandedRefTypes; 
-    }
-
-    @Override
-    public final String nonExpandedReferencesOrigins() { 
-        return this.nonExpandedRefOrigins; 
+    public List<ReferenceSymbolic> partiallyResolvedReferences() { 
+        return this.partiallyResolvedReferences; 
     }
 }

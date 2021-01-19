@@ -3,7 +3,7 @@ package jbse.apps.run;
 import static jbse.apps.Util.formatClauses;
 
 import java.io.PrintStream;
-import java.util.Collection;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,7 +43,7 @@ public final class DecisionProcedureConsole extends DecisionProcedureAlgorithms 
     }
 
     @Override
-    public Collection<Clause> getAssumptions() {
+    public List<Clause> getAssumptions() {
         try {
             return super.getAssumptions();
         } catch (DecisionException e) {

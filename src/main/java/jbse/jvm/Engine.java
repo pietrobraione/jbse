@@ -12,6 +12,7 @@ import static jbse.bc.Opcodes.OP_IRETURN;
 import static jbse.bc.Opcodes.OP_RETURN;
 
 import java.util.Collection;
+import java.util.List;
 
 import jbse.algo.Algorithm;
 import jbse.algo.ExecutionContext;
@@ -19,6 +20,7 @@ import jbse.algo.InterruptException;
 import jbse.algo.Action;
 import jbse.algo.Action_START;
 import jbse.algo.exc.CannotManageStateException;
+import jbse.apps.run.DecisionProcedureGuidance;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -37,6 +39,7 @@ import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.StateTree.BranchPoint;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * An {@code Engine} is a JVM able to symbolically execute the 
@@ -59,7 +62,7 @@ import jbse.tree.StateTree.BranchPoint;
  * @author Pietro Braione
  * @author unknown
  */
-public class Engine implements AutoCloseable {
+public final class Engine implements AutoCloseable {
     //Architecture of the engine
 
     /** The {@link ExecutionContext}. */
@@ -77,21 +80,13 @@ public class Engine implements AutoCloseable {
      * Whether some of the references resolved by the last
      * decision procedure call has not been expanded.
      */
-    private boolean someReferenceNotExpanded;
+    private boolean someReferencePartiallyResolved;
 
     /**
-     * List of the origins of the references 
-     * resolved but not expanded by the last decision 
-     * procedure call.
+     * List of the references partially resolved by the 
+     * last decision procedure call.
      */
-    private String nonExpandedReferencesOrigins;
-
-    /**
-     * List of the static types of the references 
-     * resolved but not expanded by the last decision 
-     * procedure call.
-     */
-    private String nonExpandedReferencesTypes;
+    private List<ReferenceSymbolic> partiallyResolvedReferences;
 
     /** 
      * Stores the source row of the bytecode executed before the current one 
@@ -189,6 +184,12 @@ public class Engine implements AutoCloseable {
             final Collection<Clause> currentAssumptions = this.currentState.getPathCondition();
     		this.ctx.decisionProcedure.setAssumptions(currentAssumptions);
     		this.currentState.resetLastPathConditionClauses();
+    		
+    		//if the decision procedure is a guidance decision procedure,
+    		//set the execution context
+    		if (this.ctx.decisionProcedure instanceof DecisionProcedureGuidance) {
+    			((DecisionProcedureGuidance) this.ctx.decisionProcedure).setExecutionContext(this.ctx);
+    		}
         } catch (InvalidInputException | ThreadStackEmptyException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -196,6 +197,15 @@ public class Engine implements AutoCloseable {
     }
 
     //public methods (operations)
+    
+    /**
+     * Returns this {@link Engine}'s {@link ExecutionContext}.
+     * 
+     * @return an {@link ExecutionContext}.
+     */
+    public ExecutionContext getExecutionContext() {
+    	return this.ctx;
+    }
     
     /** 
      * Checks whether the current state is the last
@@ -318,9 +328,8 @@ public class Engine implements AutoCloseable {
         	//possibly gets information about symbolic references that were not expanded
         	if (action instanceof Algorithm<?, ?, ?, ?, ?>) {
         		final Algorithm<?, ?, ?, ?, ?> algo = (Algorithm<?, ?, ?, ?, ?>) action;
-        		this.someReferenceNotExpanded = algo.someReferenceNotExpanded();
-        		this.nonExpandedReferencesOrigins = algo.nonExpandedReferencesOrigins();
-        		this.nonExpandedReferencesTypes = algo.nonExpandedReferencesTypes();
+        		this.someReferencePartiallyResolved = algo.someReferencePartiallyResolved();
+        		this.partiallyResolvedReferences = algo.partiallyResolvedReferences();
         	}
         	
         	//cleans, stores and creates a branch for the initial state
@@ -496,38 +505,29 @@ public class Engine implements AutoCloseable {
     }
 
     /**
-     * Test whether some of the references resolved by the last
-     * decision procedure call has not been expanded.
+     * Tests whether some of the references resolved by the last
+     * decision procedure call were <em>partially</em>, resolved, 
+     * i.e., were not resolved by expansion because no 
+     * concrete class was found in the classpath that is 
+     * type-compatible with the symbolic references and assumed to 
+     * be not pre-initialized.
      * 
      * @return a {@code boolean}.
      */
-    public boolean someReferenceNotExpanded() {
-        return this.someReferenceNotExpanded;
+    public boolean someReferencePartiallyResolved() {
+        return this.someReferencePartiallyResolved;
     }
 
     /**
-     * Returns a list of the origins of the references 
-     * resolved but not expanded by the last decision 
-     * procedure call.
+     * Returns a list of the symbolic references resolved by the last
+     * decision procedure call that were <em>partially</em>, resolved.
 
-     * @return a {@link String}, a comma-separated
-     *         list of origins. 
+     * @return a {@link List}{@code <}{@link ReferenceSymbolic}{@code >}, 
+     *         empty when {@link #someReferencePartiallyResolved()}{@code  == false}.
+     * @see #someReferencePartiallyResolved()
      */
-    public String getNonExpandedReferencesOrigins() {
-        return this.nonExpandedReferencesOrigins;
-    }
-
-
-    /**
-     * Returns a list of the static types of the references 
-     * resolved but not expanded by the last decision 
-     * procedure call.
-
-     * @return a {@link String}, a comma-separated
-     *         list of class names. 
-     */
-    public String getNonExpandedReferencesTypes() {
-        return this.nonExpandedReferencesTypes;
+    public List<ReferenceSymbolic> getPartiallyResolvedReferences() {
+        return this.partiallyResolvedReferences;
     }
 
     /**

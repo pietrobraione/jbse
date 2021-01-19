@@ -7,6 +7,7 @@ import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
 
 /**
  * Strategy for deciding the states following the current one.
@@ -36,8 +37,15 @@ public interface StrategyDecide<R> {
      *         of the bytecode semantics must be interrupted, e.g., 
      *         if some correctness check fails or if heap memory
      *         is exhausted.
+     * @throws InterruptException possibly raised if the execution 
+     *         of the bytecode semantics must be interrupted, e.g., 
+     *         if some correctness check fails or if heap memory
+     *         is exhausted.
+     * @throws ContradictionException possibly raised by guidance
+     *         decision procedure if some class initialization assumption
+     *         during backdoor expansion is violated
      */
     public Outcome decide(State state, SortedSet<R> result) 
     throws InvalidInputException, DecisionException,
-    ClasspathException, InterruptException;
+    ClasspathException, InterruptException, ContradictionException;
 }

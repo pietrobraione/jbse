@@ -4,7 +4,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -54,7 +54,7 @@ public class DecisionProcedureSignAnalysisTest {
 		public void clearAssumptions() { }
 
 		@Override
-		public Collection<Clause> getAssumptions() 
+		public List<Clause> getAssumptions() 
 		throws DecisionException { return null; }
 
 		@Override

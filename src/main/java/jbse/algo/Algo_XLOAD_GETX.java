@@ -7,6 +7,7 @@ import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
 
 import jbse.algo.exc.SymbolicValueNotAllowedException;
@@ -22,6 +23,7 @@ import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_XLOAD_GETX;
 import jbse.tree.DecisionAlternative_XLOAD_GETX_Aliases;
 import jbse.tree.DecisionAlternative_XLOAD_GETX_Null;
@@ -61,7 +63,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
         return (state, result) -> {
             Outcome o = null; //to keep the compiler happy
             try {
-                o = this.ctx.decisionProcedure.resolve_XLOAD_GETX(state, this.valToLoad, result);
+                o = this.ctx.decisionProcedure.resolve_XLOAD_GETX(this.valToLoad, result);
             //TODO the next catch blocks should disappear, see comments on removing exceptions in jbse.dec.DecisionProcedureAlgorithms.doResolveReference
             } catch (ClassFileNotFoundException e) {
                 //TODO this exception should wrap a ClassNotFoundException
@@ -79,19 +81,21 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
             } catch (ClassFileNotAccessibleException e) {
                 throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
                 exitFromAlgorithm();
+            } catch (HeapMemoryExhaustedException e) {
+                throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
+                exitFromAlgorithm();
             } catch (ClassFileIllFormedException e) {
                 throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             } catch (RenameUnsupportedException e) {
             	//this should never happen
             	failExecution(e);
-            }
-            this.someRefNotExpanded = o.noReferenceExpansion();
-            if (this.someRefNotExpanded) {
+			}
+            this.someReferencePartiallyResolved = o.partialReferenceResolution();
+            if (this.someReferencePartiallyResolved) {
                 try {
                     final ReferenceSymbolic refToLoad = (ReferenceSymbolic) this.valToLoad;
-                    this.nonExpandedRefTypes = refToLoad.getStaticType();
-                    this.nonExpandedRefOrigins = refToLoad.asOriginString();
+                    this.partiallyResolvedReferences.add(refToLoad);
                 } catch (ClassCastException e) {
                     //this should never happen
                     failExecution(e);

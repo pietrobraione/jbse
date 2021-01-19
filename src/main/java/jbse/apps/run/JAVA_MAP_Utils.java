@@ -64,6 +64,7 @@ public final class JAVA_MAP_Utils {
 		}				
 	}
 
+	//solo tardis
 	public static boolean assumptionViolated(Clause clause) {
 		if (clause instanceof ClauseAssumeReferenceSymbolic) {
 			final ReferenceSymbolic ref = ((ClauseAssumeReferenceSymbolic) clause).getReference(); 
@@ -83,6 +84,7 @@ public final class JAVA_MAP_Utils {
 		return false;
 	}
 
+	//solo sushi-lib
 	public static String possiblyAdaptMapModelSymbols(String origin) {
 		final String INITIAL_MAP_FIELD_FULL = "\\.[^\\.]*Map:" + INITIAL_MAP_FIELD_NAME;
 		final String originNoInitialMap;

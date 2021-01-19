@@ -89,7 +89,7 @@ public final class DecisionProcedureDecoratorPrint extends DecisionProcedureDeco
     throws InvalidInputException, DecisionException {
         final boolean retVal = super.isSat(exp);
         IO.print(this.out, ":: Decided: ");
-        IO.print(this.out, formatClauses(this.getAssumptions())); 
+        IO.print(this.out, formatClauses(getAssumptions())); 
         IO.println(this.out, TURNSTILE + formatExpression(exp) + ". Result: " + Boolean.toString(retVal));
         return retVal;
     }
@@ -99,7 +99,7 @@ public final class DecisionProcedureDecoratorPrint extends DecisionProcedureDeco
     throws InvalidInputException, DecisionException {
         final boolean retVal = super.isSatNull(r);
         IO.print(this.out, ":: Decided: ");
-        IO.print(this.out, formatClauses(this.getAssumptions())); 
+        IO.print(this.out, formatClauses(getAssumptions())); 
         IO.println(this.out, TURNSTILE + r.asOriginString() + " == null. Result: " + Boolean.toString(retVal));
         return retVal;
     }
@@ -109,7 +109,7 @@ public final class DecisionProcedureDecoratorPrint extends DecisionProcedureDeco
     throws InvalidInputException, DecisionException {
         final boolean retVal = super.isSatAliases(r, heapPos, o);
         IO.print(this.out, ":: Decided: ");
-        IO.print(this.out, formatClauses(this.getAssumptions())); 
+        IO.print(this.out, formatClauses(getAssumptions())); 
         IO.println(this.out, TURNSTILE + r.asOriginString() + " == " + o.getOrigin().asOriginString() + ". Result: " + Boolean.toString(retVal));
         return retVal;
     }
@@ -119,7 +119,7 @@ public final class DecisionProcedureDecoratorPrint extends DecisionProcedureDeco
     throws InvalidInputException, DecisionException {
         final boolean retVal = super.isSatExpands(r, classFile);
         IO.print(this.out, ":: Decided: ");
-        IO.print(this.out, formatClauses(this.getAssumptions())); 
+        IO.print(this.out, formatClauses(getAssumptions())); 
         IO.println(this.out, TURNSTILE + r.asOriginString() + " == fresh " + classFile.getClassName() + ". Result: " + Boolean.toString(retVal));
         return retVal;
     }
@@ -129,7 +129,7 @@ public final class DecisionProcedureDecoratorPrint extends DecisionProcedureDeco
     throws InvalidInputException, DecisionException {
         final boolean retVal = super.isSatInitialized(classFile);
         IO.print(this.out, ":: Decided: ");
-        IO.print(this.out, formatClauses(this.getAssumptions())); 
+        IO.print(this.out, formatClauses(getAssumptions())); 
         IO.println(this.out, TURNSTILE + "pre_init(" + classFile.getClassName() + "). Result: " + Boolean.toString(retVal));
         return retVal;
     }
@@ -139,7 +139,7 @@ public final class DecisionProcedureDecoratorPrint extends DecisionProcedureDeco
     throws InvalidInputException, DecisionException {
         final boolean retVal = super.isSatNotInitialized(classFile);
         IO.print(this.out, ":: Decided: ");
-        IO.print(this.out, formatClauses(this.getAssumptions())); 
+        IO.print(this.out, formatClauses(getAssumptions())); 
         IO.println(this.out, TURNSTILE + "!pre_init(" + classFile.getClassName() + "). Result: " + Boolean.toString(retVal));
         return retVal;
     }

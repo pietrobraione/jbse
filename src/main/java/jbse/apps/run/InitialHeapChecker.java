@@ -323,7 +323,7 @@ public final class InitialHeapChecker {
 
         @Override
         public boolean atScopeExhaustionHeap() {
-            if (scopeExhaustionMeansSuccess) {
+            if (this.scopeExhaustionMeansSuccess) {
                 this.repOk = true;
                 return true;
             }
@@ -333,7 +333,7 @@ public final class InitialHeapChecker {
 
         @Override
         public boolean atScopeExhaustionCount() {
-            if (scopeExhaustionMeansSuccess) {
+            if (this.scopeExhaustionMeansSuccess) {
                 this.repOk = true;
                 return true;
             }
@@ -342,7 +342,7 @@ public final class InitialHeapChecker {
 
         @Override
         public boolean atScopeExhaustionDepth() {
-            if (scopeExhaustionMeansSuccess) {
+            if (this.scopeExhaustionMeansSuccess) {
                 this.repOk = true;
                 return true;
             }

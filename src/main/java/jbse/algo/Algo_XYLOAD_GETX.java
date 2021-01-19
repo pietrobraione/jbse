@@ -12,6 +12,9 @@ import static jbse.common.Type.className;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isPrimitiveOpStack;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jbse.algo.exc.MissingTriggerParameterException;
 import jbse.algo.exc.NotYetImplementedException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
@@ -59,15 +62,13 @@ RE extends StrategyRefine<R>,
 UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
 
     //set by subclasses (decider method)
-    protected boolean someRefNotExpanded;
-    protected String nonExpandedRefTypes;
-    protected String nonExpandedRefOrigins;
+    protected boolean someReferencePartiallyResolved;
+    protected ArrayList<ReferenceSymbolic> partiallyResolvedReferences;
 
     @Override
     protected final void cleanup() {
-        this.someRefNotExpanded = false;
-        this.nonExpandedRefTypes = "";
-        this.nonExpandedRefOrigins = "";
+        this.someReferencePartiallyResolved = false;
+        this.partiallyResolvedReferences = new ArrayList<>();
         super.cleanup();
     }
     
@@ -182,17 +183,12 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
     throws DecisionException, InterruptException, ClasspathException, FrozenStateException;
 
     @Override
-    public final boolean someReferenceNotExpanded() { 
-        return this.someRefNotExpanded; 
+    public final boolean someReferencePartiallyResolved() { 
+        return this.someReferencePartiallyResolved; 
     }
 
     @Override
-    public final String nonExpandedReferencesTypes() { 
-        return this.nonExpandedRefTypes; 
-    }
-
-    @Override
-    public final String nonExpandedReferencesOrigins() { 
-        return this.nonExpandedRefOrigins; 
+    public final List<ReferenceSymbolic> partiallyResolvedReferences() { 
+        return this.partiallyResolvedReferences; 
     }
 }

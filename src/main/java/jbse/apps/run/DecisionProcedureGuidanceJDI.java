@@ -71,6 +71,7 @@ import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.MethodExitRequest;
 
+import jbse.algo.ExecutionContext;
 import jbse.bc.Offsets;
 import jbse.bc.Signature;
 import jbse.common.exc.InvalidInputException;
@@ -115,7 +116,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 	 *         is to blame).
 	 * @throws InvalidInputException if {@code component == null}.
 	 */
-	public DecisionProcedureGuidanceJDI(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature) 
+	public DecisionProcedureGuidanceJDI(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, ExecutionContext ctx) 
 	throws GuidanceException, InvalidInputException {
 		this(component, calc, runnerParameters, stopSignature, 1);
 	}
@@ -153,11 +154,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 	 * @throws GuidanceException if something fails during creation (and the caller
 	 *         is to blame).
 	 */
-        public static int countNonRecursiveHits(RunnerParameters runnerParameters, Signature stopSignature) 
-        throws GuidanceException {
-                final JVMJDI jdiCompleteExecution = new JVMJDI(runnerParameters, stopSignature);
-                return jdiCompleteExecution.hitCounter;
-        }
+	public static int countNonRecursiveHits(RunnerParameters runnerParameters, Signature stopSignature) 
+	throws GuidanceException {
+		final JVMJDI jdiCompleteExecution = new JVMJDI(runnerParameters, stopSignature);
+		return jdiCompleteExecution.hitCounter;
+	}
         
 	private static class JVMJDI extends JVM {
 		private static final String ERROR_BAD_PATH = "Failed accessing through a memory access path: ";
@@ -208,7 +209,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			this.stopSignatureNumberOfHits = numberOfHits;
 			this.vm = createVM();
 			goToBreakpoint(stopSignature, 0, numberOfHits);
-			try 	{
+			try {
 				this.numOfFramesAtMethodEntry = getCurrentThread().frameCount();
 			} catch (IncompatibleThreadStateException e) {
 				throw new UnexpectedInternalException(e); 
@@ -278,7 +279,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
 
 		private VirtualMachine createVM() 
-				throws GuidanceException {
+		throws GuidanceException {
 			try {
 				final Iterable<Path> classPath = this.runnerParameters.getClasspath().classPath();
 				final ArrayList<String> listClassPath = new ArrayList<>();
@@ -318,7 +319,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
 			//sets event requests
 			final EventRequestManager mgr = this.vm.eventRequestManager();
-			final ClassPrepareRequest  cprr = mgr.createClassPrepareRequest();
+			final ClassPrepareRequest cprr = mgr.createClassPrepareRequest();
 			cprr.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
 			cprr.enable();
 
@@ -376,8 +377,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
 		private void handleClassPrepareEvents(Event event) {
 			if (event instanceof ClassPrepareEvent) {
-				ClassPrepareEvent evt = (ClassPrepareEvent) event;
-				ReferenceType classType = evt.referenceType();
+				final ClassPrepareEvent evt = (ClassPrepareEvent) event;
+				final ReferenceType classType = evt.referenceType();
 				this.alreadyLoadedClasses.put(classType.name().replace('.', '/'), classType);
 				for (ReferenceType innerType: classType.nestedTypes()) {
 				    this.alreadyLoadedClasses.put(innerType.name().replace('.', '/'), innerType);					
@@ -631,7 +632,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			if (JAVA_MAP_Utils.isSymbolicApplyOnInitialMap((jbse.val.Value) symbolicApply)) {
 				final String op = this.currentHashMapModelMethod; //the operator is containsKey, but we need to move into the jbse.base.JAVA_MAP method where containskey is being evaluated to obtain the proper value of the key
 				final List<String> hits = this.symbolicApplyOperatorOccurrences.get(op);
-				SymbolicMemberField initialMap = (SymbolicMemberField) symbolicApply.getArgs()[0];
+				final SymbolicMemberField initialMap = (SymbolicMemberField) symbolicApply.getArgs()[0];
 				final InitialMapSymbolicApplyJVMJDI symbolicApplyVm = new InitialMapSymbolicApplyJVMJDI(this.calc, this.runnerParameters, this.stopSignature, this.stopSignatureNumberOfHits, op, hits, initialMap);
 				symbolicApplyVm.eval_INVOKEX();
 				if (symbolicApplyVm.getValueAtKey() == null) {
@@ -644,7 +645,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			final String op = symbolicApply.getOperator();
 			final int numberOfHits;
 			if (this.symbolicApplyOperatorOccurrences.containsKey(op)) {
-				List<String> callCtxs = this.symbolicApplyOperatorOccurrences.get(op);
+				final List<String> callCtxs = this.symbolicApplyOperatorOccurrences.get(op);
 				callCtxs.add(op); /* TODO: In the future, we should record the full call stack, to allow a less fragile 
 						 		   * handling of the breakpoints to reach the invocation of this operations. 
 						 		   * Currently, we omit the information on the call context of the operation op,
@@ -656,7 +657,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 						 		   * the case of dynamic class loading of classes that JBSE assumed as pre-loaded */
 				numberOfHits = callCtxs.size();
 			} else {
-				this.symbolicApplyOperatorOccurrences.put(op, Arrays.asList(op));
+				this.symbolicApplyOperatorOccurrences.put(op, new ArrayList<>(Arrays.asList(op)));
 				numberOfHits = 1;
 			}
 			final SymbolicApplyJVMJDI symbolicApplyVm = new SymbolicApplyJVMJDI(this.calc, this.runnerParameters, this.stopSignature, this.stopSignatureNumberOfHits, op, numberOfHits);
@@ -737,9 +738,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		}
 		
 		private static Value cloneInitialMap(ThreadReference currentThread, Object o) {
-			ObjectReference initialMapRef = (com.sun.jdi.ObjectReference) o;
+			final ObjectReference initialMapRef = (com.sun.jdi.ObjectReference) o;
 			try {
-				Value intialMapClone = initialMapRef.invokeMethod(currentThread, initialMapRef.referenceType().methodsByName("clone").get(0), Collections.emptyList(), ObjectReference.INVOKE_SINGLE_THREADED);
+				final Value intialMapClone = initialMapRef.invokeMethod(currentThread, initialMapRef.referenceType().methodsByName("clone").get(0), Collections.emptyList(), ObjectReference.INVOKE_SINGLE_THREADED);
 				return intialMapClone;
 			} catch (InvalidTypeException | ClassNotLoadedException | IncompatibleThreadStateException | InvocationException e) {
 				throw new UnexpectedInternalException(e);
@@ -842,8 +843,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			/* We set up a control breakpoint to check if, at any next step, JDI erroneously returns from the method under analysis */
 			try { 
 				final EventRequestManager mgr = this.vm.eventRequestManager();
-				Location callPoint = getCurrentThread().frames().get(1).location(); //the current location in caller frame
-				targetMethodExitedBreakpoint = mgr.createBreakpointRequest(callPoint.method().locationOfCodeIndex(callPoint.codeIndex() + Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET));
+				final Location callPoint = getCurrentThread().frames().get(1).location(); //the current location in caller frame
+				this.targetMethodExitedBreakpoint = mgr.createBreakpointRequest(callPoint.method().locationOfCodeIndex(callPoint.codeIndex() + Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET));
 			} catch (IncompatibleThreadStateException e) {
 				throw new UnexpectedInternalException(e);
 			}
@@ -875,10 +876,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
 		protected void stepIntoSymbolicApplyMethod() throws GuidanceException {
 			// Make JDI execute the uninterpreted function that corresponds to the symboliApply
-			targetMethodExitedBreakpoint.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-			targetMethodExitedBreakpoint.enable();
-			goToBreakpoint(signatureOf(symbolicApplyOperator), 0, symbolicApplyNumberOfHits);
-			targetMethodExitedBreakpoint.disable();			
+			this.targetMethodExitedBreakpoint.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+			this.targetMethodExitedBreakpoint.enable();
+			goToBreakpoint(signatureOf(this.symbolicApplyOperator), 0, this.symbolicApplyNumberOfHits);
+			this.targetMethodExitedBreakpoint.disable();			
 		}
 		
 		private static Signature signatureOf(String unintFuncOperator) {
@@ -945,7 +946,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		public InitialMapSymbolicApplyJVMJDI(Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits, String symbolicApplyOperator, List<String> hits, SymbolicMemberField initialMapOrigin) 
 		throws GuidanceException {
 			super(calc, runnerParameters, stopSignature, numberOfHits, symbolicApplyOperator, hits.size());
-			initialMapRef = (ObjectReference) getJDIValue(initialMapOrigin);
+			this.initialMapRef = (ObjectReference) getJDIValue(initialMapOrigin);
 			this.hits = hits;
 		}
 		
@@ -968,29 +969,28 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		@Override
 		protected boolean handleBreakpointEvents(Event event, int numberOfHits) throws GuidanceException {
 			boolean atBreakpoint = super.handleBreakpointEvents(event, numberOfHits);
-			if (atBreakpoint && hits != null) {
+			if (atBreakpoint && this.hits != null) {
 				// We check if the breakpoint is at a method with the right call context
-				String[] expectedCallCtx = hits.get(this.hitCounter - 1).split(callContextSeparator);
+				final String[] expectedCallCtx = this.hits.get(this.hitCounter - 1).split(callContextSeparator);
 				try {
-					int numFrames = this.numFramesFromRootFrameConcrete() + 1;
-					boolean callStackLenOk = expectedCallCtx.length == numFrames; //check if the call stack corresponds, otherwise roll-back the decision
+					final int numFrames = this.numFramesFromRootFrameConcrete() + 1;
+					final boolean callStackLenOk = expectedCallCtx.length == numFrames; //check if the call stack corresponds, otherwise roll-back the decision
 					if (!callStackLenOk) {
 						--this.hitCounter;
 						return false;
 					}
-					boolean callStackOk = true;
 					for (int i = 0; i < this.numFramesFromRootFrameConcrete(); ++i) {
-						String method = this.getCurrentThread().frame(i).location().method().name();
-						String callCtxItem = expectedCallCtx[expectedCallCtx.length - 1 - i];
-						String name = callCtxItem.substring(callCtxItem.lastIndexOf(':') + 1);
-						callStackOk = method.equals(name);
+						final String method = this.getCurrentThread().frame(i).location().method().name();
+						final String callCtxItem = expectedCallCtx[expectedCallCtx.length - 1 - i];
+						final String name = callCtxItem.substring(callCtxItem.lastIndexOf(':') + 1);
+						final boolean callStackOk = method.equals(name);
 						if (!callStackOk) {
 							--this.hitCounter;
 							return false;
 						}					
 					}
 				} catch (IncompatibleThreadStateException e) {
-					throw new GuidanceException("JDI failed to check the call stack at breakpoint on HashMap method related to symbolic HsahMap: " + e);
+					throw new GuidanceException("JDI failed to check the call stack at breakpoint on HashMap method related to symbolic HashMap: " + e);
 				}
 			}
 			return atBreakpoint;
@@ -1016,6 +1016,5 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		prevHits.add(callCtxString);
 		((JVMJDI) this.jvm).currentHashMapModelMethod = currentMethodSignature.toString();
 	}
-	
 }
 

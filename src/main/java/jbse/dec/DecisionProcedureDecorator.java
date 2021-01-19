@@ -1,6 +1,7 @@
 package jbse.dec;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import jbse.bc.ClassFile;
@@ -78,7 +79,7 @@ public class DecisionProcedureDecorator implements DecisionProcedure {
     }
     
     @Override
-    public Collection<Clause> getAssumptions() 
+    public List<Clause> getAssumptions() 
     throws DecisionException {
         return this.component.getAssumptions();
     }

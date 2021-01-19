@@ -31,7 +31,7 @@ public interface Array extends HeapObjekt {
      * The {@link String} identifier of the {@link Term} used to
      * represent an {@link Array}'s index.
      */
-    public static final String INDEX_ID = "{INDEX}";
+    public static final String INDEX_ID = "{INDEX-";
 
     /**
      * The outcome of an array access. An 

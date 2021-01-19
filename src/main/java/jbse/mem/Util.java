@@ -3,6 +3,8 @@ package jbse.mem;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isReference;
 
+import java.util.List;
+
 import jbse.val.KlassPseudoReference;
 import jbse.val.Null;
 import jbse.val.Primitive;
@@ -52,6 +54,30 @@ public class Util {
 		return 
 		isSymbolicReference(v) &&
         s.resolved((ReferenceSymbolic) v);
+	}
+	
+	/**
+	 * Checks whether a {@link Value} is a resolved symbolic 
+	 * {@link Reference}.
+	 * 
+	 * @param s a {@link State}. It must not be {@code null}.
+	 * @param v a {@link Value}. It must not be {@code null}.
+	 * @return {@code true} iff {@code v} is a symbolic 
+	 * {@link Reference} resolved in {@code s}.
+	 */
+	public static boolean isResolvedSymbolicReference(List<Clause> l, Value v) {
+		if (!isSymbolicReference(v)) {
+			return false;
+		}
+        for (Clause c : l) {
+        	if (c instanceof ClauseAssumeReferenceSymbolic) {
+        		final ClauseAssumeReferenceSymbolic cr = (ClauseAssumeReferenceSymbolic) c;
+        		if (cr.getReference().equals(v)) {
+        			return true;
+        		}
+        	}
+        }
+        return false;
 	}
 	
 	/**
@@ -119,7 +145,7 @@ public class Util {
 	 *         {@code r} is not resolved.
 	 */
 	public static long heapPosition(State s, Reference r) {
-		if (isResolved(s, r)) {
+		if (isResolved(s.getPathCondition(), r)) {
 	        return (r.isSymbolic() ? s.getResolution((ReferenceSymbolic) r) : ((ReferenceConcrete) r).getHeapPosition());
 		}
         return POS_UNKNOWN;
@@ -142,6 +168,26 @@ public class Util {
         v instanceof ReferenceArrayImmaterial ||
         v instanceof KlassPseudoReference ||
 		isResolvedSymbolicReference(s, v);
+	}
+	
+	/**
+	 * Checks whether a {@link Value} is resolved. 
+	 * 
+	 * @param l a {@link List}{@code <}{@link Clause}{@code >}. 
+	 *        It must not be {@code null}.
+	 * @param v a {@link Value}. It must not be {@code null}.
+	 * @return {@code true} iff {@code v} is resolved, i.e., 
+	 * either is a {@link Primitive} (symbolic or not), or a 
+	 * concrete {@link Reference}, or a symbolic 
+	 * {@link Reference} resolved by some {@link Clause} in {@code l}.
+	 */
+	public static boolean isResolved(List<Clause> l, Value v) {
+		return
+		isPrimitive(v.getType()) ||
+		v instanceof ReferenceConcrete ||
+        v instanceof ReferenceArrayImmaterial ||
+        v instanceof KlassPseudoReference ||
+		isResolvedSymbolicReference(l, v);
 	}
 	
 	/**

@@ -390,7 +390,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
         this.isInitial = isInitial;
         this.lengthSignature = new Signature(classFile.getClassName(), "" + INT, "length");
         try {
-            this.indexFormal = calc.valTerm(INT, INDEX_ID);
+            this.indexFormal = calc.valTerm(INT, INDEX_ID + System.identityHashCode(this) + "}");
         } catch (InvalidTypeException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -425,7 +425,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
         this.isInitial = false;
         this.lengthSignature = new Signature(this.classFile.getClassName(), "" + INT, "length");
         try {
-            this.indexFormal = calc.valTerm(INT, INDEX_ID);
+            this.indexFormal = calc.valTerm(INT, INDEX_ID + System.identityHashCode(this) + "}");
         } catch (InvalidTypeException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);

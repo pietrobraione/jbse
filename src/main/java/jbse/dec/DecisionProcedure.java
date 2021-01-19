@@ -1,7 +1,9 @@
 package jbse.dec;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import jbse.bc.ClassFile;
 import jbse.common.exc.InvalidInputException;
@@ -9,6 +11,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.NoModelException;
 import jbse.mem.Clause;
 import jbse.mem.Objekt;
+import jbse.mem.State;
 import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.Primitive;
@@ -27,9 +30,32 @@ import jbse.val.Simplex;
  * on the current assumption.
  */
 public interface DecisionProcedure extends AutoCloseable {
-	
 	/** Returns the {@link Calculator} used by this {@link DecisionProcedure}. */
 	Calculator getCalculator();
+	
+	/**
+	 * Sets a supplier for the initial state. By default
+	 * implementation ignores its parameter. Subclasses that need to
+	 * inspect the initial state of the symbolic computation
+	 * may store it. The engine will suitably invoke it upon
+	 * initialization.
+	 * 
+	 * @param initialStateSupplier a {@link Supplier}{@code <}{@link State}{@code <}, 
+	 *        that returns the initial state of the symbolic execution.
+	 */
+    default void setInitialStateSupplier(Supplier<State> initialStateSupplier) { }
+
+	/**
+	 * Sets a supplier for the current state. The default
+	 * implementation ignores its parameter. Subclasses that need to
+	 * inspect the initial state of the symbolic computation
+	 * may store it. The engine will suitably invoke it upon
+	 * initialization.
+	 * 
+	 * @param currentStateSupplier a {@link Supplier}{@code <}{@link State}{@code <}, 
+	 *        that returns the current state of the symbolic execution.
+	 */
+    default void setCurrentStateSupplier(Supplier<State> currentStateSupplier) { }
 	
     /**
      * Possibly delays checking that the pushed clauses 
@@ -74,7 +100,7 @@ public interface DecisionProcedure extends AutoCloseable {
     void clearAssumptions() throws DecisionException;
 
     /**
-     * Adds to the current assumptions more assumptions.  
+     * Adds more assumptions to the current assumptions.  
      * 
      * @param assumptionsToAdd a {@link Iterable}{@code <}{@link Clause}{@code >}, the
      *        new assumptions that must be added to the current ones, iterable in FIFO order 
@@ -94,7 +120,7 @@ public interface DecisionProcedure extends AutoCloseable {
     }
 
     /**
-     * Adds to the current assumptions more assumptions.  
+     * Adds more assumptions to the current assumptions.  
      * 
      * @param assumptionsToAdd a varargs of {@link Clause}s, the
      *        new assumptions that must be added to the current ones, iterable in FIFO order 
@@ -117,9 +143,9 @@ public interface DecisionProcedure extends AutoCloseable {
      * Changes the current assumptions.  
      * 
      * @param newAssumptions a {@link Collection}{@code <}{@link Clause}{@code >}, the
-     *        new assumptions that must replace the current ones, iterable in FIFO order 
-     *        w.r.t. pushes. It must not be {@code null}, nor have 
-     *        {@code null} as one of its elements.
+     *        new assumptions that must replace the current ones, where the first 
+     *        {@link Clause} is the first pushed. It must not be 
+     *        {@code null}, nor have {@code null}s among its elements.
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
      */
@@ -132,11 +158,11 @@ public interface DecisionProcedure extends AutoCloseable {
     /**
      * Gets the current assumptions.
      * 
-     * @return an immutable {@link Collection}{@code <}{@link Clause}{@code >}
+     * @return an immutable {@link List}{@code <}{@link Clause}{@code >}
      *         with all the pushed clauses, possibly simplified.
      * @throws DecisionException upon failure.
      */
-    Collection<Clause> getAssumptions() throws DecisionException;
+    List<Clause> getAssumptions() throws DecisionException;
 
     /**
      * Determines the satisfiability of an {@link Expression} under the
