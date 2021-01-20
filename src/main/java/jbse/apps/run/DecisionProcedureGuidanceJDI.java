@@ -1,5 +1,6 @@
 package jbse.apps.run;
 
+import static jbse.algo.Util.failExecution;
 import static jbse.bc.Signatures.JAVA_MAP_CONTAINSKEY;
 import static jbse.common.Type.BOOLEAN;
 import static jbse.common.Type.REFERENCE;
@@ -19,13 +20,13 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.function.Supplier;
 
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.ArrayReference;
@@ -79,7 +80,9 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.jvm.Runner;
 import jbse.jvm.RunnerParameters;
+import jbse.mem.Frame;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Calculator;
 import jbse.val.KlassPseudoReference;
@@ -141,6 +144,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 	public DecisionProcedureGuidanceJDI(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits) 
 	throws GuidanceException, InvalidInputException {
 		super(component, new JVMJDI(calc, runnerParameters, stopSignature, numberOfHits));
+		((JVMJDI) this.jvm).injectStateSupplier(this);
 	}
 
 	/**
@@ -183,6 +187,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		private Map<String, List<String>> symbolicApplyOperatorOccurrences = new HashMap<>();
 		private String currentHashMapModelMethod;
 		
+		private DecisionProcedureGuidanceJDI currentStateSupplier = null;
+		
 		public JVMJDI(RunnerParameters runnerParameters, Signature stopSignature) 
 		throws GuidanceException {
 			super(null, runnerParameters, stopSignature, Integer.MAX_VALUE);
@@ -201,6 +207,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			throw new GuidanceException("This constructor continues the execution up to termination, thus JDI will throw an exception eventually upon disconnecting.");
 		}
 		
+		void injectStateSupplier(DecisionProcedureGuidanceJDI decisionProcedureGuidanceJDI) {
+			this.currentStateSupplier = decisionProcedureGuidanceJDI;
+		}
+
 		public JVMJDI(Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits) 
 		throws GuidanceException {
 			super(calc, runnerParameters, stopSignature, numberOfHits);
@@ -224,7 +234,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			t.start();
 			return t;
 		}
-
+		
 		/**
 		 * StreamRedirectThread is a thread which copies it's input to
 		 * it's output and terminates when it completes.
@@ -631,9 +641,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			 */
 			if (JAVA_MAP_Utils.isSymbolicApplyOnInitialMap((jbse.val.Value) symbolicApply)) {
 				final String op = this.currentHashMapModelMethod; //the operator is containsKey, but we need to move into the jbse.base.JAVA_MAP method where containskey is being evaluated to obtain the proper value of the key
-				final List<String> hits = this.symbolicApplyOperatorOccurrences.get(op);
+				final List<String> hitCallCtxs = this.symbolicApplyOperatorOccurrences.get(op);
 				final SymbolicMemberField initialMap = (SymbolicMemberField) symbolicApply.getArgs()[0];
-				final InitialMapSymbolicApplyJVMJDI symbolicApplyVm = new InitialMapSymbolicApplyJVMJDI(this.calc, this.runnerParameters, this.stopSignature, this.stopSignatureNumberOfHits, op, hits, initialMap);
+				final InitialMapSymbolicApplyJVMJDI symbolicApplyVm = new InitialMapSymbolicApplyJVMJDI(this.calc, this.runnerParameters, this.stopSignature, this.stopSignatureNumberOfHits, op, hitCallCtxs, initialMap);
 				symbolicApplyVm.eval_INVOKEX();
 				if (symbolicApplyVm.getValueAtKey() == null) {
 					// the return value of containsKey is a boolean and there is no Object associated with this key,
@@ -643,24 +653,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 				return symbolicApplyVm;
 			}
 			final String op = symbolicApply.getOperator();
-			final int numberOfHits;
-			if (this.symbolicApplyOperatorOccurrences.containsKey(op)) {
-				final List<String> callCtxs = this.symbolicApplyOperatorOccurrences.get(op);
-				callCtxs.add(op); /* TODO: In the future, we should record the full call stack, to allow a less fragile 
-						 		   * handling of the breakpoints to reach the invocation of this operations. 
-						 		   * Currently, we omit the information on the call context of the operation op,
-						 		   * because there is no easy access to the JBSE symbolic state at this point of the code.
-						 		   * Thus, we this information allows us just to count the number of times that this operation
-						 		   * gets called under JDI, and then reach the n-th (numberOfHits) call point.  
-						 		   * This strategy may fail if JDI happens to see additional calls
-						 		   * that were not visible to JBSE, e.g., calls done in low-level code such in 
-						 		   * the case of dynamic class loading of classes that JBSE assumed as pre-loaded */
-				numberOfHits = callCtxs.size();
-			} else {
-				this.symbolicApplyOperatorOccurrences.put(op, new ArrayList<>(Arrays.asList(op)));
-				numberOfHits = 1;
-			}
-			final SymbolicApplyJVMJDI symbolicApplyVm = new SymbolicApplyJVMJDI(this.calc, this.runnerParameters, this.stopSignature, this.stopSignatureNumberOfHits, op, numberOfHits);
+            SymbolicApplyJVMJDI.storeNewSymbolicApplyOperatorOccurrence(this.symbolicApplyOperatorOccurrences, op, this.currentStateSupplier.currentStateSupplier.get());
+			final List<String> hitCallCtxs = this.symbolicApplyOperatorOccurrences.get(op);
+
+			final SymbolicApplyJVMJDI symbolicApplyVm = new SymbolicApplyJVMJDI(this.calc, this.runnerParameters, this.stopSignature, this.stopSignatureNumberOfHits, op, hitCallCtxs);
 			symbolicApplyVm.eval_INVOKEX();
 			
 			//If the return value is a primitive, we do not need this vm any further
@@ -670,7 +666,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
 			return symbolicApplyVm;
 		}
-
+		
 		private com.sun.jdi.Value getJDIValueLocalVariable(String var) 
 		throws GuidanceException, IncompatibleThreadStateException, AbsentInformationException {
 			final com.sun.jdi.Value val;
@@ -827,19 +823,27 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 				symbolicApplyVm.close();
 			}
 		}
+
 	}
 	
 	private static class SymbolicApplyJVMJDI extends JVMJDI {
-		protected Value symbolicApplyRetValue;
 		private final String symbolicApplyOperator;
-		private final int symbolicApplyNumberOfHits;
+		private final List<String> hitCallCtxs;
+		public static final String callContextSeparator = "&&";
 		private final BreakpointRequest targetMethodExitedBreakpoint;
+		protected Value symbolicApplyRetValue;
+		private boolean postInitial = false;
 
-		public SymbolicApplyJVMJDI(Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits, String symbolicApplyOperator, int symbolicApplyNumberOfHits) 
+		public SymbolicApplyJVMJDI(Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int stopSignatureNumberOfHits, String symbolicApplyOperator, List<String> hitCallCtxs) 
 		throws GuidanceException {
-			super(calc, runnerParameters, stopSignature, numberOfHits);
+			super(calc, runnerParameters, stopSignature, stopSignatureNumberOfHits);
+			postInitial = true;
 			this.symbolicApplyOperator = symbolicApplyOperator;
-			this.symbolicApplyNumberOfHits = symbolicApplyNumberOfHits;
+			if (hitCallCtxs == null || hitCallCtxs.isEmpty()) {
+				throw new UnexpectedInternalException("This should never happen: the considered symbolic apply operator (a method call) must occurr at list once");
+			}
+			this.hitCallCtxs = hitCallCtxs;
+			
 			/* We set up a control breakpoint to check if, at any next step, JDI erroneously returns from the method under analysis */
 			try { 
 				final EventRequestManager mgr = this.vm.eventRequestManager();
@@ -850,6 +854,32 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			}
 		}
 		
+		public static void storeNewSymbolicApplyOperatorOccurrence(Map<String, List<String>> symbolicApplyOperatorOccurrences, String symbolicApplyOperator, State state) {
+            String callCtxString = "";
+            try {
+            	List<Frame> stack = state.getStack();
+				for (int i = 0; i < stack.size(); ++i) {
+					final Signature sig = stack.get(i).getMethodSignature();
+					if (JAVA_MAP_Utils.classImplementsJavaUtilMap(sig.getClassName())) {
+						if (i != stack.size() - 1) {
+							return; // do not store calls nested within hash map models
+						}
+					} else {
+						callCtxString += (i > 0 ? SymbolicApplyJVMJDI.callContextSeparator : "") + sig;						
+					}
+				}
+			} catch (FrozenStateException e) {
+	            //this should never happen
+	            failExecution(e);
+			}
+            callCtxString += SymbolicApplyJVMJDI.callContextSeparator + symbolicApplyOperator;
+			if (!symbolicApplyOperatorOccurrences.containsKey(symbolicApplyOperator)) {
+				symbolicApplyOperatorOccurrences.put(symbolicApplyOperator, new ArrayList<>());
+			}
+			List<String> occurrences = symbolicApplyOperatorOccurrences.get(symbolicApplyOperator);
+			occurrences.add(callCtxString);
+		}
+
 		public Value getRetValue() {
 			return this.symbolicApplyRetValue;
 		}
@@ -859,13 +889,41 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			if (event.request().equals(this.targetMethodExitedBreakpoint)) {
 				try { //Did we exited from target method? Should not happen 
 					if (numFramesFromRootFrameConcrete() < 0) {
-						throw new UnexpectedInternalException("Exited from target method, while looking for breakpoint");
+						throw new UnexpectedInternalException("Exited from target method, while looking for method " + symbolicApplyOperator + " - " + hitCallCtxs);
 					}
 				} catch (IncompatibleThreadStateException e) {
 					throw new UnexpectedInternalException(e);
 				}
 			}
-			return super.handleBreakpointEvents(event, numberOfHits);
+			boolean atBreakpoint = super.handleBreakpointEvents(event, numberOfHits);
+			if (postInitial) {
+				// We skip (do not count) breakpoints that do not correspond to call contexts in our list of hits
+				if (this.hitCallCtxs.size() < this.hitCounter) {
+					throw new UnexpectedInternalException("This should never happen: the target number of hits cannot be larger than the size of the list of the hits' call contexts");
+				}
+				final String[] expectedCallCtx = this.hitCallCtxs.get(this.hitCounter - 1).split(callContextSeparator);
+				try {
+					final int numFrames = this.numFramesFromRootFrameConcrete() + 1;
+					final boolean callStackLenOk = expectedCallCtx.length == numFrames; //check if the call stack corresponds, otherwise roll-back the decision
+					if (!callStackLenOk) {
+						--this.hitCounter;
+						return false;
+					}
+					for (int i = 0; i < this.numFramesFromRootFrameConcrete(); ++i) {
+						final String method = this.getCurrentThread().frame(i).location().method().name();
+						final String callCtxItem = expectedCallCtx[expectedCallCtx.length - 1 - i];
+						final String name = callCtxItem.substring(callCtxItem.lastIndexOf(':') + 1);
+						final boolean callStackOk = method.equals(name);
+						if (!callStackOk) {
+							--this.hitCounter;
+							return false;
+						}					
+					}
+				} catch (IncompatibleThreadStateException e) {
+					throw new GuidanceException("JDI failed to check the call stack at breakpoint on HashMap method related to symbolic HashMap: " + e);
+				}
+			}
+			return atBreakpoint;
 		}
 		
 		protected void eval_INVOKEX() throws GuidanceException {
@@ -878,7 +936,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			// Make JDI execute the uninterpreted function that corresponds to the symboliApply
 			this.targetMethodExitedBreakpoint.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
 			this.targetMethodExitedBreakpoint.enable();
-			goToBreakpoint(signatureOf(this.symbolicApplyOperator), 0, this.symbolicApplyNumberOfHits);
+			goToBreakpoint(signatureOf(this.symbolicApplyOperator), 0, this.hitCallCtxs.size());
 			this.targetMethodExitedBreakpoint.disable();			
 		}
 		
@@ -938,16 +996,13 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 	}	
 	
 	private static class InitialMapSymbolicApplyJVMJDI extends SymbolicApplyJVMJDI {
-		public static final String callContextSeparator = "&&";
 		private final ObjectReference initialMapRef;
-		private final List<String> hits;
 		private Value valueAtKey;
 
-		public InitialMapSymbolicApplyJVMJDI(Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits, String symbolicApplyOperator, List<String> hits, SymbolicMemberField initialMapOrigin) 
+		public InitialMapSymbolicApplyJVMJDI(Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits, String symbolicApplyOperator, List<String> hitCallCtxs, SymbolicMemberField initialMapOrigin) 
 		throws GuidanceException {
-			super(calc, runnerParameters, stopSignature, numberOfHits, symbolicApplyOperator, hits.size());
+			super(calc, runnerParameters, stopSignature, numberOfHits, symbolicApplyOperator, hitCallCtxs);
 			this.initialMapRef = (ObjectReference) getJDIValue(initialMapOrigin);
-			this.hits = hits;
 		}
 		
 		@Override
@@ -965,55 +1020,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		public Value getValueAtKey() {
 			return this.valueAtKey;
 		}
-
-		@Override
-		protected boolean handleBreakpointEvents(Event event, int numberOfHits) throws GuidanceException {
-			boolean atBreakpoint = super.handleBreakpointEvents(event, numberOfHits);
-			if (atBreakpoint && this.hits != null) {
-				// We check if the breakpoint is at a method with the right call context
-				final String[] expectedCallCtx = this.hits.get(this.hitCounter - 1).split(callContextSeparator);
-				try {
-					final int numFrames = this.numFramesFromRootFrameConcrete() + 1;
-					final boolean callStackLenOk = expectedCallCtx.length == numFrames; //check if the call stack corresponds, otherwise roll-back the decision
-					if (!callStackLenOk) {
-						--this.hitCounter;
-						return false;
-					}
-					for (int i = 0; i < this.numFramesFromRootFrameConcrete(); ++i) {
-						final String method = this.getCurrentThread().frame(i).location().method().name();
-						final String callCtxItem = expectedCallCtx[expectedCallCtx.length - 1 - i];
-						final String name = callCtxItem.substring(callCtxItem.lastIndexOf(':') + 1);
-						final boolean callStackOk = method.equals(name);
-						if (!callStackOk) {
-							--this.hitCounter;
-							return false;
-						}					
-					}
-				} catch (IncompatibleThreadStateException e) {
-					throw new GuidanceException("JDI failed to check the call stack at breakpoint on HashMap method related to symbolic HashMap: " + e);
-				}
-			}
-			return atBreakpoint;
-		}
-
 	}
 
-	public void notifyExecutionOfHashMapModelMethod(Signature currentMethodSignature, Signature[] callCtx) {
-		List<String> prevHits = ((JVMJDI) this.jvm).symbolicApplyOperatorOccurrences.get(currentMethodSignature.toString());
-		if (prevHits == null) {
-			prevHits = new ArrayList<>();
-			((JVMJDI) this.jvm).symbolicApplyOperatorOccurrences.put(currentMethodSignature.toString(), prevHits);
-		}
-		String callCtxString = callCtx[0].toString();
-		for (int i = 1; i < callCtx.length; ++i) {
-			callCtxString += InitialMapSymbolicApplyJVMJDI.callContextSeparator + callCtx[i];
-			if (JAVA_MAP_Utils.classImplementsJavaUtilMap(callCtx[i].getClassName())) {
-				if (i != callCtx.length - 1) {
-					return; // skip notifications from nested calls within hash map models
-				}
-			}	
-		}
-		prevHits.add(callCtxString);
+	public void notifyExecutionOfHashMapModelMethod(Signature currentMethodSignature, State state) {
+		SymbolicApplyJVMJDI.storeNewSymbolicApplyOperatorOccurrence(((JVMJDI) this.jvm).symbolicApplyOperatorOccurrences, currentMethodSignature.toString(), state);
 		((JVMJDI) this.jvm).currentHashMapModelMethod = currentMethodSignature.toString();
 	}
 }
