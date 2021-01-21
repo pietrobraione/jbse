@@ -14,6 +14,7 @@ import static jbse.common.Type.isPrimitiveOpStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import jbse.algo.exc.MissingTriggerParameterException;
 import jbse.algo.exc.NotYetImplementedException;
@@ -60,7 +61,6 @@ R extends DecisionAlternative,
 DE extends StrategyDecide<R>, 
 RE extends StrategyRefine<R>, 
 UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
-
     //set by subclasses (decider method)
     protected boolean someReferencePartiallyResolved;
     protected ArrayList<ReferenceSymbolic> partiallyResolvedReferences;
@@ -72,25 +72,26 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
         super.cleanup();
     }
     
+    //TODO unify with Algo_INVOKEMETA_Metacircular
     protected final void refineRefExpands(State state, DecisionAlternative_XYLOAD_GETX_Expands drc) 
     throws ContradictionException, InvalidTypeException, InvalidInputException, InterruptException, 
     SymbolicValueNotAllowedException, ClasspathException {
+    	final Calculator calc = this.ctx.getCalculator();
         final ReferenceSymbolic referenceToExpand = drc.getValueToLoad();
         final String classNameOfReferenceToExpand = className(referenceToExpand.getStaticType());
         final ClassFile classFileOfReferenceToExpand = findClassFile(state, classNameOfReferenceToExpand);                        
         final ClassFile classFileOfTargetObject = drc.getClassFileOfTargetObject();
         try {
-            ensureClassInitialized(state, classFileOfReferenceToExpand, this.ctx);
-            ensureClassInitialized(state, classFileOfTargetObject, this.ctx);
-            state.assumeExpands(this.ctx.getCalculator(), referenceToExpand, classFileOfTargetObject);
+            ensureClassInitialized(state, this.ctx, classFileOfReferenceToExpand, classFileOfTargetObject);
+            state.assumeExpands(calc, referenceToExpand, classFileOfTargetObject);
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
+            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (CannotAssumeSymbolicObjectException e) {
             throw new SymbolicValueNotAllowedException(e);
         } catch (DecisionException e) {
             //this should never happen, the decision was already checked
-            throw new UnexpectedInternalException(e);
+        	failExecution(e);
         }
         
         //in the case the expansion object is an array, we assume it 
@@ -98,7 +99,6 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
         if (classFileOfTargetObject.isArray()) {
             try {
                 final Array targetObject = (Array) state.getObject(referenceToExpand);
-                final Calculator calc = this.ctx.getCalculator();
                 final Primitive lengthPositive = calc.push(targetObject.getLength()).ge(calc.valInt(0)).pop();
                 state.assume(calc.simplify(this.ctx.decisionProcedure.simplify(lengthPositive)));
             } catch (InvalidOperandException | DecisionException e) { //TODO propagate exceptions (...and replace DecisionException with a better exception)
@@ -115,7 +115,7 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
         final ClassFile classFileOfReferenceToResolve = findClassFile(state, classNameOfReferenceToResolve);
         final Objekt aliasObject = state.getObject(new ReferenceConcrete(altAliases.getObjectPosition()));
         try {
-            ensureClassInitialized(state, classFileOfReferenceToResolve, this.ctx);
+            ensureClassInitialized(state, this.ctx, classFileOfReferenceToResolve);
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
@@ -166,6 +166,11 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
             throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
 		}
+    }
+    
+    @Override
+    protected final Supplier<Boolean> isProgramCounterUpdateAnOffset() {
+        return () -> true;
     }
 
     /** 

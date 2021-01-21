@@ -138,6 +138,7 @@ public final class Action_START {
             state = createStateStart(ctx);
             userProvidedStartState = false;
         }
+        state.setStutters(false);
 
         //adds the state to the state tree
         ctx.stateTree.addStateStart(state, userProvidedStartState);
@@ -349,7 +350,7 @@ public final class Action_START {
                     if (classFile == null) {
                         throw new ClasspathException("Root method invocation class " + className + " not found in the classpath.");
                     }
-                    ensureClassInitialized(state, classFile, ctx, this.doNotInitialize);
+                    ensureClassInitialized(state, ctx, this.doNotInitialize, classFile);
                 } catch (InterruptException e) {
                     //nothing to do: fall through
                 }
@@ -370,7 +371,7 @@ public final class Action_START {
             this.doNotInitialize.remove(className);
             final int classLoader = (JBSE_BASE.equals(className) ? CLASSLOADER_APP : CLASSLOADER_BOOT);
             final ClassFile classFile = state.getClassHierarchy().getClassFileClassArray(classLoader, className); 
-            ensureClassInitialized(state, classFile, ctx, this.doNotInitialize);
+            ensureClassInitialized(state, ctx, this.doNotInitialize, classFile);
         } catch (InterruptException e) {
             //nothing to do: fall through
         } catch (HeapMemoryExhaustedException | RenameUnsupportedException e) {

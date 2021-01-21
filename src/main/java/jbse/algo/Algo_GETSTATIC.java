@@ -49,7 +49,7 @@ final class Algo_GETSTATIC extends Algo_GETX {
     ContradictionException, FrozenStateException {
         //possibly initializes the class of the field
         try {
-            ensureClassInitialized(state, this.fieldClassResolved, this.ctx);
+            ensureClassInitialized(state, this.ctx, this.fieldClassResolved);
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();

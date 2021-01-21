@@ -630,6 +630,12 @@ public final class State implements Cloneable {
     
     /** A counter for no-wrap snippet classfiles. */
     private int snippetClassFileCounter = 0;
+    
+    /** 
+     * Set to {@code true} whenever the last executed bytecode
+     * must be reexecuted.
+     */
+    private boolean stutters;
 
     /**
      * Constructor. It returns a virgin, pre-initial {@link State}.
@@ -4103,6 +4109,31 @@ public final class State implements Cloneable {
 
         this.branchingDecision = false;
         return retval;
+    }
+    
+    /**
+     * Sets whether this state stutters, i.e., whether
+     * the last executed bytecode must be executed again, 
+     * e.g., because some {@code <clinit>} frame must be
+     * executed before. 
+     * 
+     * @param stutters a {@code boolean}.
+     */
+    public void setStutters(boolean stutters) {
+    	this.stutters = stutters;
+    }
+    
+    /**
+     * Gets whether this state stutters, i.e., whether
+     * the last executed bytecode must be executed again, 
+     * e.g., because some {@code <clinit>} frame must be
+     * executed before. 
+     * 
+     * @param the {@code boolean} value set with the last
+     *        call to {@link #setStutters(boolean)}.
+     */
+    public boolean stutters() {
+    	return this.stutters;
     }
 		
     /**

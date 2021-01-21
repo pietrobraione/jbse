@@ -136,7 +136,7 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
             //repeats what was already done in Algo_INVOKEX
             if (isStaticImpl) { 
                 try {
-                    ensureClassInitialized(state, this.methodImplClass, this.ctx);
+                    ensureClassInitialized(state, this.ctx, this.methodImplClass);
                 } catch (HeapMemoryExhaustedException e) {
                     throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
                     exitFromAlgorithm();

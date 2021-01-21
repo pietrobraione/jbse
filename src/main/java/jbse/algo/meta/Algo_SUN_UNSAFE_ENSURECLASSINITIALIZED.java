@@ -54,7 +54,7 @@ public final class Algo_SUN_UNSAFE_ENSURECLASSINITIALIZED extends Algo_INVOKEMET
         
         final ClassFile classFile = clazz.representedClass();
         try {
-            ensureClassInitialized(state, classFile, this.ctx);
+            ensureClassInitialized(state, this.ctx, classFile);
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();

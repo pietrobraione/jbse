@@ -55,7 +55,7 @@ final class Algo_PUTSTATIC extends Algo_PUTX {
 
         //possibly creates and initializes the class 
         try {
-            ensureClassInitialized(state, this.fieldClassResolved, this.ctx);
+            ensureClassInitialized(state, this.ctx, this.fieldClassResolved);
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();

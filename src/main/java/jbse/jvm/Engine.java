@@ -350,7 +350,7 @@ public final class Engine implements AutoCloseable {
         	}
         	
         	//updates the counters for depth/count scope
-        	if (this.currentState.branchingDecision()) {
+        	if (this.currentState.branchingDecision() && !this.currentState.stutters()) {
         		this.currentState.incDepth();
         		this.currentState.resetCount();
         	} else {

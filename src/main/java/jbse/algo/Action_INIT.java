@@ -44,8 +44,8 @@ public final class Action_INIT implements Action {
     throws DecisionException, ContradictionException, ThreadStackEmptyException, ClasspathException,
     CannotManageStateException, FailureException, InterruptException {
         try {
-            //pushes a frame for the root method (and possibly triggers)
             invokeRootMethod(state, ctx);
+            state.setStutters(false);
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
         }

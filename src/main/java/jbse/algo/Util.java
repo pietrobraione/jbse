@@ -1528,17 +1528,17 @@ public final class Util {
 
     /**
      * Ensures that a {@link State} has a {@link Klass} in its 
-     * static store for a class, possibly creating the necessary
-     * frames for the {@code <clinit>} methods to initialize it, 
-     * or initializing it symbolically. If necessary it also recursively 
-     * initializes its superclasses. It is equivalent
-     * to {@link #ensureClassInitialized(State, ClassFile, ExecutionContext, Set, Signature) ensureClassInitialized}
-     * {@code (state, classFile, ctx, null, null)}.
+     * static store for one or more classes, possibly creating the necessary
+     * frames for the {@code <clinit>} methods to initialize them, 
+     * or initializing them symbolically. If necessary it also recursively 
+     * initializes their superclasses. It is equivalent
+     * to {@link #ensureClassInitialized(State, ExecutionContext, Set, Signature, ClassFile...) ensureClassInitialized}
+     * {@code (state, ctx, null, null, classFile)}.
      * 
      * @param state a {@link State}. It must have a current frame.
-     * @param classFile a {@link ClassFile} for the class which must
-     *        be initialized.
      * @param ctx an {@link ExecutionContext}.
+     * @param classFile a varargs of {@link ClassFile}s for the classes which must
+     *        be initialized.
      * @throws InvalidInputException if {@code classFile} or {@code state} 
      *         is null.
      * @throws DecisionException if {@code dec} fails in determining
@@ -1551,15 +1551,15 @@ public final class Util {
      * @throws InterruptException iff it is necessary to interrupt the
      *         execution of the bytecode, to run the 
      *         {@code <clinit>} method(s) for the initialized 
-     *         class(es) or because of heap memory exhaustion.
+     *         class(es).
      * @throws ContradictionException if some initialization assumption is
      *         contradicted.
      */
-    public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx)
+    public static void ensureClassInitialized(State state, ExecutionContext ctx, ClassFile... classFile)
     throws InvalidInputException, DecisionException, 
     ClasspathException, HeapMemoryExhaustedException, InterruptException, ContradictionException {
         try {
-            ensureClassInitialized(state, classFile, ctx, null, null);
+            ensureClassInitialized(state, ctx, null, null, classFile);
         } catch (ClassFileNotFoundException | IncompatibleClassFileException | 
                  ClassFileIllFormedException | BadClassFileVersionException | 
                  RenameUnsupportedException | WrongClassNameException | 
@@ -1571,21 +1571,21 @@ public final class Util {
     
     /**
      * Ensures that a {@link State} has a {@link Klass} in its 
-     * static store for a class, possibly creating the necessary
-     * frames for the {@code <clinit>} methods to initialize it, 
-     * or initializing it symbolically. If necessary it also recursively 
-     * initializes its superclasses. It is equivalent
-     * to {@link #ensureClassInitialized(State, ClassFile, ExecutionContext, Set, Signature) ensureClassInitialized}
-     * {@code (state, classFile, ctx, null, boxExceptionMethodSignature)}.
+     * static store for one or more classes, possibly creating the necessary
+     * frames for the {@code <clinit>} methods to initialize them, 
+     * or initializing them symbolically. If necessary it also recursively 
+     * initializes their superclasses. It is equivalent
+     * to {@link #ensureClassInitialized(State, ExecutionContext, Set, Signature, ClassFile...) ensureClassInitialized}
+     * {@code (state, ctx, null, boxExceptionMethodSignature, classFile)}.
      * 
      * @param state a {@link State}. It must have a current frame.
-     * @param classFile a {@link ClassFile} for the class which must
-     *        be initialized.
      * @param ctx an {@link ExecutionContext}.
      * @param boxExceptionMethodSignature a {@link Signature} for a method in
      *        {@link jbse.base.Base} that boxes exceptions thrown by the initializer
      *        methods, or {@code null} if no boxing must be performed. The class
      *        name in the signature is not considered.
+     * @param classFile a varargs of {@link ClassFile}s for the classes which must
+     *        be initialized.
      * @throws InvalidInputException if {@code classFile} or {@code state} 
      *         is null.
      * @throws DecisionException if {@code dec} fails in determining
@@ -1598,15 +1598,15 @@ public final class Util {
      * @throws InterruptException iff it is necessary to interrupt the
      *         execution of the bytecode, to run the 
      *         {@code <clinit>} method(s) for the initialized 
-     *         class(es) or because of heap memory exhaustion.
+     *         class(es).
      * @throws ContradictionException  if some initialization assumption is
      *         contradicted.
      */
-    public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx, Signature boxExceptionMethodSignature)
+    public static void ensureClassInitialized(State state, ExecutionContext ctx, Signature boxExceptionMethodSignature, ClassFile... classFile)
     throws InvalidInputException, DecisionException, 
     ClasspathException, HeapMemoryExhaustedException, InterruptException, ContradictionException {
         try {
-            ensureClassInitialized(state, classFile, ctx, null, boxExceptionMethodSignature);
+            ensureClassInitialized(state, ctx, null, boxExceptionMethodSignature, classFile);
         } catch (ClassFileNotFoundException | IncompatibleClassFileException | 
                  ClassFileIllFormedException | BadClassFileVersionException | 
                  RenameUnsupportedException | WrongClassNameException | 
@@ -1618,22 +1618,22 @@ public final class Util {
     
     /**
      * Ensures that a {@link State} has a {@link Klass} in its 
-     * static store for a class, possibly creating the necessary
-     * frames for the {@code <clinit>} methods to initialize it, 
-     * or initializing it symbolically. If necessary it also recursively 
-     * initializes its superclasses. It is equivalent
-     * to {@link #ensureClassInitialized(State, String, ExecutionContext, Set, Signature) ensureClassInitialized}
-     * {@code (state, classFile, ctx, skip, null)}.
+     * static store for one or more classes, possibly creating the necessary
+     * frames for the {@code <clinit>} methods to initialize them, 
+     * or initializing them symbolically. If necessary it also recursively 
+     * initializes their superclasses. It is equivalent
+     * to {@link #ensureClassInitialized(State, ExecutionContext, Set, Signature, ClassFile...) ensureClassInitialized}
+     * {@code (state, ctx, skip, null, classFile)}.
      * 
      * @param state a {@link State}. It must have a current frame.
-     * @param classFile a {@link ClassFile} for the class which must
-     *        be initialized.
      * @param ctx an {@link ExecutionContext}.
      * @param skip a {@link Set}{@code <}{@link String}{@code >}.
      *        All the classes (and their superclasses and superinterfaces recursively) 
      *        whose names are in this set will not be created. A {@code null} value
      *        is equivalent to the empty set. All the classes must be in the bootstrap
      *        classpath and will be loaded with the bootstrap classloader.
+     * @param classFile a varargs of {@link ClassFile}s for the classes which must
+     *        be initialized.
      * @throws InvalidInputException if {@code classFile} or {@code state} 
      *         is null.
      * @throws DecisionException if {@code dec} fails in determining
@@ -1646,7 +1646,7 @@ public final class Util {
      * @throws InterruptException iff it is necessary to interrupt the
      *         execution of the bytecode, to run the 
      *         {@code <clinit>} method(s) for the initialized 
-     *         class(es) or because of heap memory exhaustion.
+     *         class(es).
      * @throws ClassFileNotFoundException if some class in {@code skip} does not exist
      *         in the bootstrap classpath.
      * @throws IncompatibleClassFileException if the superclass for some class in {@code skip} is 
@@ -1663,23 +1663,21 @@ public final class Util {
      * @throws ContradictionException  if some initialization assumption is
      *         contradicted.
      */
-    public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx, Set<String> skip)
+    public static void ensureClassInitialized(State state, ExecutionContext ctx, Set<String> skip, ClassFile... classFile)
     throws InvalidInputException, DecisionException, ClasspathException, HeapMemoryExhaustedException, 
     InterruptException, ClassFileNotFoundException, IncompatibleClassFileException, ClassFileIllFormedException, 
     BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, ClassFileNotAccessibleException, ContradictionException {
-        ensureClassInitialized(state, classFile, ctx, skip, null);
+        ensureClassInitialized(state, ctx, skip, null, classFile);
     }
     
     /**
      * Ensures that a {@link State} has a {@link Klass} in its 
-     * static store for a class, possibly creating the necessary
-     * frames for the {@code <clinit>} methods to initialize it, 
-     * or initializing it symbolically. If necessary it also recursively 
-     * initializes its superclasses.
+     * static store for one or more classes, possibly creating the necessary
+     * frames for the {@code <clinit>} methods to initialize them, 
+     * or initializing them symbolically. If necessary it also recursively 
+     * initializes their superclasses.
      * 
      * @param state a {@link State}. It must have a current frame.
-     * @param classFile a {@link ClassFile} for the class which must
-     *        be initialized.
      * @param ctx an {@link ExecutionContext}.
      * @param skip a {@link Set}{@code <}{@link String}{@code >}.
      *        All the classes (and their superclasses and superinterfaces recursively) 
@@ -1690,6 +1688,8 @@ public final class Util {
      *        {@link jbse.base.Base} that boxes exceptions thrown by the initializer
      *        methods, or {@code null} if no boxing must be performed. The class
      *        name in the signature is not considered.
+     * @param classFile a varargs of {@link ClassFile}s for the classes which must
+     *        be initialized.
      * @throws InvalidInputException if {@code classFile} or {@code state} 
      *         is null.
      * @throws DecisionException if {@code dec} fails in determining
@@ -1702,7 +1702,7 @@ public final class Util {
      * @throws InterruptException iff it is necessary to interrupt the
      *         execution of the bytecode, to run the 
      *         {@code <clinit>} method(s) for the initialized 
-     *         class(es) or because of heap memory exhaustion.
+     *         class(es).
      * @throws ClassFileNotFoundException if some class in {@code skip} does not exist
      *         in the bootstrap classpath.
      * @throws IncompatibleClassFileException if the superclass for some class in {@code skip} is 
@@ -1719,7 +1719,7 @@ public final class Util {
      * @throws ContradictionException  if some initialization assumption is
      *         contradicted.
      */
-    public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx, Set<String> skip, Signature boxExceptionMethodSignature) 
+    public static void ensureClassInitialized(State state, ExecutionContext ctx, Set<String> skip, Signature boxExceptionMethodSignature, ClassFile... classFile) 
     throws InvalidInputException, DecisionException, ClasspathException, HeapMemoryExhaustedException, InterruptException, 
     ClassFileNotFoundException, IncompatibleClassFileException, ClassFileIllFormedException, 
     BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, ClassFileNotAccessibleException, 
@@ -1845,9 +1845,9 @@ public final class Util {
         }
 
         /**
-         * Implements {@link Util#ensureClassInitialized(State, ClassFile, ExecutionContext, Set)}.
+         * Implements class initialization.
          * 
-         * @param classFile the {@link ClassFile} of the class to be initialized.
+         * @param classFile the {@link ClassFile}s of the classes to be initialized.
          * @return {@code true} iff the initialization of 
          *         the class or of one of its superclasses 
          *         fails for some reason.
@@ -1861,10 +1861,10 @@ public final class Util {
          * @throws ContradictionException  if some initialization assumption is
          *         contradicted.
          */
-        private boolean initialize(ClassFile classFile)
+        private boolean initialize(ClassFile... classFile)
         throws InvalidInputException, DecisionException, 
         ClasspathException, HeapMemoryExhaustedException, ContradictionException {
-            phase1(classFile, false);
+            phase1(false, classFile);
             if (this.failed) {
                 revert();
                 return true;
@@ -1935,135 +1935,145 @@ public final class Util {
          * Phase 1 creates all the {@link Klass} objects for a class and its
          * superclasses that can be assumed to be not initialized. It also 
          * refines the path condition by adding all the initialization assumptions.
-         * 
-         * @param classFile the {@link ClassFile} of the class to be initialized.
          * @param recurSuperinterfaces if {@code true}, recurs phase 1 over
          *        {@code classFile}'s superinterfaces even if 
          *        {@code classFile.}{@link ClassFile#isInterface() isInterface}{@code () == true}.
+         * @param classFile the {@link ClassFile}s of the classes to be initialized.
+         * 
          * @throws InvalidInputException if {@code classFile} is null.
          * @throws DecisionException if the decision procedure fails.
          * @throws ContradictionException  if some initialization assumption is
          *         contradicted.
          */
-        private void phase1(ClassFile classFile, boolean recurSuperinterfaces)
+        private void phase1(boolean recurSuperinterfaces, ClassFile... classFiles)
         throws InvalidInputException, DecisionException, ContradictionException {
-            //if classFile is already in this.classesForPhase3
-            //we must reschedule it to respect the visiting order
-            //of JVMS v8 section 5.5, point 7
-            if (this.classesForPhase3.contains(classFile)) {
-                this.classesForPhase3.remove(classFile);
-                this.classesForPhase3.add(classFile);
-                return;
-            }
-            
-            //if classFile is in the skip set, skip it 
-            if (this.skip.contains(classFile.getClassName())) {
-            	return;
-            }
-            
-            //if there is a Klass object for classFile in the state, 
-            //and is in the "initialization started" status (means 
-            //initialization in progress or already initialized),
-            //skip it
-            if (this.s.existsKlass(classFile) && this.s.getKlass(classFile).initializationStarted()) {
-            	return;
-            }
-
-            //saves classFile in the list of the newly
-            //created Klasses
-            this.classesForPhase2.add(classFile);
-            
-            //decides whether the class is assumed pre-initialized and whether
-            //a symbolic or concrete Klass object should be created
-            //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. Withdraw this assumption and branch.
-            final ClassHierarchy hier = this.s.getClassHierarchy();
-            final boolean klassAlreadyExists = this.s.existsKlass(classFile);
-            final boolean symbolicKlass;
-            boolean assumeInitialized = false; //bogus initialization to keep the compiler happy
-            //invariant: symbolicKlass implies assumeInitialized
-            if (klassAlreadyExists) {
-                symbolicKlass = this.s.getKlass(classFile).isSymbolic();
-                //search assumeInitialized in the path condition - if there is a 
-                //Klass in the state there must also be a path condition clause
-                boolean found = false;
-                for (Clause c : this.s.getPathCondition()) {
-                    if (c instanceof ClauseAssumeClassInitialized) {
-                        if (((ClauseAssumeClassInitialized) c).getClassFile().equals(classFile)) {
-                            found = true;
-                            assumeInitialized = true;
-                        }
-                    } else if (c instanceof ClauseAssumeClassNotInitialized) {
-                        if (((ClauseAssumeClassNotInitialized) c).getClassFile().equals(classFile)) {
-                            found = true;
-                            assumeInitialized = false;
-                        }
-                    }
-                }
-                if (!found) {
-                    throw new UnexpectedInternalException("Ill-formed state: Klass present in the static store but ClassFile not present in the path condition.");
-                }
-            } else {
-                if (this.s.phase() == Phase.PRE_INITIAL) {
-                    symbolicKlass = false; //...and they are also assumed to be pure (or unmodified since their initialization)
-                    assumeInitialized = true; //all pre-initial class are assumed to be pre-initialized...
-                } else if (this.ctx.decisionProcedure.isSatInitialized(classFile)) { 
-                    final boolean shallRunStaticInitializer = classFile.isPure() || this.ctx.classHasAPureInitializer(hier, classFile) || this.ctx.classInvariantAfterInitialization(classFile);
-                    symbolicKlass = !shallRunStaticInitializer;
-                    assumeInitialized = true;
-                } else {
-                    symbolicKlass = false;
-                    assumeInitialized = false;
-                }
-            }
-
-            //creates the Klass object
-            if (symbolicKlass) {
-                //creates a symbolic Klass
-                this.s.ensureKlassSymbolic(this.ctx.getCalculator(), classFile);
-            } else {
-                //creates a concrete Klass and schedules it for phase 3
-                this.s.ensureKlass(this.ctx.getCalculator(), classFile);
-                if (JAVA_OBJECT.equals(classFile.getClassName())) {
-                    this.pushClinitFor_JAVA_OBJECT = true;
-                } else {
-                    this.classesForPhase3.add(classFile);
-                }
-            }
-
-            //pushes the assumption
-            if (!klassAlreadyExists) { //if klassAlreadyExists, the clause is already present
-                if (assumeInitialized) { 
-                    final Klass k = this.s.getKlass(classFile);
-                    this.s.assumeClassInitialized(classFile, k);
-                } else {
-                    this.s.assumeClassNotInitialized(classFile);
-                }
-            }
-
-            //if the created Klass is concrete but 
-            //the class is assumed to be pre-initialized, 
-            //schedules the Klass to become symbolic (if
-            //the corresponding flag is active)
-            if (!symbolicKlass && assumeInitialized && this.makePreInitClassesSymbolic
-            && !JBSE_BASE.equals(classFile.getClassName()) /* HACK */) {
-                this.preInitializedClasses.add(classFile);
-            }
-
-            //if classFile denotes a class rather than an interface
-            //and has a superclass, then recursively performs phase1 
-            //on its superclass and superinterfaces, according to
-            //JVMS v8 section 5.5, point 7
-            if (!classFile.isInterface() || recurSuperinterfaces) {
-                for (ClassFile superinterface : reverse(classFile.getSuperInterfaces())) {
-                    if (hasANonStaticImplementedMethod(classFile)) {
-                        phase1(superinterface, true);
-                    }
-                }
-                final ClassFile superclass = classFile.getSuperclass();
-                if (superclass != null) {
-                    phase1(superclass, false);
-                }
-            }
+        	for (ClassFile classFile : classFiles) {
+	            //if classFile is already in this.classesForPhase3
+	            //we must reschedule it to respect the visiting order
+	            //of JVMS v8 section 5.5, point 7
+	            if (this.classesForPhase3.contains(classFile)) {
+	                this.classesForPhase3.remove(classFile);
+	                this.classesForPhase3.add(classFile);
+	                return;
+	            }
+	            
+	            //if classFile is in the skip set, skip it 
+	            if (this.skip.contains(classFile.getClassName())) {
+	            	return;
+	            }
+	            
+	            //if there is a Klass object for classFile in the state, 
+	            //and is in the "initialization started" status (means 
+	            //initialization in progress or already initialized),
+	            //skip it
+	            if (this.s.existsKlass(classFile) && this.s.getKlass(classFile).initializationStarted()) {
+	            	return;
+	            }
+	
+	            //saves classFile in the list of the newly
+	            //created Klasses
+	            this.classesForPhase2.add(classFile);
+	            
+	            //decides whether the class is assumed pre-initialized and whether
+	            //a symbolic or concrete Klass object should be created
+	            //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. Withdraw this assumption and branch.
+	            final ClassHierarchy hier = this.s.getClassHierarchy();
+	            final boolean klassAlreadyExists = this.s.existsKlass(classFile);
+	            final boolean symbolicKlass;
+	            boolean assumeInitialized = false; //bogus initialization to keep the compiler happy
+	            //invariant: symbolicKlass implies assumeInitialized
+	            if (klassAlreadyExists) {
+	                symbolicKlass = this.s.getKlass(classFile).isSymbolic();
+	                //search assumeInitialized in the path condition - if there is a 
+	                //Klass in the state there must also be a path condition clause
+	                boolean found = false;
+	                for (Clause c : this.s.getPathCondition()) {
+	                    if (c instanceof ClauseAssumeClassInitialized) {
+	                        if (((ClauseAssumeClassInitialized) c).getClassFile().equals(classFile)) {
+	                            found = true;
+	                            assumeInitialized = true;
+	                        }
+	                    } else if (c instanceof ClauseAssumeClassNotInitialized) {
+	                        if (((ClauseAssumeClassNotInitialized) c).getClassFile().equals(classFile)) {
+	                            found = true;
+	                            assumeInitialized = false;
+	                        }
+	                    }
+	                }
+	                if (!found) {
+	                    throw new UnexpectedInternalException("Ill-formed state: Klass present in the static store but ClassFile not present in the path condition.");
+	                }
+	            } else {
+	                if (this.s.phase() == Phase.PRE_INITIAL) {
+	                    symbolicKlass = false; //...and they are also assumed to be pure (or unmodified since their initialization)
+	                    assumeInitialized = true; //all pre-initial class are assumed to be pre-initialized...
+	                } else if (this.ctx.decisionProcedure.isSatInitialized(classFile)) { 
+	                    final boolean shallRunStaticInitializer = classFile.isPure() || this.ctx.classHasAPureInitializer(hier, classFile) || this.ctx.classInvariantAfterInitialization(classFile);
+	                    symbolicKlass = !shallRunStaticInitializer;
+	                    assumeInitialized = true;
+	                } else {
+	                    symbolicKlass = false;
+	                    assumeInitialized = false;
+	                }
+	            }
+	
+	            //creates the Klass object
+	            if (symbolicKlass) {
+	                //creates a symbolic Klass
+	                this.s.ensureKlassSymbolic(this.ctx.getCalculator(), classFile);
+	            } else {
+	                //creates a concrete Klass and schedules it for phase 3
+	                this.s.ensureKlass(this.ctx.getCalculator(), classFile);
+	                if (JAVA_OBJECT.equals(classFile.getClassName())) {
+	                    this.pushClinitFor_JAVA_OBJECT = true;
+	                } else {
+	                    this.classesForPhase3.add(classFile);
+	                }
+	            }
+	
+	            //pushes the assumption
+	            if (!klassAlreadyExists) { //if klassAlreadyExists, the clause is already present
+	                if (assumeInitialized) { 
+	                    final Klass k = this.s.getKlass(classFile);
+	                    this.s.assumeClassInitialized(classFile, k);
+	                } else {
+	                    this.s.assumeClassNotInitialized(classFile);
+	                }
+	            }
+	
+	            //if the created Klass is concrete but 
+	            //the class is assumed to be pre-initialized, 
+	            //schedules the Klass to become symbolic (if
+	            //the corresponding flag is active)
+	            if (!symbolicKlass && assumeInitialized && this.makePreInitClassesSymbolic
+	            && !JBSE_BASE.equals(classFile.getClassName()) /* HACK */) {
+	                this.preInitializedClasses.add(classFile);
+	            }
+	
+	            //if classFile denotes a class rather than an interface
+	            //and has a superclass, then recursively performs phase1 
+	            //on its superclass and superinterfaces, according to
+	            //JVMS v8 section 5.5, point 7
+	            if (!classFile.isInterface() || recurSuperinterfaces) {
+	                for (ClassFile superinterface : reverse(classFile.getSuperInterfaces())) {
+	                    if (hasANonStaticImplementedMethod(classFile)) {
+	                        phase1(true, superinterface);
+	                    }
+	                }
+	                final ClassFile superclass = classFile.getSuperclass();
+	                if (superclass != null) {
+	                    phase1(false, superclass);
+	                }
+	            }
+	            
+	            //if classFile denotes an array class, then it shall
+	            //not be initialized (it has no static initializer), 
+	            //but its creation triggers the creation of its member
+	            //class, see JVMS v8 section 5.3.3
+	            if (classFile.isArray()) {
+	            	phase1(false, classFile.getMemberClass());
+	            }
+        	}
         }
 
         /**
@@ -2141,7 +2151,7 @@ public final class Util {
                     			++this.createdFrames;
                     		}
                     		if (this.boxExceptionMethodSignature != null && exceptionBoxFrameYetToPush) {
-                    			this.s.pushFrame(this.ctx.getCalculator(), this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);                    
+                    			this.s.pushFrame(this.ctx.getCalculator(), this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);
                     			++this.createdFrames;
                     		}
                     		this.s.pushFrame(this.ctx.getCalculator(), classFile, sigClinit, root(), 0);
@@ -2155,7 +2165,7 @@ public final class Util {
                 if (this.pushClinitFor_JAVA_OBJECT) {
                     try {
                         if (this.boxExceptionMethodSignature != null && exceptionBoxFrameYetToPush) {
-                            this.s.pushFrame(this.ctx.getCalculator(), this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);                    
+                            this.s.pushFrame(this.ctx.getCalculator(), this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);
                             ++this.createdFrames;
                         }
                         final Signature sigClinit_JAVA_OBJECT = new Signature(JAVA_OBJECT, "()" + Type.VOID, "<clinit>");

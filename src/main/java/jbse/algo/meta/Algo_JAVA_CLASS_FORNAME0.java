@@ -121,7 +121,7 @@ public final class Algo_JAVA_CLASS_FORNAME0 extends Algo_INVOKEMETA_Nonbranching
             //initializes it
             state.ensureInstance_JAVA_CLASS(this.ctx.getCalculator(), classFile);
             if (toInit) {
-                ensureClassInitialized(state, classFile, this.ctx, JBSE_BASE_BOXEXCEPTIONININITIALIZERERROR); 
+                ensureClassInitialized(state, this.ctx, JBSE_BASE_BOXEXCEPTIONININITIALIZERERROR, classFile); 
             }
             
             this.classRef = state.referenceToInstance_JAVA_CLASS(classFile);

@@ -51,9 +51,9 @@ public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE extends Algo_INVOKEMETA_
     CannotManageStateException, InterruptException, InvalidInputException, ContradictionException, RenameUnsupportedException {
         try {
             final ClassFile cf_JAVA_STRING = state.getClassHierarchy().loadCreateClass(JAVA_STRING);
-            ensureClassInitialized(state, cf_JAVA_STRING, this.ctx);
+            ensureClassInitialized(state, this.ctx, cf_JAVA_STRING);
             final ClassFile cf_JAVA_THROWABLE = state.getClassHierarchy().loadCreateClass(JAVA_THROWABLE);
-            ensureClassInitialized(state, cf_JAVA_THROWABLE, this.ctx);
+            ensureClassInitialized(state, this.ctx, cf_JAVA_THROWABLE);
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
