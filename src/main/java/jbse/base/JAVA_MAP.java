@@ -813,6 +813,70 @@ implements Map<K,V>, Cloneable, Serializable {
 			return new Iterator<Map.Entry<K,V>>() {
 				private boolean scanningInitialMap = (JAVA_MAP.this.initialMap == null ? false : true);
 				private Node current = (JAVA_MAP.this.initialMap == null ? JAVA_MAP.this.root : JAVA_MAP.this.initialMap.root);
+				
+				{
+					findCurrent();
+				}
+				
+				@SuppressWarnings("unchecked")
+				private void findCurrent() {
+					//if the iterator is scanning JAVA_MAP.this.initialMap, it skips all 
+					//the entries that are overridden by the ones in JAVA_MAP.this.root.(next)*
+					if (this.scanningInitialMap) {
+						skipOverriddenEntries:
+						while (this.current instanceof JAVA_MAP.NodePair) {
+							final NodePair<K, V> npCurrent = (JAVA_MAP.NodePair<K, V>) this.current;
+							final K keyCurrent = npCurrent.key;
+							if (keyCurrent == null) {
+								for (Node n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+									final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+									if (np.key == null) {
+										this.current = npCurrent.next;
+										continue skipOverriddenEntries;
+									}
+								}
+							} else {
+								for (Node n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+									final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+									if (keyCurrent.equals(np.key)) {
+										this.current = npCurrent.next;
+										continue skipOverriddenEntries;
+									}
+								}
+							}
+							break;
+						}
+						
+						//if the iterator is at the end of JAVA_MAP.this.initialMap.root.(next)*,
+						//branches to assume another entry in it
+						if (this.current instanceof JAVA_MAP.NodeEmpty) {
+							//determines the predecessor to this.current
+							NodePair<K, V> preCurrent;
+							if (this.current == JAVA_MAP.this.initialMap.root) {
+								preCurrent = null; //no predecessor
+							} else {
+								preCurrent = (JAVA_MAP.NodePair<K, V>) JAVA_MAP.this.initialMap.root;
+								while (preCurrent.next != this.current) {
+									preCurrent = (JAVA_MAP.NodePair<K, V>) preCurrent.next;
+								}
+							}
+
+							//refines
+							JAVA_MAP.this.initialMap.refineOnFreshEntryAndBranch();
+
+							//adjusts this.current
+							this.current = (preCurrent == null ? JAVA_MAP.this.initialMap.root : preCurrent.next);
+
+							//if this.current is still at the end of JAVA_MAP.this.initialMap.root.(next)*, 
+							//we are on the branch where we exhausted the initial map, therefore continues 
+							//with the entries in JAVA_MAP.this.root.(next)*
+							if (this.current instanceof JAVA_MAP.NodeEmpty) {
+								this.scanningInitialMap = false;
+								this.current = JAVA_MAP.this.root;
+							}
+						}
+					}
+				}
 
 				@Override
 				public boolean hasNext() {
@@ -825,14 +889,9 @@ implements Map<K,V>, Cloneable, Serializable {
 					if (!hasNext()) {
 						throw new NoSuchElementException();
 					}
+
+					//builds the return value
 					final NodePair<K, V> currentPair = (JAVA_MAP.NodePair<K, V>) this.current;
-					
-					//if at the end of the initial map, branches to assume 
-					//another entry in it
-					if (this.scanningInitialMap && currentPair.next instanceof NodeEmpty) {
-						refineOnFreshEntryAndBranch();
-					}
-					
 					final Entry<K, V> retVal = new Map.Entry<K, V>() {
 						@Override
 						public K getKey() {
@@ -873,43 +932,9 @@ implements Map<K,V>, Cloneable, Serializable {
 						}
 					};
 					
-					//move forward by one
+					//move this.current forward
 					this.current = currentPair.next;
-
-					if (this.scanningInitialMap) {
-						//if the iterator is scanning JAVA_MAP.this.initialMap, it skips all 
-						//the entries that are overridden by the ones in JAVA_MAP.this.root.(next)*
-						skipOverriddenEntries:
-						while (this.current instanceof JAVA_MAP.NodePair) {
-							final NodePair<K, V> npCurrent = (JAVA_MAP.NodePair<K, V>) this.current;
-							final K keyCurrent = npCurrent.key;
-							if (keyCurrent == null) {
-								for (Node n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-									final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
-									if (np.key == null) {
-										this.current = npCurrent.next;
-										continue skipOverriddenEntries;
-									}
-								}
-							} else {
-								for (Node n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-									final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
-									if (keyCurrent.equals(np.key)) {
-										this.current = npCurrent.next;
-										continue skipOverriddenEntries;
-									}
-								}
-							}
-							break;
-						}
-						
-						//if the iterator is at the end of JAVA_MAP.this.initialMap.root.(next)*,
-						//continues with the entries in JAVA_MAP.this.root.(next)*
-						if (this.current instanceof JAVA_MAP.NodeEmpty) {
-							this.scanningInitialMap = false;
-							this.current = JAVA_MAP.this.root;
-						}
-					}
+					findCurrent();
 
 					return retVal;
 				}

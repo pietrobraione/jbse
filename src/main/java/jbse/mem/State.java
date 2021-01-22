@@ -4354,15 +4354,30 @@ public final class State implements Cloneable {
      * 
      * @param container a {@link ReferenceSymbolic}, the container object
      *        the symbol originates from. It must refer a map.
-     * @param value a {@link Reference}, the value of the entry in the 
-     *        container this symbol originates from. It can be null, in
-     *        which case the returned reference will not store information
-     *        in its origin of the value it is associated with.
      * @return a {@link ReferenceSymbolic}.
-     * @throws FrozenStateException if the state is frozen.
+     * @throws InvalidInputException if the state is frozen or {@code container == null}.
+     */
+    public ReferenceSymbolic createSymbolMemberMapKey(ReferenceSymbolic container) 
+    throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+    	return this.symbolFactory.createSymbolMemberMapKey(container);
+    }
+
+    /**
+     * A Factory Method for creating symbolic values. The symbol
+     * has as origin the key slot of an entry in a map.  
+     * 
+     * @param container a {@link ReferenceSymbolic}, the container object
+     *        the symbol originates from. It must refer a map.
+     * @param value a {@link Reference}, the value of the entry in the 
+     *        container this symbol originates from.
+     * @return a {@link ReferenceSymbolic}.
+     * @throws InvalidInputException if {@code container == null || value == null}.
      */
     public ReferenceSymbolic createSymbolMemberMapKey(ReferenceSymbolic container, Reference value) 
-    throws FrozenStateException {
+    throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
@@ -4371,7 +4386,8 @@ public final class State implements Cloneable {
 
     /**
      * A Factory Method for creating symbolic values. The symbol
-     * has as origin the value slot of an entry in a map.  
+     * has as origin the value slot of an entry in a map. The key
+     * to retrieve it is at the current history point.
      * 
      * @param container a {@link ReferenceSymbolic}, the container object
      *        the symbol originates from. It must refer a map.
@@ -4380,12 +4396,32 @@ public final class State implements Cloneable {
      * @return a {@link ReferenceSymbolic}.
      * @throws FrozenStateException if the state is frozen.
      */
-    public ReferenceSymbolic createSymbolMemberMapValue(ReferenceSymbolic container, Reference key) 
+    public ReferenceSymbolic createSymbolMemberMapValueKeyCurrentHistoryPoint(ReferenceSymbolic container, Reference key) 
     throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
     	return this.symbolFactory.createSymbolMemberMapValue(container, key, getHistoryPoint());
+    }
+
+    /**
+     * A Factory Method for creating symbolic values. The symbol
+     * has as origin the value slot of an entry in a map. The key
+     * to retrieve it is at the starting initial history point.
+     * 
+     * @param container a {@link ReferenceSymbolic}, the container object
+     *        the symbol originates from. It must refer a map.
+     * @param key a {@link Reference}, the key of the entry in the 
+     *        container this symbol originates from.
+     * @return a {@link ReferenceSymbolic}.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public ReferenceSymbolic createSymbolMemberMapValueKeyInitialHistoryPoint(ReferenceSymbolic container, Reference key) 
+    throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+    	return this.symbolFactory.createSymbolMemberMapValue(container, key, getHistoryPoint().startingInitial());
     }
 
     /**

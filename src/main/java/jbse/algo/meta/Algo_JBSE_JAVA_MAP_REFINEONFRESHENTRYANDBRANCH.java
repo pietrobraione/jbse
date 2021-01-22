@@ -85,7 +85,7 @@ StrategyUpdate<DecisionAlternative_IFX>> {
 				failExecution(e);
 			}
             final Outcome o = this.ctx.decisionProcedure.decide_IFX(condition, result);
-            return o;
+            return Outcome.val(true, o.branchingDecision()); //tweak to trigger refinement
         };
     }
 
@@ -95,8 +95,8 @@ StrategyUpdate<DecisionAlternative_IFX>> {
     		try {
     			final Snippet snippet;
     			if (alt.value()) {
-        			final ReferenceSymbolic key = state.createSymbolMemberMapKey(this.map.getOrigin(), null);
-        			final ReferenceSymbolic value = state.createSymbolMemberMapValue(this.map.getOrigin(), key);
+        			final ReferenceSymbolic key = state.createSymbolMemberMapKey(this.map.getOrigin());
+        			final ReferenceSymbolic value = state.createSymbolMemberMapValueKeyInitialHistoryPoint(this.map.getOrigin(), key);
     				state.pushOperand(this.thisReference);
     				state.pushOperand(key);
     				state.pushOperand(value);

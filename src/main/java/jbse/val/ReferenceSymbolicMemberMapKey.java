@@ -13,9 +13,9 @@ import jbse.val.exc.InvalidTypeException;
  * in a map (key slot). 
  */
 public final class ReferenceSymbolicMemberMapKey extends ReferenceSymbolicMember {
-    /** The current {@link HistoryPoint} (to disambiguate the state of {@link #key}). */
-    private final HistoryPoint historyPoint;
-    
+	/** The key origin specifier. */
+	private final String keyOriginSpecifier;
+	
     /** The origin String representation of this object. */
     private final String asOriginString;
     
@@ -30,38 +30,31 @@ public final class ReferenceSymbolicMemberMapKey extends ReferenceSymbolicMember
      * @param keyOriginSpecifier a {@link String}. It will be used to specify
      *        the origin string representation of this symbol, that will be 
      *        built as {@code container.}{@link ReferenceSymbolic#asOriginString() asOriginString}{@code () + "::" + keyOriginSpecifier}.
-     * @param historyPoint the current {@link HistoryPoint}.
+     *        It is used to disambiguate the identity of references with same
+     *        {@code container}.
      * @param id an {@link int}, the identifier of the symbol. Used only
      *        in the toString representation of the symbol.
      * @throws InvalidTypeException never.
      * @throws InvalidInputException if {@code key == null || historyPoint == null}.
      * @throws NullPointerException if {@code container == null}.
      */
-    ReferenceSymbolicMemberMapKey(ReferenceSymbolic container, String keyOriginSpecifier, HistoryPoint historyPoint, int id) throws InvalidInputException, InvalidTypeException {
+    ReferenceSymbolicMemberMapKey(ReferenceSymbolic container, String keyOriginSpecifier, int id) throws InvalidInputException, InvalidTypeException {
     	super(container, id, REFERENCE + JAVA_OBJECT + TYPEEND, TYPEVAR + "V" + TYPEEND);
-    	if (keyOriginSpecifier == null || historyPoint == null) {
+    	if (keyOriginSpecifier == null) {
     		throw new InvalidInputException("Attempted the creation of a ReferenceSymbolicMemberMapValue with null key.");
     	}
     	
-    	this.historyPoint = historyPoint;
-    	this.asOriginString = getContainer().asOriginString() + "::" + keyOriginSpecifier;
+    	this.keyOriginSpecifier = keyOriginSpecifier;
+    	this.asOriginString = getContainer().asOriginString() + "::" + this.keyOriginSpecifier;
 
     	//calculates hashCode
 		final int prime = 131111;
 		int result = 1;
 		result = prime * result + getContainer().hashCode();
+		result = prime * result + this.keyOriginSpecifier.hashCode();
 		this.hashCode = result;
     }
 
-    /**
-     * Returns the {@link HistoryPoint}.
-     * 
-     * @return a {@link HistoryPoint}.
-     */
-    public HistoryPoint getHistoryPoint() {
-		return this.historyPoint;
-	}
-    
     @Override
     public String asOriginString() {
         return this.asOriginString;
@@ -90,6 +83,9 @@ public final class ReferenceSymbolicMemberMapKey extends ReferenceSymbolicMember
 		}
 		final ReferenceSymbolicMemberMapKey other = (ReferenceSymbolicMemberMapKey) obj;
 		if (!getContainer().equals(other.getContainer())) {
+			return false;
+		}
+		if (!this.keyOriginSpecifier.equals(other.keyOriginSpecifier)) {
 			return false;
 		}
 		return true;

@@ -155,7 +155,7 @@ StrategyUpdate<DecisionAlternative_JAVA_MAP>> {
         						.op_return()
         						.mk();
         			} else {
-        				final ReferenceSymbolic value = state.createSymbolMemberMapValue(this.map.getOrigin(), key);
+        				final ReferenceSymbolic value = state.createSymbolMemberMapValueKeyCurrentHistoryPoint(this.map.getOrigin(), key);
         				state.pushOperand(this.thisReference);
         				state.pushOperand(key);
         				state.pushOperand(value);

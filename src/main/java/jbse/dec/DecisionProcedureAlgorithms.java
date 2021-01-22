@@ -324,7 +324,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
             if (isAny(exp.getFirstOperand()) || isAny(exp.getSecondOperand())) {
                 result.add(T);
                 result.add(F);
-                shouldRefine = false; //"don't care" does not require refinement
+                shouldRefine = false; //any-based conditions shall not reach the decision procedure
             } else if (isSat(exp)) {
                 result.add(T);
                 final Expression expNot = (Expression) this.calc.push(condition).not().pop(); 
@@ -413,7 +413,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
             result.add(GT);
             result.add(EQ);
             result.add(LT);
-            shouldRefine = false;
+            shouldRefine = false; //any-based conditions shall not reach the decision procedure
         } else {
             try {
                 final Expression expGT = (Expression) this.calc.push(val1).gt(val2).pop();
@@ -559,7 +559,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
         final DecisionAlternative_XNEWARRAY OK = DecisionAlternative_XNEWARRAY.toNonconcrete(true);
         final DecisionAlternative_XNEWARRAY WRONG = DecisionAlternative_XNEWARRAY.toNonconcrete(false);
 
-        if (countsNonNegative instanceof Any) {
+        if (isAny(countsNonNegative)) {
             //TODO can it really happen? should we throw an exception in the case?
             result.add(WRONG);
             result.add(OK);
@@ -631,7 +631,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
         final DecisionAlternative_XASTORE IN = DecisionAlternative_XASTORE.toNonconcrete(true);
         final DecisionAlternative_XASTORE OUT = DecisionAlternative_XASTORE.toNonconcrete(false);
 
-        if (inRange instanceof Any) {
+        if (isAny(inRange)) {
             //TODO can it really happen? should we throw an exception in the case?
             result.add(OUT);
             result.add(IN);
