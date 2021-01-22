@@ -804,9 +804,15 @@ implements Map<K,V>, Cloneable, Serializable {
 
 		@Override
 		public Iterator<Map.Entry<K, V>> iterator() {
+			/**
+			 * This iterator iterates first over the entries of the backing
+			 * initial map (if they exist) in the order first assumed -  
+			 * to - last assumed, then the entries of the post-initial
+			 * map, in the order first inserted - to - last inserted.
+			 */
 			return new Iterator<Map.Entry<K,V>>() {
-				private boolean scanningInitialMap = false;
-				private Node current = JAVA_MAP.this.root;
+				private boolean scanningInitialMap = (JAVA_MAP.this.initialMap == null ? false : true);
+				private Node current = (JAVA_MAP.this.initialMap == null ? JAVA_MAP.this.root : JAVA_MAP.this.initialMap.root);
 
 				@Override
 				public boolean hasNext() {
@@ -820,17 +826,22 @@ implements Map<K,V>, Cloneable, Serializable {
 						throw new NoSuchElementException();
 					}
 					final NodePair<K, V> currentPair = (JAVA_MAP.NodePair<K, V>) this.current;
-					final K key = currentPair.key;
-					final V value = currentPair.value;
+					
+					//if at the end of the initial map, branches to assume 
+					//another entry in it
+					if (this.scanningInitialMap && currentPair.next instanceof NodeEmpty) {
+						refineOnFreshEntryAndBranch();
+					}
+					
 					final Entry<K, V> retVal = new Map.Entry<K, V>() {
 						@Override
 						public K getKey() {
-							return key;
+							return currentPair.key;
 						}
 
 						@Override
 						public V getValue() {
-							return value;
+							return currentPair.value;
 						}
 
 						@Override
@@ -852,8 +863,8 @@ implements Map<K,V>, Cloneable, Serializable {
 								return false;
 							}
 							final Map.Entry<?, ?> e = (Map.Entry<?, ?>) obj;
-							return (key == null ? e.getKey() == null : key.equals(e.getKey())) &&
-									(value == null ? e.getValue() == null : value.equals(e.getValue()));
+							return (currentPair.key == null ? e.getKey() == null : currentPair.key.equals(e.getKey())) &&
+									(currentPair.value == null ? e.getValue() == null : currentPair.value.equals(e.getValue()));
 						}
 
 						@Override
@@ -861,41 +872,43 @@ implements Map<K,V>, Cloneable, Serializable {
 							return currentPair.pairHashCode();
 						}
 					};
-
+					
 					//move forward by one
 					this.current = currentPair.next;
 
 					if (this.scanningInitialMap) {
-						//if we are in the initial map, we must also skip all entries that are overridden
-						//by other (already emitted) ones - i.e., by the entries in JAVA_MAP.this.root.(next)*
-						scanForNotAlreadyEmitted:
-							while (this.current instanceof JAVA_MAP.NodePair) {
-								final NodePair<K, V> npCurrent = (JAVA_MAP.NodePair<K, V>) this.current;
-								final K keyCurrent = npCurrent.key;
-								if (keyCurrent == null) {
-									for (Node n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-										final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
-										if (np.key == null) {
-											this.current = npCurrent.next;
-											continue scanForNotAlreadyEmitted;
-										}
-									}
-								} else {
-									for (Node n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-										final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
-										if (keyCurrent.equals(np.key)) {
-											this.current = npCurrent.next;
-											continue scanForNotAlreadyEmitted;
-										}
+						//if the iterator is scanning JAVA_MAP.this.initialMap, it skips all 
+						//the entries that are overridden by the ones in JAVA_MAP.this.root.(next)*
+						skipOverriddenEntries:
+						while (this.current instanceof JAVA_MAP.NodePair) {
+							final NodePair<K, V> npCurrent = (JAVA_MAP.NodePair<K, V>) this.current;
+							final K keyCurrent = npCurrent.key;
+							if (keyCurrent == null) {
+								for (Node n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+									final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+									if (np.key == null) {
+										this.current = npCurrent.next;
+										continue skipOverriddenEntries;
 									}
 								}
-								break;
+							} else {
+								for (Node n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+									final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+									if (keyCurrent.equals(np.key)) {
+										this.current = npCurrent.next;
+										continue skipOverriddenEntries;
+									}
+								}
 							}
-					} else if (this.current instanceof JAVA_MAP.NodeEmpty && JAVA_MAP.this.initialMap != null) {
-						//if we are at the end of JAVA_MAP.this.root.(next)*, continue 
-						//with the initial map (if present)
-						this.current = JAVA_MAP.this.initialMap.root;
-						this.scanningInitialMap = true;
+							break;
+						}
+						
+						//if the iterator is at the end of JAVA_MAP.this.initialMap.root.(next)*,
+						//continues with the entries in JAVA_MAP.this.root.(next)*
+						if (this.current instanceof JAVA_MAP.NodeEmpty) {
+							this.scanningInitialMap = false;
+							this.current = JAVA_MAP.this.root;
+						}
 					}
 
 					return retVal;
@@ -1238,15 +1251,24 @@ implements Map<K,V>, Cloneable, Serializable {
 	private native void refineOnKeyCombinationsAndBranch(Object... keys);
 
 	/**
+	 * Causes symbolic execution to branch on the cases:
+	 * A fresh entry is present/absent in an initial map. 
+	 * Can be invoked only if this map is initial.
+	 */
+	private native void refineOnFreshEntryAndBranch();
+	
+	/**
 	 * Upcalled by {@link #refineOnKeyAndBranch(Object)},
 	 * {@link #refineOnKeyCombinationsAndBranch(Object...)}, 
-	 * and {@link #refineOnValueAndBranch(Object)}. 
+	 * {@link #refineOnValueAndBranch(Object)}, and
+	 * {@link #refineOnFreshEntryAndBranch()} 
 	 * Refines this object by assuming that a key/value pair
 	 * is present in it. This object must be initial.
 	 * 
 	 * @param key the key.
 	 * @param value the value.
 	 */
+	@SuppressWarnings("unchecked")
 	private void refineIn(K key, V value) {
 		if (!this.isInitial) {
 			metaThrowUnexpectedInternalException("Tried to refine a JAVA_MAP that is not initial.");
@@ -1255,11 +1277,23 @@ implements Map<K,V>, Cloneable, Serializable {
 			ignore(); //contradiction found
 		}
 
-		final NodePair<K, V> p = new NodePair<K, V>();
+		final NodePair<K, V> p = new NodePair<>();
 		p.key = key;
 		p.value = value;
-		p.next = this.root;
-		this.root = p;
+		Node n;
+		for (n = this.root; n instanceof NodePair<?, ?>; n = ((NodePair<?, ?>) n).next) {
+			if (((NodePair<?, ?>) n).next instanceof NodeEmpty) {
+				break;
+			}
+		}
+		if (n instanceof NodeEmpty) {
+			p.next = this.root;
+			this.root = p;
+		} else {
+			final NodePair<K, V> np = (NodePair<K, V>) n;
+			p.next = np.next;
+			np.next = p;
+		}
 		++this.numNodes;
 		assume(this.size >= this.numNodes);
 	}
@@ -1325,5 +1359,19 @@ implements Map<K,V>, Cloneable, Serializable {
 		}
 
 		this.absentValues.add(value);
+	}
+
+	/**
+	 * Upcalled by {@link #refineOnFreshEntryAndBranch()}. 
+	 * Refines this object by assuming that no more entries
+	 * are present in it. This object must be initial.
+	 * 
+	 * @param value the value.
+	 */
+	private void refineMapComplete() {
+		if (!this.isInitial) {
+			metaThrowUnexpectedInternalException("Tried to refine a JAVA_MAP that is not initial.");
+		}
+		assume(this.size == this.numNodes);
 	}
 }

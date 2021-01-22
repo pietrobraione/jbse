@@ -14,8 +14,8 @@ public abstract class PrimitiveSymbolicAtomic extends PrimitiveSymbolic implemen
     /**
      * Constructor.
      * 
-     * @param id an {@link int}, the identifier of the symbol. Different
-     *        object with same identifier will be treated as equal.
+     * @param id an {@link int}, the identifier of the symbol. Used only
+     *        in the toString representation of the symbol.
      * @param type the type of the represented value.
      * @param historyPoint the current {@link HistoryPoint}. It must not be {@code null}.
      * @throws InvalidTypeException if {@code type} is not primitive.

@@ -13,7 +13,7 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  */
 public abstract class ReferenceSymbolicAtomic extends ReferenceSymbolic implements SymbolicAtomic {
-    /** The string representation of this object. */
+    /** The String representation of this object. */
     private final String toString;
 
     /** 
@@ -24,7 +24,8 @@ public abstract class ReferenceSymbolicAtomic extends ReferenceSymbolic implemen
     /**
      * Constructor returning an uninitialized symbolic reference.
      * 
-     * @param id an {@code int} identifying the reference univocally.
+     * @param id an {@link int}, the identifier of the symbol. Used only
+     *        in the toString representation of the symbol.
      * @param staticType a {@link String}, the static type of the
      *        reference (taken from bytecode).
      * @param genericSignatureType a {@link String}, the generic signature 

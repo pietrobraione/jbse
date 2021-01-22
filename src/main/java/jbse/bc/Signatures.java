@@ -404,6 +404,8 @@ public final class Signatures {
         new Signature(JAVA_JARFILE, "()" + ARRAYOF + REFERENCE + JAVA_STRING + TYPEEND, "getMetaInfEntryNames");
     public static final Signature JAVA_MAP_CONTAINSKEY =
         new Signature(JAVA_MAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + BOOLEAN, "containsKey");
+    public static final Signature JAVA_MAP_CONTAINSVALUE =
+    	new Signature(JAVA_MAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + BOOLEAN, "containsValue");
     public static final Signature JAVA_MAP_GET =
         new Signature(JAVA_MAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "get");
     public static final Signature JAVA_MEMBERNAME_GETTYPE =
@@ -780,12 +782,20 @@ public final class Signatures {
         new Signature(JAVA_CONCURRENTHASHMAP, "()" + VOID, "notifyMethodExecution");
     public static final Signature JBSE_JAVA_CONCURRENTMAP_REFINEIN = 
         new Signature(JAVA_CONCURRENTHASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineIn");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_REFINEMAPCOMPLETE = 
+		new Signature(JAVA_CONCURRENTHASHMAP, "()" + VOID, "refineMapComplete");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_REFINEONFRESHENTRYANDBRANCH = 
+		new Signature(JAVA_CONCURRENTHASHMAP, "()" + VOID, "refineOnFreshEntryAndBranch");
     public static final Signature JBSE_JAVA_CONCURRENTMAP_REFINEONKEYANDBRANCH = 
         new Signature(JAVA_CONCURRENTHASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOnKeyAndBranch");
     public static final Signature JBSE_JAVA_CONCURRENTMAP_REFINEONKEYCOMBINATIONSANDBRANCH = 
         new Signature(JAVA_CONCURRENTHASHMAP, "(" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOnKeyCombinationsAndBranch");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_REFINEONVALUEANDBRANCH = 
+		new Signature(JAVA_CONCURRENTHASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOnValueAndBranch");
     public static final Signature JBSE_JAVA_CONCURRENTMAP_REFINEOUTKEY = 
         new Signature(JAVA_CONCURRENTHASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOutKey");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_REFINEOUTVALUE = 
+		new Signature(JAVA_CONCURRENTHASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOutValue");
     public static final Signature JBSE_JAVA_MAP_MAKEINITIAL = 
     	new Signature(JAVA_HASHMAP, "()" + VOID, "makeInitial");
     public static final Signature JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION = 
@@ -794,12 +804,20 @@ public final class Signatures {
     		new Signature(JAVA_HASHMAP, "()" + VOID, "notifyMethodExecution");
     public static final Signature JBSE_JAVA_MAP_REFINEIN = 
     	new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineIn");
+    public static final Signature JBSE_JAVA_MAP_REFINEMAPCOMPLETE = 
+		new Signature(JAVA_HASHMAP, "()" + VOID, "refineMapComplete");
+    public static final Signature JBSE_JAVA_MAP_REFINEONFRESHENTRYANDBRANCH = 
+    	new Signature(JAVA_HASHMAP, "()" + VOID, "refineOnFreshEntryAndBranch");
     public static final Signature JBSE_JAVA_MAP_REFINEONKEYANDBRANCH = 
-        	new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOnKeyAndBranch");
+        new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOnKeyAndBranch");
     public static final Signature JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH = 
     	new Signature(JAVA_HASHMAP, "(" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOnKeyCombinationsAndBranch");
+    public static final Signature JBSE_JAVA_MAP_REFINEONVALUEANDBRANCH = 
+    	new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOnValueAndBranch");
     public static final Signature JBSE_JAVA_MAP_REFINEOUTKEY = 
     	new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOutKey");
+    public static final Signature JBSE_JAVA_MAP_REFINEOUTVALUE = 
+		new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOutValue");
     public static final Signature SUN_CONSTANTPOOL_GETUTF8AT0 = 
         new Signature(SUN_CONSTANTPOOL, 
                       "(" + REFERENCE + JAVA_OBJECT + TYPEEND + INT + ")" + REFERENCE + JAVA_STRING + TYPEEND, 

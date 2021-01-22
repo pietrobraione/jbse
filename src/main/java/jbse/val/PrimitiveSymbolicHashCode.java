@@ -29,8 +29,8 @@ public final class PrimitiveSymbolicHashCode extends PrimitiveSymbolicAtomic {
      *        object this hash code originates from, or {@code null} if this
      *        hash code is the hash code of an object not present in the
      *        initial state (i.e., a concrete object).
-     * @param id an {@link int}, the identifier of the symbol. Different
-     *        object with same identifier will be treated as equal.
+     * @param id an {@link int}, the identifier of the symbol. Used only
+     *        in the toString representation of the symbol.
      * @param historyPoint the current {@link HistoryPoint} if {@code container == null}.
      *        In such case it must not be {@code null}.
      * @throws InvalidTypeException never.

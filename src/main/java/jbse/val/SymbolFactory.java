@@ -184,6 +184,36 @@ public final class SymbolFactory implements Cloneable {
 
     /**
      * A Factory Method for creating symbolic values. The symbol
+     * has as origin the key slot of an entry in a map.  
+     * 
+     * @param container a {@link ReferenceSymbolic}, the container object
+     *        the symbol originates from. It must refer a map.
+     * @param value a {@link Reference}, the value of the entry in the 
+     *        container this symbol originates from. It can be null, in
+     *        which case the returned reference will not store information
+     *        in its origin of the value it is associated with.
+     * @param historyPoint the current {@link HistoryPoint}.
+     * @return a {@link ReferenceSymbolic}.
+     */
+    public ReferenceSymbolic createSymbolMemberMapKey(ReferenceSymbolic container, Reference value, HistoryPoint historyPoint) {
+    	try {
+    		final int nextIdReferenceSymbolic = getNextIdReferenceSymbolic();
+    		final String keyOriginSpecifier;
+    		if (value == null) {
+    			keyOriginSpecifier = "::KEY(" + nextIdReferenceSymbolic + ")";
+    		} else {
+    			keyOriginSpecifier = "::KEY-OF(" + (value.isSymbolic() ? ((Symbolic) value).asOriginString() : value.toString()) + "@" + historyPoint.toString() + ", " + nextIdReferenceSymbolic + ")";
+    		}
+    		final ReferenceSymbolic retVal = new ReferenceSymbolicMemberMapKey(container, keyOriginSpecifier, historyPoint, nextIdReferenceSymbolic);
+    		return retVal;
+    	} catch (InvalidInputException | InvalidTypeException e) {
+    		//this should never happen
+    		throw new UnexpectedInternalException(e);
+    	}
+    }
+
+    /**
+     * A Factory Method for creating symbolic values. The symbol
      * has as origin the value slot of an entry in a map.  
      * 
      * @param container a {@link ReferenceSymbolic}, the container object

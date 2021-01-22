@@ -14,5 +14,6 @@ public interface ReferenceVisitor {
 	void visitReferenceSymbolicLocalVariable(ReferenceSymbolicLocalVariable x) throws Exception;
 	void visitReferenceSymbolicMemberArray(ReferenceSymbolicMemberArray x) throws Exception;
 	void visitReferenceSymbolicMemberField(ReferenceSymbolicMemberField x) throws Exception;
+	void visitReferenceSymbolicMemberMapKey(ReferenceSymbolicMemberMapKey x) throws Exception;
 	void visitReferenceSymbolicMemberMapValue(ReferenceSymbolicMemberMapValue x) throws Exception;
 }

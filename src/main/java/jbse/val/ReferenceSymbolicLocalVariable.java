@@ -25,8 +25,8 @@ public final class ReferenceSymbolicLocalVariable extends ReferenceSymbolicAtomi
      * 
      * @param variableName a {@link String}, the name of the local variable
      *        in the root frame this symbol originates from.
-     * @param id an {@link int}, the identifier of the symbol. Different
-     *        object with same identifier will be treated as equal.
+     * @param id an {@link int}, the identifier of the symbol. Used only
+     *        in the toString representation of the symbol.
      * @param staticType a {@link String}, the static type of the
      *        reference (taken from bytecode).
      * @param genericSignatureType a {@link String}, the generic signature 
