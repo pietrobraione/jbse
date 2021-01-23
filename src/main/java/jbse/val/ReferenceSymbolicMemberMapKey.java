@@ -39,7 +39,7 @@ public final class ReferenceSymbolicMemberMapKey extends ReferenceSymbolicMember
      * @throws NullPointerException if {@code container == null}.
      */
     ReferenceSymbolicMemberMapKey(ReferenceSymbolic container, String keyOriginSpecifier, int id) throws InvalidInputException, InvalidTypeException {
-    	super(container, id, REFERENCE + JAVA_OBJECT + TYPEEND, TYPEVAR + "V" + TYPEEND);
+    	super(container, id, REFERENCE + JAVA_OBJECT + TYPEEND, TYPEVAR + "K" + TYPEEND);
     	if (keyOriginSpecifier == null) {
     		throw new InvalidInputException("Attempted the creation of a ReferenceSymbolicMemberMapValue with null key.");
     	}
