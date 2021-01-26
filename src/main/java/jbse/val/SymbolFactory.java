@@ -198,7 +198,7 @@ public final class SymbolFactory implements Cloneable {
 		}
     	try {
     		final int nextIdReferenceSymbolic = getNextIdReferenceSymbolic();
-    		final String keyOriginSpecifier = "KEY(" + nextIdReferenceSymbolic + ")";
+    		final String keyOriginSpecifier = "KEY[" + nextIdReferenceSymbolic + "]";
     		final ReferenceSymbolic retVal = new ReferenceSymbolicMemberMapKey(container, keyOriginSpecifier, nextIdReferenceSymbolic);
     		return retVal;
     	} catch (InvalidInputException | InvalidTypeException e) {
@@ -230,7 +230,7 @@ public final class SymbolFactory implements Cloneable {
 		}
     	try {
     		final int nextIdReferenceSymbolic = getNextIdReferenceSymbolic();
-    		final String keyOriginSpecifier = "KEY-OF(" + (value.isSymbolic() ? ((Symbolic) value).asOriginString() : value.toString()) + "@" + historyPoint.toString() + ", " + nextIdReferenceSymbolic + ")";
+    		final String keyOriginSpecifier = "KEY-OF[" + (value.isSymbolic() ? ((Symbolic) value).asOriginString() : value.toString()) + "@" + historyPoint.toString() + ", " + nextIdReferenceSymbolic + "]";
     		final ReferenceSymbolic retVal = new ReferenceSymbolicMemberMapKey(container, keyOriginSpecifier, nextIdReferenceSymbolic);
     		return retVal;
     	} catch (InvalidInputException | InvalidTypeException e) {

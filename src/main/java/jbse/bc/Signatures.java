@@ -800,8 +800,12 @@ public final class Signatures {
     	new Signature(JAVA_HASHMAP, "()" + VOID, "makeInitial");
     public static final Signature JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION = 
     	new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + VOID, "metaThrowUnexpectedInternalException");
+    public static final Signature JBSE_JAVA_MAP_ONKEYRESOLUTION0 = 
+    	new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "onKeyResolution0");
+    public static final Signature JBSE_JAVA_MAP_ONKEYRESOLUTIONCOMPLETE = 
+		new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_HASHMAP + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "onKeyResolutionComplete");
     public static final Signature JBSE_JAVA_MAP_NOTIFYMETHODEXECUTION = 
-    		new Signature(JAVA_HASHMAP, "()" + VOID, "notifyMethodExecution");
+		new Signature(JAVA_HASHMAP, "()" + VOID, "notifyMethodExecution");
     public static final Signature JBSE_JAVA_MAP_REFINEIN = 
     	new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineIn");
     public static final Signature JBSE_JAVA_MAP_REFINEMAPCOMPLETE = 

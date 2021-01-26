@@ -47,7 +47,7 @@ public final class ReferenceSymbolicMemberMapValue extends ReferenceSymbolicMemb
     	
     	this.key = key;
     	this.historyPoint = historyPoint;
-    	this.asOriginString = getContainer().asOriginString() + "::GET(" + (this.key.isSymbolic() ? ((Symbolic) this.key).asOriginString() : this.key.toString()) + "@" + historyPoint.toString() + ")";
+    	this.asOriginString = getContainer().asOriginString() + "::GET[" + (this.key.isSymbolic() ? ((Symbolic) this.key).asOriginString() : this.key.toString()) + "@" + historyPoint.toString() + "]";
 
     	//calculates hashCode
 		final int prime = 131071;

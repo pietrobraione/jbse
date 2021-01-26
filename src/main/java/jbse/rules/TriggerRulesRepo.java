@@ -42,7 +42,7 @@ public final class TriggerRulesRepo implements Cloneable {
      *                     {@code originExp}, will be expanded 
      *                     when necessary to a symbolic object with class 
      *                     {@code classAllowed}. If {@code classAllowed == null}, 
-     *                     the matching {@link ReferenceSymbolic}s will not be expanded.
+     *                     any class will be accepted.
      * @param triggerMethod the {@link Signature} of the instrumentation method to be 
      *                      triggered when this rule fires.
      * @param triggerParameter a specification of the parameter to be passed to the 
@@ -124,8 +124,7 @@ public final class TriggerRulesRepo implements Cloneable {
      *                       when necessary to all the epoch-compatible symbolic objects 
      *                       with class
      *                       {@code classAllowed}. If {@code classAllowed == null}
-     *                       the matching {@link ReferenceSymbolic} will not be
-     *                       resolved by alias.
+     *                       any class will be accepted.
      * @param triggerMethod the {@link Signature} of the instrumentation method to be 
      *                      triggered when this rule fires.
      * @param triggerParameter a specification of the parameter to be passed to the 

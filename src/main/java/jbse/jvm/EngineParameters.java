@@ -683,7 +683,10 @@ public final class EngineParameters implements Cloneable {
         final TriggerRulesRepo retVal = this.triggerRulesRepo.clone();
         if (getUseHashMapModel()) {
         	retVal.addExpandTo("java/util/HashMap", "(?!{°}*java/util/HashMap:initialMap{EOL}){°}*", "java/util/HashMap", new Signature("java/util/HashMap", "(Ljava/util/HashMap;)V", "initSymbolic"), "{$REF}");
-        	retVal.addExpandTo("java/util/Map", "(?!{°}*java/util/HashMap:initialMap{EOL}){°}*", "java/util/HashMap", new Signature("java/util/HashMap", "(Ljava/util/HashMap;)V", "initSymbolic"), "{$REF}");
+        	retVal.addExpandTo("java/util/Map", "(?!{°}*java/util/HashMap:initialMap{EOL}){°}*", "java/util/HashMap", new Signature("java/util/HashMap", "(Ljava/util/HashMap;)V", "initSymbolic"), "{$REF}");        	
+        	retVal.addExpandTo("java/lang/Object", "(?!{°}*java/util/HashMap:initialMap::GET){°}*java/util/HashMap:initialMap::KEY{°}*", null, new Signature("java/util/HashMap", "(Ljava/lang/Object;)V", "onKeyResolution"), "{$REF}");
+        	retVal.addResolveAliasInstanceof("java/lang/Object", "(?!{°}*java/util/HashMap:initialMap::GET){°}*java/util/HashMap:initialMap::KEY{°}*", null, new Signature("java/util/HashMap", "(Ljava/lang/Object;)V", "onKeyResolution"), "{$REF}");
+        	retVal.addResolveNull("java/lang/Object", "(?!{°}*java/util/HashMap:initialMap::GET){°}*java/util/HashMap:initialMap::KEY{°}*", new Signature("java/util/HashMap", "(Ljava/lang/Object;)V", "onKeyResolution"), "{$REF}");
         	retVal.addExpandTo("java/util/concurrent/ConcurrentHashMap", "(?!{°}*java/util/concurrent/ConcurrentHashMap:initialMap{EOL}){°}*", "java/util/concurrent/ConcurrentHashMap", new Signature("java/util/concurrent/ConcurrentHashMap", "(Ljava/util/concurrent/ConcurrentHashMap;)V", "initSymbolic"), "{$REF}");
         	retVal.addExpandTo("java/util/Map", "(?!{°}*java/util/concurrent/ConcurrentHashMap:initialMap{EOL}){°}*", "java/util/concurrent/ConcurrentHashMap", new Signature("java/util/concurrent/ConcurrentHashMap", "(Ljava/util/concurrent/ConcurrentHashMap;)V", "initSymbolic"), "{$REF}");
         }
@@ -757,7 +760,8 @@ public final class EngineParameters implements Cloneable {
      *                     references with static type {@code toExpand} 
      *                     will match. 
      * @param classAllowed the name of the class whose instances are possible 
-     *                     expansions for this trigger to fire. 
+     *                     expansions for this trigger to fire. If {@code classAllowed == null}
+     *                     any class will be accepted.  
      * @param triggerClassName 
      *                     the class of the trigger method. When {@code null}
      *                     no trigger method will fire (only the expansion backdoor
@@ -853,7 +857,8 @@ public final class EngineParameters implements Cloneable {
      *                     references with static type {@code toResolve} 
      *                     will match. 
      * @param classAllowed the name of the class whose instances are possible 
-     *                     expansions for this trigger to fire. 
+     *                     aliases for this trigger to fire. If {@code classAllowed == null}
+     *                     any class will be accepted.  
      * @param triggerClassName 
      *                     the class of the trigger method.
      * @param triggerParametersSignature 

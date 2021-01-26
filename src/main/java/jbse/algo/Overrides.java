@@ -183,6 +183,7 @@ public final class Overrides {
     public static final String ALGO_JBSE_JAVA_CONCURRENTMAP_REFINEONKEYANDBRANCH             = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_CONCURRENTMAP_REFINEONKEYANDBRANCH.class.getName());
     public static final String ALGO_JBSE_JAVA_CONCURRENTMAP_REFINEONKEYCOMBINATIONSANDBRANCH = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_CONCURRENTMAP_REFINEONKEYCOMBINATIONSANDBRANCH.class.getName());
     public static final String ALGO_JBSE_JAVA_CONCURRENTMAP_REFINEONVALUEANDBRANCH           = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_CONCURRENTMAP_REFINEONVALUEANDBRANCH.class.getName());
+    public static final String ALGO_JBSE_JAVA_MAP_ONKEYRESOLUTION0                           = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_MAP_ONKEYRESOLUTION0.class.getName());
     public static final String ALGO_JBSE_JAVA_MAP_REFINEONFRESHENTRYANDBRANCH                = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_MAP_REFINEONFRESHENTRYANDBRANCH.class.getName());
     public static final String ALGO_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH                       = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH.class.getName());
     public static final String ALGO_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH           = internalClassName(jbse.algo.meta.Algo_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH.class.getName());

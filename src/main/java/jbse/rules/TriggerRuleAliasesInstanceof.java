@@ -12,7 +12,7 @@ import jbse.val.ReferenceSymbolic;
  * @author Pietro Braione
  */
 public class TriggerRuleAliasesInstanceof extends TriggerRuleAliases {
-	/** If {@code null} means aliases nothing. */
+	/** When {@code null} means that the alias class doesn't care. */
 	private final String classAllowed;
 	
 	/** The toString version of this rule. */
@@ -21,18 +21,14 @@ public class TriggerRuleAliasesInstanceof extends TriggerRuleAliases {
 	public TriggerRuleAliasesInstanceof(String originExp, String classAllowed, Signature triggerMethodSignature, String triggerMethodParameter) {
 		super(originExp, triggerMethodSignature, triggerMethodParameter);
 		this.classAllowed = classAllowed;
-		this.toString = originExp + " aliases instanceof " + this.classAllowed + " triggers " + 
+		this.toString = originExp + " aliases" + (this.classAllowed == null ? "" : (" instanceof " + this.classAllowed)) + " triggers " + 
 		                triggerMethodSignature.toString() + (triggerMethodParameter == null ? "" : (":" + triggerMethodParameter));
 	}
 
 	@Override
 	public boolean satisfies(ReferenceSymbolic ref, Objekt o) {
-		if (this.classAllowed == null) {
-			return false;
-		}
-
 		//ref is not used
-		return this.classAllowed.equals(o.getType().getClassName());
+		return (this.classAllowed == null ? true : this.classAllowed.equals(o.getType().getClassName()));
 	}
 
 	@Override

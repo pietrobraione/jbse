@@ -1283,6 +1283,52 @@ implements Map<K,V>, Cloneable, Serializable {
 	private native void refineOnFreshEntryAndBranch();
 	
 	/**
+	 * Triggered on reference resolution of a key, 
+	 * assumes that the key does not resolve to another
+	 * key.
+	 * 
+	 * @param key the key that is resolved.
+	 */
+	private static void onKeyResolution(Object key) {
+		onKeyResolution0(key); //calls native implementation - alas, triggers may not be native
+	}
+	
+	private static native void onKeyResolution0(Object key);
+	
+	/**
+	 * Upcalled by {@link #onKeyResolution(Object)}, 
+	 * because it is easier to perform the check at
+	 * the base-level (and triggers with two parameters
+	 * are currently unsupported).
+	 * 
+	 * @param map the {@link JAVA_MAP} containing {@code key}.
+	 * @param key the key that is resolved.
+	 */
+	@SuppressWarnings("unchecked")
+	private static <KK, VV> void onKeyResolutionComplete(JAVA_MAP<KK, VV> tthis, KK key) {
+		if (!tthis.isInitial) {
+			throw new IllegalArgumentException("Attempted to invoke " + JAVA_MAP.class.getCanonicalName() + ".onKeyResolutionComplete on a JAVA_MAP that is not initial.");
+		}
+		int occurrences = 0;
+		if (key == null) {
+			for (Node n = tthis.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<KK, VV>) n).next) {
+				final NodePair<KK, VV> np = (JAVA_MAP.NodePair<KK, VV>) n;
+				if (np.key == null) {
+					++occurrences;
+				}
+			}
+		} else {
+			for (Node n = tthis.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<KK, VV>) n).next) {
+				final NodePair<KK, VV> np = (JAVA_MAP.NodePair<KK, VV>) n;
+				if (key.equals(np.key)) {
+					++occurrences;
+				}
+			}
+		}
+		assume(occurrences <= 1);
+	}
+	
+	/**
 	 * Upcalled by {@link #refineOnKeyAndBranch(Object)},
 	 * {@link #refineOnKeyCombinationsAndBranch(Object...)}, 
 	 * {@link #refineOnValueAndBranch(Object)}, and
