@@ -155,15 +155,15 @@ implements Map<K,V>, Cloneable, Serializable {
 
 		//if not absent, checks in the nodes
 		if (key == null) {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (JAVA_MAP.Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+				final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 				if (np.key == null) {
 					return true;
 				}
 			}
 		} else {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (JAVA_MAP.Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+				final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 				if (key.equals(np.key)) {
 					return true;
 				}
@@ -195,15 +195,15 @@ implements Map<K,V>, Cloneable, Serializable {
 
 		//if not absent, checks in the nodes
 		if (value == null) {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (JAVA_MAP.Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+				final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 				if (np.value == null) {
 					return true;
 				}
 			}
 		} else {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (JAVA_MAP.Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+				final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 				if (value.equals(np.value)) {
 					return true;
 				}
@@ -237,15 +237,15 @@ implements Map<K,V>, Cloneable, Serializable {
 
 		//if not absent, checks in the nodes
 		if (key == null) {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (JAVA_MAP.Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+				final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 				if (np.key == null) {
 					return np.value;
 				}
 			}
 		} else {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (JAVA_MAP.Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+				final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 				if (key.equals(np.key)) {
 					return np.value;
 				}
@@ -269,7 +269,7 @@ implements Map<K,V>, Cloneable, Serializable {
 
 	private void addNode(K key, V value) {
 		this.absentKeys.remove(key);
-		final NodePair<K, V> np = new NodePair<>();
+		final JAVA_MAP.NodePair<K, V> np = new JAVA_MAP.NodePair<>();
 		np.key = key;
 		np.value = value;
 		np.next = this.root;
@@ -288,18 +288,18 @@ implements Map<K,V>, Cloneable, Serializable {
 		}
 
 		//looks for a matching NodePair in this.root.(next)*
-		NodePair<K, V> matchingPair = null;
+		JAVA_MAP.NodePair<K, V> matchingPair = null;
 		if (key == null) {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (JAVA_MAP.Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+				final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 				if (np.key == null) {
 					matchingPair = np;
 					break;
 				}
 			}
 		} else {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (JAVA_MAP.Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+				final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 				if (key.equals(np.key)) {
 					matchingPair = np;
 					break;
@@ -332,16 +332,16 @@ implements Map<K,V>, Cloneable, Serializable {
 				//if the key surely is in the initial map, add the new mapping and 
 				//return the value it had in the initial map
 				if (key == null) {
-					for (Node nInitial = this.initialMap.root; nInitial instanceof JAVA_MAP.NodePair; nInitial = ((JAVA_MAP.NodePair<K, V>) nInitial).next) {
-						final NodePair<K, V> npInitial = (JAVA_MAP.NodePair<K, V>) nInitial;
+					for (JAVA_MAP.Node nInitial = this.initialMap.root; nInitial instanceof JAVA_MAP.NodePair; nInitial = ((JAVA_MAP.NodePair<K, V>) nInitial).next) {
+						final JAVA_MAP.NodePair<K, V> npInitial = (JAVA_MAP.NodePair<K, V>) nInitial;
 						if (npInitial.key == null) {
 							addNode(key, value);
 							return npInitial.value;
 						}
 					}
 				} else {
-					for (Node nInitial = this.initialMap.root; nInitial instanceof JAVA_MAP.NodePair; nInitial = ((JAVA_MAP.NodePair<K, V>) nInitial).next) {
-						final NodePair<K, V> npInitial = (JAVA_MAP.NodePair<K, V>) nInitial;
+					for (JAVA_MAP.Node nInitial = this.initialMap.root; nInitial instanceof JAVA_MAP.NodePair; nInitial = ((JAVA_MAP.NodePair<K, V>) nInitial).next) {
+						final JAVA_MAP.NodePair<K, V> npInitial = (JAVA_MAP.NodePair<K, V>) nInitial;
 						if (key.equals(npInitial.key)) {
 							addNode(key, value);
 							return npInitial.value;
@@ -378,10 +378,10 @@ implements Map<K,V>, Cloneable, Serializable {
 		}
 
 		//looks for a matching NodePair in this.root.(next)*
-		NodePair<K, V> matchingPairPrev = null, matchingPair = null;
+		JAVA_MAP.NodePair<K, V> matchingPairPrev = null, matchingPair = null;
 		if (key == null) {
-			for (Node nPrev = null, n = this.root; n instanceof JAVA_MAP.NodePair; nPrev = n, n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (JAVA_MAP.Node nPrev = null, n = this.root; n instanceof JAVA_MAP.NodePair; nPrev = n, n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+				final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 				if (np.key == null) {
 					matchingPairPrev = (JAVA_MAP.NodePair<K, V>) nPrev;
 					matchingPair = np;
@@ -389,8 +389,8 @@ implements Map<K,V>, Cloneable, Serializable {
 				}
 			}
 		} else {
-			for (Node nPrev = null, n = this.root; n instanceof JAVA_MAP.NodePair; nPrev = n, n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (JAVA_MAP.Node nPrev = null, n = this.root; n instanceof JAVA_MAP.NodePair; nPrev = n, n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+				final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 				if (key.equals(np.key)) {
 					matchingPairPrev = (JAVA_MAP.NodePair<K, V>) nPrev;
 					matchingPair = np;
@@ -418,8 +418,8 @@ implements Map<K,V>, Cloneable, Serializable {
 				//if the key surely is in the initial map, adjust size and
 				//return the associated value
 				if (key == null) {
-					for (Node nInitial = this.initialMap.root; nInitial instanceof JAVA_MAP.NodePair; nInitial = ((JAVA_MAP.NodePair<K, V>) nInitial).next) {
-						final NodePair<K, V> npInitial = (JAVA_MAP.NodePair<K, V>) nInitial;
+					for (JAVA_MAP.Node nInitial = this.initialMap.root; nInitial instanceof JAVA_MAP.NodePair; nInitial = ((JAVA_MAP.NodePair<K, V>) nInitial).next) {
+						final JAVA_MAP.NodePair<K, V> npInitial = (JAVA_MAP.NodePair<K, V>) nInitial;
 						if (npInitial.key == null) {
 							this.absentKeys.add((K) key);						
 							--this.size;
@@ -427,8 +427,8 @@ implements Map<K,V>, Cloneable, Serializable {
 						}
 					}
 				} else {
-					for (Node nInitial = this.initialMap.root; nInitial instanceof JAVA_MAP.NodePair; nInitial = ((JAVA_MAP.NodePair<K, V>) nInitial).next) {
-						final NodePair<K, V> npInitial = (JAVA_MAP.NodePair<K, V>) nInitial;
+					for (JAVA_MAP.Node nInitial = this.initialMap.root; nInitial instanceof JAVA_MAP.NodePair; nInitial = ((JAVA_MAP.NodePair<K, V>) nInitial).next) {
+						final JAVA_MAP.NodePair<K, V> npInitial = (JAVA_MAP.NodePair<K, V>) nInitial;
 						if (key.equals(npInitial.key)) {
 							this.absentKeys.add((K) key);						
 							--this.size;
@@ -825,19 +825,19 @@ implements Map<K,V>, Cloneable, Serializable {
 					if (this.scanningInitialMap) {
 						skipOverriddenEntries:
 						while (this.current instanceof JAVA_MAP.NodePair) {
-							final NodePair<K, V> npCurrent = (JAVA_MAP.NodePair<K, V>) this.current;
+							final JAVA_MAP.NodePair<K, V> npCurrent = (JAVA_MAP.NodePair<K, V>) this.current;
 							final K keyCurrent = npCurrent.key;
 							if (keyCurrent == null) {
-								for (Node n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-									final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+								for (JAVA_MAP.Node n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+									final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 									if (np.key == null) {
 										this.current = npCurrent.next;
 										continue skipOverriddenEntries;
 									}
 								}
 							} else {
-								for (Node n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-									final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+								for (JAVA_MAP.Node n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+									final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 									if (keyCurrent.equals(np.key)) {
 										this.current = npCurrent.next;
 										continue skipOverriddenEntries;
@@ -851,7 +851,7 @@ implements Map<K,V>, Cloneable, Serializable {
 						//branches to assume another entry in it
 						if (this.current instanceof JAVA_MAP.NodeEmpty) {
 							//determines the predecessor to this.current
-							NodePair<K, V> preCurrent;
+							JAVA_MAP.NodePair<K, V> preCurrent;
 							if (this.current == JAVA_MAP.this.initialMap.root) {
 								preCurrent = null; //no predecessor
 							} else {
@@ -891,8 +891,8 @@ implements Map<K,V>, Cloneable, Serializable {
 					}
 
 					//builds the return value
-					final NodePair<K, V> currentPair = (JAVA_MAP.NodePair<K, V>) this.current;
-					final Entry<K, V> retVal = new Map.Entry<K, V>() {
+					final JAVA_MAP.NodePair<K, V> currentPair = (JAVA_MAP.NodePair<K, V>) this.current;
+					final Map.Entry<K, V> retVal = new Map.Entry<K, V>() {
 						@Override
 						public K getKey() {
 							return currentPair.key;
@@ -945,12 +945,12 @@ implements Map<K,V>, Cloneable, Serializable {
 					if (!hasNext()) {
 						throw new IllegalStateException();
 					}
-					final NodePair<K, V> currentBeforeRemovalPair = (JAVA_MAP.NodePair<K, V>) this.current;
+					final JAVA_MAP.NodePair<K, V> currentBeforeRemovalPair = (JAVA_MAP.NodePair<K, V>) this.current;
 					final K key = currentBeforeRemovalPair.key;
 					JAVA_MAP.this.remove(key);
 					if (!this.scanningInitialMap) {
 						//check if currentBeforeRemovalPair is still there
-						for (Node n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+						for (JAVA_MAP.Node n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
 							if (n == currentBeforeRemovalPair) {
 								//still present
 								return;
@@ -1080,8 +1080,8 @@ implements Map<K,V>, Cloneable, Serializable {
 		//calculates the hash code for the entries added
 		//after the start of the symbolic execution
 		int hashCode = 0;
-		for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-			final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+		for (JAVA_MAP.Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+			final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 			hashCode += np.pairHashCode();
 		}
 
@@ -1106,21 +1106,21 @@ implements Map<K,V>, Cloneable, Serializable {
 		//the initial map
 		final ArrayList<K> notRefined = new ArrayList<>();
 		findNotRefinedNodes:
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (JAVA_MAP.Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+				final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 				if (this.initialMap.absentKeys.contains(np.key)) {
 					continue findNotRefinedNodes;
 				}
 				if (np.key == null) {
-					for (Node nRefinement = this.initialMap.root; nRefinement instanceof JAVA_MAP.NodePair; nRefinement = ((JAVA_MAP.NodePair<K, V>) nRefinement).next) {
-						final NodePair<K, V> npRefinement = (JAVA_MAP.NodePair<K, V>) nRefinement;
+					for (JAVA_MAP.Node nRefinement = this.initialMap.root; nRefinement instanceof JAVA_MAP.NodePair; nRefinement = ((JAVA_MAP.NodePair<K, V>) nRefinement).next) {
+						final JAVA_MAP.NodePair<K, V> npRefinement = (JAVA_MAP.NodePair<K, V>) nRefinement;
 						if (npRefinement.key == null) {
 							continue findNotRefinedNodes;
 						}
 					}
 				} else {
-					for (Node nRefinement = this.initialMap.root; nRefinement instanceof JAVA_MAP.NodePair; nRefinement = ((JAVA_MAP.NodePair<K, V>) nRefinement).next) {
-						final NodePair<K, V> npRefinement = (JAVA_MAP.NodePair<K, V>) nRefinement;
+					for (JAVA_MAP.Node nRefinement = this.initialMap.root; nRefinement instanceof JAVA_MAP.NodePair; nRefinement = ((JAVA_MAP.NodePair<K, V>) nRefinement).next) {
+						final JAVA_MAP.NodePair<K, V> npRefinement = (JAVA_MAP.NodePair<K, V>) nRefinement;
 						if (np.key.equals(npRefinement.key)) {
 							continue findNotRefinedNodes;
 						}
@@ -1137,8 +1137,8 @@ implements Map<K,V>, Cloneable, Serializable {
 
 		//finally, subtract from the hash code all the hashes of pairs
 		//in the initial map
-		for (Node nRefinement = this.initialMap.root; nRefinement instanceof JAVA_MAP.NodePair; nRefinement = ((JAVA_MAP.NodePair<K, V>) nRefinement).next) {
-			final NodePair<K, V> npRefinement = (JAVA_MAP.NodePair<K, V>) nRefinement;
+		for (JAVA_MAP.Node nRefinement = this.initialMap.root; nRefinement instanceof JAVA_MAP.NodePair; nRefinement = ((JAVA_MAP.NodePair<K, V>) nRefinement).next) {
+			final JAVA_MAP.NodePair<K, V> npRefinement = (JAVA_MAP.NodePair<K, V>) nRefinement;
 			hashCode -= npRefinement.pairHashCode();
 		}
 
@@ -1311,15 +1311,15 @@ implements Map<K,V>, Cloneable, Serializable {
 		}
 		int occurrences = 0;
 		if (key == null) {
-			for (Node n = tthis.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<KK, VV>) n).next) {
-				final NodePair<KK, VV> np = (JAVA_MAP.NodePair<KK, VV>) n;
+			for (JAVA_MAP.Node n = tthis.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<KK, VV>) n).next) {
+				final JAVA_MAP.NodePair<KK, VV> np = (JAVA_MAP.NodePair<KK, VV>) n;
 				if (np.key == null) {
 					++occurrences;
 				}
 			}
 		} else {
-			for (Node n = tthis.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<KK, VV>) n).next) {
-				final NodePair<KK, VV> np = (JAVA_MAP.NodePair<KK, VV>) n;
+			for (JAVA_MAP.Node n = tthis.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<KK, VV>) n).next) {
+				final JAVA_MAP.NodePair<KK, VV> np = (JAVA_MAP.NodePair<KK, VV>) n;
 				if (key.equals(np.key)) {
 					++occurrences;
 				}
@@ -1348,12 +1348,12 @@ implements Map<K,V>, Cloneable, Serializable {
 			ignore(); //contradiction found
 		}
 
-		final NodePair<K, V> p = new NodePair<>();
+		final JAVA_MAP.NodePair<K, V> p = new JAVA_MAP.NodePair<>();
 		p.key = key;
 		p.value = value;
 		Node n;
-		for (n = this.root; n instanceof NodePair<?, ?>; n = ((NodePair<?, ?>) n).next) {
-			if (((NodePair<?, ?>) n).next instanceof NodeEmpty) {
+		for (n = this.root; n instanceof JAVA_MAP.NodePair<?, ?>; n = ((JAVA_MAP.NodePair<?, ?>) n).next) {
+			if (((JAVA_MAP.NodePair<?, ?>) n).next instanceof NodeEmpty) {
 				break;
 			}
 		}
@@ -1361,7 +1361,7 @@ implements Map<K,V>, Cloneable, Serializable {
 			p.next = this.root;
 			this.root = p;
 		} else {
-			final NodePair<K, V> np = (NodePair<K, V>) n;
+			final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 			p.next = np.next;
 			np.next = p;
 		}
@@ -1383,15 +1383,15 @@ implements Map<K,V>, Cloneable, Serializable {
 			metaThrowUnexpectedInternalException("Tried to refine a JAVA_MAP that is not initial.");
 		}
 		if (key == null) {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (JAVA_MAP.Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+				final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 				if (np.key == null) {
 					ignore(); //contradiction found
 				}
 			}
 		} else {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (JAVA_MAP.Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+				final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 				if (key.equals(np.key)) {
 					ignore(); //contradiction found
 				}
@@ -1414,15 +1414,15 @@ implements Map<K,V>, Cloneable, Serializable {
 			metaThrowUnexpectedInternalException("Tried to refine a JAVA_MAP that is not initial.");
 		}
 		if (value == null) {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (JAVA_MAP.Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+				final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 				if (np.value == null) {
 					ignore(); //contradiction found
 				}
 			}
 		} else {
-			for (Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
+			for (JAVA_MAP.Node n = this.root; n instanceof JAVA_MAP.NodePair; n = ((JAVA_MAP.NodePair<K, V>) n).next) {
+				final JAVA_MAP.NodePair<K, V> np = (JAVA_MAP.NodePair<K, V>) n;
 				if (value.equals(np.value)) {
 					ignore(); //contradiction found
 				}

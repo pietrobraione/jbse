@@ -689,6 +689,9 @@ public final class EngineParameters implements Cloneable {
         	retVal.addResolveNull("java/lang/Object", "(?!{°}*java/util/HashMap:initialMap::GET){°}*java/util/HashMap:initialMap::KEY{°}*", new Signature("java/util/HashMap", "(Ljava/lang/Object;)V", "onKeyResolution"), "{$REF}");
         	retVal.addExpandTo("java/util/concurrent/ConcurrentHashMap", "(?!{°}*java/util/concurrent/ConcurrentHashMap:initialMap{EOL}){°}*", "java/util/concurrent/ConcurrentHashMap", new Signature("java/util/concurrent/ConcurrentHashMap", "(Ljava/util/concurrent/ConcurrentHashMap;)V", "initSymbolic"), "{$REF}");
         	retVal.addExpandTo("java/util/Map", "(?!{°}*java/util/concurrent/ConcurrentHashMap:initialMap{EOL}){°}*", "java/util/concurrent/ConcurrentHashMap", new Signature("java/util/concurrent/ConcurrentHashMap", "(Ljava/util/concurrent/ConcurrentHashMap;)V", "initSymbolic"), "{$REF}");
+        	retVal.addExpandTo("java/lang/Object", "(?!{°}*java/util/concurrent/ConcurrentHashMap:initialMap::GET){°}*java/util/concurrent/ConcurrentHashMap:initialMap::KEY{°}*", null, new Signature("java/util/concurrent/ConcurrentHashMap", "(Ljava/lang/Object;)V", "onKeyResolution"), "{$REF}");
+        	retVal.addResolveAliasInstanceof("java/lang/Object", "(?!{°}*java/util/concurrent/ConcurrentHashMap:initialMap::GET){°}*java/util/concurrent/ConcurrentHashMap:initialMap::KEY{°}*", null, new Signature("java/util/concurrent/ConcurrentHashMap", "(Ljava/lang/Object;)V", "onKeyResolution"), "{$REF}");
+        	retVal.addResolveNull("java/lang/Object", "(?!{°}*java/util/concurrent/ConcurrentHashMap:initialMap::GET){°}*java/util/concurrent/ConcurrentHashMap:initialMap::KEY{°}*", new Signature("java/util/concurrent/ConcurrentHashMap", "(Ljava/lang/Object;)V", "onKeyResolution"), "{$REF}");
         }
         return retVal;
     }
