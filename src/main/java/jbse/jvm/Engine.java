@@ -167,7 +167,7 @@ public final class Engine implements AutoCloseable {
     		algo.exec(this.ctx);
     		
     		//updates the current state
-    		if (this.ctx.stateTree.createdBranch()) { //Algo_START always creates a branch, but we need the side effect of invoking createBranch
+    		if (this.ctx.stateTree.createdBranch()) { //Action_START always creates a branch, but we need the side effect of invoking createBranch
     			this.currentState = this.ctx.stateTree.nextState();
     		} else {
     			//this should never happen
