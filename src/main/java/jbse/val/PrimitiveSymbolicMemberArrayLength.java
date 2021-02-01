@@ -21,8 +21,8 @@ public final class PrimitiveSymbolicMemberArrayLength extends PrimitiveSymbolicM
      *        it must refer an array.
      * @param index a {@link Primitive}, the index of the slot in the 
      *        container array this symbol originates from.
-     * @param id an {@link int}, the identifier of the symbol. Different
-     *        object with same identifier will be treated as equal.
+     * @param id an {@link int}, the identifier of the symbol. Used only
+     *        in the toString representation of the symbol.
      * @throws InvalidTypeException never.
      * @throws InvalidInputException never.. 
      * @throws NullPointerException if {@code container == null}.

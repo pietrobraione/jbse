@@ -75,7 +75,7 @@ public final class Algo_JAVA_CLASS_GETCONSTANTPOOL extends Algo_INVOKEMETA_Nonbr
             
             //loads and initializes the class sun.reflect.ConstantPool
             final ClassFile cf_SUN_CONSTANTPOOL = state.getClassHierarchy().loadCreateClass(SUN_CONSTANTPOOL);
-            ensureClassInitialized(state, cf_SUN_CONSTANTPOOL, this.ctx);
+            ensureClassInitialized(state, this.ctx, cf_SUN_CONSTANTPOOL);
             
             //creates the instance
             this.toPush = state.createInstance(this.ctx.getCalculator(), cf_SUN_CONSTANTPOOL);

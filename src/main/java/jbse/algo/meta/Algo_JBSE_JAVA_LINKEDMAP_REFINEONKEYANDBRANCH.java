@@ -5,8 +5,8 @@ import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.bc.Signatures.JAVA_MAP_CONTAINSKEY;
-import static jbse.bc.Signatures.JBSE_JAVA_CONCURRENTMAP_REFINEIN;
-import static jbse.bc.Signatures.JBSE_JAVA_CONCURRENTMAP_REFINEOUTKEY;
+import static jbse.bc.Signatures.JBSE_JAVA_LINKEDMAP_REFINEIN;
+import static jbse.bc.Signatures.JBSE_JAVA_LINKEDMAP_REFINEOUTKEY;
 import static jbse.common.Type.BOOLEAN;
 import static jbse.common.Type.INT;
 
@@ -31,11 +31,11 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Meta-level implementation of {@link jbse.base.JAVA_CONCURRENTMAP#refineOnKeyAndBranch(Object)}.
+ * Meta-level implementation of {@link jbse.base.JAVA_LINKEDMAP#refineOnKeyAndBranch(Object)}.
  * 
  * @author Pietro Braione
  */
-public final class Algo_JBSE_JAVA_CONCURRENTMAP_REFINEONKEYANDBRANCH extends Algo_INVOKEMETA<
+public final class Algo_JBSE_JAVA_LINKEDMAP_REFINEONKEYANDBRANCH extends Algo_INVOKEMETA<
 DecisionAlternative_IFX,
 StrategyDecide<DecisionAlternative_IFX>, 
 StrategyRefine<DecisionAlternative_IFX>, 
@@ -58,12 +58,12 @@ StrategyUpdate<DecisionAlternative_IFX>> {
             	this.thisReference = (ReferenceSymbolic) this.data.operand(0);
                 if (state.isNull(this.thisReference)) {
                     //this should never happen
-                    failExecution("The 'this' parameter to jbse.base.JAVA_CONCURRENTMAP.refineOnKeyAndBranch method is null.");
+                    failExecution("The 'this' parameter to jbse.base.JAVA_LINKEDMAP.refineOnKeyAndBranch method is null.");
                 }
                 this.map = (Instance) state.getObject(this.thisReference);
                 if (this.map == null) {
                     //this should never happen
-                    failExecution("The 'this' parameter to jbse.base.JAVA_CONCURRENTMAP.refineOnKeyAndBranch method is symbolic and unresolved.");
+                    failExecution("The 'this' parameter to jbse.base.JAVA_LINKEDMAP.refineOnKeyAndBranch method is symbolic and unresolved.");
                 }
                 this.keyReference = (Reference) this.data.operand(1);
                 final Primitive javaMapContainsKey = calc.applyFunctionPrimitive(BOOLEAN, state.getHistoryPoint(), JAVA_MAP_CONTAINSKEY.toString(), this.thisReference, this.keyReference).widen(INT).pop();
@@ -105,14 +105,14 @@ StrategyUpdate<DecisionAlternative_IFX>> {
     				state.pushOperand(this.keyReference);
     				state.pushOperand(value);
     				snippet = state.snippetFactoryWrap()
-    						.op_invokevirtual(JBSE_JAVA_CONCURRENTMAP_REFINEIN)
+    						.op_invokevirtual(JBSE_JAVA_LINKEDMAP_REFINEIN)
     						.op_return()
     						.mk();
     			} else {
     				state.pushOperand(this.thisReference);
     				state.pushOperand(this.keyReference);
     				snippet = state.snippetFactoryWrap()
-    						.op_invokevirtual(JBSE_JAVA_CONCURRENTMAP_REFINEOUTKEY)
+    						.op_invokevirtual(JBSE_JAVA_LINKEDMAP_REFINEOUTKEY)
     						.op_return()
     						.mk();
     			}

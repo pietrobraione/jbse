@@ -87,7 +87,7 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
             //creates and initializes the class of the resolved method in the invokestatic case
             if (this.isStatic && this.methodResolvedClass != null) { 
                 try {
-                    ensureClassInitialized(state, this.methodResolvedClass, this.ctx);
+                    ensureClassInitialized(state, this.ctx, this.methodResolvedClass);
                 } catch (HeapMemoryExhaustedException e) {
                     throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
                     exitFromAlgorithm();

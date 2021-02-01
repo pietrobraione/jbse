@@ -24,17 +24,17 @@ import java.util.concurrent.ConcurrentMap;
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  */
-public class JAVA_CONCURRENTMAP<K, V>  extends AbstractMap<K,V>
-implements ConcurrentMap<K,V>, Serializable {
+public class JAVA_CONCURRENTMAP<K, V>  extends AbstractMap<K, V>
+implements ConcurrentMap<K, V>, Serializable {
 
     private static final long serialVersionUID = 7249069246763182397L;
 
-	private static abstract class Node { }
+	private static abstract class NNode { }
 
-	private static class NodePair<KK, VV> extends Node {
+	private static class NNodePair<KK, VV> extends NNode {
 		KK key;
 		VV value;
-		Node next;
+		NNode next;
 
 		public int pairHashCode() {
 			return (this.key == null ? 0 : this.key.hashCode()) ^
@@ -42,7 +42,7 @@ implements ConcurrentMap<K,V>, Serializable {
 		}
 	}
 
-	private static class NodeEmpty extends Node { }
+	private static class NNodeEmpty extends NNode { }
 
 	/**
 	 * Caches whether this map is initial, i.e., whether it 
@@ -85,7 +85,7 @@ implements ConcurrentMap<K,V>, Serializable {
 	 * The list of key/value pairs in the map, 
 	 * either added (noninitial map) or assumed (initial map).
 	 */
-	private Node root;
+	private NNode root;
 
 	/** 
 	 * The number of nodes in root.(next)*, excluded the
@@ -117,7 +117,7 @@ implements ConcurrentMap<K,V>, Serializable {
 		this.absentValues = null;
 		this.initialMap = null;
 		this.size = 0;
-		this.root = new NodeEmpty();
+		this.root = new NNodeEmpty();
 		this.numNodes = 0;
     }
 
@@ -137,6 +137,46 @@ implements ConcurrentMap<K,V>, Serializable {
 	public boolean isEmpty() {
 		return (size() == 0);
 	}
+	
+	@SuppressWarnings("unchecked")
+	private static <KK, VV> JAVA_CONCURRENTMAP.NNodePair<KK, VV> findNodeKey(JAVA_CONCURRENTMAP.NNode root, KK key) {
+		if (key == null) {
+			for (JAVA_CONCURRENTMAP.NNode nInitial = root; nInitial instanceof JAVA_CONCURRENTMAP.NNodePair; nInitial = ((JAVA_CONCURRENTMAP.NNodePair<KK, VV>) nInitial).next) {
+				final JAVA_CONCURRENTMAP.NNodePair<KK, VV> npInitial = (JAVA_CONCURRENTMAP.NNodePair<KK, VV>) nInitial;
+				if (npInitial.key == null) {
+					return npInitial;
+				}
+			}
+		} else {
+			for (JAVA_CONCURRENTMAP.NNode nInitial = root; nInitial instanceof JAVA_CONCURRENTMAP.NNodePair; nInitial = ((JAVA_CONCURRENTMAP.NNodePair<KK, VV>) nInitial).next) {
+				final JAVA_CONCURRENTMAP.NNodePair<KK, VV> npInitial = (JAVA_CONCURRENTMAP.NNodePair<KK, VV>) nInitial;
+				if (key.equals(npInitial.key)) {
+					return npInitial;
+				}
+			}
+		}
+		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <KK, VV> JAVA_CONCURRENTMAP.NNodePair<KK, VV> findNodeValue(JAVA_CONCURRENTMAP.NNode root, VV value) {
+		if (value == null) {
+			for (JAVA_CONCURRENTMAP.NNode nInitial = root; nInitial instanceof JAVA_CONCURRENTMAP.NNodePair; nInitial = ((JAVA_CONCURRENTMAP.NNodePair<KK, VV>) nInitial).next) {
+				final JAVA_CONCURRENTMAP.NNodePair<KK, VV> npInitial = (JAVA_CONCURRENTMAP.NNodePair<KK, VV>) nInitial;
+				if (npInitial.value == null) {
+					return npInitial;
+				}
+			}
+		} else {
+			for (JAVA_CONCURRENTMAP.NNode nInitial = root; nInitial instanceof JAVA_CONCURRENTMAP.NNodePair; nInitial = ((JAVA_CONCURRENTMAP.NNodePair<KK, VV>) nInitial).next) {
+				final JAVA_CONCURRENTMAP.NNodePair<KK, VV> npInitial = (JAVA_CONCURRENTMAP.NNodePair<KK, VV>) nInitial;
+				if (value.equals(npInitial.value)) {
+					return npInitial;
+				}
+			}
+		}
+		return null;
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -149,20 +189,8 @@ implements ConcurrentMap<K,V>, Serializable {
 		}
 
 		//if not absent, checks in the nodes
-		if (key == null) {
-			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
-				if (np.key == null) {
-					return true;
-				}
-			}
-		} else {
-			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
-				if (key.equals(np.key)) {
-					return true;
-				}
-			}
+		if (findNodeKey(this.root, key) != null) {
+			return true;
 		}
 
 		//if not in the nodes, there are three cases 
@@ -189,20 +217,8 @@ implements ConcurrentMap<K,V>, Serializable {
 		}
 
 		//if not absent, checks in the nodes
-		if (value == null) {
-			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
-				if (np.value == null) {
-					return true;
-				}
-			}
-		} else {
-			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
-				if (value.equals(np.value)) {
-					return true;
-				}
-			}
+		if (findNodeValue(this.root, value) != null) {
+			return true;
 		}
 
 		//if not in the nodes there are three possible cases: 
@@ -231,20 +247,9 @@ implements ConcurrentMap<K,V>, Serializable {
 		}
 
 		//if not absent, checks in the nodes
-		if (key == null) {
-			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
-				if (np.key == null) {
-					return np.value;
-				}
-			}
-		} else {
-			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
-				if (key.equals(np.key)) {
-					return np.value;
-				}
-			}
+		final JAVA_CONCURRENTMAP.NNodePair<K, V> np = (JAVA_CONCURRENTMAP.NNodePair<K, V>) findNodeKey(this.root, key);
+		if (np != null) {
+			return np.value;
 		}
 
 		//if not in the nodes there are three cases: 
@@ -262,13 +267,25 @@ implements ConcurrentMap<K,V>, Serializable {
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	private void addNode(K key, V value) {
-		this.absentKeys.remove(key);
-		final NodePair<K, V> np = new NodePair<>();
-		np.key = key;
-		np.value = value;
-		np.next = this.root;
-		this.root = np;
+		final JAVA_CONCURRENTMAP.NNodePair<K, V> p = new JAVA_CONCURRENTMAP.NNodePair<>();
+		p.key = key;
+		p.value = value;
+		JAVA_CONCURRENTMAP.NNode n;
+		for (n = this.root; n instanceof JAVA_CONCURRENTMAP.NNodePair<?, ?>; n = ((JAVA_CONCURRENTMAP.NNodePair<?, ?>) n).next) {
+			if (((NNodePair<?, ?>) n).next instanceof JAVA_CONCURRENTMAP.NNodeEmpty) {
+				break;
+			}
+		}
+		if (n instanceof JAVA_CONCURRENTMAP.NNodeEmpty) {
+			p.next = this.root;
+			this.root = p;
+		} else {
+			final JAVA_CONCURRENTMAP.NNodePair<K, V> np = (JAVA_CONCURRENTMAP.NNodePair<K, V>) n;
+			p.next = np.next;
+			np.next = p;
+		}
 		++this.numNodes;
 	}
 
@@ -283,65 +300,41 @@ implements ConcurrentMap<K,V>, Serializable {
 		}
 
 		//looks for a matching NodePair in this.root.(next)*
-		NodePair<K, V> matchingPair = null;
-		if (key == null) {
-			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
-				if (np.key == null) {
-					matchingPair = np;
-					break;
-				}
-			}
-		} else {
-			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
-				if (key.equals(np.key)) {
-					matchingPair = np;
-					break;
-				}
-			}
-		}
+		final JAVA_CONCURRENTMAP.NNodePair<K, V> matchingPair = (JAVA_CONCURRENTMAP.NNodePair<K, V>) findNodeKey(this.root, key);
 
-		//no matching NodePair
 		if (matchingPair == null) {
+			//no matching NodePair
 			if (this.initialMap == null) {
 				//the map is concrete, so it did not contain the key
 				//before this put operation: add the new mapping, 
 				//adjust the size and return null
+				this.absentKeys.remove(key);
 				addNode(key, value);
 				++this.size;
 				return null;
 			} else {
-				//the map is symbolic, so there are two cases: 
-				//either the key was, or it was not, in the initial map. 
+				//the map is symbolic, so there are two cases: either a 
+				//mapping is present, or it is not present, from the initial map. 
 				//This decision could generate a branch in symbolic execution.
 
-				//if the key surely is not in the initial map, add the new mapping, 
-				//adjust the size and return null
-				if (this.initialMap.absentKeys.contains(key)) {
+				//if no mapping is surely contributed by the initial map, adds the 
+				//new mapping in the current map, adjusts the size and returns 
+				//null
+				if (this.absentKeys.contains(key) || this.initialMap.absentKeys.contains(key)) {
+					this.absentKeys.remove(key);
 					addNode(key, value);
 					++this.size;
 					return null;
 				}
 
-				//if the key surely is in the initial map, add the new mapping and 
-				//return the value it had in the initial map
-				if (key == null) {
-					for (Node nInitial = this.initialMap.root; nInitial instanceof JAVA_CONCURRENTMAP.NodePair; nInitial = ((JAVA_CONCURRENTMAP.NodePair<K, V>) nInitial).next) {
-						final NodePair<K, V> npInitial = (JAVA_CONCURRENTMAP.NodePair<K, V>) nInitial;
-						if (npInitial.key == null) {
-							addNode(key, value);
-							return npInitial.value;
-						}
-					}
-				} else {
-					for (Node nInitial = this.initialMap.root; nInitial instanceof JAVA_CONCURRENTMAP.NodePair; nInitial = ((JAVA_CONCURRENTMAP.NodePair<K, V>) nInitial).next) {
-						final NodePair<K, V> npInitial = (JAVA_CONCURRENTMAP.NodePair<K, V>) nInitial;
-						if (key.equals(npInitial.key)) {
-							addNode(key, value);
-							return npInitial.value;
-						}
-					}
+				//otherwise, the initial map might contribute a mapping: if the 
+				//key surely is in the initial map, adds a new mapping to the 
+				//current map that overrides that in the initial map, and 
+				//returns the value it had in the initial map
+				final JAVA_CONCURRENTMAP.NNodePair<K, V> npInitial = (JAVA_CONCURRENTMAP.NNodePair<K, V>) findNodeKey(this.initialMap.root, key);
+				if (npInitial != null) {
+					addNode(key, value);
+					return npInitial.value;
 				}
 
 				//else, branch and repeat put operation
@@ -350,7 +343,8 @@ implements ConcurrentMap<K,V>, Serializable {
 			}
 		} else {
 			//matching NodePair found: just update it and 
-			//return its previous value
+			//return its previous value (note that here 
+			//this.absentKeys does not contain key)
 			final V retVal = matchingPair.value;
 			matchingPair.value = value;
 			return retVal;
@@ -373,21 +367,21 @@ implements ConcurrentMap<K,V>, Serializable {
 		}
 
 		//looks for a matching NodePair in this.root.(next)*
-		NodePair<K, V> matchingPairPrev = null, matchingPair = null;
+		JAVA_CONCURRENTMAP.NNodePair<K, V> matchingPairPrev = null, matchingPair = null;
 		if (key == null) {
-			for (Node nPrev = null, n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; nPrev = n, n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
+			for (JAVA_CONCURRENTMAP.NNode nPrev = null, n = this.root; n instanceof JAVA_CONCURRENTMAP.NNodePair; nPrev = n, n = ((JAVA_CONCURRENTMAP.NNodePair<K, V>) n).next) {
+				final JAVA_CONCURRENTMAP.NNodePair<K, V> np = (JAVA_CONCURRENTMAP.NNodePair<K, V>) n;
 				if (np.key == null) {
-					matchingPairPrev = (JAVA_CONCURRENTMAP.NodePair<K, V>) nPrev;
+					matchingPairPrev = (JAVA_CONCURRENTMAP.NNodePair<K, V>) nPrev;
 					matchingPair = np;
 					break;
 				}
 			}
 		} else {
-			for (Node nPrev = null, n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; nPrev = n, n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
+			for (JAVA_CONCURRENTMAP.NNode nPrev = null, n = this.root; n instanceof JAVA_CONCURRENTMAP.NNodePair; nPrev = n, n = ((JAVA_CONCURRENTMAP.NNodePair<K, V>) n).next) {
+				final JAVA_CONCURRENTMAP.NNodePair<K, V> np = (JAVA_CONCURRENTMAP.NNodePair<K, V>) n;
 				if (key.equals(np.key)) {
-					matchingPairPrev = (JAVA_CONCURRENTMAP.NodePair<K, V>) nPrev;
+					matchingPairPrev = (JAVA_CONCURRENTMAP.NNodePair<K, V>) nPrev;
 					matchingPair = np;
 					break;
 				}
@@ -412,24 +406,11 @@ implements ConcurrentMap<K,V>, Serializable {
 
 				//if the key surely is in the initial map, adjust size and
 				//return the associated value
-				if (key == null) {
-					for (Node nInitial = this.initialMap.root; nInitial instanceof JAVA_CONCURRENTMAP.NodePair; nInitial = ((JAVA_CONCURRENTMAP.NodePair<K, V>) nInitial).next) {
-						final NodePair<K, V> npInitial = (JAVA_CONCURRENTMAP.NodePair<K, V>) nInitial;
-						if (npInitial.key == null) {
-							this.absentKeys.add((K) key);						
-							--this.size;
-							return npInitial.value;
-						}
-					}
-				} else {
-					for (Node nInitial = this.initialMap.root; nInitial instanceof JAVA_CONCURRENTMAP.NodePair; nInitial = ((JAVA_CONCURRENTMAP.NodePair<K, V>) nInitial).next) {
-						final NodePair<K, V> npInitial = (JAVA_CONCURRENTMAP.NodePair<K, V>) nInitial;
-						if (key.equals(npInitial.key)) {
-							this.absentKeys.add((K) key);						
-							--this.size;
-							return npInitial.value;
-						}
-					}
+				final JAVA_CONCURRENTMAP.NNodePair<K, V> npInitial = (JAVA_CONCURRENTMAP.NNodePair<K, V>) findNodeKey(this.initialMap.root, key);
+				if (npInitial != null) {
+					this.absentKeys.add((K) key);						
+					--this.size;
+					return npInitial.value;
 				}
 
 				//else, branch and repeat remove operation
@@ -473,7 +454,7 @@ implements ConcurrentMap<K,V>, Serializable {
 			metaThrowUnexpectedInternalException("Tried to clear an initial map.");
 		}
 		this.size = 0;
-		this.root = new NodeEmpty();
+		this.root = new NNodeEmpty();
 		this.numNodes = 0;
 		this.initialMap = null; //my, that's rough! But it works.
 	}
@@ -799,13 +780,83 @@ implements ConcurrentMap<K,V>, Serializable {
 
 		@Override
 		public Iterator<Map.Entry<K, V>> iterator() {
+			/**
+			 * This iterator iterates first over the entries of the backing
+			 * initial map (if they exist) in the order first assumed -  
+			 * to - last assumed, then the entries of the post-initial
+			 * map, in the order first inserted - to - last inserted.
+			 */
 			return new Iterator<Map.Entry<K,V>>() {
-				private boolean scanningInitialMap = false;
-				private Node current = JAVA_CONCURRENTMAP.this.root;
+				private boolean scanningInitialMap = (JAVA_CONCURRENTMAP.this.initialMap == null ? false : true);
+				private NNode nextNodeIterator = (JAVA_CONCURRENTMAP.this.initialMap == null ? JAVA_CONCURRENTMAP.this.root : JAVA_CONCURRENTMAP.this.initialMap.root);
+				
+				{
+					findNextNode();
+				}
+				
+				@SuppressWarnings("unchecked")
+				private void findNextNode() {
+					//if the iterator is scanning JAVA_CONCURRENTMAP.this.initialMap, it skips all 
+					//the entries that are overridden by the ones in JAVA_CONCURRENTMAP.this.root.(next)*
+					if (this.scanningInitialMap) {
+						skipOverriddenEntries:
+						while (this.nextNodeIterator instanceof JAVA_CONCURRENTMAP.NNodePair) {
+							final JAVA_CONCURRENTMAP.NNodePair<K, V> npCurrent = (JAVA_CONCURRENTMAP.NNodePair<K, V>) this.nextNodeIterator;
+							final K keyCurrent = npCurrent.key;
+							if (keyCurrent == null) {
+								for (JAVA_CONCURRENTMAP.NNode n = JAVA_CONCURRENTMAP.this.root; n instanceof JAVA_CONCURRENTMAP.NNodePair; n = ((JAVA_CONCURRENTMAP.NNodePair<K, V>) n).next) {
+									final JAVA_CONCURRENTMAP.NNodePair<K, V> np = (JAVA_CONCURRENTMAP.NNodePair<K, V>) n;
+									if (np.key == null) {
+										this.nextNodeIterator = npCurrent.next;
+										continue skipOverriddenEntries;
+									}
+								}
+							} else {
+								for (JAVA_CONCURRENTMAP.NNode n = JAVA_CONCURRENTMAP.this.root; n instanceof JAVA_CONCURRENTMAP.NNodePair; n = ((JAVA_CONCURRENTMAP.NNodePair<K, V>) n).next) {
+									final JAVA_CONCURRENTMAP.NNodePair<K, V> np = (JAVA_CONCURRENTMAP.NNodePair<K, V>) n;
+									if (keyCurrent.equals(np.key)) {
+										this.nextNodeIterator = npCurrent.next;
+										continue skipOverriddenEntries;
+									}
+								}
+							}
+							break;
+						}
+						
+						//if the iterator is at the end of JAVA_MAP.this.initialMap.root.(next)*,
+						//branches to assume another entry in it
+						if (this.nextNodeIterator instanceof JAVA_CONCURRENTMAP.NNodeEmpty) {
+							//determines the predecessor to this.current
+							JAVA_CONCURRENTMAP.NNodePair<K, V> preCurrent;
+							if (this.nextNodeIterator == JAVA_CONCURRENTMAP.this.initialMap.root) {
+								preCurrent = null; //no predecessor
+							} else {
+								preCurrent = (JAVA_CONCURRENTMAP.NNodePair<K, V>) JAVA_CONCURRENTMAP.this.initialMap.root;
+								while (preCurrent.next != this.nextNodeIterator) {
+									preCurrent = (JAVA_CONCURRENTMAP.NNodePair<K, V>) preCurrent.next;
+								}
+							}
+
+							//refines
+							JAVA_CONCURRENTMAP.this.initialMap.refineOnFreshEntryAndBranch();
+
+							//adjusts this.current
+							this.nextNodeIterator = (preCurrent == null ? JAVA_CONCURRENTMAP.this.initialMap.root : preCurrent.next);
+
+							//if this.current is still at the end of JAVA_CONCURRENTMAP.this.initialMap.root.(next)*, 
+							//we are on the branch where we exhausted the initial map, therefore continues 
+							//with the entries in JAVA_CONCURRENTMAP.this.root.(next)*
+							if (this.nextNodeIterator instanceof JAVA_CONCURRENTMAP.NNodeEmpty) {
+								this.scanningInitialMap = false;
+								this.nextNodeIterator = JAVA_CONCURRENTMAP.this.root;
+							}
+						}
+					}
+				}
 
 				@Override
 				public boolean hasNext() {
-					return (this.current instanceof JAVA_CONCURRENTMAP.NodePair);
+					return (this.nextNodeIterator instanceof JAVA_CONCURRENTMAP.NNodePair);
 				}
 
 				@SuppressWarnings("unchecked")
@@ -814,18 +865,18 @@ implements ConcurrentMap<K,V>, Serializable {
 					if (!hasNext()) {
 						throw new NoSuchElementException();
 					}
-					final NodePair<K, V> currentPair = (JAVA_CONCURRENTMAP.NodePair<K, V>) this.current;
-					final K key = currentPair.key;
-					final V value = currentPair.value;
+					
+					//builds the return value
+					final JAVA_CONCURRENTMAP.NNodePair<K, V> currentPair = (JAVA_CONCURRENTMAP.NNodePair<K, V>) this.nextNodeIterator;					
 					final Entry<K, V> retVal = new Map.Entry<K, V>() {
 						@Override
 						public K getKey() {
-							return key;
+							return currentPair.key;
 						}
 
 						@Override
 						public V getValue() {
-							return value;
+							return currentPair.value;
 						}
 
 						@Override
@@ -847,8 +898,8 @@ implements ConcurrentMap<K,V>, Serializable {
 								return false;
 							}
 							final Map.Entry<?, ?> e = (Map.Entry<?, ?>) obj;
-							return (key == null ? e.getKey() == null : key.equals(e.getKey())) &&
-									(value == null ? e.getValue() == null : value.equals(e.getValue()));
+							return (currentPair.key == null ? e.getKey() == null : currentPair.key.equals(e.getKey())) &&
+									(currentPair.value == null ? e.getValue() == null : currentPair.value.equals(e.getValue()));
 						}
 
 						@Override
@@ -857,41 +908,9 @@ implements ConcurrentMap<K,V>, Serializable {
 						}
 					};
 
-					//move forward by one
-					this.current = currentPair.next;
-
-					if (this.scanningInitialMap) {
-						//if we are in the initial map, we must also skip all entries that are overridden
-						//by other (already emitted) ones - i.e., by the entries in JAVA_CONCURRENTMAP.this.root.(next)*
-						scanForNotAlreadyEmitted:
-							while (this.current instanceof JAVA_CONCURRENTMAP.NodePair) {
-								final NodePair<K, V> npCurrent = (JAVA_CONCURRENTMAP.NodePair<K, V>) this.current;
-								final K keyCurrent = npCurrent.key;
-								if (keyCurrent == null) {
-									for (Node n = JAVA_CONCURRENTMAP.this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-										final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
-										if (np.key == null) {
-											this.current = npCurrent.next;
-											continue scanForNotAlreadyEmitted;
-										}
-									}
-								} else {
-									for (Node n = JAVA_CONCURRENTMAP.this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-										final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
-										if (keyCurrent.equals(np.key)) {
-											this.current = npCurrent.next;
-											continue scanForNotAlreadyEmitted;
-										}
-									}
-								}
-								break;
-							}
-					} else if (this.current instanceof JAVA_CONCURRENTMAP.NodeEmpty && JAVA_CONCURRENTMAP.this.initialMap != null) {
-						//if we are at the end of JAVA_CONCURRENTMAP.this.root.(next)*, continue 
-						//with the initial map (if present)
-						this.current = JAVA_CONCURRENTMAP.this.initialMap.root;
-						this.scanningInitialMap = true;
-					}
+					//move this.current forward
+					this.nextNodeIterator = currentPair.next;
+					findNextNode();
 
 					return retVal;
 				}
@@ -902,20 +921,20 @@ implements ConcurrentMap<K,V>, Serializable {
 					if (!hasNext()) {
 						throw new IllegalStateException();
 					}
-					final NodePair<K, V> currentBeforeRemovalPair = (JAVA_CONCURRENTMAP.NodePair<K, V>) this.current;
-					final K key = currentBeforeRemovalPair.key;
+					final JAVA_CONCURRENTMAP.NNodePair<K, V> nextNodeIteratorBeforeRemoval = (JAVA_CONCURRENTMAP.NNodePair<K, V>) this.nextNodeIterator;
+					final K key = nextNodeIteratorBeforeRemoval.key;
 					JAVA_CONCURRENTMAP.this.remove(key);
 					if (!this.scanningInitialMap) {
 						//check if currentBeforeRemovalPair is still there
-						for (Node n = JAVA_CONCURRENTMAP.this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-							if (n == currentBeforeRemovalPair) {
+						for (JAVA_CONCURRENTMAP.NNode n = JAVA_CONCURRENTMAP.this.root; n instanceof JAVA_CONCURRENTMAP.NNodePair; n = ((JAVA_CONCURRENTMAP.NNodePair<K, V>) n).next) {
+							if (n == nextNodeIteratorBeforeRemoval) {
 								//still present
 								return;
 							}
 						}
 
 						//otherwise, skips the iterator by one
-						this.current = currentBeforeRemovalPair.next;
+						this.nextNodeIterator = nextNodeIteratorBeforeRemoval.next;
 					}
 				}
 			};
@@ -1037,8 +1056,8 @@ implements ConcurrentMap<K,V>, Serializable {
 		//calculates the hash code for the entries added
 		//after the start of the symbolic execution
 		int hashCode = 0;
-		for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-			final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
+		for (JAVA_CONCURRENTMAP.NNode n = this.root; n instanceof JAVA_CONCURRENTMAP.NNodePair; n = ((JAVA_CONCURRENTMAP.NNodePair<K, V>) n).next) {
+			final JAVA_CONCURRENTMAP.NNodePair<K, V> np = (JAVA_CONCURRENTMAP.NNodePair<K, V>) n;
 			hashCode += np.pairHashCode();
 		}
 
@@ -1063,39 +1082,31 @@ implements ConcurrentMap<K,V>, Serializable {
 		//the initial map
 		final ArrayList<K> notRefined = new ArrayList<>();
 		findNotRefinedNodes:
-			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
+			for (JAVA_CONCURRENTMAP.NNode n = this.root; n instanceof JAVA_CONCURRENTMAP.NNodePair; n = ((JAVA_CONCURRENTMAP.NNodePair<K, V>) n).next) {
+				final JAVA_CONCURRENTMAP.NNodePair<K, V> np = (JAVA_CONCURRENTMAP.NNodePair<K, V>) n;
 				if (this.initialMap.absentKeys.contains(np.key)) {
 					continue findNotRefinedNodes;
 				}
-				if (np.key == null) {
-					for (Node nRefinement = this.initialMap.root; nRefinement instanceof JAVA_CONCURRENTMAP.NodePair; nRefinement = ((JAVA_CONCURRENTMAP.NodePair<K, V>) nRefinement).next) {
-						final NodePair<K, V> npRefinement = (JAVA_CONCURRENTMAP.NodePair<K, V>) nRefinement;
-						if (npRefinement.key == null) {
-							continue findNotRefinedNodes;
-						}
-					}
-				} else {
-					for (Node nRefinement = this.initialMap.root; nRefinement instanceof JAVA_CONCURRENTMAP.NodePair; nRefinement = ((JAVA_CONCURRENTMAP.NodePair<K, V>) nRefinement).next) {
-						final NodePair<K, V> npRefinement = (JAVA_CONCURRENTMAP.NodePair<K, V>) nRefinement;
-						if (np.key.equals(npRefinement.key)) {
-							continue findNotRefinedNodes;
-						}
-					}
+				if (findNodeKey(this.initialMap.root, np.key) != null) {
+					continue findNotRefinedNodes;
 				}
 				notRefined.add(np.key);
 			}
 
 		//if there are any, then refine (for n keys generates 2^n branches!!!)
 		if (notRefined.size() > 0) {
-			//TODO does this ever happen??? Apparently either a map is concrete (no initial map) or is symbolic, and in this case every operation (get, put) that introduces a key also introduces a refinement on it in the initial map
+			/* 
+			 * TODO does this ever happen??? Apparently either a map is concrete (no initial map) 
+			 * or is symbolic, and in this case every operation (get, put) that introduces a key 
+			 * also introduces a refinement on it in the initial map
+			 */
 			refineOnKeyCombinationsAndBranch(notRefined.toArray());
 		}
 
 		//finally, subtract from the hash code all the hashes of pairs
 		//in the initial map
-		for (Node nRefinement = this.initialMap.root; nRefinement instanceof JAVA_CONCURRENTMAP.NodePair; nRefinement = ((JAVA_CONCURRENTMAP.NodePair<K, V>) nRefinement).next) {
-			final NodePair<K, V> npRefinement = (JAVA_CONCURRENTMAP.NodePair<K, V>) nRefinement;
+		for (JAVA_CONCURRENTMAP.NNode nRefinement = this.initialMap.root; nRefinement instanceof JAVA_CONCURRENTMAP.NNodePair; nRefinement = ((JAVA_CONCURRENTMAP.NNodePair<K, V>) nRefinement).next) {
+			final JAVA_CONCURRENTMAP.NNodePair<K, V> npRefinement = (JAVA_CONCURRENTMAP.NNodePair<K, V>) nRefinement;
 			hashCode -= npRefinement.pairHashCode();
 		}
 
@@ -1106,10 +1117,8 @@ implements ConcurrentMap<K,V>, Serializable {
 
 	//TODO here we accept all the default implementations. Should we define lazier ones?
 	
-	// Abstract methods of ConcurrentMap
-
-	//TODO here we accept all the default implementations in Map. Should we define lazier ones?
-
+	//these must explicitly redispatch to super:
+	
 	@Override
 	public V putIfAbsent(K key, V value) {
 		return super.putIfAbsent(key, value);
@@ -1129,6 +1138,10 @@ implements ConcurrentMap<K,V>, Serializable {
 	public V replace(K key, V value) {
 		return super.replace(key, value);
 	}
+
+	// Abstract methods of ConcurrentMap
+
+	//TODO here we accept all the default implementations in Map. Should we define lazier ones?
 
 	// Private methods
 
@@ -1169,7 +1182,7 @@ implements ConcurrentMap<K,V>, Serializable {
 		//this.absentValues: doesn't care
 		//this.initialMap: OK the symbolic value it already has
 		tthis.size = tthis.initialMap.size;
-		tthis.root = new NodeEmpty();
+		tthis.root = new NNodeEmpty();
 		tthis.numNodes = 0;
 
 		tthis.initialMap.makeInitial();
@@ -1180,7 +1193,7 @@ implements ConcurrentMap<K,V>, Serializable {
 		tthis.initialMap.initialMap = null;
 		//this.initialMap.size: OK the symbolic value it already has
 		assume(tthis.initialMap.size >= 0);
-		tthis.initialMap.root = new NodeEmpty();
+		tthis.initialMap.root = new NNodeEmpty();
 		tthis.initialMap.numNodes = 0;
 	}
 
@@ -1225,9 +1238,64 @@ implements ConcurrentMap<K,V>, Serializable {
 	private native void refineOnKeyCombinationsAndBranch(Object... keys);
 
 	/**
+	 * Causes symbolic execution to branch on the cases:
+	 * A fresh entry is present/absent in an initial map. 
+	 * Can be invoked only if this map is initial.
+	 */
+	private native void refineOnFreshEntryAndBranch();
+	
+	/**
+	 * Triggered on reference resolution of a key, 
+	 * assumes that the key does not resolve to another
+	 * key.
+	 * 
+	 * @param key the key that is resolved.
+	 */
+	private static void onKeyResolution(Object key) {
+		onKeyResolution0(key); //calls native implementation - alas, triggers may not be native
+	}
+	
+	private static native void onKeyResolution0(Object key);
+	
+	/**
+	 * Upcalled by {@link #onKeyResolution(Object)}, 
+	 * because it is easier to perform the check at
+	 * the base-level (and triggers with two parameters
+	 * are currently unsupported).
+	 * 
+	 * @param map the {@link JAVA_CONCURRENTMAP} containing {@code key}.
+	 * @param key the key that is resolved.
+	 */
+	@SuppressWarnings("unchecked")
+	private static <KK, VV> void onKeyResolutionComplete(JAVA_CONCURRENTMAP<KK, VV> tthis, KK key) {
+		if (!tthis.isInitial) {
+			throw new IllegalArgumentException("Attempted to invoke " + JAVA_CONCURRENTMAP.class.getCanonicalName() + ".onKeyResolutionComplete on a JAVA_CONCURRENTMAP that is not initial.");
+		}
+		int occurrences = 0;
+		if (key == null) {
+			for (JAVA_CONCURRENTMAP.NNode n = tthis.root; n instanceof JAVA_CONCURRENTMAP.NNodePair; n = ((JAVA_CONCURRENTMAP.NNodePair<KK, VV>) n).next) {
+				final JAVA_CONCURRENTMAP.NNodePair<KK, VV> np = (JAVA_CONCURRENTMAP.NNodePair<KK, VV>) n;
+				if (np.key == null) {
+					++occurrences;
+					assume(occurrences <= 1);
+				}
+			}
+		} else {
+			for (JAVA_CONCURRENTMAP.NNode n = tthis.root; n instanceof JAVA_CONCURRENTMAP.NNodePair; n = ((JAVA_CONCURRENTMAP.NNodePair<KK, VV>) n).next) {
+				final JAVA_CONCURRENTMAP.NNodePair<KK, VV> np = (JAVA_CONCURRENTMAP.NNodePair<KK, VV>) n;
+				if (key.equals(np.key)) {
+					++occurrences;
+					assume(occurrences <= 1);
+				}
+			}
+		}
+	}
+
+	/**
 	 * Upcalled by {@link #refineOnKeyAndBranch(Object)},
 	 * {@link #refineOnKeyCombinationsAndBranch(Object...)}, 
-	 * and {@link #refineOnValueAndBranch(Object)}. 
+	 * {@link #refineOnValueAndBranch(Object)}, and
+	 * {@link #refineOnFreshEntryAndBranch()}. 
 	 * Refines this object by assuming that a key/value pair
 	 * is present in it. This object must be initial.
 	 * 
@@ -1236,18 +1304,12 @@ implements ConcurrentMap<K,V>, Serializable {
 	 */
 	private void refineIn(K key, V value) {
 		if (!this.isInitial) {
-			metaThrowUnexpectedInternalException("Tried to refine a JAVA_CONCURRENTMAP that is not initial.");
+			metaThrowUnexpectedInternalException("Tried to refine a " + JAVA_CONCURRENTMAP.class.getCanonicalName() + " that is not initial.");
 		}
 		if (this.absentKeys.contains(key)) {
 			ignore(); //contradiction found
 		}
-
-		final NodePair<K, V> p = new NodePair<K, V>();
-		p.key = key;
-		p.value = value;
-		p.next = this.root;
-		this.root = p;
-		++this.numNodes;
+		addNode(key, value);
 		assume(this.size >= this.numNodes);
 	}
 
@@ -1259,27 +1321,13 @@ implements ConcurrentMap<K,V>, Serializable {
 	 * 
 	 * @param key the key.
 	 */
-	@SuppressWarnings("unchecked")
 	private void refineOutKey(K key) {
 		if (!this.isInitial) {
-			metaThrowUnexpectedInternalException("Tried to refine a JAVA_CONCURRENTMAP that is not initial.");
+			metaThrowUnexpectedInternalException("Tried to refine a " + JAVA_CONCURRENTMAP.class.getCanonicalName() + " that is not initial.");
 		}
-		if (key == null) {
-			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
-				if (np.key == null) {
-					ignore(); //contradiction found
-				}
-			}
-		} else {
-			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
-				if (key.equals(np.key)) {
-					ignore(); //contradiction found
-				}
-			}
+		if (findNodeKey(this.root, key) != null) {
+			ignore(); //contradiction found
 		}
-
 		this.absentKeys.add(key);
 	}
 
@@ -1290,27 +1338,27 @@ implements ConcurrentMap<K,V>, Serializable {
 	 * 
 	 * @param value the value.
 	 */
-	@SuppressWarnings("unchecked")
 	private void refineOutValue(V value) {
 		if (!this.isInitial) {
-			metaThrowUnexpectedInternalException("Tried to refine a JAVA_CONCURRENTMAP that is not initial.");
+			metaThrowUnexpectedInternalException("Tried to refine a " + JAVA_CONCURRENTMAP.class.getCanonicalName() + " that is not initial.");
 		}
-		if (value == null) {
-			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
-				if (np.value == null) {
-					ignore(); //contradiction found
-				}
-			}
-		} else {
-			for (Node n = this.root; n instanceof JAVA_CONCURRENTMAP.NodePair; n = ((JAVA_CONCURRENTMAP.NodePair<K, V>) n).next) {
-				final NodePair<K, V> np = (JAVA_CONCURRENTMAP.NodePair<K, V>) n;
-				if (value.equals(np.value)) {
-					ignore(); //contradiction found
-				}
-			}
+		if (findNodeValue(this.root, value) != null) {
+			ignore(); //contradiction found
 		}
-
 		this.absentValues.add(value);
+	}
+
+	/**
+	 * Upcalled by {@link #refineOnFreshEntryAndBranch()}. 
+	 * Refines this object by assuming that no more entries
+	 * are present in it. This object must be initial.
+	 * 
+	 * @param value the value.
+	 */
+	private void refineMapComplete() {
+		if (!this.isInitial) {
+			metaThrowUnexpectedInternalException("Tried to refine a " + JAVA_CONCURRENTMAP.class.getCanonicalName() + " that is not initial.");
+		}
+		assume(this.size == this.numNodes);
 	}
 }

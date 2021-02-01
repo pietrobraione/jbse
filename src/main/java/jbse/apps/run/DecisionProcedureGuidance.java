@@ -329,7 +329,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     		if (objType != null && !refType.equals(objType)) {
     			state.getClassHierarchy().addToExpansionBackdoor(refType, objType);
 				final ClassFile cf = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, objType, true);
-    			ensureClassInitialized(state, cf, this.ctx);
+    			ensureClassInitialized(state, this.ctx, cf);
     		}
     	} catch (DecisionException | ClassFileNotFoundException | ClassFileIllFormedException | 
     	ClassFileNotAccessibleException | IncompatibleClassFileException | 

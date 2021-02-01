@@ -1,5 +1,6 @@
 package jbse.rules;
 
+import static jbse.rules.Util.ANY;
 import static jbse.rules.Util.makeOriginPatternAbsolute;
 
 import java.util.regex.Matcher;
@@ -27,7 +28,7 @@ public abstract class Rule {
 	 *        value is equivalent to "match all".
 	 */
 	public Rule(String originExp) { 
-		this.originPattern = makeOriginPatternAbsolute(originExp == null ? Util.ANY : originExp);
+		this.originPattern = makeOriginPatternAbsolute(originExp == null ? ANY : originExp);
 	}
 	
 	/**

@@ -10,15 +10,12 @@ import jbse.val.exc.InvalidTypeException;
 
 /**
  * Class that represent a {@link ReferenceSymbolicMember} whose origin is an entry
- * in a map (value slot). 
+ * in a map (key slot). 
  */
-public final class ReferenceSymbolicMemberMapValue extends ReferenceSymbolicMember {
-	/** The {@link Reference} to the key object associated to the value. */
-    private final Reference key;
-    
-    /** The current {@link HistoryPoint} (to disambiguate the state of {@link #key}). */
-    private final HistoryPoint historyPoint;
-    
+public final class ReferenceSymbolicMemberMapKey extends ReferenceSymbolicMember {
+	/** The key origin specifier. */
+	private final String keyOriginSpecifier;
+	
     /** The origin String representation of this object. */
     private final String asOriginString;
     
@@ -30,52 +27,34 @@ public final class ReferenceSymbolicMemberMapValue extends ReferenceSymbolicMemb
      * 
      * @param container a {@link ReferenceSymbolic}, the container object
      *        this symbol originates from. It must refer a map.
-     * @param key a {@link Reference}, the key of the entry in the 
-     *        container map this symbol originates from. It must not be {@code null}.
-     * @param historyPoint the current {@link HistoryPoint}.
+     * @param keyOriginSpecifier a {@link String}. It will be used to specify
+     *        the origin string representation of this symbol, that will be 
+     *        built as {@code container.}{@link ReferenceSymbolic#asOriginString() asOriginString}{@code () + "::" + keyOriginSpecifier}.
+     *        It is used to disambiguate the identity of references with same
+     *        {@code container}.
      * @param id an {@link int}, the identifier of the symbol. Used only
      *        in the toString representation of the symbol.
      * @throws InvalidTypeException never.
      * @throws InvalidInputException if {@code key == null || historyPoint == null}.
      * @throws NullPointerException if {@code container == null}.
      */
-    ReferenceSymbolicMemberMapValue(ReferenceSymbolic container, Reference key, HistoryPoint historyPoint, int id) throws InvalidInputException, InvalidTypeException {
-    	super(container, id, REFERENCE + JAVA_OBJECT + TYPEEND, TYPEVAR + "V" + TYPEEND);
-    	if (key == null || historyPoint == null) {
+    ReferenceSymbolicMemberMapKey(ReferenceSymbolic container, String keyOriginSpecifier, int id) throws InvalidInputException, InvalidTypeException {
+    	super(container, id, REFERENCE + JAVA_OBJECT + TYPEEND, TYPEVAR + "K" + TYPEEND);
+    	if (keyOriginSpecifier == null) {
     		throw new InvalidInputException("Attempted the creation of a ReferenceSymbolicMemberMapValue with null key.");
     	}
     	
-    	this.key = key;
-    	this.historyPoint = historyPoint;
-    	this.asOriginString = getContainer().asOriginString() + "::GET[" + (this.key.isSymbolic() ? ((Symbolic) this.key).asOriginString() : this.key.toString()) + "@" + historyPoint.toString() + "]";
+    	this.keyOriginSpecifier = keyOriginSpecifier;
+    	this.asOriginString = getContainer().asOriginString() + "::" + this.keyOriginSpecifier;
 
     	//calculates hashCode
-		final int prime = 131071;
+		final int prime = 131111;
 		int result = 1;
 		result = prime * result + getContainer().hashCode();
-		result = prime * result + key.hashCode();
+		result = prime * result + this.keyOriginSpecifier.hashCode();
 		this.hashCode = result;
     }
 
-    /**
-     * Returns the {@link Reference} to the key object associated 
-     * to this value slot {@link Reference}.
-     * 
-     * @return a {@link Reference}.
-     */
-    public Reference getKey() {
-        return this.key;
-    }
-    
-    /**
-     * Returns the {@link HistoryPoint}.
-     * 
-     * @return a {@link HistoryPoint}.
-     */
-    public HistoryPoint getHistoryPoint() {
-		return this.historyPoint;
-	}
-    
     @Override
     public String asOriginString() {
         return this.asOriginString;
@@ -83,7 +62,7 @@ public final class ReferenceSymbolicMemberMapValue extends ReferenceSymbolicMemb
     
     @Override
     public void accept(ReferenceVisitor v) throws Exception {
-    	v.visitReferenceSymbolicMemberMapValue(this);
+    	v.visitReferenceSymbolicMemberMapKey(this);
     }
     
     @Override
@@ -102,11 +81,11 @@ public final class ReferenceSymbolicMemberMapValue extends ReferenceSymbolicMemb
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		final ReferenceSymbolicMemberMapValue other = (ReferenceSymbolicMemberMapValue) obj;
+		final ReferenceSymbolicMemberMapKey other = (ReferenceSymbolicMemberMapKey) obj;
 		if (!getContainer().equals(other.getContainer())) {
 			return false;
 		}
-		if (!this.key.equals(other.key)) {
+		if (!this.keyOriginSpecifier.equals(other.keyOriginSpecifier)) {
 			return false;
 		}
 		return true;

@@ -46,7 +46,6 @@ import jbse.bc.exc.WrongClassNameException;
 import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
-import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
@@ -333,6 +332,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
         };
     }
 
+    //TODO unify with Algo_XYLOAD_GETX
     protected final void refineRefExpands(State state, DecisionAlternative_XYLOAD_GETX_Expands drc) 
     throws ContradictionException, InvalidTypeException, InvalidInputException, InterruptException, 
     SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
@@ -342,17 +342,16 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
         final ClassFile classFileOfReferenceToExpand = findClassFile(state, classNameOfReferenceToExpand);                        
         final ClassFile classFileOfTargetObject = drc.getClassFileOfTargetObject();
         try {
-            ensureClassInitialized(state, classFileOfReferenceToExpand, this.ctx);
-            ensureClassInitialized(state, classFileOfTargetObject, this.ctx);
+            ensureClassInitialized(state, this.ctx, classFileOfReferenceToExpand, classFileOfTargetObject);
             state.assumeExpands(calc, referenceToExpand, classFileOfTargetObject);
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
+            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (CannotAssumeSymbolicObjectException e) {
             throw new SymbolicValueNotAllowedException(e);
         } catch (DecisionException e) {
             //this should never happen, the decision was already checked
-            throw new UnexpectedInternalException(e);
+        	failExecution(e);
         }
         //in the case the expansion object is an array, we assume it 
         //to have nonnegative length

@@ -1186,7 +1186,7 @@ public final class RunParameters implements Cloneable {
      *        the hash maps will be replaced by a model class that
      *        is more symbolic-execution-friendly than {@code java.util.HashMap}.
      */
-    public void setUseHashMapModel(boolean useHashMapModel) {
+    public void setUseHashMapModels(boolean useHashMapModel) {
     	this.runnerParameters.setUseHashMapModel(useHashMapModel);
     }
     

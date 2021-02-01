@@ -333,11 +333,6 @@ StrategyUpdate_XALOAD> {
     }
 
     @Override
-    protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
-        return () -> true;
-    }
-
-    @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> XALOADSTORE_OFFSET;
     }

@@ -24,8 +24,8 @@ public final class ReferenceSymbolicMemberArray extends ReferenceSymbolicMember 
      *        this symbol originates from. It must refer an array.
      * @param index a {@link Primitive}, the index of the slot in the 
      *        container array this symbol originates from.
-     * @param id an {@link int}, the identifier of the symbol. Different
-     *        object with same identifier will be treated as equal.
+     * @param id an {@link int}, the identifier of the symbol. Used only
+     *        in the toString representation of the symbol.
      * @param staticType a {@link String}, the static type of the
      *        reference (taken from bytecode).
      * @param genericSignatureType a {@link String}, the generic signature 

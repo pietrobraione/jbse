@@ -10,7 +10,7 @@ import jbse.val.ReferenceSymbolic;
  * 
  */
 public final class TriggerRuleExpandsTo extends TriggerRule {
-	/** Should not be {@code null}. */
+	/** When {@code null} means that the expansion class doesn't care. */
 	private final String className;
 
 	/** The toString version of this rule. */
@@ -18,14 +18,13 @@ public final class TriggerRuleExpandsTo extends TriggerRule {
 
 	public TriggerRuleExpandsTo(String originExp, String className, Signature triggerMethodSignature, String triggerMethodParameter) {
 		super(originExp, triggerMethodSignature, triggerMethodParameter);
-		//TODO check className != null
 		this.className = className;
-		this.toString = originExp + " expands to instanceof " + this.className + " triggers " + 
+		this.toString = originExp + " expands" + (this.className == null ? "" : (" to instanceof " + this.className)) + " triggers " + 
 		                triggerMethodSignature.toString() + (triggerMethodParameter == null ? "" : (":" + triggerMethodParameter));
 	}
 	
 	public boolean satisfies(String className) {
-		return this.className.equals(className);
+		return (this.className == null ? true : this.className.equals(className));
 	}
 
 	/**

@@ -234,6 +234,9 @@ UP extends StrategyUpdate<R>> implements Action {
         try {
             this.data.read(state, this.ctx.getCalculator(), this.numOperands);
             this.cooker.cook(state);
+        } catch (InterruptException e) {
+        	state.setStutters(true);
+        	throw e;
         } catch (InvalidTypeException | InvalidOperatorException | 
         		 InvalidOperandException | ThreadStackEmptyException | 
         		 RenameUnsupportedException | InvalidProgramCounterException | 
@@ -243,9 +246,15 @@ UP extends StrategyUpdate<R>> implements Action {
         }
 
         //decides the satisfiability of the different alternatives
-        final SortedSet<R> decisionResults = this.ctx.mkDecisionResultSet(classDecisionAlternative());     
-        final Outcome outcome = this.decider.decide(state, decisionResults);
-
+        final SortedSet<R> decisionResults = this.ctx.mkDecisionResultSet(classDecisionAlternative());
+        final Outcome outcome;
+        try {
+        	outcome = this.decider.decide(state, decisionResults);
+        } catch (InterruptException e) {
+        	state.setStutters(true);
+        	throw e;
+        }
+        
         //checks if at least one alternative is satisfiable
         final int tot = decisionResults.size();
         if (tot == 0) {
@@ -288,16 +297,20 @@ UP extends StrategyUpdate<R>> implements Action {
             //updates the program counter
             try {
                 if (stateCurrent.isStuck() || stateCurrent.getStackSize() == 0) {
-                    //nothing to do
+                	stateCurrent.setStutters(false);
                 } else if (interrupt == null) {
                     if (this.isProgramCounterUpdateAnOffset.get()) {
                         stateCurrent.incProgramCounter(this.programCounterUpdate.get());
                     } else {
                         stateCurrent.setProgramCounter(this.programCounterUpdate.get());
                     }
+                    stateCurrent.setStutters(false);
                 } else if (interrupt.hasContinuation()) {
-                    throw interrupt;
-                } //else, nothing to do
+                    //this should never happen
+                    failExecution("Thrown an InterruptException with continuation from a refiner or an updater.");
+                } else {
+                	stateCurrent.setStutters(true);
+                }
             } catch (InvalidProgramCounterException e) {
                 throwVerifyError(stateCurrent, this.ctx.getCalculator());
             } catch (ThreadStackEmptyException e) {

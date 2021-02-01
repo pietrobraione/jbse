@@ -40,23 +40,26 @@ public abstract class TriggerRule extends Rule {
 	 * Checks whether an {@link Objekt} is the parameter 
 	 * of this trigger rule.
 	 * 
-	 * @param ref the {@link ReferenceSymbolic} that made fire 
-	 *        this rule.
-	 * @param o an {@link Objekt}. It must be symbolic.
+	 * @param originTarget a {@link ReferenceSymbolic}, the origin of
+	 *        the target object of this rule. In case of a {@link TriggerRuleExpandsTo}
+	 *        it is the {@link ReferenceSymbolic} that matched the rule, in case 
+	 *        of a {@link TriggerRuleAliases} it is the origin of the object that
+	 *        the {@link ReferenceSymbolic} that matched the rule aliases.
+	 * @param o a {@link ReferenceSymbolic}, the origin of an {@link Objekt}.
 	 * @return {@code true} iff {@code o} is the parameter for
 	 *         this rule.
 	 * @throws NullPointerException if {@code o.}{@link Objekt#getOrigin() getOrigin}{@code () == null}.
 	 */
-	final boolean isTriggerMethodParameterObject(ReferenceSymbolic ref, Objekt o) {
+	final boolean isTriggerMethodParameterObject(ReferenceSymbolic originTarget, ReferenceSymbolic originObject) {
 		if (this.triggerMethodParameter == null) {
 			return false;
 		}
 		
 		//makes the pattern
-		final Pattern p = makeOriginPatternRelative(this.triggerMethodParameter, ref, this.originPattern);
+		final Pattern p = makeOriginPatternRelative(this.triggerMethodParameter, originTarget, this.originPattern);
 
 		//checks if the origin of o matches the pattern
-		final String originString = o.getOrigin().asOriginString();
+		final String originString = originObject.asOriginString();
 		final Matcher m = p.matcher(originString);
 		final boolean retVal = m.matches();
 		return retVal;

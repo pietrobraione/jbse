@@ -184,13 +184,72 @@ public final class SymbolFactory implements Cloneable {
 
     /**
      * A Factory Method for creating symbolic values. The symbol
-     * has as origin the value slot of an entry in a map.  
+     * has as origin the key slot of an entry in a map not associated
+     * to any value.  
+     * 
+     * @param container a {@link ReferenceSymbolic}, the container object
+     *        the symbol originates from. It must refer a map.
+     * @return a {@link ReferenceSymbolic}.
+     * @throws InvalidInputException if {@code container == null}.
+     */
+    public ReferenceSymbolic createSymbolMemberMapKey(ReferenceSymbolic container) throws InvalidInputException {
+		if (container == null) {
+			throw new InvalidInputException("Invoked createSymbolMemberMapKey with null container parameter.");
+		}
+    	try {
+    		final int nextIdReferenceSymbolic = getNextIdReferenceSymbolic();
+    		final String keyOriginSpecifier = "KEY[" + nextIdReferenceSymbolic + "]";
+    		final ReferenceSymbolic retVal = new ReferenceSymbolicMemberMapKey(container, keyOriginSpecifier, nextIdReferenceSymbolic);
+    		return retVal;
+    	} catch (InvalidInputException | InvalidTypeException e) {
+    		//this should never happen
+    		throw new UnexpectedInternalException(e);
+    	}
+    }
+
+    /**
+     * A Factory Method for creating symbolic values. The symbol
+     * has as origin the key slot of an entry in a map associated
+     * to a given value.  
+     * 
+     * @param container a {@link ReferenceSymbolic}, the container object
+     *        the symbol originates from. It must refer a map.
+     * @param value a {@link Reference}, the value of the entry in the 
+     *        container this symbol originates from. It can be null, in
+     *        which case the returned reference will not store information
+     *        in its origin of the value it is associated with.
+     * @param historyPoint the {@link HistoryPoint} to disambiguate
+     *        the state of {@code value}.
+     * @return a {@link ReferenceSymbolic}.
+     * @throws InvalidInputException if {@code container == null || value == null || historyPoint == null}.
+     */
+    public ReferenceSymbolic createSymbolMemberMapKey(ReferenceSymbolic container, Reference value, HistoryPoint historyPoint) 
+    throws InvalidInputException {
+		if (container == null || value == null || historyPoint == null) {
+			throw new InvalidInputException("Invoked createSymbolMemberMapKey with null container, value or historyPoint parameter.");
+		}
+    	try {
+    		final int nextIdReferenceSymbolic = getNextIdReferenceSymbolic();
+    		final String keyOriginSpecifier = "KEY-OF[" + (value.isSymbolic() ? ((Symbolic) value).asOriginString() : value.toString()) + "@" + historyPoint.toString() + ", " + nextIdReferenceSymbolic + "]";
+    		final ReferenceSymbolic retVal = new ReferenceSymbolicMemberMapKey(container, keyOriginSpecifier, nextIdReferenceSymbolic);
+    		return retVal;
+    	} catch (InvalidInputException | InvalidTypeException e) {
+    		//this should never happen
+    		throw new UnexpectedInternalException(e);
+    	}
+    }
+
+    /**
+     * A Factory Method for creating symbolic values. The symbol
+     * has as origin the value slot of an entry in a map associated
+     * to a given key.  
      * 
      * @param container a {@link ReferenceSymbolic}, the container object
      *        the symbol originates from. It must refer a map.
      * @param key a {@link Reference}, the key of the entry in the 
      *        container this symbol originates from.
-     * @param historyPoint the current {@link HistoryPoint}.
+     * @param historyPoint the {@link HistoryPoint} to disambiguate
+     *        the state of {@code key}.
      * @return a {@link ReferenceSymbolic}.
      */
     public ReferenceSymbolic createSymbolMemberMapValue(ReferenceSymbolic container, Reference key, HistoryPoint historyPoint) {

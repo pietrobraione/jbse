@@ -20,8 +20,8 @@ public final class PrimitiveSymbolicMemberArray extends PrimitiveSymbolicMember 
      *        it must refer an array.
      * @param index a {@link Primitive}, the index of the slot in the 
      *        container array this symbol originates from.  It must not be {@code null}.
-     * @param id an {@link int}, the identifier of the symbol. Different
-     *        object with same identifier will be treated as equal.
+     * @param id an {@link int}, the identifier of the symbol. Used only
+     *        in the toString representation of the symbol.
      * @param type the type of the represented value.
      * @throws InvalidTypeException if {@code type} is not primitive.
      * @throws InvalidInputException if {@code container == null || index == null}.

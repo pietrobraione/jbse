@@ -104,11 +104,6 @@ abstract class Algo_GETX extends Algo_XLOAD_GETX<BytecodeData_1FI> {
     throws ClasspathException, DecisionException, InterruptException, ContradictionException, FrozenStateException;
 
     @Override
-    protected final Supplier<Boolean> isProgramCounterUpdateAnOffset() {
-        return () -> true;
-    }
-
-    @Override
     protected final Supplier<Integer> programCounterUpdate() {
         return () -> GETX_PUTX_OFFSET;
     }

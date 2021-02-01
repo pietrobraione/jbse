@@ -32,11 +32,6 @@ final class Algo_XLOAD extends Algo_XLOAD_GETX<BytecodeData_1LV> {
     }
 
     @Override
-    protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
-        return () -> true;
-    }
-
-    @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> (this.data.nextWide() ? XLOADSTORE_IMMEDIATE_WIDE_OFFSET : XLOADSTORE_IMMEDIATE_OFFSET);
     }

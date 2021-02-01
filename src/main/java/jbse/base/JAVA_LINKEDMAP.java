@@ -5,10 +5,9 @@ import static jbse.meta.Analysis.ignore;
 import static jbse.meta.Analysis.isResolvedByExpansion;
 import static jbse.meta.Analysis.isSymbolic;
 
-import java.io.Serializable;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -16,17 +15,17 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Model class for class {@link java.util.HashMap}. 
+ * Model class for class {@link java.util.LinkedHashMap}. 
  * 
  * @author Pietro Braione
  *
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  */
-public class JAVA_MAP<K, V>  extends AbstractMap<K, V>
-implements Map<K, V>, Cloneable, Serializable {
+public class JAVA_LINKEDMAP<K, V> extends HashMap<K, V>
+implements Map<K, V> {
 
-	private static final long serialVersionUID = 362498820763181265L; //same as HashMap
+	private static final long serialVersionUID = 3801124242820219131L; //same as LinkedHashMap
 
 	private static abstract class NNode { }
 
@@ -34,6 +33,8 @@ implements Map<K, V>, Cloneable, Serializable {
 		KK key;
 		VV value;
 		NNode next;
+		NNodePair<KK, VV> before;
+		NNodePair<KK, VV> after;
 
 		public int pairHashCode() {
 			return (this.key == null ? 0 : this.key.hashCode()) ^
@@ -42,6 +43,12 @@ implements Map<K, V>, Cloneable, Serializable {
 	}
 
 	private static class NNodeEmpty extends NNode { }
+
+	/**
+     * The iteration ordering method for this linked hash map: <tt>true</tt>
+     * for access-order, <tt>false</tt> for insertion-order.
+	 */
+	private final boolean accessOrder;
 
 	/**
 	 * Caches whether this map is initial, i.e., whether it 
@@ -73,7 +80,13 @@ implements Map<K, V>, Cloneable, Serializable {
 	 * Used only when isInitial == false; the initial map that backs this map, if 
 	 * this map is symbolic, otherwise it is set to null.
 	 */
-	private JAVA_MAP<K, V> initialMap;
+	private JAVA_LINKEDMAP<K, V> initialMap;
+
+	/** 
+	 * Used only when isInitial == true; the current map of which this map 
+	 * is the initial one. It is the reverse link of initialMap.
+	 */
+	private JAVA_LINKEDMAP<K, V> currentMap;
 
 	/**
 	 * The size of the map.
@@ -85,13 +98,28 @@ implements Map<K, V>, Cloneable, Serializable {
 	 * either added (noninitial map) or assumed (initial map).
 	 */
 	private NNode root;
+	
+    /**
+     * The eldest key/value pair; if the map is initial
+     * it is always null.
+     */
+	private NNodePair<K, V> head;
+	
+    /**
+     * The youngest key/value pair; if the map is initial
+     * it points to the youngest key/value pair that was
+     * assumed to be in the initial map, and that was not
+     * accessed (in the sense of the access order definition) 
+     * after execution, if the order is access order.
+     */
+	private NNodePair<K, V> tail;
 
 	/** 
 	 * The number of nodes in root.(next)*, excluded the
 	 * final NodeEmpty.
 	 */
 	private int numNodes;
-
+	
 	// Constructors
 
 	private static final int MAXIMUM_CAPACITY = 1 << 30;
@@ -99,7 +127,7 @@ implements Map<K, V>, Cloneable, Serializable {
 	private static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16
 
 
-	public JAVA_MAP(int initialCapacity, float loadFactor) {
+	public JAVA_LINKEDMAP(int initialCapacity, float loadFactor, boolean accessOrder) {
 		if (initialCapacity < 0)
 			throw new IllegalArgumentException("Illegal initial capacity: " +
 					initialCapacity);
@@ -108,25 +136,34 @@ implements Map<K, V>, Cloneable, Serializable {
 		if (loadFactor <= 0 || Float.isNaN(loadFactor))
 			throw new IllegalArgumentException("Illegal load factor: " +
 					loadFactor);
+		this.accessOrder = accessOrder;
 		this.isInitial = false;
 		this.initialHashCode = 0;
 		this.absentKeys = new ArrayList<>();
 		this.absentValues = null;
 		this.initialMap = null;
+		this.currentMap = null;
 		this.size = 0;
 		this.root = new NNodeEmpty();
+		this.head = null;
+		this.tail = null;
 		this.numNodes = 0;
 	}
+	
+	public JAVA_LINKEDMAP(int initialCapacity, float loadFactor) {
+		this(initialCapacity, loadFactor, false);
+	}
 
-	public JAVA_MAP(int initialCapacity) {
+
+	public JAVA_LINKEDMAP(int initialCapacity) {
 		this(initialCapacity, DEFAULT_LOAD_FACTOR);
 	}
 
-	public JAVA_MAP() {
+	public JAVA_LINKEDMAP() {
 		this(DEFAULT_INITIAL_CAPACITY);
 	}
 
-	public JAVA_MAP(Map<? extends K, ? extends V> m) {
+	public JAVA_LINKEDMAP(Map<? extends K, ? extends V> m) {
 		this();
 		putAll(m);
 	}
@@ -144,17 +181,17 @@ implements Map<K, V>, Cloneable, Serializable {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private static <KK, VV> JAVA_MAP.NNodePair<KK, VV> findNodeKey(JAVA_MAP.NNode root, KK key) {
+	private static <KK, VV> JAVA_LINKEDMAP.NNodePair<KK, VV> findNodeKey(JAVA_LINKEDMAP.NNode root, KK key) {
 		if (key == null) {
-			for (JAVA_MAP.NNode nInitial = root; nInitial instanceof JAVA_MAP.NNodePair; nInitial = ((JAVA_MAP.NNodePair<KK, VV>) nInitial).next) {
-				final JAVA_MAP.NNodePair<KK, VV> npInitial = (JAVA_MAP.NNodePair<KK, VV>) nInitial;
+			for (JAVA_LINKEDMAP.NNode nInitial = root; nInitial instanceof JAVA_LINKEDMAP.NNodePair; nInitial = ((JAVA_LINKEDMAP.NNodePair<KK, VV>) nInitial).next) {
+				final JAVA_LINKEDMAP.NNodePair<KK, VV> npInitial = (JAVA_LINKEDMAP.NNodePair<KK, VV>) nInitial;
 				if (npInitial.key == null) {
 					return npInitial;
 				}
 			}
 		} else {
-			for (JAVA_MAP.NNode nInitial = root; nInitial instanceof JAVA_MAP.NNodePair; nInitial = ((JAVA_MAP.NNodePair<KK, VV>) nInitial).next) {
-				final JAVA_MAP.NNodePair<KK, VV> npInitial = (JAVA_MAP.NNodePair<KK, VV>) nInitial;
+			for (JAVA_LINKEDMAP.NNode nInitial = root; nInitial instanceof JAVA_LINKEDMAP.NNodePair; nInitial = ((JAVA_LINKEDMAP.NNodePair<KK, VV>) nInitial).next) {
+				final JAVA_LINKEDMAP.NNodePair<KK, VV> npInitial = (JAVA_LINKEDMAP.NNodePair<KK, VV>) nInitial;
 				if (key.equals(npInitial.key)) {
 					return npInitial;
 				}
@@ -164,17 +201,17 @@ implements Map<K, V>, Cloneable, Serializable {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <KK, VV> JAVA_MAP.NNodePair<KK, VV> findNodeValue(JAVA_MAP.NNode root, VV value) {
+	private static <KK, VV> JAVA_LINKEDMAP.NNodePair<KK, VV> findNodeValue(JAVA_LINKEDMAP.NNode root, VV value) {
 		if (value == null) {
-			for (JAVA_MAP.NNode nInitial = root; nInitial instanceof JAVA_MAP.NNodePair; nInitial = ((JAVA_MAP.NNodePair<KK, VV>) nInitial).next) {
-				final JAVA_MAP.NNodePair<KK, VV> npInitial = (JAVA_MAP.NNodePair<KK, VV>) nInitial;
+			for (JAVA_LINKEDMAP.NNode nInitial = root; nInitial instanceof JAVA_LINKEDMAP.NNodePair; nInitial = ((JAVA_LINKEDMAP.NNodePair<KK, VV>) nInitial).next) {
+				final JAVA_LINKEDMAP.NNodePair<KK, VV> npInitial = (JAVA_LINKEDMAP.NNodePair<KK, VV>) nInitial;
 				if (npInitial.value == null) {
 					return npInitial;
 				}
 			}
 		} else {
-			for (JAVA_MAP.NNode nInitial = root; nInitial instanceof JAVA_MAP.NNodePair; nInitial = ((JAVA_MAP.NNodePair<KK, VV>) nInitial).next) {
-				final JAVA_MAP.NNodePair<KK, VV> npInitial = (JAVA_MAP.NNodePair<KK, VV>) nInitial;
+			for (JAVA_LINKEDMAP.NNode nInitial = root; nInitial instanceof JAVA_LINKEDMAP.NNodePair; nInitial = ((JAVA_LINKEDMAP.NNodePair<KK, VV>) nInitial).next) {
+				final JAVA_LINKEDMAP.NNodePair<KK, VV> npInitial = (JAVA_LINKEDMAP.NNodePair<KK, VV>) nInitial;
 				if (value.equals(npInitial.value)) {
 					return npInitial;
 				}
@@ -233,12 +270,41 @@ implements Map<K, V>, Cloneable, Serializable {
 			return containsValue(value); //after refinement it will be either in this.absentValues or in this.root.(next)*
 		}
 		//2- the map is not initial and is backed by an initial
-		//   map (it is symbolic): search in the initial map
+		//   map (it is symbolic): searches in the initial map
 		if (this.initialMap != null) {
 			return this.initialMap.containsValue(value);
 		}
 		//3- otherwise (concrete map) it is not in the map
 		return false;
+	}
+	
+	private void _afterNodeAccess(NNodePair<K, V> e) {
+		final JAVA_LINKEDMAP<K, V> tthis = (this.isInitial ? this.currentMap : this);
+		JAVA_LINKEDMAP.NNodePair<K, V> last = tthis.tail;
+		if (tthis.accessOrder && e != last) {
+			JAVA_LINKEDMAP.NNodePair<K, V> b = e.before, a = e.after;
+			e.after = null;
+			if (b == null) {
+				tthis.head = a;
+			} else {
+				b.after = a;
+			}
+			if (a == null) {
+				last = b;
+			} else {
+				a.before = b;
+			}
+			if (last == null) {
+				tthis.head = e;
+			} else {
+				e.before = last;
+				last.after = e;
+			}
+			tthis.tail = e;
+			if (this.isInitial && this.tail == e) {
+				this.tail = b;
+			}
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -252,8 +318,9 @@ implements Map<K, V>, Cloneable, Serializable {
 		}
 
 		//if not absent, checks in the nodes
-		final JAVA_MAP.NNodePair<K, V> np = (JAVA_MAP.NNodePair<K, V>) findNodeKey(this.root, key);
+		final JAVA_LINKEDMAP.NNodePair<K, V> np = (JAVA_LINKEDMAP.NNodePair<K, V>) findNodeKey(this.root, key);
 		if (np != null) {
+			_afterNodeAccess(np);
 			return np.value;
 		}
 
@@ -273,39 +340,180 @@ implements Map<K, V>, Cloneable, Serializable {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void addNode(K key, V value) {
-		final JAVA_MAP.NNodePair<K, V> p = new JAVA_MAP.NNodePair<>();
-		p.key = key;
-		p.value = value;
-		JAVA_MAP.NNode n;
-		for (n = this.root; n instanceof JAVA_MAP.NNodePair<?, ?>; n = ((JAVA_MAP.NNodePair<?, ?>) n).next) {
-			if (((JAVA_MAP.NNodePair<?, ?>) n).next instanceof JAVA_MAP.NNodeEmpty) {
-				break;
-			}
+	@Override
+	public V getOrDefault(Object key, V defaultValue) {
+		notifyMethodExecution(); //TODO is it necessary?
+
+		//checks if the key is in the list of absent keys
+		if (this.absentKeys.contains((K) key)) {
+			return defaultValue;
 		}
-		if (n instanceof JAVA_MAP.NNodeEmpty) {
-			p.next = this.root;
-			this.root = p;
-		} else {
-			final JAVA_MAP.NNodePair<K, V> np = (JAVA_MAP.NNodePair<K, V>) n;
-			p.next = np.next;
-			np.next = p;
+
+		//if not absent, checks in the nodes
+		final JAVA_LINKEDMAP.NNodePair<K, V> np = (NNodePair<K, V>) findNodeKey(this.root, key);
+		if (np != null) {
+			_afterNodeAccess(np);
+			return np.value;
 		}
-		++this.numNodes;
+
+		//if not in the nodes there are three cases: 
+		//1- the map is initial: branches and rechecks
+		if (this.isInitial) {
+			refineOnKeyAndBranch((K) key);
+			return get(key); //after refinement it will be either in this.absentKeys or in this.root.(next)*
+		}
+		//2- the map is not initial and is backed by an initial
+		//   map (it is symbolic): search in the initial map
+		if (this.initialMap != null) {
+			return this.initialMap.get(key);
+		}
+		//3- otherwise (concrete map) it is not in the map
+		return defaultValue;
 	}
 
 	@SuppressWarnings("unchecked")
+	private void addNode(K key, V value) {
+		final JAVA_LINKEDMAP.NNodePair<K, V> p = new JAVA_LINKEDMAP.NNodePair<>();
+		p.key = key;
+		p.value = value;
+		p.before = p.after = null;
+		JAVA_LINKEDMAP.NNode n;
+		for (n = this.root; n instanceof JAVA_LINKEDMAP.NNodePair<?, ?>; n = ((JAVA_LINKEDMAP.NNodePair<?, ?>) n).next) {
+			if (((JAVA_LINKEDMAP.NNodePair<?, ?>) n).next instanceof NNodeEmpty) {
+				break;
+			}
+		}
+		if (n instanceof NNodeEmpty) {
+			p.next = this.root;
+			this.root = p;
+		} else {
+			final JAVA_LINKEDMAP.NNodePair<K, V> np = (JAVA_LINKEDMAP.NNodePair<K, V>) n;
+			p.next = np.next;
+			np.next = p;
+		}
+		_linkNodeLast(p);
+		++this.numNodes;
+	}
+	
+	private void _linkNodeLast(JAVA_LINKEDMAP.NNodePair<K, V> p) {
+		if (this.isInitial) {
+			final JAVA_LINKEDMAP.NNodePair<K, V> last = this.tail;
+			this.tail = p;
+			if (last == null) {
+				p.before = null;
+				p.after = this.currentMap.head;
+				if (p.after != null) {
+					p.after.before = p;
+				}				
+				this.currentMap.head = p; 
+			} else {
+				p.before = last;
+				p.after = last.after;
+				if (p.after != null) {
+					p.after.before = p;
+				}
+				last.after = p;
+			}
+			if (this.currentMap.tail == last) {
+				this.currentMap.tail = p;
+			}
+		} else {
+			final JAVA_LINKEDMAP.NNodePair<K, V> last = this.tail;
+			this.tail = p;
+			if (last == null) {
+				this.head = p;
+			} else {
+				p.before = last;
+				last.after = p;
+			}
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void overrideInitialNode(JAVA_LINKEDMAP.NNodePair<K, V> pOverridden, V value) {
+		final JAVA_LINKEDMAP.NNodePair<K, V> p = new JAVA_LINKEDMAP.NNodePair<>();
+		p.key = pOverridden.key;
+		p.value = value;
+		p.before = p.after = null;
+		JAVA_LINKEDMAP.NNode n;
+		for (n = this.root; n instanceof JAVA_LINKEDMAP.NNodePair<?, ?>; n = ((JAVA_LINKEDMAP.NNodePair<?, ?>) n).next) {
+			if (((JAVA_LINKEDMAP.NNodePair<?, ?>) n).next instanceof NNodeEmpty) {
+				break;
+			}
+		}
+		if (n instanceof NNodeEmpty) {
+			p.next = this.root;
+			this.root = p;
+		} else {
+			final JAVA_LINKEDMAP.NNodePair<K, V> np = (JAVA_LINKEDMAP.NNodePair<K, V>) n;
+			p.next = np.next;
+			np.next = p;
+		}
+		_transferLinks(pOverridden, p);
+		pOverridden.before = pOverridden.after = null;
+		++this.numNodes;
+	}
+	
+	private void _transferLinks(JAVA_LINKEDMAP.NNodePair<K, V> src, JAVA_LINKEDMAP.NNodePair<K, V> dst) {
+		final JAVA_LINKEDMAP.NNodePair<K, V> b = dst.before = src.before;
+		final JAVA_LINKEDMAP.NNodePair<K, V> a = dst.after = src.after;
+        if (b == null) {
+            head = dst;
+        } else {
+            b.after = dst;
+        }
+        if (a == null) {
+            tail = dst;
+        } else {
+            a.before = dst;
+        }
+	}
+	
+	private void _afterNodeInsertion(boolean evict) {
+		final JAVA_LINKEDMAP.NNodePair<K, V> first = this.head;
+		final Entry<K, V> e = new Map.Entry<K, V>() {
+
+			@Override
+			public K getKey() {
+				return first.key;
+			}
+
+			@Override
+			public V getValue() {
+				return first.value;
+			}
+
+			@Override
+			public V setValue(V value) {
+				throw new UnsupportedOperationException();
+			}
+		};
+		if (evict && first != null && removeEldestEntry(e)) {
+			final K key = first.key;
+			doRemove(key);
+		}
+	}
+	
+	protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+		return false;
+	}
+
 	@Override
 	public V put(K key, V value) {
+		return putVal(key, value, true);
+	}
+	
+	@SuppressWarnings("unchecked")
+	private V putVal(K key, V value, boolean evict) {
 		notifyMethodExecution();
-
+		
 		if (this.isInitial) {
 			//initial maps are immutable
 			metaThrowUnexpectedInternalException("Tried to put a value in an initial map.");
 		}
-
+		
 		//looks for a matching NodePair in this.root.(next)*
-		final JAVA_MAP.NNodePair<K, V> matchingPair = (JAVA_MAP.NNodePair<K, V>) findNodeKey(this.root, key);
+		final JAVA_LINKEDMAP.NNodePair<K, V> matchingPair = (JAVA_LINKEDMAP.NNodePair<K, V>) findNodeKey(this.root, key);
 
 		if (matchingPair == null) {
 			//no matching NodePair
@@ -316,6 +524,7 @@ implements Map<K, V>, Cloneable, Serializable {
 				this.absentKeys.remove(key);
 				addNode(key, value);
 				++this.size;
+				_afterNodeInsertion(evict);
 				return null;
 			} else {
 				//the map is symbolic, so there are two cases: either a 
@@ -329,6 +538,7 @@ implements Map<K, V>, Cloneable, Serializable {
 					this.absentKeys.remove(key);
 					addNode(key, value);
 					++this.size;
+					_afterNodeInsertion(evict);
 					return null;
 				}
 
@@ -336,31 +546,51 @@ implements Map<K, V>, Cloneable, Serializable {
 				//key surely is in the initial map, adds a new mapping to the 
 				//current map that overrides that in the initial map, and 
 				//returns the value it had in the initial map
-				final JAVA_MAP.NNodePair<K, V> npInitial = (JAVA_MAP.NNodePair<K, V>) findNodeKey(this.initialMap.root, key);
+				final JAVA_LINKEDMAP.NNodePair<K, V> npInitial = (JAVA_LINKEDMAP.NNodePair<K, V>) findNodeKey(this.initialMap.root, key);
 				if (npInitial != null) {
-					addNode(key, value);
+					overrideInitialNode(npInitial, value);
 					return npInitial.value;
 				}
 
-				//else, branch and repeat put operation
+				//else, branch and repeat putVal operation
 				this.initialMap.refineOnKeyAndBranch((K) key);
-				return put(key, value);
+				return putVal(key, value, evict);
 			}
 		} else {
 			//matching NodePair found: just update it and 
 			//return its previous value (note that here 
 			//this.absentKeys does not contain key)
+			_afterNodeAccess(matchingPair);
 			final V retVal = matchingPair.value;
 			matchingPair.value = value;
 			return retVal;
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public V remove(Object key) {
 		notifyMethodExecution();
+		final JAVA_LINKEDMAP.NNodePair<K, V> np = doRemove(key);
+		return (np == null ? null : np.value);
+	}
+	
+	private void _afterNodeRemoval(JAVA_LINKEDMAP.NNodePair<K, V> e) {
+		final JAVA_LINKEDMAP.NNodePair<K, V> b = e.before, a = e.after;
+		e.before = e.after = null;
+		if (b == null) {
+			this.head = a;
+		} else {
+			b.after = a;
+		}
+		if (a == null) {
+			this.tail = b;
+		} else {
+			a.before = b;
+		}
+	}
 
+	@SuppressWarnings("unchecked")
+	private JAVA_LINKEDMAP.NNodePair<K, V> doRemove(Object key) {
 		if (this.isInitial) {
 			//initial maps are immutable
 			metaThrowUnexpectedInternalException("Tried to remove a value from an initial map.");
@@ -372,21 +602,21 @@ implements Map<K, V>, Cloneable, Serializable {
 		}
 
 		//looks for a matching NodePair in this.root.(next)*
-		JAVA_MAP.NNodePair<K, V> matchingPairPrev = null, matchingPair = null;
+		JAVA_LINKEDMAP.NNodePair<K, V> matchingPairPrev = null, matchingPair = null;
 		if (key == null) {
-			for (JAVA_MAP.NNode nPrev = null, n = this.root; n instanceof JAVA_MAP.NNodePair; nPrev = n, n = ((JAVA_MAP.NNodePair<K, V>) n).next) {
-				final JAVA_MAP.NNodePair<K, V> np = (JAVA_MAP.NNodePair<K, V>) n;
+			for (JAVA_LINKEDMAP.NNode nPrev = null, n = this.root; n instanceof JAVA_LINKEDMAP.NNodePair; nPrev = n, n = ((JAVA_LINKEDMAP.NNodePair<K, V>) n).next) {
+				final JAVA_LINKEDMAP.NNodePair<K, V> np = (JAVA_LINKEDMAP.NNodePair<K, V>) n;
 				if (np.key == null) {
-					matchingPairPrev = (JAVA_MAP.NNodePair<K, V>) nPrev;
+					matchingPairPrev = (JAVA_LINKEDMAP.NNodePair<K, V>) nPrev;
 					matchingPair = np;
 					break;
 				}
 			}
 		} else {
-			for (JAVA_MAP.NNode nPrev = null, n = this.root; n instanceof JAVA_MAP.NNodePair; nPrev = n, n = ((JAVA_MAP.NNodePair<K, V>) n).next) {
-				final JAVA_MAP.NNodePair<K, V> np = (JAVA_MAP.NNodePair<K, V>) n;
+			for (JAVA_LINKEDMAP.NNode nPrev = null, n = this.root; n instanceof JAVA_LINKEDMAP.NNodePair; nPrev = n, n = ((JAVA_LINKEDMAP.NNodePair<K, V>) n).next) {
+				final JAVA_LINKEDMAP.NNodePair<K, V> np = (JAVA_LINKEDMAP.NNodePair<K, V>) n;
 				if (key.equals(np.key)) {
-					matchingPairPrev = (JAVA_MAP.NNodePair<K, V>) nPrev;
+					matchingPairPrev = (JAVA_LINKEDMAP.NNodePair<K, V>) nPrev;
 					matchingPair = np;
 					break;
 				}
@@ -409,18 +639,19 @@ implements Map<K, V>, Cloneable, Serializable {
 					return null;
 				}
 
-				//if the key surely is in the initial map, adjust size and
-				//return the associated value
-				final JAVA_MAP.NNodePair<K, V> npInitial = (JAVA_MAP.NNodePair<K, V>) findNodeKey(this.initialMap.root, key);
+				//if the key surely is in the initial map, adjusts size and
+				//returns the associated value
+				final JAVA_LINKEDMAP.NNodePair<K, V> npInitial = (JAVA_LINKEDMAP.NNodePair<K, V>) findNodeKey(this.initialMap.root, key);
 				if (npInitial != null) {
 					this.absentKeys.add((K) key);						
 					--this.size;
-					return npInitial.value;
+					_afterNodeRemoval(npInitial);
+					return npInitial;
 				}
 
-				//else, branch and repeat remove operation
+				//else, branch and repeat doRemove operation
 				this.initialMap.refineOnKeyAndBranch((K) key);
-				return remove(key);
+				return doRemove(key);
 			}
 		} else {
 			//matching NodePair found: remove it, adjust
@@ -433,10 +664,10 @@ implements Map<K, V>, Cloneable, Serializable {
 			}
 			--this.numNodes;
 			--this.size;
-			return matchingPair.value;
+			_afterNodeRemoval(matchingPair);
+			return matchingPair;
 		}
 	}
-
 
 	// Bulk Operations
 
@@ -448,7 +679,7 @@ implements Map<K, V>, Cloneable, Serializable {
 		}
 		//TODO find a lazier implementation, this is copied from AbstractMap; see also copy constructor
 		for (Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
-			put(e.getKey(), e.getValue());
+			putVal(e.getKey(), e.getValue(), false);
 		}
 	}
 
@@ -460,6 +691,8 @@ implements Map<K, V>, Cloneable, Serializable {
 		}
 		this.size = 0;
 		this.root = new NNodeEmpty();
+		this.head = null;
+		this.tail = null;
 		this.numNodes = 0;
 		this.initialMap = null; //my, that's rough! But it works.
 	}
@@ -506,7 +739,7 @@ implements Map<K, V>, Cloneable, Serializable {
 
 		@Override
 		public boolean contains(Object o) {
-			return JAVA_MAP.this.containsKey(o);
+			return JAVA_LINKEDMAP.this.containsKey(o);
 		}
 
 		@Override
@@ -554,8 +787,8 @@ implements Map<K, V>, Cloneable, Serializable {
 
 		@Override
 		public boolean remove(Object o) {
-			final boolean retVal = JAVA_MAP.this.containsKey(o);
-			JAVA_MAP.this.remove(o);
+			final boolean retVal = JAVA_LINKEDMAP.this.containsKey(o);
+			JAVA_LINKEDMAP.this.remove(o);
 			return retVal;
 		}
 
@@ -629,7 +862,7 @@ implements Map<K, V>, Cloneable, Serializable {
 
 		@Override
 		public boolean contains(Object o) {
-			return JAVA_MAP.this.containsValue(o);
+			return JAVA_LINKEDMAP.this.containsValue(o);
 		}
 
 		@Override
@@ -755,12 +988,12 @@ implements Map<K, V>, Cloneable, Serializable {
 	private class JAVA_SET_ENTRY implements Set<Map.Entry<K, V>> {
 		@Override
 		public int size() {
-			return JAVA_MAP.this.size();
+			return JAVA_LINKEDMAP.this.size();
 		}
 
 		@Override
 		public boolean isEmpty() {
-			return JAVA_MAP.this.isEmpty();
+			return JAVA_LINKEDMAP.this.isEmpty();
 		}
 
 		@Override
@@ -772,10 +1005,10 @@ implements Map<K, V>, Cloneable, Serializable {
 				return false;
 			}
 			final Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
-			if (!JAVA_MAP.this.containsKey(e.getKey())) {
+			if (!JAVA_LINKEDMAP.this.containsKey(e.getKey())) {
 				return false;
 			}
-			final Object mapValue = JAVA_MAP.this.get(e.getKey());
+			final Object mapValue = JAVA_LINKEDMAP.this.get(e.getKey());
 			if (mapValue == null) {
 				return e.getValue() == null;
 			} else {
@@ -786,93 +1019,43 @@ implements Map<K, V>, Cloneable, Serializable {
 		@Override
 		public Iterator<Map.Entry<K, V>> iterator() {
 			/**
-			 * This iterator iterates first over the entries of the backing
-			 * initial map (if they exist) in the order first assumed -  
-			 * to - last assumed, then the entries of the post-initial
-			 * map, in the order first inserted - to - last inserted.
+			 * This iterator iterates according to the order established by
+			 * the linked list. When hitting initialMap.tail, it branches
+			 * assuming another entry in the initial list, or that the initial
+			 * list is complete. 
 			 */
 			return new Iterator<Map.Entry<K,V>>() {
-				private boolean scanningInitialMap = (JAVA_MAP.this.initialMap == null ? false : true);
-				private NNode nextNodeIterator = (JAVA_MAP.this.initialMap == null ? JAVA_MAP.this.root : JAVA_MAP.this.initialMap.root);
+				private NNodePair<K, V> nextNodeIterator = null;
 				
 				{
 					findNextNode();
 				}
 				
-				@SuppressWarnings("unchecked")
 				private void findNextNode() {
-					//if the iterator is scanning JAVA_MAP.this.initialMap, it skips all 
-					//the entries that are overridden by the ones in JAVA_MAP.this.root.(next)*
-					if (this.scanningInitialMap) {
-						skipOverriddenEntries:
-						while (this.nextNodeIterator instanceof JAVA_MAP.NNodePair) {
-							final JAVA_MAP.NNodePair<K, V> npCurrent = (JAVA_MAP.NNodePair<K, V>) this.nextNodeIterator;
-							final K keyCurrent = npCurrent.key;
-							if (keyCurrent == null) {
-								for (JAVA_MAP.NNode n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NNodePair; n = ((JAVA_MAP.NNodePair<K, V>) n).next) {
-									final JAVA_MAP.NNodePair<K, V> np = (JAVA_MAP.NNodePair<K, V>) n;
-									if (np.key == null) {
-										this.nextNodeIterator = npCurrent.next;
-										continue skipOverriddenEntries;
-									}
-								}
-							} else {
-								for (JAVA_MAP.NNode n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NNodePair; n = ((JAVA_MAP.NNodePair<K, V>) n).next) {
-									final JAVA_MAP.NNodePair<K, V> np = (JAVA_MAP.NNodePair<K, V>) n;
-									if (keyCurrent.equals(np.key)) {
-										this.nextNodeIterator = npCurrent.next;
-										continue skipOverriddenEntries;
-									}
-								}
-							}
-							break;
-						}
-						
-						//if the iterator is at the end of JAVA_MAP.this.initialMap.root.(next)*,
-						//branches to assume another entry in it
-						if (this.nextNodeIterator instanceof JAVA_MAP.NNodeEmpty) {
-							//determines the predecessor to this.current
-							JAVA_MAP.NNodePair<K, V> preCurrent;
-							if (this.nextNodeIterator == JAVA_MAP.this.initialMap.root) {
-								preCurrent = null; //no predecessor
-							} else {
-								preCurrent = (JAVA_MAP.NNodePair<K, V>) JAVA_MAP.this.initialMap.root;
-								while (preCurrent.next != this.nextNodeIterator) {
-									preCurrent = (JAVA_MAP.NNodePair<K, V>) preCurrent.next;
-								}
-							}
-
-							//refines
-							JAVA_MAP.this.initialMap.refineOnFreshEntryAndBranch();
-
-							//adjusts this.current
-							this.nextNodeIterator = (preCurrent == null ? JAVA_MAP.this.initialMap.root : preCurrent.next);
-
-							//if this.current is still at the end of JAVA_MAP.this.initialMap.root.(next)*, 
-							//we are on the branch where we exhausted the initial map, therefore continues 
-							//with the entries in JAVA_MAP.this.root.(next)*
-							if (this.nextNodeIterator instanceof JAVA_MAP.NNodeEmpty) {
-								this.scanningInitialMap = false;
-								this.nextNodeIterator = JAVA_MAP.this.root;
-							}
-						}
+					//if the iterator is at JAVA_LINKEDMAP.this.initialMap.tail, 
+					//branches to assume another entry in the initial map
+					if (JAVA_LINKEDMAP.this.initialMap != null && this.nextNodeIterator == JAVA_LINKEDMAP.this.initialMap.tail) {
+						//refines
+						JAVA_LINKEDMAP.this.initialMap.refineOnFreshEntryAndBranch();
 					}
+					//advances this.current
+					this.nextNodeIterator = (this.nextNodeIterator == null ? JAVA_LINKEDMAP.this.head : this.nextNodeIterator.after);
 				}
-
+				
 				@Override
 				public boolean hasNext() {
-					return (this.nextNodeIterator instanceof JAVA_MAP.NNodePair);
+					return (this.nextNodeIterator != null);
 				}
 
 				@SuppressWarnings("unchecked")
 				@Override
-				public Entry<K, V> next() {
+				public Map.Entry<K, V> next() {
 					if (!hasNext()) {
 						throw new NoSuchElementException();
 					}
 
 					//builds the return value
-					final JAVA_MAP.NNodePair<K, V> currentPair = (JAVA_MAP.NNodePair<K, V>) this.nextNodeIterator;
+					final JAVA_LINKEDMAP.NNodePair<K, V> currentPair = this.nextNodeIterator;
 					final Map.Entry<K, V> retVal = new Map.Entry<K, V>() {
 						@Override
 						public K getKey() {
@@ -914,33 +1097,29 @@ implements Map<K, V>, Cloneable, Serializable {
 					};
 					
 					//move this.current forward
-					this.nextNodeIterator = currentPair.next;
 					findNextNode();
 
 					return retVal;
 				}
 
-				@SuppressWarnings("unchecked")
 				@Override
 				public void remove() {
 					if (!hasNext()) {
 						throw new IllegalStateException();
 					}
-					final JAVA_MAP.NNodePair<K, V> nextNodeIteratorBeforeRemoval = (JAVA_MAP.NNodePair<K, V>) this.nextNodeIterator;
+					final JAVA_LINKEDMAP.NNodePair<K, V> nextNodeIteratorBeforeRemoval = this.nextNodeIterator;
 					final K key = nextNodeIteratorBeforeRemoval.key;
-					JAVA_MAP.this.remove(key);
-					if (!this.scanningInitialMap) {
-						//check if currentBeforeRemovalPair is still there
-						for (JAVA_MAP.NNode n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NNodePair; n = ((JAVA_MAP.NNodePair<K, V>) n).next) {
-							if (n == nextNodeIteratorBeforeRemoval) {
-								//still present
-								return;
-							}
+					JAVA_LINKEDMAP.this.remove(key);
+					//check if currentBeforeRemovalPair is still there
+					for (JAVA_LINKEDMAP.NNodePair<K, V>  n = JAVA_LINKEDMAP.this.head; n != null; n = n.after) {
+						if (n == nextNodeIteratorBeforeRemoval) {
+							//still present
+							return;
 						}
-
-						//otherwise, skips the iterator by one
-						this.nextNodeIterator = nextNodeIteratorBeforeRemoval.next;
 					}
+
+					//otherwise, skips the iterator by one
+					this.nextNodeIterator = nextNodeIteratorBeforeRemoval.after;
 				}
 			};
 		}
@@ -962,7 +1141,7 @@ implements Map<K, V>, Cloneable, Serializable {
 		}
 
 		@Override
-		public boolean add(Entry<K, V> e) {
+		public boolean add(Map.Entry<K, V> e) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -972,7 +1151,7 @@ implements Map<K, V>, Cloneable, Serializable {
 				final Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
 				final Object key = e.getKey();
 				final Object value = e.getValue();
-				return JAVA_MAP.this.remove(key, value);
+				return JAVA_LINKEDMAP.this.remove(key, value);
 			}
 			return false;
 		}
@@ -992,7 +1171,7 @@ implements Map<K, V>, Cloneable, Serializable {
 		}
 
 		@Override
-		public boolean addAll(Collection<? extends Entry<K, V>> c) {
+		public boolean addAll(Collection<? extends Map.Entry<K, V>> c) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -1028,7 +1207,7 @@ implements Map<K, V>, Cloneable, Serializable {
 
 		@Override
 		public void clear() {
-			JAVA_MAP.this.clear();
+			JAVA_LINKEDMAP.this.clear();
 		}
 
 	}
@@ -1061,8 +1240,8 @@ implements Map<K, V>, Cloneable, Serializable {
 		//calculates the hash code for the entries added
 		//after the start of the symbolic execution
 		int hashCode = 0;
-		for (JAVA_MAP.NNode n = this.root; n instanceof JAVA_MAP.NNodePair; n = ((JAVA_MAP.NNodePair<K, V>) n).next) {
-			final JAVA_MAP.NNodePair<K, V> np = (JAVA_MAP.NNodePair<K, V>) n;
+		for (JAVA_LINKEDMAP.NNode n = this.root; n instanceof JAVA_LINKEDMAP.NNodePair; n = ((JAVA_LINKEDMAP.NNodePair<K, V>) n).next) {
+			final JAVA_LINKEDMAP.NNodePair<K, V> np = (JAVA_LINKEDMAP.NNodePair<K, V>) n;
 			hashCode += np.pairHashCode();
 		}
 
@@ -1087,8 +1266,8 @@ implements Map<K, V>, Cloneable, Serializable {
 		//the initial map
 		final ArrayList<K> notRefined = new ArrayList<>();
 		findNotRefinedNodes:
-			for (JAVA_MAP.NNode n = this.root; n instanceof JAVA_MAP.NNodePair; n = ((JAVA_MAP.NNodePair<K, V>) n).next) {
-				final JAVA_MAP.NNodePair<K, V> np = (JAVA_MAP.NNodePair<K, V>) n;
+			for (JAVA_LINKEDMAP.NNode n = this.root; n instanceof JAVA_LINKEDMAP.NNodePair; n = ((JAVA_LINKEDMAP.NNodePair<K, V>) n).next) {
+				final JAVA_LINKEDMAP.NNodePair<K, V> np = (JAVA_LINKEDMAP.NNodePair<K, V>) n;
 				if (this.initialMap.absentKeys.contains(np.key)) {
 					continue findNotRefinedNodes;
 				}
@@ -1110,8 +1289,8 @@ implements Map<K, V>, Cloneable, Serializable {
 
 		//finally, subtract from the hash code all the hashes of pairs
 		//in the initial map
-		for (JAVA_MAP.NNode nRefinement = this.initialMap.root; nRefinement instanceof JAVA_MAP.NNodePair; nRefinement = ((JAVA_MAP.NNodePair<K, V>) nRefinement).next) {
-			final JAVA_MAP.NNodePair<K, V> npRefinement = (JAVA_MAP.NNodePair<K, V>) nRefinement;
+		for (JAVA_LINKEDMAP.NNode nRefinement = this.initialMap.root; nRefinement instanceof JAVA_LINKEDMAP.NNodePair; nRefinement = ((JAVA_LINKEDMAP.NNodePair<K, V>) nRefinement).next) {
+			final JAVA_LINKEDMAP.NNodePair<K, V> npRefinement = (JAVA_LINKEDMAP.NNodePair<K, V>) nRefinement;
 			hashCode -= npRefinement.pairHashCode();
 		}
 
@@ -1127,13 +1306,7 @@ implements Map<K, V>, Cloneable, Serializable {
 	@SuppressWarnings("unchecked")
     @Override
     public Object clone() {
-        final JAVA_MAP<K,V> result;
-        try {
-			result = (JAVA_MAP<K,V>) super.clone();
-		} catch (CloneNotSupportedException e) {
-            // this shouldn't happen, since we are Cloneable
-            throw new InternalError(e);
-		}
+        final JAVA_LINKEDMAP<K,V> result = (JAVA_LINKEDMAP<K,V>) super.clone();
         result.absentKeys = new ArrayList<>(this.absentKeys);
         result.root = new NNodeEmpty();
         NNodePair<K, V> dest = null;
@@ -1152,6 +1325,7 @@ implements Map<K, V>, Cloneable, Serializable {
         }
         return result;
 	}
+        
 
 	// Private methods
 
@@ -1170,7 +1344,7 @@ implements Map<K, V>, Cloneable, Serializable {
 	 * map {@code this.initialMap} that backs the map, and that 
 	 * represents the map as it was in the initial state. 
 	 * 
-	 * @param tthis the {@link JAVA_MAP} to initialize. While {@code tthis}
+	 * @param tthis the {@link JAVA_LINKEDMAP} to initialize. While {@code tthis}
 	 * is mutable, {@code tthis.initialMap} will be immutable, will be 
 	 * shared by all the clones of {@code tthis}, and will be progressively 
 	 * refined upon access to {@code tthis} introduces assumptions on the 
@@ -1178,32 +1352,38 @@ implements Map<K, V>, Cloneable, Serializable {
 	 * 
 	 * @throws IllegalArgumentException if this map is not symbolic.
 	 */
-	private static <KK, VV> void initSymbolic(JAVA_MAP<KK, VV> tthis) {
+	private static <KK, VV> void initSymbolic(JAVA_LINKEDMAP<KK, VV> tthis) {
 		if (!isSymbolic(tthis)) {
-			throw new IllegalArgumentException("Attempted to invoke " + JAVA_MAP.class.getCanonicalName() + ".initSymbolic on a concrete map.");
+			throw new IllegalArgumentException("Attempted to invoke " + JAVA_LINKEDMAP.class.getCanonicalName() + ".initSymbolic on a concrete map.");
 		}
 		assume(isResolvedByExpansion(tthis));
 		assume(isResolvedByExpansion(tthis.initialMap));
 
 		//initializes this
 		tthis.isInitial = false;
-		//origin.initialHashCode: doesn't care
+		//tthis.initialHashCode: doesn't care
 		tthis.absentKeys = new ArrayList<>();
-		//this.absentValues: doesn't care
-		//this.initialMap: OK the symbolic value it already has
+		//tthis.absentValues: doesn't care
+		//tthis.initialMap: OK the symbolic value it already has
+		tthis.currentMap = null;
 		tthis.size = tthis.initialMap.size;
 		tthis.root = new NNodeEmpty();
+		tthis.head = null;
+		tthis.tail = null;
 		tthis.numNodes = 0;
 
 		tthis.initialMap.makeInitial();
 		tthis.initialMap.isInitial = true;
-		//this.initialMap.initialHashCode: OK the symbolic value it already has
+		//tthis.initialMap.initialHashCode: OK the symbolic value it already has
 		tthis.initialMap.absentKeys = new ArrayList<>();
 		tthis.initialMap.absentValues = new ArrayList<>();
 		tthis.initialMap.initialMap = null;
+		tthis.initialMap.currentMap = tthis;
 		//this.initialMap.size: OK the symbolic value it already has
 		assume(tthis.initialMap.size >= 0);
 		tthis.initialMap.root = new NNodeEmpty();
+		tthis.initialMap.head = null;
+		tthis.initialMap.tail = null;
 		tthis.initialMap.numNodes = 0;
 	}
 
@@ -1273,26 +1453,26 @@ implements Map<K, V>, Cloneable, Serializable {
 	 * the base-level (and triggers with two parameters
 	 * are currently unsupported).
 	 * 
-	 * @param map the {@link JAVA_MAP} containing {@code key}.
+	 * @param map the {@link JAVA_LINKEDMAP} containing {@code key}.
 	 * @param key the key that is resolved.
 	 */
 	@SuppressWarnings("unchecked")
-	private static <KK, VV> void onKeyResolutionComplete(JAVA_MAP<KK, VV> tthis, KK key) {
+	private static <KK, VV> void onKeyResolutionComplete(JAVA_LINKEDMAP<KK, VV> tthis, KK key) {
 		if (!tthis.isInitial) {
-			throw new IllegalArgumentException("Attempted to invoke " + JAVA_MAP.class.getCanonicalName() + ".onKeyResolutionComplete on a JAVA_MAP that is not initial.");
+			throw new IllegalArgumentException("Attempted to invoke " + JAVA_LINKEDMAP.class.getCanonicalName() + ".onKeyResolutionComplete on a JAVA_MAP that is not initial.");
 		}
 		int occurrences = 0;
 		if (key == null) {
-			for (JAVA_MAP.NNode n = tthis.root; n instanceof JAVA_MAP.NNodePair; n = ((JAVA_MAP.NNodePair<KK, VV>) n).next) {
-				final JAVA_MAP.NNodePair<KK, VV> np = (JAVA_MAP.NNodePair<KK, VV>) n;
+			for (JAVA_LINKEDMAP.NNode n = tthis.root; n instanceof JAVA_LINKEDMAP.NNodePair; n = ((JAVA_LINKEDMAP.NNodePair<KK, VV>) n).next) {
+				final JAVA_LINKEDMAP.NNodePair<KK, VV> np = (JAVA_LINKEDMAP.NNodePair<KK, VV>) n;
 				if (np.key == null) {
 					++occurrences;
 					assume(occurrences <= 1);
 				}
 			}
 		} else {
-			for (JAVA_MAP.NNode n = tthis.root; n instanceof JAVA_MAP.NNodePair; n = ((JAVA_MAP.NNodePair<KK, VV>) n).next) {
-				final JAVA_MAP.NNodePair<KK, VV> np = (JAVA_MAP.NNodePair<KK, VV>) n;
+			for (JAVA_LINKEDMAP.NNode n = tthis.root; n instanceof JAVA_LINKEDMAP.NNodePair; n = ((JAVA_LINKEDMAP.NNodePair<KK, VV>) n).next) {
+				final JAVA_LINKEDMAP.NNodePair<KK, VV> np = (JAVA_LINKEDMAP.NNodePair<KK, VV>) n;
 				if (key.equals(np.key)) {
 					++occurrences;
 					assume(occurrences <= 1);
@@ -1314,7 +1494,7 @@ implements Map<K, V>, Cloneable, Serializable {
 	 */
 	private void refineIn(K key, V value) {
 		if (!this.isInitial) {
-			metaThrowUnexpectedInternalException("Tried to refine a JAVA_MAP that is not initial.");
+			metaThrowUnexpectedInternalException("Tried to refine a " + JAVA_LINKEDMAP.class.getCanonicalName() + " that is not initial.");
 		}
 		if (this.absentKeys.contains(key)) {
 			ignore(); //contradiction found
@@ -1333,7 +1513,7 @@ implements Map<K, V>, Cloneable, Serializable {
 	 */
 	private void refineOutKey(K key) {
 		if (!this.isInitial) {
-			metaThrowUnexpectedInternalException("Tried to refine a JAVA_MAP that is not initial.");
+			metaThrowUnexpectedInternalException("Tried to refine a " + JAVA_LINKEDMAP.class.getCanonicalName() + " that is not initial.");
 		}
 		if (findNodeKey(this.root, key) != null) {
 			ignore(); //contradiction found
@@ -1350,7 +1530,7 @@ implements Map<K, V>, Cloneable, Serializable {
 	 */
 	private void refineOutValue(V value) {
 		if (!this.isInitial) {
-			metaThrowUnexpectedInternalException("Tried to refine a JAVA_MAP that is not initial.");
+			metaThrowUnexpectedInternalException("Tried to refine a " + JAVA_LINKEDMAP.class.getCanonicalName() + " that is not initial.");
 		}
 		if (findNodeValue(this.root, value) != null) {
 			ignore(); //contradiction found
@@ -1367,7 +1547,7 @@ implements Map<K, V>, Cloneable, Serializable {
 	 */
 	private void refineMapComplete() {
 		if (!this.isInitial) {
-			metaThrowUnexpectedInternalException("Tried to refine a JAVA_MAP that is not initial.");
+			metaThrowUnexpectedInternalException("Tried to refine a " + JAVA_LINKEDMAP.class.getCanonicalName() + " that is not initial.");
 		}
 		assume(this.size == this.numNodes);
 	}

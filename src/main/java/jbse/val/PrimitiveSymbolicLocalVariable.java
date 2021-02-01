@@ -7,9 +7,14 @@ import jbse.val.exc.InvalidTypeException;
  * Class that represent a {@link PrimitiveSymbolicAtomic} whose origin is a 
  * local variable in the root frame. 
  */
-public final class PrimitiveSymbolicLocalVariable extends PrimitiveSymbolicAtomic implements SymbolicLocalVariable {
+public final class PrimitiveSymbolicLocalVariable extends PrimitiveSymbolicAtomic implements SymbolicLocalVariable {   
+    /** The name of the local variable where this symbol originates from. */
     private final String variableName;
+    
+    /** The origin String representation of this object. */
     private final String originString;
+    
+	/** The hash code of this object. */
     private final int hashCode;
     
     /**
@@ -17,8 +22,8 @@ public final class PrimitiveSymbolicLocalVariable extends PrimitiveSymbolicAtomi
      * 
      * @param variableName a {@link String}, the name of the local variable
      *        in the root frame this symbol originates from.
-     * @param id an {@link int}, the identifier of the symbol. Different
-     *        object with same identifier will be treated as equal.
+     * @param id an {@link int}, the identifier of the symbol. Used only
+     *        in the toString representation of the symbol.
      * @param type the type of the represented value.
      * @param historyPoint the current {@link HistoryPoint}. It must not be {@code null}.
      * @throws InvalidTypeException if {@code type} is not primitive.

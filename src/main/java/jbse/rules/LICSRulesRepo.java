@@ -1,5 +1,12 @@
 package jbse.rules;
 
+import static jbse.bc.Signatures.JAVA_CONCURRENTHASHMAP;
+import static jbse.bc.Signatures.JAVA_HASHMAP;
+import static jbse.bc.Signatures.JAVA_LINKEDHASHMAP;
+import static jbse.bc.Signatures.JAVA_OBJECT;
+import static jbse.common.Type.ARRAYOF;
+import static jbse.common.Type.CHAR;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,6 +21,22 @@ public final class LICSRulesRepo implements Cloneable {
 	private HashMap<String, Set<LICSRuleAliases>> rulesAliases = new HashMap<>();
     private HashMap<String, Set<LICSRuleAliases>> rulesNeverAliases = new HashMap<>();
 	private HashMap<String, Set<LICSRuleNotNull>> rulesNotNull = new HashMap<>();
+	
+	public LICSRulesRepo() {
+		//adds some default rules
+		//java.lang.String
+		addResolveAliasInstanceof("" + ARRAYOF + CHAR, "{°}*java/lang/String:value", null);
+		addResolveNotNull("" + ARRAYOF + CHAR, "{°}*java/lang/String:value");
+    	//java.util.HashMap (model)
+		final String JBSE_JAVA_MAP_KEY = "(?!{°}*" + JAVA_HASHMAP + ":initialMap::GET){°}*" + JAVA_HASHMAP + ":initialMap::KEY{°}*";
+    	addResolveAliasNever(JAVA_OBJECT, JBSE_JAVA_MAP_KEY, JBSE_JAVA_MAP_KEY);
+    	//java.util.concurrent.ConcurrentHashMap (model)
+		final String JBSE_JAVA_CONCURRENTMAP_KEY = "(?!{°}*" + JAVA_CONCURRENTHASHMAP + ":initialMap::GET){°}*" + JAVA_CONCURRENTHASHMAP + ":initialMap::KEY{°}*";
+    	addResolveAliasNever(JAVA_OBJECT, JBSE_JAVA_CONCURRENTMAP_KEY, JBSE_JAVA_CONCURRENTMAP_KEY);
+    	//java.util.LinkedHashMap (model)
+		final String JBSE_JAVA_LINKEDMAP_KEY = "(?!{°}*" + JAVA_LINKEDHASHMAP + ":initialMap::GET){°}*" + JAVA_LINKEDHASHMAP + ":initialMap::KEY{°}*";
+    	addResolveAliasNever(JAVA_OBJECT, JBSE_JAVA_LINKEDMAP_KEY, JBSE_JAVA_LINKEDMAP_KEY);
+	}
 
     /**
      * Specifies a possible expansion for symbolic references. Typically, a 

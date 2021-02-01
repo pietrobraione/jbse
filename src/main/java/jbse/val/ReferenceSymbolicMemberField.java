@@ -36,8 +36,8 @@ public final class ReferenceSymbolicMemberField extends ReferenceSymbolicMember 
      *        container object this symbol originates from. It must not be {@code null}.
      * @param fieldClass a {@link String}, the name of the class where the 
      *        field is declared. It must not be {@code null}.
-     * @param id an {@link int}, the identifier of the symbol. Different
-     *        object with same identifier will be treated as equal.
+     * @param id an {@link int}, the identifier of the symbol. Used only
+     *        in the toString representation of the symbol.
      * @param staticType a {@link String}, the static type of the
      *        reference (taken from bytecode).
      * @param genericSignatureType a {@link String}, the generic signature 

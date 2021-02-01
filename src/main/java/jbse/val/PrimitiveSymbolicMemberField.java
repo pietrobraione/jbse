@@ -24,8 +24,8 @@ public final class PrimitiveSymbolicMemberField extends PrimitiveSymbolicMember 
      *        be {@code null}.
      * @param fieldClass a {@link String}, the name of the class where the 
      *        field is declared. It must not be {@code null}.
-     * @param id an {@link int}, the identifier of the symbol. Different
-     *        object with same identifier will be treated as equal.
+     * @param id an {@link int}, the identifier of the symbol. Used only
+     *        in the toString representation of the symbol.
      * @param type the type of the represented value.
      * @throws InvalidTypeException if {@code type} is not primitive.
      * @throws InvalidInputException if {@code fieldName == null}.

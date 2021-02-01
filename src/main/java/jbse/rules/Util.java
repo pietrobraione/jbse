@@ -37,7 +37,7 @@ public final class Util {
 	 * 
 	 * @param originExpRelative a {@link String}, the relative origin 
 	 *        expression.
-	 * @param origin a {@link ReferenceSymbolic}, the origin that 
+	 * @param originTarget a {@link ReferenceSymbolic}, the origin that 
 	 *        all the occurrences of {$R_ANY} and {$REF} in 
 	 *        {@code originExpRelative} refer to.
 	 * @param originPattern a {@link Pattern} that is used to detect 
@@ -46,10 +46,10 @@ public final class Util {
 	 *        {$R_ANY}.
 	 * @return a {@link Pattern} for {@code originExpRelative}.
 	 */
-	static Pattern makeOriginPatternRelative(String originExpRelative, ReferenceSymbolic origin, Pattern originPattern) {
-		final String valueForAny = findAny(originPattern, origin);
+	static Pattern makeOriginPatternRelative(String originExpRelative, ReferenceSymbolic originTarget, Pattern originPattern) {
+		final String valueForAny = findAny(originPattern, originTarget);
 		final String specializedOriginExpRelative = specializeAny(originExpRelative, valueForAny);
-		return makeOriginPatternAbsolute(translateOriginExpressionRelativeToAbsolute(specializedOriginExpRelative, origin));
+		return makeOriginPatternAbsolute(translateOriginExpressionRelativeToAbsolute(specializedOriginExpRelative, originTarget));
 	}
 	
 	/* TODO this is really ugly, but it works with the current 
@@ -62,8 +62,8 @@ public final class Util {
 		retVal = retVal.replace(REGEX_ALLCHARS, "."); 
 		retVal = retVal.replace("{", "\\{"); //this is for {ROOT}
 		retVal = retVal.replace("}", "\\}"); //this also is for {ROOT}
-		retVal = retVal.replace("[", "\\["); //this is for [<className>]
-		retVal = retVal.replace("]", "\\]"); //this also is for [<className>]
+		retVal = retVal.replace("[", "\\["); //this is for [<className>] and ::KEY...[...]
+		retVal = retVal.replace("]", "\\]"); //this also is for [<className>] and ::KEY...[...]
 		retVal = retVal.replace("$", "\\$"); //this is for names of inner classes
 		retVal = retVal.replace(REGEX_ENDLINE, "$"); 
 		return retVal;
@@ -105,8 +105,12 @@ public final class Util {
 	 * Searches for the actual parameter of a trigger rule.
 	 * 
 	 * @param r a {@link TriggerRule}.
-	 * @param ref the {@link ReferenceSymbolic} that made fire 
-	 *        {@code r}.
+	 * @param originTarget a {@link ReferenceSymbolic}, the origin of
+	 *        the target object that made fire {@code r}. In case of 
+	 *        a {@link TriggerRuleExpandsTo} it is the {@link ReferenceSymbolic}
+	 *        that matched the rule, in case of a {@link TriggerRuleAliases} it 
+	 *        is the origin of the object that the {@link ReferenceSymbolic} that
+	 *        matched the rule aliases.
 	 * @param state a {@link State}.
 	 * @return a {@link ReferenceSymbolic} to (i.e., the origin of) 
 	 *         the first {@link Objekt} in the heap of {@code state} 
@@ -114,18 +118,25 @@ public final class Util {
 	 *         of {@code r}, or {@code null} if none exists.
 	 * @throws FrozenStateException if {@code state} is frozen.
 	 */
-	public static ReferenceSymbolic getTriggerMethodParameterObject(TriggerRule r, ReferenceSymbolic ref, State state) throws FrozenStateException {
+	public static ReferenceSymbolic getTriggerMethodParameterObject(TriggerRule r, ReferenceSymbolic originTarget, State state) throws FrozenStateException {
         final Iterable<Clause> pathCondition = state.getPathCondition(); //TODO the decision procedure already stores the path condition: eliminate dependence on state
         for (Clause c : pathCondition) {
             if (c instanceof ClauseAssumeExpands) {
                 //gets the object and its position in the heap
                 final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
-                final Objekt o = cExp.getObjekt();
+                final Objekt object = cExp.getObjekt();
+                final ReferenceSymbolic originObject = object.getOrigin();
                 
-    			if (r.isTriggerMethodParameterObject(ref, o)){
-    				return o.getOrigin();
+    			if (r.isTriggerMethodParameterObject(originTarget, originObject)){
+    				return originObject;
     			}
             }
+        }
+        //in the case r is a TriggerRuleNull, it is possible that the
+        //rule parameter is originTarget, which does not point to any
+        //object, so we must check this possible situation
+        if (r instanceof TriggerRuleNull && r.isTriggerMethodParameterObject(originTarget, originTarget)) {
+        	return originTarget;
         }
 		return null;
 	}

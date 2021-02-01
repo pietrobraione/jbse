@@ -76,7 +76,7 @@ public class ClassInitTest {
         final ClassFile cf_A = this.state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, "hier/A", true);
         this.state.pushFrameSymbolic(cf_A, this.ctx.rootMethodSignature); //or initialization will fail
         try {
-            Util.ensureClassInitialized(this.state, cf_A, this.ctx);
+            Util.ensureClassInitialized(this.state, this.ctx, cf_A);
             assertTrue(false); //should not arrive here
         } catch (InterruptException e) {
             //that's right, go on

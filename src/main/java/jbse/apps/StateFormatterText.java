@@ -51,6 +51,7 @@ import jbse.val.ReferenceSymbolicAtomic;
 import jbse.val.ReferenceSymbolicLocalVariable;
 import jbse.val.ReferenceSymbolicMemberArray;
 import jbse.val.ReferenceSymbolicMemberField;
+import jbse.val.ReferenceSymbolicMemberMapKey;
 import jbse.val.ReferenceSymbolicMemberMapValue;
 import jbse.val.Simplex;
 import jbse.val.Symbolic;
@@ -366,8 +367,7 @@ public final class StateFormatterText implements Formatter {
 
     	@Override
     	public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) {
-    		// TODO Auto-generated method stub
-    		
+    		this.mentionsClass = false;
     	}
 
     	@Override
@@ -453,6 +453,17 @@ public final class StateFormatterText implements Formatter {
 
     	@Override
     	public void visitReferenceSymbolicMemberField(ReferenceSymbolicMemberField x) {
+    		try {
+    			x.getContainer().accept(this);
+    		} catch (RuntimeException exc) {
+    			throw exc;
+    		} catch (Exception exc) {
+    			//cannot happen;
+    		}
+    	}
+
+    	@Override
+    	public void visitReferenceSymbolicMemberMapKey(ReferenceSymbolicMemberMapKey x) {
     		try {
     			x.getContainer().accept(this);
     		} catch (RuntimeException exc) {

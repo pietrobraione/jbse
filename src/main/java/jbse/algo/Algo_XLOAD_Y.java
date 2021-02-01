@@ -43,11 +43,6 @@ final class Algo_XLOAD_Y extends Algo_XLOAD_GETX<BytecodeData_0LV> {
     }
 
     @Override
-    protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
-        return () -> true;
-    }
-
-    @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> XLOADSTORE_IMPLICIT_OFFSET;
     }

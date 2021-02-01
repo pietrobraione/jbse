@@ -44,6 +44,7 @@ import jbse.tree.DecisionAlternative_XYLOAD_GETX_Aliases;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Expands;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Null;
 import jbse.val.Calculator;
+import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidTypeException;
@@ -134,7 +135,6 @@ public class TriggerManager {
 
         //handles triggers by creating a frame for the fresh object;
         //first, gets data
-        final ReferenceSymbolic ref = ((DecisionAlternative_XYLOAD_GETX_Unresolved) da).getValueToLoad();
         final ArrayList<TriggerRule> rules = satisfiedTriggerRules(state, da, this.triggerRulesRepo);
 
         //then, pushes all the frames
@@ -143,10 +143,19 @@ public class TriggerManager {
             final Signature triggerSig = rule.getTriggerMethodSignature();
             if (splitReturnValueDescriptor(triggerSig.getDescriptor()).equals("" + VOID) &&
                 splitParametersDescriptors(triggerSig.getDescriptor()).length <= 1) {
-                final ReferenceSymbolic triggerArg = getTriggerMethodParameterObject(rule, ref, state);
-                if (triggerArg == null) {
-                    throw new MissingTriggerParameterException("No heap object matches the parameter part in the trigger rule " + rule);
-                }
+            	final ReferenceSymbolic originTarget;
+            	if (rule instanceof TriggerRuleNull) {
+            		originTarget = ((DecisionAlternative_XYLOAD_GETX_Null) da).getValueToLoad();
+            	} else if (rule instanceof TriggerRuleAliases) {
+            		final ReferenceConcrete refObject = new ReferenceConcrete(((DecisionAlternative_XYLOAD_GETX_Aliases) da).getObjectPosition());
+            		originTarget = state.getObject(refObject).getOrigin();
+            	} else { //(rule instanceof TriggerRuleExpandsTo) 
+            		originTarget = ((DecisionAlternative_XYLOAD_GETX_Expands) da).getValueToLoad();
+            	}
+            	final Reference triggerArg = getTriggerMethodParameterObject(rule, originTarget, state);
+            	if (triggerArg == null) {
+            		throw new MissingTriggerParameterException("No heap object matches the parameter part in the trigger rule " + rule);
+            	}
                 try {
                     final ClassFile cf = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, triggerSig.getClassName(), true);
                     state.pushFrame(calc, cf, triggerSig, false, pcOffset, triggerArg);
