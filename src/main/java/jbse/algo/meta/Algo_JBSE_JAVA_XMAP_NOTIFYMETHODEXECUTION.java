@@ -13,7 +13,6 @@ import jbse.algo.StrategyUpdate;
 import jbse.apps.run.DecisionProcedureGuidanceJDI;
 import jbse.bc.Signature;
 import jbse.common.exc.ClasspathException;
-import jbse.mem.Frame;
 import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.InvalidSlotException;
@@ -51,12 +50,7 @@ public final class Algo_JBSE_JAVA_XMAP_NOTIFYMETHODEXECUTION extends Algo_INVOKE
             }
             if (this.ctx.decisionProcedure instanceof DecisionProcedureGuidanceJDI) {
                 final DecisionProcedureGuidanceJDI dpJDI = (DecisionProcedureGuidanceJDI) this.ctx.decisionProcedure;
-                final Signature[] callCtx = new Signature[state.getStackSize()];
-                int i = 0;
-                for (Frame f: state.getStack()) {
-                    callCtx[i++] = f.getMethodSignature();
-                }
-                dpJDI.notifyExecutionOfHashMapModelMethod(sig, callCtx);
+                dpJDI.notifyExecutionOfHashMapModelMethod(sig, state);
             }
         } catch (ThreadStackEmptyException | InvalidSlotException | ClassCastException e) {
             //this should never happen
