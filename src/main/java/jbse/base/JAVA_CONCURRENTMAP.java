@@ -788,26 +788,26 @@ implements ConcurrentMap<K, V>, Serializable {
 			 */
 			return new Iterator<Map.Entry<K,V>>() {
 				private boolean scanningInitialMap = (JAVA_CONCURRENTMAP.this.initialMap == null ? false : true);
-				private NNode current = (JAVA_CONCURRENTMAP.this.initialMap == null ? JAVA_CONCURRENTMAP.this.root : JAVA_CONCURRENTMAP.this.initialMap.root);
+				private NNode nextNodeIterator = (JAVA_CONCURRENTMAP.this.initialMap == null ? JAVA_CONCURRENTMAP.this.root : JAVA_CONCURRENTMAP.this.initialMap.root);
 				
 				{
-					findCurrent();
+					findNextNode();
 				}
 				
 				@SuppressWarnings("unchecked")
-				private void findCurrent() {
+				private void findNextNode() {
 					//if the iterator is scanning JAVA_CONCURRENTMAP.this.initialMap, it skips all 
 					//the entries that are overridden by the ones in JAVA_CONCURRENTMAP.this.root.(next)*
 					if (this.scanningInitialMap) {
 						skipOverriddenEntries:
-						while (this.current instanceof JAVA_CONCURRENTMAP.NNodePair) {
-							final JAVA_CONCURRENTMAP.NNodePair<K, V> npCurrent = (JAVA_CONCURRENTMAP.NNodePair<K, V>) this.current;
+						while (this.nextNodeIterator instanceof JAVA_CONCURRENTMAP.NNodePair) {
+							final JAVA_CONCURRENTMAP.NNodePair<K, V> npCurrent = (JAVA_CONCURRENTMAP.NNodePair<K, V>) this.nextNodeIterator;
 							final K keyCurrent = npCurrent.key;
 							if (keyCurrent == null) {
 								for (JAVA_CONCURRENTMAP.NNode n = JAVA_CONCURRENTMAP.this.root; n instanceof JAVA_CONCURRENTMAP.NNodePair; n = ((JAVA_CONCURRENTMAP.NNodePair<K, V>) n).next) {
 									final JAVA_CONCURRENTMAP.NNodePair<K, V> np = (JAVA_CONCURRENTMAP.NNodePair<K, V>) n;
 									if (np.key == null) {
-										this.current = npCurrent.next;
+										this.nextNodeIterator = npCurrent.next;
 										continue skipOverriddenEntries;
 									}
 								}
@@ -815,7 +815,7 @@ implements ConcurrentMap<K, V>, Serializable {
 								for (JAVA_CONCURRENTMAP.NNode n = JAVA_CONCURRENTMAP.this.root; n instanceof JAVA_CONCURRENTMAP.NNodePair; n = ((JAVA_CONCURRENTMAP.NNodePair<K, V>) n).next) {
 									final JAVA_CONCURRENTMAP.NNodePair<K, V> np = (JAVA_CONCURRENTMAP.NNodePair<K, V>) n;
 									if (keyCurrent.equals(np.key)) {
-										this.current = npCurrent.next;
+										this.nextNodeIterator = npCurrent.next;
 										continue skipOverriddenEntries;
 									}
 								}
@@ -825,14 +825,14 @@ implements ConcurrentMap<K, V>, Serializable {
 						
 						//if the iterator is at the end of JAVA_MAP.this.initialMap.root.(next)*,
 						//branches to assume another entry in it
-						if (this.current instanceof JAVA_CONCURRENTMAP.NNodeEmpty) {
+						if (this.nextNodeIterator instanceof JAVA_CONCURRENTMAP.NNodeEmpty) {
 							//determines the predecessor to this.current
 							JAVA_CONCURRENTMAP.NNodePair<K, V> preCurrent;
-							if (this.current == JAVA_CONCURRENTMAP.this.initialMap.root) {
+							if (this.nextNodeIterator == JAVA_CONCURRENTMAP.this.initialMap.root) {
 								preCurrent = null; //no predecessor
 							} else {
 								preCurrent = (JAVA_CONCURRENTMAP.NNodePair<K, V>) JAVA_CONCURRENTMAP.this.initialMap.root;
-								while (preCurrent.next != this.current) {
+								while (preCurrent.next != this.nextNodeIterator) {
 									preCurrent = (JAVA_CONCURRENTMAP.NNodePair<K, V>) preCurrent.next;
 								}
 							}
@@ -841,14 +841,14 @@ implements ConcurrentMap<K, V>, Serializable {
 							JAVA_CONCURRENTMAP.this.initialMap.refineOnFreshEntryAndBranch();
 
 							//adjusts this.current
-							this.current = (preCurrent == null ? JAVA_CONCURRENTMAP.this.initialMap.root : preCurrent.next);
+							this.nextNodeIterator = (preCurrent == null ? JAVA_CONCURRENTMAP.this.initialMap.root : preCurrent.next);
 
 							//if this.current is still at the end of JAVA_CONCURRENTMAP.this.initialMap.root.(next)*, 
 							//we are on the branch where we exhausted the initial map, therefore continues 
 							//with the entries in JAVA_CONCURRENTMAP.this.root.(next)*
-							if (this.current instanceof JAVA_CONCURRENTMAP.NNodeEmpty) {
+							if (this.nextNodeIterator instanceof JAVA_CONCURRENTMAP.NNodeEmpty) {
 								this.scanningInitialMap = false;
-								this.current = JAVA_CONCURRENTMAP.this.root;
+								this.nextNodeIterator = JAVA_CONCURRENTMAP.this.root;
 							}
 						}
 					}
@@ -856,7 +856,7 @@ implements ConcurrentMap<K, V>, Serializable {
 
 				@Override
 				public boolean hasNext() {
-					return (this.current instanceof JAVA_CONCURRENTMAP.NNodePair);
+					return (this.nextNodeIterator instanceof JAVA_CONCURRENTMAP.NNodePair);
 				}
 
 				@SuppressWarnings("unchecked")
@@ -867,7 +867,7 @@ implements ConcurrentMap<K, V>, Serializable {
 					}
 					
 					//builds the return value
-					final JAVA_CONCURRENTMAP.NNodePair<K, V> currentPair = (JAVA_CONCURRENTMAP.NNodePair<K, V>) this.current;					
+					final JAVA_CONCURRENTMAP.NNodePair<K, V> currentPair = (JAVA_CONCURRENTMAP.NNodePair<K, V>) this.nextNodeIterator;					
 					final Entry<K, V> retVal = new Map.Entry<K, V>() {
 						@Override
 						public K getKey() {
@@ -909,8 +909,8 @@ implements ConcurrentMap<K, V>, Serializable {
 					};
 
 					//move this.current forward
-					this.current = currentPair.next;
-					findCurrent();
+					this.nextNodeIterator = currentPair.next;
+					findNextNode();
 
 					return retVal;
 				}
@@ -921,7 +921,7 @@ implements ConcurrentMap<K, V>, Serializable {
 					if (!hasNext()) {
 						throw new IllegalStateException();
 					}
-					final JAVA_CONCURRENTMAP.NNodePair<K, V> currentBeforeRemovalPair = (JAVA_CONCURRENTMAP.NNodePair<K, V>) this.current;
+					final JAVA_CONCURRENTMAP.NNodePair<K, V> currentBeforeRemovalPair = (JAVA_CONCURRENTMAP.NNodePair<K, V>) this.nextNodeIterator;
 					final K key = currentBeforeRemovalPair.key;
 					JAVA_CONCURRENTMAP.this.remove(key);
 					if (!this.scanningInitialMap) {
@@ -934,7 +934,7 @@ implements ConcurrentMap<K, V>, Serializable {
 						}
 
 						//otherwise, skips the iterator by one
-						this.current = currentBeforeRemovalPair.next;
+						this.nextNodeIterator = currentBeforeRemovalPair.next;
 					}
 				}
 			};

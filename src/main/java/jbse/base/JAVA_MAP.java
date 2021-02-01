@@ -793,26 +793,26 @@ implements Map<K, V>, Cloneable, Serializable {
 			 */
 			return new Iterator<Map.Entry<K,V>>() {
 				private boolean scanningInitialMap = (JAVA_MAP.this.initialMap == null ? false : true);
-				private NNode current = (JAVA_MAP.this.initialMap == null ? JAVA_MAP.this.root : JAVA_MAP.this.initialMap.root);
+				private NNode nextNodeIterator = (JAVA_MAP.this.initialMap == null ? JAVA_MAP.this.root : JAVA_MAP.this.initialMap.root);
 				
 				{
-					findCurrent();
+					findNextNode();
 				}
 				
 				@SuppressWarnings("unchecked")
-				private void findCurrent() {
+				private void findNextNode() {
 					//if the iterator is scanning JAVA_MAP.this.initialMap, it skips all 
 					//the entries that are overridden by the ones in JAVA_MAP.this.root.(next)*
 					if (this.scanningInitialMap) {
 						skipOverriddenEntries:
-						while (this.current instanceof JAVA_MAP.NNodePair) {
-							final JAVA_MAP.NNodePair<K, V> npCurrent = (JAVA_MAP.NNodePair<K, V>) this.current;
+						while (this.nextNodeIterator instanceof JAVA_MAP.NNodePair) {
+							final JAVA_MAP.NNodePair<K, V> npCurrent = (JAVA_MAP.NNodePair<K, V>) this.nextNodeIterator;
 							final K keyCurrent = npCurrent.key;
 							if (keyCurrent == null) {
 								for (JAVA_MAP.NNode n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NNodePair; n = ((JAVA_MAP.NNodePair<K, V>) n).next) {
 									final JAVA_MAP.NNodePair<K, V> np = (JAVA_MAP.NNodePair<K, V>) n;
 									if (np.key == null) {
-										this.current = npCurrent.next;
+										this.nextNodeIterator = npCurrent.next;
 										continue skipOverriddenEntries;
 									}
 								}
@@ -820,7 +820,7 @@ implements Map<K, V>, Cloneable, Serializable {
 								for (JAVA_MAP.NNode n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NNodePair; n = ((JAVA_MAP.NNodePair<K, V>) n).next) {
 									final JAVA_MAP.NNodePair<K, V> np = (JAVA_MAP.NNodePair<K, V>) n;
 									if (keyCurrent.equals(np.key)) {
-										this.current = npCurrent.next;
+										this.nextNodeIterator = npCurrent.next;
 										continue skipOverriddenEntries;
 									}
 								}
@@ -830,14 +830,14 @@ implements Map<K, V>, Cloneable, Serializable {
 						
 						//if the iterator is at the end of JAVA_MAP.this.initialMap.root.(next)*,
 						//branches to assume another entry in it
-						if (this.current instanceof JAVA_MAP.NNodeEmpty) {
+						if (this.nextNodeIterator instanceof JAVA_MAP.NNodeEmpty) {
 							//determines the predecessor to this.current
 							JAVA_MAP.NNodePair<K, V> preCurrent;
-							if (this.current == JAVA_MAP.this.initialMap.root) {
+							if (this.nextNodeIterator == JAVA_MAP.this.initialMap.root) {
 								preCurrent = null; //no predecessor
 							} else {
 								preCurrent = (JAVA_MAP.NNodePair<K, V>) JAVA_MAP.this.initialMap.root;
-								while (preCurrent.next != this.current) {
+								while (preCurrent.next != this.nextNodeIterator) {
 									preCurrent = (JAVA_MAP.NNodePair<K, V>) preCurrent.next;
 								}
 							}
@@ -846,14 +846,14 @@ implements Map<K, V>, Cloneable, Serializable {
 							JAVA_MAP.this.initialMap.refineOnFreshEntryAndBranch();
 
 							//adjusts this.current
-							this.current = (preCurrent == null ? JAVA_MAP.this.initialMap.root : preCurrent.next);
+							this.nextNodeIterator = (preCurrent == null ? JAVA_MAP.this.initialMap.root : preCurrent.next);
 
 							//if this.current is still at the end of JAVA_MAP.this.initialMap.root.(next)*, 
 							//we are on the branch where we exhausted the initial map, therefore continues 
 							//with the entries in JAVA_MAP.this.root.(next)*
-							if (this.current instanceof JAVA_MAP.NNodeEmpty) {
+							if (this.nextNodeIterator instanceof JAVA_MAP.NNodeEmpty) {
 								this.scanningInitialMap = false;
-								this.current = JAVA_MAP.this.root;
+								this.nextNodeIterator = JAVA_MAP.this.root;
 							}
 						}
 					}
@@ -861,7 +861,7 @@ implements Map<K, V>, Cloneable, Serializable {
 
 				@Override
 				public boolean hasNext() {
-					return (this.current instanceof JAVA_MAP.NNodePair);
+					return (this.nextNodeIterator instanceof JAVA_MAP.NNodePair);
 				}
 
 				@SuppressWarnings("unchecked")
@@ -872,7 +872,7 @@ implements Map<K, V>, Cloneable, Serializable {
 					}
 
 					//builds the return value
-					final JAVA_MAP.NNodePair<K, V> currentPair = (JAVA_MAP.NNodePair<K, V>) this.current;
+					final JAVA_MAP.NNodePair<K, V> currentPair = (JAVA_MAP.NNodePair<K, V>) this.nextNodeIterator;
 					final Map.Entry<K, V> retVal = new Map.Entry<K, V>() {
 						@Override
 						public K getKey() {
@@ -914,8 +914,8 @@ implements Map<K, V>, Cloneable, Serializable {
 					};
 					
 					//move this.current forward
-					this.current = currentPair.next;
-					findCurrent();
+					this.nextNodeIterator = currentPair.next;
+					findNextNode();
 
 					return retVal;
 				}
@@ -926,7 +926,7 @@ implements Map<K, V>, Cloneable, Serializable {
 					if (!hasNext()) {
 						throw new IllegalStateException();
 					}
-					final JAVA_MAP.NNodePair<K, V> currentBeforeRemovalPair = (JAVA_MAP.NNodePair<K, V>) this.current;
+					final JAVA_MAP.NNodePair<K, V> currentBeforeRemovalPair = (JAVA_MAP.NNodePair<K, V>) this.nextNodeIterator;
 					final K key = currentBeforeRemovalPair.key;
 					JAVA_MAP.this.remove(key);
 					if (!this.scanningInitialMap) {
@@ -939,7 +939,7 @@ implements Map<K, V>, Cloneable, Serializable {
 						}
 
 						//otherwise, skips the iterator by one
-						this.current = currentBeforeRemovalPair.next;
+						this.nextNodeIterator = currentBeforeRemovalPair.next;
 					}
 				}
 			};
