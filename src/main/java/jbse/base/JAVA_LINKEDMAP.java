@@ -1034,7 +1034,7 @@ implements Map<K, V> {
 				private void findNextNode() {
 					//if the iterator is at JAVA_LINKEDMAP.this.initialMap.tail, 
 					//branches to assume another entry in the initial map
-					if (this.nextNodeIterator == JAVA_LINKEDMAP.this.initialMap.tail) {
+					if (JAVA_LINKEDMAP.this.initialMap != null && this.nextNodeIterator == JAVA_LINKEDMAP.this.initialMap.tail) {
 						//refines
 						JAVA_LINKEDMAP.this.initialMap.refineOnFreshEntryAndBranch();
 					}
@@ -1055,21 +1055,22 @@ implements Map<K, V> {
 					}
 
 					//builds the return value
+					final JAVA_LINKEDMAP.NNodePair<K, V> currentPair = this.nextNodeIterator;
 					final Map.Entry<K, V> retVal = new Map.Entry<K, V>() {
 						@Override
 						public K getKey() {
-							return nextNodeIterator.key;
+							return currentPair.key;
 						}
 
 						@Override
 						public V getValue() {
-							return nextNodeIterator.value;
+							return currentPair.value;
 						}
 
 						@Override
 						public Object setValue(Object value) {
-							final Object retVal = nextNodeIterator.value;
-							nextNodeIterator.value = (V) value;
+							final Object retVal = currentPair.value;
+							currentPair.value = (V) value;
 							return retVal;
 						}
 
@@ -1085,13 +1086,13 @@ implements Map<K, V> {
 								return false;
 							}
 							final Map.Entry<?, ?> e = (Map.Entry<?, ?>) obj;
-							return (nextNodeIterator.key == null ? e.getKey() == null : nextNodeIterator.key.equals(e.getKey())) &&
-									(nextNodeIterator.value == null ? e.getValue() == null : nextNodeIterator.value.equals(e.getValue()));
+							return (currentPair.key == null ? e.getKey() == null : currentPair.key.equals(e.getKey())) &&
+									(currentPair.value == null ? e.getValue() == null : currentPair.value.equals(e.getValue()));
 						}
 
 						@Override
 						public int hashCode() {
-							return nextNodeIterator.pairHashCode();
+							return currentPair.pairHashCode();
 						}
 					};
 					
@@ -1106,19 +1107,19 @@ implements Map<K, V> {
 					if (!hasNext()) {
 						throw new IllegalStateException();
 					}
-					final JAVA_LINKEDMAP.NNodePair<K, V> currentBeforeRemovalPair = this.nextNodeIterator;
-					final K key = currentBeforeRemovalPair.key;
+					final JAVA_LINKEDMAP.NNodePair<K, V> nextNodeIteratorBeforeRemoval = this.nextNodeIterator;
+					final K key = nextNodeIteratorBeforeRemoval.key;
 					JAVA_LINKEDMAP.this.remove(key);
 					//check if currentBeforeRemovalPair is still there
 					for (JAVA_LINKEDMAP.NNodePair<K, V>  n = JAVA_LINKEDMAP.this.head; n != null; n = n.after) {
-						if (n == currentBeforeRemovalPair) {
+						if (n == nextNodeIteratorBeforeRemoval) {
 							//still present
 							return;
 						}
 					}
 
 					//otherwise, skips the iterator by one
-					this.nextNodeIterator = currentBeforeRemovalPair.after;
+					this.nextNodeIterator = nextNodeIteratorBeforeRemoval.after;
 				}
 			};
 		}

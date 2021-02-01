@@ -926,20 +926,20 @@ implements Map<K, V>, Cloneable, Serializable {
 					if (!hasNext()) {
 						throw new IllegalStateException();
 					}
-					final JAVA_MAP.NNodePair<K, V> currentBeforeRemovalPair = (JAVA_MAP.NNodePair<K, V>) this.nextNodeIterator;
-					final K key = currentBeforeRemovalPair.key;
+					final JAVA_MAP.NNodePair<K, V> nextNodeIteratorBeforeRemoval = (JAVA_MAP.NNodePair<K, V>) this.nextNodeIterator;
+					final K key = nextNodeIteratorBeforeRemoval.key;
 					JAVA_MAP.this.remove(key);
 					if (!this.scanningInitialMap) {
 						//check if currentBeforeRemovalPair is still there
 						for (JAVA_MAP.NNode n = JAVA_MAP.this.root; n instanceof JAVA_MAP.NNodePair; n = ((JAVA_MAP.NNodePair<K, V>) n).next) {
-							if (n == currentBeforeRemovalPair) {
+							if (n == nextNodeIteratorBeforeRemoval) {
 								//still present
 								return;
 							}
 						}
 
 						//otherwise, skips the iterator by one
-						this.nextNodeIterator = currentBeforeRemovalPair.next;
+						this.nextNodeIterator = nextNodeIteratorBeforeRemoval.next;
 					}
 				}
 			};

@@ -921,20 +921,20 @@ implements ConcurrentMap<K, V>, Serializable {
 					if (!hasNext()) {
 						throw new IllegalStateException();
 					}
-					final JAVA_CONCURRENTMAP.NNodePair<K, V> currentBeforeRemovalPair = (JAVA_CONCURRENTMAP.NNodePair<K, V>) this.nextNodeIterator;
-					final K key = currentBeforeRemovalPair.key;
+					final JAVA_CONCURRENTMAP.NNodePair<K, V> nextNodeIteratorBeforeRemoval = (JAVA_CONCURRENTMAP.NNodePair<K, V>) this.nextNodeIterator;
+					final K key = nextNodeIteratorBeforeRemoval.key;
 					JAVA_CONCURRENTMAP.this.remove(key);
 					if (!this.scanningInitialMap) {
 						//check if currentBeforeRemovalPair is still there
 						for (JAVA_CONCURRENTMAP.NNode n = JAVA_CONCURRENTMAP.this.root; n instanceof JAVA_CONCURRENTMAP.NNodePair; n = ((JAVA_CONCURRENTMAP.NNodePair<K, V>) n).next) {
-							if (n == currentBeforeRemovalPair) {
+							if (n == nextNodeIteratorBeforeRemoval) {
 								//still present
 								return;
 							}
 						}
 
 						//otherwise, skips the iterator by one
-						this.nextNodeIterator = currentBeforeRemovalPair.next;
+						this.nextNodeIterator = nextNodeIteratorBeforeRemoval.next;
 					}
 				}
 			};
