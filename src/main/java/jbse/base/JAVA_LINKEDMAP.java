@@ -7,6 +7,7 @@ import static jbse.meta.Analysis.isSymbolic;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -21,7 +22,7 @@ import java.util.Set;
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  */
-public class JAVA_LINKEDMAP<K, V>  extends JAVA_MAP<K, V>
+public class JAVA_LINKEDMAP<K, V> extends HashMap<K, V>
 implements Map<K, V> {
 
 	private static final long serialVersionUID = 3801124242820219131L; //same as LinkedHashMap
@@ -277,7 +278,7 @@ implements Map<K, V> {
 		return false;
 	}
 	
-	private void afterNodeAccess(NNodePair<K, V> e) {
+	private void _afterNodeAccess(NNodePair<K, V> e) {
 		final JAVA_LINKEDMAP<K, V> tthis = (this.isInitial ? this.currentMap : this);
 		JAVA_LINKEDMAP.NNodePair<K, V> last = tthis.tail;
 		if (tthis.accessOrder && e != last) {
@@ -319,7 +320,7 @@ implements Map<K, V> {
 		//if not absent, checks in the nodes
 		final JAVA_LINKEDMAP.NNodePair<K, V> np = (JAVA_LINKEDMAP.NNodePair<K, V>) findNodeKey(this.root, key);
 		if (np != null) {
-			afterNodeAccess(np);
+			_afterNodeAccess(np);
 			return np.value;
 		}
 
@@ -351,7 +352,7 @@ implements Map<K, V> {
 		//if not absent, checks in the nodes
 		final JAVA_LINKEDMAP.NNodePair<K, V> np = (NNodePair<K, V>) findNodeKey(this.root, key);
 		if (np != null) {
-			afterNodeAccess(np);
+			_afterNodeAccess(np);
 			return np.value;
 		}
 
@@ -390,11 +391,11 @@ implements Map<K, V> {
 			p.next = np.next;
 			np.next = p;
 		}
-		linkNodeLast(p);
+		_linkNodeLast(p);
 		++this.numNodes;
 	}
 	
-	private void linkNodeLast(JAVA_LINKEDMAP.NNodePair<K, V> p) {
+	private void _linkNodeLast(JAVA_LINKEDMAP.NNodePair<K, V> p) {
 		if (this.isInitial) {
 			final JAVA_LINKEDMAP.NNodePair<K, V> last = this.tail;
 			this.tail = p;
@@ -448,12 +449,12 @@ implements Map<K, V> {
 			p.next = np.next;
 			np.next = p;
 		}
-		transferLinks(pOverridden, p);
+		_transferLinks(pOverridden, p);
 		pOverridden.before = pOverridden.after = null;
 		++this.numNodes;
 	}
 	
-	private void transferLinks(JAVA_LINKEDMAP.NNodePair<K, V> src, JAVA_LINKEDMAP.NNodePair<K, V> dst) {
+	private void _transferLinks(JAVA_LINKEDMAP.NNodePair<K, V> src, JAVA_LINKEDMAP.NNodePair<K, V> dst) {
 		final JAVA_LINKEDMAP.NNodePair<K, V> b = dst.before = src.before;
 		final JAVA_LINKEDMAP.NNodePair<K, V> a = dst.after = src.after;
         if (b == null) {
@@ -468,9 +469,25 @@ implements Map<K, V> {
         }
 	}
 	
-	private void afterNodeInsertion(boolean evict) {
+	private void _afterNodeInsertion(boolean evict) {
 		final JAVA_LINKEDMAP.NNodePair<K, V> first = this.head;
-		final Entry<K, V> e = new Entry<K, V>(0, first.key, first.value, null);
+		final Entry<K, V> e = new Map.Entry<K, V>() {
+
+			@Override
+			public K getKey() {
+				return first.key;
+			}
+
+			@Override
+			public V getValue() {
+				return first.value;
+			}
+
+			@Override
+			public V setValue(V value) {
+				throw new UnsupportedOperationException();
+			}
+		};
 		if (evict && first != null && removeEldestEntry(e)) {
 			final K key = first.key;
 			doRemove(key);
@@ -507,7 +524,7 @@ implements Map<K, V> {
 				this.absentKeys.remove(key);
 				addNode(key, value);
 				++this.size;
-				afterNodeInsertion(evict);
+				_afterNodeInsertion(evict);
 				return null;
 			} else {
 				//the map is symbolic, so there are two cases: either a 
@@ -521,7 +538,7 @@ implements Map<K, V> {
 					this.absentKeys.remove(key);
 					addNode(key, value);
 					++this.size;
-					afterNodeInsertion(evict);
+					_afterNodeInsertion(evict);
 					return null;
 				}
 
@@ -543,7 +560,7 @@ implements Map<K, V> {
 			//matching NodePair found: just update it and 
 			//return its previous value (note that here 
 			//this.absentKeys does not contain key)
-			afterNodeAccess(matchingPair);
+			_afterNodeAccess(matchingPair);
 			final V retVal = matchingPair.value;
 			matchingPair.value = value;
 			return retVal;
@@ -557,7 +574,7 @@ implements Map<K, V> {
 		return (np == null ? null : np.value);
 	}
 	
-	private void afterNodeRemoval(JAVA_LINKEDMAP.NNodePair<K, V> e) {
+	private void _afterNodeRemoval(JAVA_LINKEDMAP.NNodePair<K, V> e) {
 		final JAVA_LINKEDMAP.NNodePair<K, V> b = e.before, a = e.after;
 		e.before = e.after = null;
 		if (b == null) {
@@ -628,7 +645,7 @@ implements Map<K, V> {
 				if (npInitial != null) {
 					this.absentKeys.add((K) key);						
 					--this.size;
-					afterNodeRemoval(npInitial);
+					_afterNodeRemoval(npInitial);
 					return npInitial;
 				}
 
@@ -647,7 +664,7 @@ implements Map<K, V> {
 			}
 			--this.numNodes;
 			--this.size;
-			afterNodeRemoval(matchingPair);
+			_afterNodeRemoval(matchingPair);
 			return matchingPair;
 		}
 	}
@@ -1361,12 +1378,12 @@ implements Map<K, V> {
 		tthis.initialMap.absentKeys = new ArrayList<>();
 		tthis.initialMap.absentValues = new ArrayList<>();
 		tthis.initialMap.initialMap = null;
-		tthis.currentMap = tthis;
+		tthis.initialMap.currentMap = tthis;
 		//this.initialMap.size: OK the symbolic value it already has
 		assume(tthis.initialMap.size >= 0);
 		tthis.initialMap.root = new NNodeEmpty();
-		tthis.head = null;
-		tthis.tail = null;
+		tthis.initialMap.head = null;
+		tthis.initialMap.tail = null;
 		tthis.initialMap.numNodes = 0;
 	}
 
@@ -1534,12 +1551,4 @@ implements Map<K, V> {
 		}
 		assume(this.size == this.numNodes);
 	}
-	
-	//Necessary
-    static class Entry<K,V> extends JAVA_MAP.Node<K,V> {
-        Entry<K,V> before, after;
-        Entry(int hash, K key, V value, JAVA_MAP.Node<K,V> next) {
-            super(hash, key, value, next);
-        }
-    }
 }

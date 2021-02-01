@@ -1,5 +1,17 @@
 package jbse.rules;
 
+import static jbse.bc.Signatures.JAVA_CONCURRENTHASHMAP;
+import static jbse.bc.Signatures.JAVA_HASHMAP;
+import static jbse.bc.Signatures.JAVA_LINKEDHASHMAP;
+import static jbse.bc.Signatures.JAVA_MAP;
+import static jbse.bc.Signatures.JAVA_OBJECT;
+import static jbse.bc.Signatures.JBSE_JAVA_CONCURRENTMAP_INITSYMBOLIC;
+import static jbse.bc.Signatures.JBSE_JAVA_CONCURRENTMAP_ONKEYRESOLUTION;
+import static jbse.bc.Signatures.JBSE_JAVA_LINKEDMAP_INITSYMBOLIC;
+import static jbse.bc.Signatures.JBSE_JAVA_LINKEDMAP_ONKEYRESOLUTION;
+import static jbse.bc.Signatures.JBSE_JAVA_MAP_INITSYMBOLIC;
+import static jbse.bc.Signatures.JBSE_JAVA_MAP_ONKEYRESOLUTION;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,6 +32,35 @@ public final class TriggerRulesRepo implements Cloneable {
 	private HashMap<String, Set<TriggerRuleExpandsTo>> rulesExpandsTo = new HashMap<>();
 	private HashMap<String, Set<TriggerRuleAliases>> rulesAliases = new HashMap<>();
 	private HashMap<String, Set<TriggerRuleNull>> rulesNull = new HashMap<>();
+	
+	public TriggerRulesRepo() {
+		//adds some default rules
+    	//java.util.HashMap (model)
+		final String JBSE_JAVA_MAP_NOT_INITIALMAP = "(?!{°}*" + JAVA_HASHMAP + ":initialMap{EOL}){°}*";
+		final String JBSE_JAVA_MAP_KEY = "(?!{°}*" + JAVA_HASHMAP + ":initialMap::GET){°}*" + JAVA_HASHMAP + ":initialMap::KEY{°}*";
+    	addExpandTo(JAVA_HASHMAP, JBSE_JAVA_MAP_NOT_INITIALMAP, JAVA_HASHMAP, JBSE_JAVA_MAP_INITSYMBOLIC, "{$REF}");
+    	addExpandTo(JAVA_MAP, JBSE_JAVA_MAP_NOT_INITIALMAP, JAVA_HASHMAP, JBSE_JAVA_MAP_INITSYMBOLIC, "{$REF}");        	
+    	addExpandTo(JAVA_OBJECT, JBSE_JAVA_MAP_KEY, null, JBSE_JAVA_MAP_ONKEYRESOLUTION, "{$REF}");
+    	addResolveAliasInstanceof(JAVA_OBJECT, JBSE_JAVA_MAP_KEY, null, JBSE_JAVA_MAP_ONKEYRESOLUTION, "{$REF}");
+    	addResolveNull(JAVA_OBJECT, JBSE_JAVA_MAP_KEY, JBSE_JAVA_MAP_ONKEYRESOLUTION, "{$REF}");
+    	//java.util.concurrent.ConcurrentHashMap (model)
+		final String JBSE_JAVA_CONCURRENTMAP_NOT_INITIALMAP = "(?!{°}*" + JAVA_CONCURRENTHASHMAP + ":initialMap{EOL}){°}*";
+		final String JBSE_JAVA_CONCURRENTMAP_KEY = "(?!{°}*" + JAVA_CONCURRENTHASHMAP + ":initialMap::GET){°}*" + JAVA_CONCURRENTHASHMAP + ":initialMap::KEY{°}*";
+    	addExpandTo(JAVA_CONCURRENTHASHMAP, JBSE_JAVA_CONCURRENTMAP_NOT_INITIALMAP, JAVA_CONCURRENTHASHMAP, JBSE_JAVA_CONCURRENTMAP_INITSYMBOLIC, "{$REF}");
+    	addExpandTo(JAVA_MAP, JBSE_JAVA_CONCURRENTMAP_NOT_INITIALMAP, JAVA_CONCURRENTHASHMAP, JBSE_JAVA_CONCURRENTMAP_INITSYMBOLIC, "{$REF}");
+    	addExpandTo(JAVA_OBJECT, JBSE_JAVA_CONCURRENTMAP_KEY, null, JBSE_JAVA_CONCURRENTMAP_ONKEYRESOLUTION, "{$REF}");
+    	addResolveAliasInstanceof(JAVA_OBJECT, JBSE_JAVA_CONCURRENTMAP_KEY, null, JBSE_JAVA_CONCURRENTMAP_ONKEYRESOLUTION, "{$REF}");
+    	addResolveNull(JAVA_OBJECT, JBSE_JAVA_CONCURRENTMAP_KEY, JBSE_JAVA_CONCURRENTMAP_ONKEYRESOLUTION, "{$REF}");
+    	//java.util.LinkedHashMap (model)
+		final String JBSE_JAVA_LINKEDMAP_NOT_INITIALMAP = "(?!{°}*" + JAVA_LINKEDHASHMAP + ":initialMap{EOL}){°}*";
+		final String JBSE_JAVA_LINKEDMAP_KEY = "(?!{°}*" + JAVA_LINKEDHASHMAP + ":initialMap::GET){°}*" + JAVA_LINKEDHASHMAP + ":initialMap::KEY{°}*";
+    	addExpandTo(JAVA_LINKEDHASHMAP, JBSE_JAVA_LINKEDMAP_NOT_INITIALMAP, JAVA_LINKEDHASHMAP, JBSE_JAVA_LINKEDMAP_INITSYMBOLIC, "{$REF}");
+    	addExpandTo(JAVA_HASHMAP, JBSE_JAVA_LINKEDMAP_NOT_INITIALMAP, JAVA_LINKEDHASHMAP, JBSE_JAVA_LINKEDMAP_INITSYMBOLIC, "{$REF}");
+    	addExpandTo(JAVA_MAP, JBSE_JAVA_LINKEDMAP_NOT_INITIALMAP, JAVA_LINKEDHASHMAP, JBSE_JAVA_LINKEDMAP_INITSYMBOLIC, "{$REF}");        	
+    	addExpandTo(JAVA_OBJECT, JBSE_JAVA_LINKEDMAP_KEY, null, JBSE_JAVA_LINKEDMAP_ONKEYRESOLUTION, "{$REF}");
+    	addResolveAliasInstanceof(JAVA_OBJECT, JBSE_JAVA_LINKEDMAP_KEY, null, JBSE_JAVA_LINKEDMAP_ONKEYRESOLUTION, "{$REF}");
+    	addResolveNull(JAVA_OBJECT, JBSE_JAVA_LINKEDMAP_KEY, JBSE_JAVA_LINKEDMAP_ONKEYRESOLUTION, "{$REF}");
+	}
 
     /**
      * Specifies a possible expansion for symbolic references. Typically, a 
