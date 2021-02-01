@@ -500,13 +500,16 @@ implements Map<K, V> {
 
 	@Override
 	public V put(K key, V value) {
+		notifyMethodExecution();
+		if (this.isInitial) {
+			//initial maps are immutable
+			metaThrowUnexpectedInternalException("Tried to put a value in an initial map.");
+		}
 		return putVal(key, value, true);
 	}
 	
 	@SuppressWarnings("unchecked")
-	private V putVal(K key, V value, boolean evict) {
-		notifyMethodExecution();
-		
+	private V putVal(K key, V value, boolean evict) {				
 		if (this.isInitial) {
 			//initial maps are immutable
 			metaThrowUnexpectedInternalException("Tried to put a value in an initial map.");
@@ -570,6 +573,10 @@ implements Map<K, V> {
 	@Override
 	public V remove(Object key) {
 		notifyMethodExecution();
+		if (this.isInitial) {
+			//initial maps are immutable
+			metaThrowUnexpectedInternalException("Tried to remove a value from an initial map.");
+		}
 		final JAVA_LINKEDMAP.NNodePair<K, V> np = doRemove(key);
 		return (np == null ? null : np.value);
 	}
@@ -595,7 +602,7 @@ implements Map<K, V> {
 			//initial maps are immutable
 			metaThrowUnexpectedInternalException("Tried to remove a value from an initial map.");
 		}
-
+		
 		//if it is already absent, returns null
 		if (this.absentKeys.contains(key)) {
 			return null;
