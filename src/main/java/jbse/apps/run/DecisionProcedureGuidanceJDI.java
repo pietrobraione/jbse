@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.function.Supplier;
 
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.ArrayReference;
