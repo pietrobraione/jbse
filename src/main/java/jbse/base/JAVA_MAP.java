@@ -1122,6 +1122,12 @@ implements Map<K, V>, Cloneable, Serializable {
 
 	//TODO here we accept all the default implementations. Should we define lazier ones?
 	
+	@Override
+	public boolean remove(Object key, Object value) {
+		notifyMethodExecution();
+		return super.remove(key, value);
+	}
+	
 	// Clone
 	
 	@SuppressWarnings("unchecked")

@@ -50,7 +50,7 @@ public final class Algo_JBSE_JAVA_XMAP_NOTIFYMETHODEXECUTION extends Algo_INVOKE
             }
             if (this.ctx.decisionProcedure instanceof DecisionProcedureGuidanceJDI) {
                 final DecisionProcedureGuidanceJDI dpJDI = (DecisionProcedureGuidanceJDI) this.ctx.decisionProcedure;
-                dpJDI.notifyExecutionOfHashMapModelMethod(sig, state);
+                dpJDI.notifyExecutionOfMapModelMethod(sig, state);
             }
         } catch (ThreadStackEmptyException | InvalidSlotException | ClassCastException e) {
             //this should never happen

@@ -879,7 +879,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 	            failExecution(e);
 			}
             callCtxString += SymbolicApplyJVMJDI.callContextSeparator + symbolicApplyOperator;
-			return callCtxString;
+            return callCtxString;
 		}
 
 		public Value getRetValue() {
@@ -1024,11 +1024,17 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		}
 	}
 
-	public void notifyExecutionOfHashMapModelMethod(Signature currentMethodSignature, State state) {
-		final String methodWithContext = SymbolicApplyJVMJDI.formatContextualSymbolicApplyOperatorOccurrence(currentMethodSignature.toString(), state);
+	public void notifyExecutionOfMapModelMethod(Signature currentMethodSignature, State state) {
+		String methodWithContext = SymbolicApplyJVMJDI.formatContextualSymbolicApplyOperatorOccurrence("", state);
 		if (methodWithContext != null) {
+			methodWithContext = methodWithContext.substring(0, methodWithContext.lastIndexOf(SymbolicApplyJVMJDI.callContextSeparator));
 			((JVMJDI) this.jvm).storeNewSymbolicApplyOperatorContextualOccurrence(currentMethodSignature.toString(), methodWithContext);
 			((JVMJDI) this.jvm).currentHashMapModelMethod = currentMethodSignature.toString();
+			//consistency check
+			String lastInCtx = methodWithContext.substring(methodWithContext.lastIndexOf(SymbolicApplyJVMJDI.callContextSeparator) + SymbolicApplyJVMJDI.callContextSeparator.length());
+			if (!currentMethodSignature.toString().equals(lastInCtx)) {
+				throw new UnexpectedInternalException("We expect that the currently executing method is the last in the context string, but CURRENT=" + currentMethodSignature + " while LAST=" + lastInCtx + " and CONTEXT=" + methodWithContext);
+			}
 		}
 	}
 }
