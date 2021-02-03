@@ -14,6 +14,9 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * Model class for class {@link java.util.HashMap}. 
@@ -442,6 +445,8 @@ implements Map<K, V>, Cloneable, Serializable {
 
 	@Override
 	public void putAll(Map<? extends K, ? extends V> m) {
+		notifyMethodExecution();
+
 		if (this.isInitial) {
 			//initial maps are immutable
 			metaThrowUnexpectedInternalException("Tried to put values in an initial map.");
@@ -1123,9 +1128,69 @@ implements Map<K, V>, Cloneable, Serializable {
 	//TODO here we accept all the default implementations. Should we define lazier ones?
 	
 	@Override
+	public V getOrDefault(Object key, V defaultValue) {
+		notifyMethodExecution();
+		return super.getOrDefault(key, defaultValue);
+	}
+
+	@Override
+	public void forEach(BiConsumer<? super K, ? super V> action) {
+		notifyMethodExecution();
+		super.forEach(action);
+	}
+	
+	@Override
+	public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+		notifyMethodExecution();
+		super.replaceAll(function);
+	}
+	
+	@Override
+	public V putIfAbsent(K key, V value) {
+		notifyMethodExecution();
+		return super.putIfAbsent(key, value);
+	}
+	
+	@Override
 	public boolean remove(Object key, Object value) {
 		notifyMethodExecution();
 		return super.remove(key, value);
+	}
+	
+	@Override
+	public boolean replace(K key, V oldValue, V newValue) {
+		notifyMethodExecution();
+		return super.replace(key, oldValue, newValue);
+	}
+	
+	@Override
+	public V replace(K key, V value) {
+		notifyMethodExecution();
+		return super.replace(key, value);
+	}
+	
+	@Override
+	public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+		notifyMethodExecution();
+		return super.computeIfAbsent(key, mappingFunction);
+	}
+	
+	@Override
+	public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+		notifyMethodExecution();
+		return super.computeIfPresent(key, remappingFunction);
+	}
+	
+	@Override
+	public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+		notifyMethodExecution();
+		return super.compute(key, remappingFunction);
+	}
+	
+	@Override
+	public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+		notifyMethodExecution();
+		return super.merge(key, value, remappingFunction);
 	}
 	
 	// Clone
