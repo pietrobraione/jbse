@@ -653,7 +653,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 				return symbolicApplyVm;
 			}
 			final String op = symbolicApply.getOperator();
-            SymbolicApplyJVMJDI.storeNewSymbolicApplyOperatorOccurrence(this.symbolicApplyOperatorOccurrences, op, this.currentStateSupplier.currentStateSupplier.get());
+			String opWithContext = SymbolicApplyJVMJDI.formatContextualSymbolicApplyOperatorOccurrence(op, this.currentStateSupplier.currentStateSupplier.get());
+            storeNewSymbolicApplyOperatorContextualOccurrence(op, opWithContext);
 			final List<String> hitCallCtxs = this.symbolicApplyOperatorOccurrences.get(op);
 
 			final SymbolicApplyJVMJDI symbolicApplyVm = new SymbolicApplyJVMJDI(this.calc, this.runnerParameters, this.stopSignature, this.stopSignatureNumberOfHits, op, hitCallCtxs);
@@ -665,6 +666,14 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			}
 
 			return symbolicApplyVm;
+		}
+		
+		private void storeNewSymbolicApplyOperatorContextualOccurrence(String symbolicApplyOperator, String symbolicApplyOperatorCallWithContext) {
+			if (!symbolicApplyOperatorOccurrences.containsKey(symbolicApplyOperator)) {
+				symbolicApplyOperatorOccurrences.put(symbolicApplyOperator, new ArrayList<>());
+			}
+			List<String> occurrences = symbolicApplyOperatorOccurrences.get(symbolicApplyOperator);
+			occurrences.add(symbolicApplyOperatorCallWithContext);
 		}
 		
 		private com.sun.jdi.Value getJDIValueLocalVariable(String var) 
@@ -840,7 +849,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			postInitial = true;
 			this.symbolicApplyOperator = symbolicApplyOperator;
 			if (hitCallCtxs == null || hitCallCtxs.isEmpty()) {
-				throw new UnexpectedInternalException("This should never happen: the considered symbolic apply operator (a method call) must occurr at list once");
+				throw new UnexpectedInternalException("This should never happen: the considered symbolic apply operator (" + symbolicApplyOperator + ") must occurr at least once");
 			}
 			this.hitCallCtxs = hitCallCtxs;
 			
@@ -854,16 +863,14 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			}
 		}
 		
-		public static void storeNewSymbolicApplyOperatorOccurrence(Map<String, List<String>> symbolicApplyOperatorOccurrences, String symbolicApplyOperator, State state) {
+		public static String formatContextualSymbolicApplyOperatorOccurrence(String symbolicApplyOperator, State state) {
             String callCtxString = "";
             try {
             	List<Frame> stack = state.getStack();
 				for (int i = 0; i < stack.size(); ++i) {
 					final Signature sig = stack.get(i).getMethodSignature();
-					if (JAVA_MAP_Utils.classImplementsJavaUtilMap(sig.getClassName())) {
-						if (i != stack.size() - 1) {
-							return; // do not store calls nested within hash map models
-						}
+					if (i != stack.size() - 1 && JAVA_MAP_Utils.classImplementsJavaUtilMap(sig.getClassName())) {
+						return null; // refuse calls nested within hash map models
 					} else {
 						callCtxString += (i > 0 ? SymbolicApplyJVMJDI.callContextSeparator : "") + sig;						
 					}
@@ -873,11 +880,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 	            failExecution(e);
 			}
             callCtxString += SymbolicApplyJVMJDI.callContextSeparator + symbolicApplyOperator;
-			if (!symbolicApplyOperatorOccurrences.containsKey(symbolicApplyOperator)) {
-				symbolicApplyOperatorOccurrences.put(symbolicApplyOperator, new ArrayList<>());
-			}
-			List<String> occurrences = symbolicApplyOperatorOccurrences.get(symbolicApplyOperator);
-			occurrences.add(callCtxString);
+			return callCtxString;
 		}
 
 		public Value getRetValue() {
@@ -1023,8 +1026,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 	}
 
 	public void notifyExecutionOfHashMapModelMethod(Signature currentMethodSignature, State state) {
-		SymbolicApplyJVMJDI.storeNewSymbolicApplyOperatorOccurrence(((JVMJDI) this.jvm).symbolicApplyOperatorOccurrences, currentMethodSignature.toString(), state);
-		((JVMJDI) this.jvm).currentHashMapModelMethod = currentMethodSignature.toString();
+		final String methodWithContext = SymbolicApplyJVMJDI.formatContextualSymbolicApplyOperatorOccurrence(currentMethodSignature.toString(), state);
+		if (methodWithContext != null) {
+			((JVMJDI) this.jvm).storeNewSymbolicApplyOperatorContextualOccurrence(currentMethodSignature.toString(), methodWithContext);
+			((JVMJDI) this.jvm).currentHashMapModelMethod = currentMethodSignature.toString();
+		}
 	}
 }
 
