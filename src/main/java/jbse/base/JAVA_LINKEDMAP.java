@@ -339,7 +339,6 @@ implements Map<K, V> {
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public V get(Object key) {
 		notifyMethodExecution();
@@ -353,7 +352,6 @@ implements Map<K, V> {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public V getOrDefault(Object key, V defaultValue) {
 		notifyMethodExecution();
