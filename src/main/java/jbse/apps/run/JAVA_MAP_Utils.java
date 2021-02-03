@@ -39,9 +39,6 @@ public final class JAVA_MAP_Utils {
 	public static boolean classImplementsJavaUtilMap(String className) {
 		try {
 			Class<?> clazz = Class.forName(binaryClassName(className));
-			if (clazz.getName().equals("java.util.Map")) {
-				return true;
-			}	
 			for (Class<?> interf: clazz.getInterfaces()) {
 				if (interf.getName().equals("java.util.Map")) {
 					return true;
