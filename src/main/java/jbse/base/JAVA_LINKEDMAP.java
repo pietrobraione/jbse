@@ -7,12 +7,16 @@ import static jbse.meta.Analysis.isSymbolic;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * Model class for class {@link java.util.LinkedHashMap}. 
@@ -306,12 +310,9 @@ implements Map<K, V> {
 			}
 		}
 	}
-
+	
 	@SuppressWarnings("unchecked")
-	@Override
-	public V get(Object key) {
-		notifyMethodExecution();
-
+	private JAVA_LINKEDMAP.NNodePair<K, V> getNode(Object key) {
 		//checks if the key is in the list of absent keys
 		if (this.absentKeys.contains((K) key)) {
 			return null;
@@ -320,55 +321,48 @@ implements Map<K, V> {
 		//if not absent, checks in the nodes
 		final JAVA_LINKEDMAP.NNodePair<K, V> np = (JAVA_LINKEDMAP.NNodePair<K, V>) findNodeKey(this.root, key);
 		if (np != null) {
-			_afterNodeAccess(np);
-			return np.value;
+			return np;
 		}
 
 		//if not in the nodes there are three cases: 
 		//1- the map is initial: branches and rechecks
 		if (this.isInitial) {
 			refineOnKeyAndBranch((K) key);
-			return get(key); //after refinement it will be either in this.absentKeys or in this.root.(next)*
+			return getNode(key); //after refinement it will be either in this.absentKeys or in this.root.(next)*
 		}
 		//2- the map is not initial and is backed by an initial
 		//   map (it is symbolic): search in the initial map
 		if (this.initialMap != null) {
-			return this.initialMap.get(key);
+			return this.initialMap.getNode(key);
 		}
 		//3- otherwise (concrete map) it is not in the map
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public V getOrDefault(Object key, V defaultValue) {
-		notifyMethodExecution(); //TODO is it necessary?
-
-		//checks if the key is in the list of absent keys
-		if (this.absentKeys.contains((K) key)) {
-			return defaultValue;
-		}
-
-		//if not absent, checks in the nodes
-		final JAVA_LINKEDMAP.NNodePair<K, V> np = (NNodePair<K, V>) findNodeKey(this.root, key);
-		if (np != null) {
+	public V get(Object key) {
+		notifyMethodExecution();
+		
+		final JAVA_LINKEDMAP.NNodePair<K, V> np = getNode(key);
+		if (np == null) {
+			return null;
+		} else {
 			_afterNodeAccess(np);
 			return np.value;
 		}
+	}
 
-		//if not in the nodes there are three cases: 
-		//1- the map is initial: branches and rechecks
-		if (this.isInitial) {
-			refineOnKeyAndBranch((K) key);
-			return get(key); //after refinement it will be either in this.absentKeys or in this.root.(next)*
+	@Override
+	public V getOrDefault(Object key, V defaultValue) {
+		notifyMethodExecution();
+		
+		final JAVA_LINKEDMAP.NNodePair<K, V> np = getNode(key);
+		if (np == null) {
+			return defaultValue;
+		} else {
+			_afterNodeAccess(np);
+			return np.value;
 		}
-		//2- the map is not initial and is backed by an initial
-		//   map (it is symbolic): search in the initial map
-		if (this.initialMap != null) {
-			return this.initialMap.get(key);
-		}
-		//3- otherwise (concrete map) it is not in the map
-		return defaultValue;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -501,11 +495,27 @@ implements Map<K, V> {
 	@Override
 	public V put(K key, V value) {
 		notifyMethodExecution();
+		
 		if (this.isInitial) {
 			//initial maps are immutable
 			metaThrowUnexpectedInternalException("Tried to put a value in an initial map.");
 		}
 		return putVal(key, value, true);
+	}
+	
+	@Override
+	public V putIfAbsent(K key, V value) {
+		notifyMethodExecution();
+		
+		if (this.isInitial) {
+			//initial maps are immutable
+			metaThrowUnexpectedInternalException("Tried to put a value in an initial map.");
+		}
+		V v = get(key);
+		if (v == null) {
+			v = putVal(key, value, true);
+		}
+		return v;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -563,9 +573,9 @@ implements Map<K, V> {
 			//matching NodePair found: just update it and 
 			//return its previous value (note that here 
 			//this.absentKeys does not contain key)
-			_afterNodeAccess(matchingPair);
 			final V retVal = matchingPair.value;
 			matchingPair.value = value;
+			_afterNodeAccess(matchingPair);
 			return retVal;
 		}
 	}
@@ -573,12 +583,30 @@ implements Map<K, V> {
 	@Override
 	public V remove(Object key) {
 		notifyMethodExecution();
+		
 		if (this.isInitial) {
 			//initial maps are immutable
 			metaThrowUnexpectedInternalException("Tried to remove a value from an initial map.");
 		}
 		final JAVA_LINKEDMAP.NNodePair<K, V> np = doRemove(key);
 		return (np == null ? null : np.value);
+	}
+	
+	@Override
+	public boolean remove(Object key, Object value) {
+		notifyMethodExecution();
+		
+		if (this.isInitial) {
+			//initial maps are immutable
+			metaThrowUnexpectedInternalException("Tried to remove a value from an initial map.");
+		}
+        final Object curValue = get(key);
+        if (!Objects.equals(curValue, value) ||
+            (curValue == null && !containsKey(key))) {
+            return false;
+        }
+        doRemove(key);
+        return true;
 	}
 	
 	private void _afterNodeRemoval(JAVA_LINKEDMAP.NNodePair<K, V> e) {
@@ -1306,8 +1334,196 @@ implements Map<K, V> {
 
 	// Defaultable methods
 
-	//TODO here we accept all the default implementations. Should we define lazier ones?
+	//TODO here we take all the default implementations from java.util.Map. Should we define lazier ones?
+		
+	@Override
+	public void forEach(BiConsumer<? super K, ? super V> action) {
+		notifyMethodExecution();
+		
+        Objects.requireNonNull(action);
+        for (Map.Entry<K, V> entry : entrySet()) {
+            K k;
+            V v;
+            try {
+                k = entry.getKey();
+                v = entry.getValue();
+            } catch(IllegalStateException ise) {
+                // this usually means the entry is no longer in the map.
+                throw new ConcurrentModificationException(ise);
+            }
+            action.accept(k, v);
+        }
+	}
 	
+	@Override
+	public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+		notifyMethodExecution();
+		
+		if (this.isInitial) {
+			//initial maps are immutable
+			metaThrowUnexpectedInternalException("Tried to invoke replaceAll on an initial map.");
+		}
+        Objects.requireNonNull(function);
+        for (Map.Entry<K, V> entry : entrySet()) {
+            K k;
+            V v;
+            try {
+                k = entry.getKey();
+                v = entry.getValue();
+            } catch(IllegalStateException ise) {
+                // this usually means the entry is no longer in the map.
+                throw new ConcurrentModificationException(ise);
+            }
+
+            // ise thrown from function is not a cme.
+            v = function.apply(k, v);
+
+            try {
+                entry.setValue(v);
+            } catch(IllegalStateException ise) {
+                // this usually means the entry is no longer in the map.
+                throw new ConcurrentModificationException(ise);
+            }
+        }
+	}
+	
+	@Override
+	public boolean replace(K key, V oldValue, V newValue) {
+		notifyMethodExecution();
+		
+		if (this.isInitial) {
+			//initial maps are immutable
+			metaThrowUnexpectedInternalException("Tried to replace a value in an initial map.");
+		}
+        final JAVA_LINKEDMAP.NNodePair<K, V> curNode = getNode(key);
+        final V curValue = (curNode == null ? null : curNode.value);
+        if (!Objects.equals(curValue, oldValue) ||
+            (curValue == null && !containsKey(key))) {
+            return false;
+        }
+        put(key, newValue);
+        return true;
+	}
+	
+	@Override
+	public V replace(K key, V value) {
+		notifyMethodExecution();
+		
+		if (this.isInitial) {
+			//initial maps are immutable
+			metaThrowUnexpectedInternalException("Tried to replace a value in an initial map.");
+		}
+        final JAVA_LINKEDMAP.NNodePair<K, V> curNode = getNode(key);
+        V curValue = (curNode == null ? null : curNode.value);
+        if (curValue != null || containsKey(key)) {
+            curValue = put(key, value);
+        }
+        return curValue;
+	}
+	
+	@Override
+	public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+		notifyMethodExecution();
+
+		if (this.isInitial) {
+			//initial maps are immutable
+			metaThrowUnexpectedInternalException("Tried to invoke computeIfAbsent on an initial map.");
+		}
+		Objects.requireNonNull(mappingFunction);
+		final JAVA_LINKEDMAP.NNodePair<K, V> oldNode = getNode(key);
+        if (oldNode == null || oldNode.value == null) {
+            final V newValue = mappingFunction.apply(key);
+            if (newValue != null) {
+            	put(key, newValue);
+            }
+        	return newValue;
+        } else {
+        	_afterNodeAccess(oldNode);
+        	return oldNode.value;
+        }
+	}
+	
+	@Override
+	public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+		notifyMethodExecution();
+
+		if (this.isInitial) {
+			//initial maps are immutable
+			metaThrowUnexpectedInternalException("Tried to invoke computeIfPresent on an initial map.");
+		}
+		Objects.requireNonNull(remappingFunction);
+		final JAVA_LINKEDMAP.NNodePair<K, V> oldNode = getNode(key);
+        if (oldNode != null && oldNode.value != null) {
+            final V newValue = remappingFunction.apply(key, oldNode.value);
+            if (newValue == null) {
+            	doRemove(key);
+            } else {
+            	put(key, newValue);
+            }
+        	return newValue;
+        } else {
+        	_afterNodeAccess(oldNode);
+        	return oldNode.value;
+        }
+	}
+	
+	@Override
+	public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+		notifyMethodExecution();
+
+		if (this.isInitial) {
+			//initial maps are immutable
+			metaThrowUnexpectedInternalException("Tried to invoke compute on an initial map.");
+		}
+		Objects.requireNonNull(remappingFunction);
+		final JAVA_LINKEDMAP.NNodePair<K, V> oldNode = getNode(key);
+        if (oldNode == null || oldNode.value == null) {
+            final V newValue = remappingFunction.apply(key, null);
+            if (newValue != null) {
+            	put(key, newValue);
+            }
+        	return newValue;
+        } else {
+            final V newValue = remappingFunction.apply(key, oldNode.value);
+            if (newValue == null) {
+            	doRemove(key);
+            } else {
+            	put(key, newValue);
+            }
+        	return newValue;
+        }
+	}
+	
+	@Override
+	public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+		notifyMethodExecution();
+		
+		if (this.isInitial) {
+			//initial maps are immutable
+			metaThrowUnexpectedInternalException("Tried to put a value in an initial map.");
+		}
+		Objects.requireNonNull(remappingFunction);
+		final JAVA_LINKEDMAP.NNodePair<K, V> oldNode = getNode(key);
+        if (oldNode != null) {
+            final V v;
+            if (oldNode.value == null) {
+                v = value;
+            } else {
+                v = remappingFunction.apply(oldNode.value, value);
+            }
+            if (v == null) {
+            	doRemove(key);
+            } else {
+                put(key, v);
+            }
+            return v;
+        }
+        if (value != null) {
+        	put(key, value);
+        }
+        return value;
+	}
+
 	// Clone
 	
 	@SuppressWarnings("unchecked")
@@ -1332,7 +1548,6 @@ implements Map<K, V> {
         }
         return result;
 	}
-        
 
 	// Private methods
 
