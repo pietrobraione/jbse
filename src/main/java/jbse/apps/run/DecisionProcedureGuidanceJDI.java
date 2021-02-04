@@ -897,8 +897,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 					throw new UnexpectedInternalException(e);
 				}
 			}
-			boolean atBreakpoint = super.handleBreakpointEvents(event, numberOfHits);
-			if (postInitial) {
+			final int hitCounterBefore = this.hitCounter;
+			final boolean atBreakpoint = super.handleBreakpointEvents(event, numberOfHits);
+			if (postInitial && this.hitCounter > hitCounterBefore) {
 				// We skip (do not count) breakpoints that do not correspond to call contexts in our list of hits
 				if (this.hitCallCtxs.size() < this.hitCounter) {
 					throw new UnexpectedInternalException("This should never happen: the target number of hits cannot be larger than the size of the list of the hits' call contexts");
