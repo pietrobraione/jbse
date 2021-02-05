@@ -373,7 +373,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 					if (stopPointFound) {
 						return; //must not try to disable event requests
 					} else {
-						throw new GuidanceException("while looking for " + sig + "::" + offset + " : " + e);
+						throw new GuidanceException("while looking for " + sig + "::" + offset + ", number of hits: " + stopSignatureNumberOfHits + " : " + e);
 					}
 				}
 			}
@@ -888,7 +888,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
 		@Override
 		protected boolean handleBreakpointEvents(Event event, int numberOfHits) throws GuidanceException {
-			if (event.request().equals(this.targetMethodExitedBreakpoint)) {
+			if (this.postInitial && this.targetMethodExitedBreakpoint.equals(event.request())) {
 				try { //Did we exited from target method? Should not happen 
 					if (numFramesFromRootFrameConcrete() < 0) {
 						throw new UnexpectedInternalException("Exited from target method, while looking for method " + symbolicApplyOperator + " - " + hitCallCtxs);
@@ -899,7 +899,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			}
 			final int hitCounterBefore = this.hitCounter;
 			final boolean atBreakpoint = super.handleBreakpointEvents(event, numberOfHits);
-			if (postInitial && this.hitCounter > hitCounterBefore) {
+			if (this.postInitial && this.hitCounter > hitCounterBefore) {
 				// We skip (do not count) breakpoints that do not correspond to call contexts in our list of hits
 				if (this.hitCallCtxs.size() < this.hitCounter) {
 					throw new UnexpectedInternalException("This should never happen: the target number of hits cannot be larger than the size of the list of the hits' call contexts");
