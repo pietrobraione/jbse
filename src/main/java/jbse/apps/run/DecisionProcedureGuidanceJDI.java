@@ -381,6 +381,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			cprr.disable();
 			if (this.breakpoint != null) {
 				this.breakpoint.disable();
+				this.breakpoint = null;
 			}
 		}
 
