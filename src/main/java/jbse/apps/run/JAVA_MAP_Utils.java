@@ -1,8 +1,12 @@
 package jbse.apps.run;
 
-import static jbse.common.Type.binaryClassName;
+import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
+import static jbse.bc.Signatures.JAVA_MAP;
 import static jbse.bc.Signatures.JAVA_MAP_CONTAINSKEY;
 import static jbse.bc.Signatures.JAVA_MAP_GET;
+
+import jbse.bc.ClassFile;
+import jbse.bc.ClassHierarchy;
 
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Clause;
@@ -23,38 +27,39 @@ public final class JAVA_MAP_Utils {
 	public final static String INITIAL_MAP_FIELD_NAME = "initialMap";
 	public final static String GET_SIGIL = "::GET(";
 
-	public static boolean isInitialMapField(Value value) {
+	public static boolean isInitialMapField(ClassHierarchy hier, Value value) {
 		if (!(value instanceof SymbolicMemberField)) {
 			return false;
 		}
 		final SymbolicMemberField originMemberField = (SymbolicMemberField) value;
+		final ClassFile originMemberClass = hier.getClassFileClassArray(CLASSLOADER_APP, originMemberField.getFieldClass());
+		if (originMemberClass == null) {
+			return false; //maps that are not loaded with the app classloader are not symbolic ones
+		}
 		if (originMemberField.getFieldName().equals(INITIAL_MAP_FIELD_NAME) 
-			&& classImplementsJavaUtilMap(originMemberField.getFieldClass())) {
+			&& classImplementsJavaUtilMap(originMemberClass)) {
 			return true;
 		} else {
 			return false;
 		}
 	}
 
-	public static boolean classImplementsJavaUtilMap(String className) {
-		try {
-			Class<?> clazz = Class.forName(binaryClassName(className));
-			for (Class<?> interf: clazz.getInterfaces()) {
-				if (interf.getName().equals("java.util.Map")) {
-					return true;
-				}	
-			}
-		} catch (ClassNotFoundException e) { }
+	public static boolean classImplementsJavaUtilMap(ClassFile clazz) {
+		for (ClassFile interf: clazz.superinterfaces()) {
+			if (JAVA_MAP.equals(interf.getClassName())) {
+				return true;
+			}	
+		}
 		return false;
 	}
 
-	public static boolean isSymbolicApplyOnInitialMap(Value value) {
+	public static boolean isSymbolicApplyOnInitialMap(ClassHierarchy hier, Value value) {
 		if (!(value instanceof SymbolicApply)) {
 			return false;
 		}
 		final SymbolicApply symbolicApply = (SymbolicApply) value;
 		final Value[] args = symbolicApply.getArgs();
-		if (args.length > 0 && isInitialMapField(args[0])) {
+		if (args.length > 0 && isInitialMapField(hier, args[0])) {
 			if (!symbolicApply.getOperator().equals(JAVA_MAP_CONTAINSKEY.toString())) {
 				throw new UnexpectedInternalException("Path condition refers to unexpected symbolicApply on a symbolic map: " + symbolicApply.getOperator());
 			}
@@ -65,10 +70,10 @@ public final class JAVA_MAP_Utils {
 	}
 
 	//solo tardis
-	public static boolean assumptionViolated(Clause clause) {
+	public static boolean assumptionViolated(ClassHierarchy hier, Clause clause) {
 		if (clause instanceof ClauseAssumeReferenceSymbolic) {
 			final ReferenceSymbolic ref = ((ClauseAssumeReferenceSymbolic) clause).getReference(); 
-			if (isInitialMapField(ref) && (clause instanceof ClauseAssumeAliases || clause instanceof ClauseAssumeNull)) {
+			if (isInitialMapField(hier, ref) && (clause instanceof ClauseAssumeAliases || clause instanceof ClauseAssumeNull)) {
 				return true;
 			} 
 		} else if (clause instanceof ClauseAssume) {
@@ -76,7 +81,7 @@ public final class JAVA_MAP_Utils {
 			final Primitive firstOp = cond.getFirstOperand();
 			if (cond.getOperator().equals(Operator.LT) && firstOp instanceof PrimitiveSymbolicMemberField) {
 				final PrimitiveSymbolicMemberField field = (PrimitiveSymbolicMemberField) firstOp;
-				if (isInitialMapField(field.getContainer()) && "size".equals(field.getFieldName())) {
+				if (isInitialMapField(hier, field.getContainer()) && "size".equals(field.getFieldName())) {
 					return true;
 				}
 			}

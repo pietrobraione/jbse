@@ -1327,14 +1327,11 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     }
 
     /**
-     * Produces all the superinterfaces of a given class.
+     * Produces all the superinterfaces of this class.
      * 
-     * @param startClass the {@link ClassFile} of the class whose superinterfaces 
-     *        are returned.
      * @return an {@link Iterable}{@code <}{@link ClassFile}{@code >} containing 
      *         all the superinterfaces of {@code startClassName} (included if
-     *         it is an interface). If {@code startClass == null} an empty 
-     *         {@link Iterable} is returned. A same superinterface is not iterated
+     *         it is an interface). A same superinterface is not iterated
      *         more than once even if the class inherits it more than once. 
      */
     public Iterable<ClassFile> superinterfaces() {

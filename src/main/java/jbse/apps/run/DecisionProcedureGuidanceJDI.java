@@ -1,6 +1,9 @@
 package jbse.apps.run;
 
 import static jbse.algo.Util.failExecution;
+import static jbse.apps.run.JAVA_MAP_Utils.classImplementsJavaUtilMap;
+import static jbse.apps.run.JAVA_MAP_Utils.isInitialMapField;
+import static jbse.apps.run.JAVA_MAP_Utils.isSymbolicApplyOnInitialMap;
 import static jbse.bc.Signatures.JAVA_MAP_CONTAINSKEY;
 import static jbse.common.Type.BOOLEAN;
 import static jbse.common.Type.REFERENCE;
@@ -72,6 +75,7 @@ import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.MethodExitRequest;
 
 import jbse.algo.ExecutionContext;
+import jbse.bc.ClassFile;
 import jbse.bc.Offsets;
 import jbse.bc.Signature;
 import jbse.common.exc.InvalidInputException;
@@ -498,14 +502,14 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
 		@Override
 		public boolean isNull(ReferenceSymbolic origin) throws GuidanceException {
-			final ObjectReference object = (ObjectReference) this.getValue(origin);
+			final ObjectReference object = (ObjectReference) getValue(origin);
 			return (object == null);
 		}
 
 		@Override
 		public boolean areAlias(ReferenceSymbolic first, ReferenceSymbolic second) throws GuidanceException {
-			final ObjectReference objectFirst = (ObjectReference) this.getValue(first);
-			final ObjectReference objectSecond = (ObjectReference) this.getValue(second);
+			final ObjectReference objectFirst = (ObjectReference) getValue(first);
+			final ObjectReference objectSecond = (ObjectReference) getValue(second);
 			return ((objectFirst == null && objectSecond == null) || 
 					(objectFirst != null && objectSecond != null && objectFirst.equals(objectSecond)));
 		}
@@ -639,7 +643,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			 * However, this can become expensive if there are many invocations of ReferenceSymbolicApply 
 			 * uninterpreted functions. 			  
 			 */
-			if (JAVA_MAP_Utils.isSymbolicApplyOnInitialMap((jbse.val.Value) symbolicApply)) {
+			if (isSymbolicApplyOnInitialMap(this.currentStateSupplier.currentStateSupplier.get().getClassHierarchy(), (jbse.val.Value) symbolicApply)) {
 				final String op = this.currentHashMapModelMethod; //the operator is containsKey, but we need to move into the jbse.base.JAVA_MAP method where containskey is being evaluated to obtain the proper value of the key
 				final List<String> hitCallCtxs = this.symbolicApplyOperatorOccurrences.get(op);
 				final SymbolicMemberField initialMap = (SymbolicMemberField) symbolicApply.getArgs()[0];
@@ -703,7 +707,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
 		private com.sun.jdi.Value getJDIValueField(SymbolicMemberField origin, Object o) 
 		throws GuidanceException {
-			if (JAVA_MAP_Utils.isInitialMapField((jbse.val.Value) origin)) {
+			if (isInitialMapField(this.currentStateSupplier.currentStateSupplier.get().getClassHierarchy(), (jbse.val.Value) origin)) {
 				return cloneInitialMap(getCurrentThread(), o);
 			}
 			final String fieldName = origin.getFieldName();
@@ -868,12 +872,13 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             try {
             	List<Frame> stack = state.getStack();
 				for (int i = 0; i < stack.size(); ++i) {
-					final Signature sig = stack.get(i).getMethodSignature();
-					if (i != stack.size() - 1 && JAVA_MAP_Utils.classImplementsJavaUtilMap(sig.getClassName())) {
+					final ClassFile methodClass = stack.get(i).getMethodClass();
+					if (i != stack.size() - 1 && classImplementsJavaUtilMap(methodClass)) {
 						return null; // refuse calls nested within hash map models
 					} else {
-						callCtxString += (i > 0 ? SymbolicApplyJVMJDI.callContextSeparator : "") + sig;						
+						callCtxString += (i > 0 ? SymbolicApplyJVMJDI.callContextSeparator : "") + stack.get(i).getMethodSignature();						
 					}
+
 				}
 			} catch (FrozenStateException e) {
 	            //this should never happen
