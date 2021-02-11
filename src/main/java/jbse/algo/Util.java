@@ -1954,12 +1954,12 @@ public final class Util {
 	            if (this.classesForPhase3.contains(classFile)) {
 	                this.classesForPhase3.remove(classFile);
 	                this.classesForPhase3.add(classFile);
-	                return;
+	                continue;
 	            }
 	            
 	            //if classFile is in the skip set, skip it 
 	            if (this.skip.contains(classFile.getClassName())) {
-	            	return;
+	            	continue;
 	            }
 	            
 	            //if there is a Klass object for classFile in the state, 
@@ -1967,7 +1967,7 @@ public final class Util {
 	            //initialization in progress or already initialized),
 	            //skip it
 	            if (this.s.existsKlass(classFile) && this.s.getKlass(classFile).initializationStarted()) {
-	            	return;
+	            	continue;
 	            }
 	
 	            //saves classFile in the list of the newly
