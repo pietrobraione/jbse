@@ -1,5 +1,7 @@
 package jbse.val;
 
+import static jbse.val.Util.asCharacterLiteral;
+
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.exc.InvalidOperandException;
@@ -69,7 +71,7 @@ public final class Simplex extends Primitive implements Cloneable {
         } else if (type == Type.BYTE) {
         	this.toString = "(byte) " + this.value.toString();
         } else if (type == Type.CHAR) {
-        	this.toString = "'" + asCharacterLiteral(((Character) this.value).charValue()) + "'";
+        	this.toString = asCharacterLiteral(((Character) this.value).charValue());
         } else if (type == Type.DOUBLE) {
         	this.toString = this.value.toString() + "d";
         } else if (type == Type.FLOAT) {
@@ -81,32 +83,6 @@ public final class Simplex extends Primitive implements Cloneable {
         } else { //type == Type.SHORT
             this.toString = "(short) " + this.value.toString();
         }
-    }
-    
-    private static String asCharacterLiteral(char character) {
-    	if (character == '\b') {
-    		return "\\b";
-    	} else if (character == '\t') {
-    		return "\\t";
-    	} else if (character == '\n') {
-    		return "\\n";
-    	} else if (character == '\f') {
-    		return "\\f";
-    	} else if (character == '\r') {
-    		return "\\r";
-    	} else if (character == '\"') {
-    		return "\\\"";
-    	} else if (character == '\'') {
-    		return "\\\'";
-    	} else if (character == '\\') {
-    		return "\\\\";
-    	} else if (character < ' ' || 
-    	(character >= '\u007f' && character <= '\u00a0') ||
-    	character == '\u00ad' || character > '\u00ff') {
-    		return "\\u" + String.format("%04x", (int) character);
-    	} else {
-    		return "" + character;
-    	}
     }
     
     /**
