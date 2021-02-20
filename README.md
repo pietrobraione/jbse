@@ -14,7 +14,7 @@ Right now JBSE can be installed only by building it from source. Formal releases
 
 ## Building JBSE
 
-JBSE is built with Gradle version 6.7.1, that is included in the repository. First, ensure that all the dependencies are present, including Z3 (see section "Dependencies"). Then, clone the JBSE git repository. If you work from the command line, this means running `git clone`. Once cloned the git repository and ensured the dependencies, you need to fix a couple of things that Gradle is not able to fix by itself. Gradle will not build the JBSE project unless the (very small) JUnit test suite under the `src/test` directory passes. All tests should pass with no problem (we do regression testing before every commit), with the exception of the tests in the class `jbse.dec.DecisionProcedureTest` that require that you fix the path to the Z3 executable. Modify line 46 of class `jbse.dec.DecisionProcedureTest` and replace `/opt/local/bin/z3` with your local path to the Z3 executable. Once fixed this path, run the build Gradle task by invoking `gradlew build` from the command line, and JBSE should build without any other fuss.
+JBSE is built with Gradle version 6.7.1, that is included in the repository. First, ensure that all the dependencies are present, including Z3 (see section "Dependencies"). Then, clone the JBSE git repository. If you work from the command line, this means running `git clone`. Next, you may need to patch a test class as explained in the section "Patching the tests". Finally, run the build Gradle task, e.g. by invoking `gradlew build` from the command line.
 
 ### Dependencies
 
@@ -28,7 +28,11 @@ The runtime dependencies that are automatically resolved by Gradle and included 
 * The `tools.jar` library, that is part of every JDK 8 setup (note, *not* of the JRE).
 * [Javassist](http://jboss-javassist.github.io/javassist/), that is used by JBSE for all the bytecode manipulation tasks. JBSE relies on a patched version of Javassist that is included in the `libs` folder.
 
-There is an additional runtime dependency that is not handled by Gradle so you will need to fix it manually. JBSE needs to interact at runtime with an external numeric solver for pruning infeasible program paths. JBSE works well with [Z3](https://github.com/Z3Prover/z3) and [CVC4](https://cvc4.cs.stanford.edu/), but any SMT solver that is compatible with the SMTLIB v2 standard and supports the AUFNIRA logic should work. Both Z3 and CVC4 are distributed as standalone binaries and can be installed almost everywhere. We strongly advise to use Z3 because it is what we routinely use.
+There is an additional runtime dependency that is not handled by Gradle so you will need to fix it manually. JBSE needs to interact at runtime with an external numeric solver for pruning infeasible program paths. JBSE works well with [Z3](https://github.com/Z3Prover/z3) and [CVC4](https://cvc4.cs.stanford.edu/), but any SMT solver that is compatible with the SMTLIB v2 standard and supports the AUFNIRA logic should work. Both Z3 and CVC4 are distributed as standalone binaries and can be installed almost everywhere. We strongly advise to use Z3 because it is what we routinely use, and because the JBSE test suite depends on Z3.
+
+### Patching the tests
+
+Once cloned the git repository and ensured the dependencies, you might need to fix a dependency that Gradle is not able to fix by itself. Gradle will not build the JBSE project unless the (very small) JUnit test suite under the `src/test` directory passes. All tests should pass with no problem (we do regression testing before every commit), with the exception of the tests in the class `jbse.dec.DecisionProcedureTest`, that depends on the presence of a Z3 executable and defines a variable that shall contain the path to it. Modify line 46 of class `jbse.dec.DecisionProcedureTest` and replace `/opt/local/bin/z3` with your local path to the Z3 executable. 
 
 ### Working under Eclipse
 
