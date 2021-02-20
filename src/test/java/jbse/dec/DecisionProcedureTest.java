@@ -36,13 +36,24 @@ import org.junit.Test;
 public class DecisionProcedureTest {
 	private static final String SWITCH_CHAR = System.getProperty("os.name").toLowerCase().contains("windows") ? "/" : "-";
     private static final ArrayList<String> Z3_COMMAND_LINE = new ArrayList<>();
-    
+    private static final ArrayList<String> CVC4_COMMAND_LINE = new ArrayList<>();
+
+    //BEGIN TO PATCH
+    private static final ArrayList<String> COMMAND_LINE = Z3_COMMAND_LINE;
+    private static final String SMT_SOLVER_PATH = "/opt/local/bin/z3"; //"/Users/denaro/Desktop/RTools/Z3/z3-4.3.2.d548c51a984e-x64-osx-10.8.5/bin/z3"
+    //END TO PATCH
+
     static {
-        //Z3_COMMAND_LINE.add("/Users/denaro/Desktop/RTools/Z3/z3-4.3.2.d548c51a984e-x64-osx-10.8.5/bin/z3");
-    	Z3_COMMAND_LINE.add("/opt/local/bin/z3");
+    	Z3_COMMAND_LINE.add(SMT_SOLVER_PATH);
     	Z3_COMMAND_LINE.add(SWITCH_CHAR + "smt2");
     	Z3_COMMAND_LINE.add(SWITCH_CHAR + "in");
     	Z3_COMMAND_LINE.add(SWITCH_CHAR + "t:10");
+    	CVC4_COMMAND_LINE.add(SMT_SOLVER_PATH);
+    	CVC4_COMMAND_LINE.add("--lang=smt2");
+    	CVC4_COMMAND_LINE.add("--output-lang=smt2");
+    	CVC4_COMMAND_LINE.add("--no-interactive");
+    	CVC4_COMMAND_LINE.add("--incremental");
+    	CVC4_COMMAND_LINE.add("--tlimit-per=10000");
     }
     
     CalculatorRewriting calc;
@@ -57,7 +68,7 @@ public class DecisionProcedureTest {
         this.dec = 
         new DecisionProcedureAlgorithms(
           new DecisionProcedureSMTLIB2_AUFNIRA(
-            new DecisionProcedureAlwSat(this.calc), Z3_COMMAND_LINE));
+            new DecisionProcedureAlwSat(this.calc), COMMAND_LINE));
     }
 
     @Test
