@@ -14,6 +14,7 @@ import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.Reference;
+import jbse.val.ReferenceSymbolic;
 import jbse.val.Value;
 
 /**
@@ -79,6 +80,10 @@ public final class Algo_INVOKEMETA_Uninterpreted extends Algo_INVOKEMETA_Nonbran
     private static boolean isSimple(State state, Reference objRef) throws FrozenStateException {
 		if (state.isNull(objRef)) {
 			return true;
+		}
+		if (objRef instanceof ReferenceSymbolic && !state.resolved((ReferenceSymbolic) objRef)) {
+			//this might happen at recursive invocations of this method
+			return false;
 		}
 		final Objekt obj = state.getObject(objRef);
 		if (obj instanceof Array) {
