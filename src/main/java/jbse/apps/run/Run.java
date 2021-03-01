@@ -762,11 +762,11 @@ public final class Run {
         }
 
         // tries to open the dump file
-        if (this.parameters.getOutputFileName() == null) {
+        if (this.parameters.getOutputFilePath() == null) {
             this.err[1] = null;
         } else {
             try {
-                final File f = new File(this.parameters.getOutputFileName());
+                final File f = this.parameters.getOutputFilePath().toFile();
                 this.err[1] = new PrintStream(f);
             } catch (FileNotFoundException | SecurityException e) {
                 err(ERROR_DUMP_FILE_OPEN);
