@@ -1,9 +1,6 @@
-package jbse.dec;
+package jbse.tree;
 
 import jbse.bc.ClassFile;
-import jbse.tree.DecisionAlternative_XLOAD_GETX_Aliases;
-import jbse.tree.DecisionAlternative_XLOAD_GETX_Expands;
-import jbse.tree.DecisionAlternative_XLOAD_GETX_Null;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -13,7 +10,7 @@ import jbse.val.ReferenceSymbolic;
  * @author Pietro Braione
  *
  */
-class DecisionAlternativeReferenceFactory_XLOAD_GETX 
+public final class DecisionAlternativeReferenceFactory_XLOAD_GETX 
 implements DecisionAlternativeReferenceFactory<DecisionAlternative_XLOAD_GETX_Aliases, 
 DecisionAlternative_XLOAD_GETX_Expands, DecisionAlternative_XLOAD_GETX_Null> {
     @Override

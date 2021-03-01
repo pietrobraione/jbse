@@ -1,9 +1,6 @@
-package jbse.dec;
+package jbse.tree;
 
 import jbse.bc.ClassFile;
-import jbse.tree.DecisionAlternative_XALOAD_Aliases;
-import jbse.tree.DecisionAlternative_XALOAD_Expands;
-import jbse.tree.DecisionAlternative_XALOAD_Null;
 import jbse.val.Expression;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -17,7 +14,7 @@ import jbse.val.Term;
  * @author Pietro Braione
  *
  */
-class DecisionAlternativeReferenceFactory_XALOAD 
+public final class DecisionAlternativeReferenceFactory_XALOAD 
 implements DecisionAlternativeReferenceFactory<DecisionAlternative_XALOAD_Aliases, 
 DecisionAlternative_XALOAD_Expands, DecisionAlternative_XALOAD_Null> {
     private final Expression arrayAccessExpression;
