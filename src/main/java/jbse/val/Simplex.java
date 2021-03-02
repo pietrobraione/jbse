@@ -9,6 +9,9 @@ import jbse.val.exc.InvalidTypeException;
 
 /**
  * Class for concrete primitive values.
+ * 
+ * @author Pietro Braione
+ * @author unknown
  */
 public final class Simplex extends Primitive implements Cloneable {	
     /** The primitive value this object represents. */
@@ -35,23 +38,14 @@ public final class Simplex extends Primitive implements Cloneable {
     private Simplex(char type, Object value) 
     throws InvalidOperandException, InvalidTypeException {
         super(type);
-        //checks on parameters
+        //further checks
         if (value == null) {
             throw new InvalidOperandException("Simplex constructor received a null Object value parameter");
         }
-        final boolean isBoolean = (type == Type.BOOLEAN && (value instanceof Boolean));
-        final boolean isByte    = (type == Type.BYTE    && (value instanceof Byte));
-        final boolean isChar    = (type == Type.CHAR    && (value instanceof Character));
-        final boolean isDouble  = (type == Type.DOUBLE  && (value instanceof Double));
-        final boolean isFloat   = (type == Type.FLOAT   && (value instanceof Float));
-        final boolean isInt     = (type == Type.INT     && (value instanceof Integer));
-        final boolean isLong    = (type == Type.LONG    && (value instanceof Long));
-        final boolean isShort   = (type == Type.SHORT   && (value instanceof Short));
-        final boolean isCorrect = isBoolean || isByte || isChar || isDouble || 
-                                  isFloat || isInt || isLong || isShort;
-        if (!isCorrect) {
+        if (!typeAgreesWithValue(type, value)) {
             throw new InvalidTypeException("Simplex constructor char type and Object value parameters disagree");
         }
+        
         this.value = value;
 
         //calculates hashCode
@@ -61,23 +55,58 @@ public final class Simplex extends Primitive implements Cloneable {
         this.hashCode = result;
 
         //calculates toString
-        if (type == Type.BOOLEAN) {
-        	this.toString = this.value.toString();
-        } else if (type == Type.BYTE) {
-        	this.toString = "(byte) " + this.value.toString();
-        } else if (type == Type.CHAR) {
-        	this.toString = asCharacterLiteral(((Character) this.value).charValue());
-        } else if (type == Type.DOUBLE) {
-        	this.toString = this.value.toString() + "d";
-        } else if (type == Type.FLOAT) {
-        	this.toString = this.value.toString() + "f";
-        } else if (type == Type.INT) {
-        	this.toString = this.value.toString();
-        } else if (type == Type.LONG) {
-        	this.toString = this.value.toString() + "L";
-        } else { //type == Type.SHORT
-            this.toString = "(short) " + this.value.toString();
+        this.toString = toString(this.value);
+    }
+    
+    /**
+     * Checks if a type agrees with an associated value.
+     * 
+     * @param type a {@code char}.
+     * @param value an {@link Object}.
+     * @return {@code true} iff {@code value}
+     *         is a boxed primitive type and {@code type} is the
+     *         type of {@code value}.
+     */
+    private static boolean typeAgreesWithValue(char type, Object value) {
+        final boolean isBoolean = (type == Type.BOOLEAN && (value instanceof Boolean));
+        final boolean isByte    = (type == Type.BYTE    && (value instanceof Byte));
+        final boolean isChar    = (type == Type.CHAR    && (value instanceof Character));
+        final boolean isDouble  = (type == Type.DOUBLE  && (value instanceof Double));
+        final boolean isFloat   = (type == Type.FLOAT   && (value instanceof Float));
+        final boolean isInt     = (type == Type.INT     && (value instanceof Integer));
+        final boolean isLong    = (type == Type.LONG    && (value instanceof Long));
+        final boolean isShort   = (type == Type.SHORT   && (value instanceof Short));
+        final boolean retVal = isBoolean || isByte || isChar || isDouble || 
+                               isFloat || isInt || isLong || isShort;
+        return retVal;
+    }
+    
+    /**
+     * Converts to {@link String} a value.
+     * @param value a (boxed) value with primitive type.
+     * @return a {@link String} representation of {@code value},
+     *         in the shape of a Java language literal for it.
+     */
+    private static String toString(Object value) {
+    	final String retVal;
+        if (value instanceof Boolean) {
+        	retVal = value.toString();
+        } else if (value instanceof Byte) {
+        	retVal = "(byte) " + value.toString();
+        } else if (value instanceof Character) {
+        	retVal = asCharacterLiteral(((Character) value).charValue());
+        } else if (value instanceof Double) {
+        	retVal = value.toString() + "d";
+        } else if (value instanceof Float) {
+        	retVal = value.toString() + "f";
+        } else if (value instanceof Integer) {
+        	retVal = value.toString();
+        } else if (value instanceof Long) {
+        	retVal = value.toString() + "L";
+        } else { //value instanceof Short
+        	retVal = "(short) " + value.toString();
         }
+        return retVal;
     }
     
     /**
@@ -255,7 +284,7 @@ public final class Simplex extends Primitive implements Cloneable {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        Simplex other = (Simplex) obj;
+        final Simplex other = (Simplex) obj;
         if (this.value == null) {
             if (other.value != null) {
                 return false;
