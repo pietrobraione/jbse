@@ -578,12 +578,61 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
         return retVal;
     }
 
+    private void applyOperatorBooleanBinary(Simplex firstOperand, Operator operator, Simplex secondOperand)
+    throws NoResultException {
+    	final char firstOperandType = firstOperand.getType();
+    	final Object firstOperandValue = ((Simplex) firstOperand).getActualValue();
+    	final char secondOperandType = secondOperand.getType();
+    	final Object secondOperandValue = ((Simplex) secondOperand).getActualValue();
+
+    	final boolean firstOperandBoolean;
+    	if (firstOperandType == Type.BOOLEAN) {
+    		firstOperandBoolean = ((Boolean) firstOperandValue).booleanValue();
+    	} else if (firstOperandType == Type.BYTE) {
+    		firstOperandBoolean = ((Byte) firstOperandValue).byteValue() != 0;
+    	} else if (firstOperandType == Type.CHAR) {
+    		firstOperandBoolean = ((Character) firstOperandValue).charValue() != 0;
+    	} else if (firstOperandType == Type.INT) {
+    		firstOperandBoolean = ((Integer) firstOperandValue).intValue() != 0;
+    	} else if (firstOperandType == Type.LONG) {
+    		firstOperandBoolean = ((Long) firstOperandValue).longValue() != 0;
+    	} else if (firstOperandType == Type.SHORT) {
+    		firstOperandBoolean = ((Short) firstOperandValue).shortValue() != 0;
+    	} else {
+    		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
+    	}
+    	final boolean secondOperandBoolean;
+    	if (secondOperandType == Type.BOOLEAN) {
+    		secondOperandBoolean = ((Boolean) secondOperandValue).booleanValue();
+    	} else if (secondOperandType == Type.BYTE) {
+    		secondOperandBoolean = ((Byte) secondOperandValue).byteValue() != 0;
+    	} else if (secondOperandType == Type.CHAR) {
+    		secondOperandBoolean = ((Character) secondOperandValue).charValue() != 0;
+    	} else if (secondOperandType == Type.INT) {
+    		secondOperandBoolean = ((Integer) secondOperandValue).intValue() != 0;
+    	} else if (secondOperandType == Type.LONG) {
+    		secondOperandBoolean = ((Long) secondOperandValue).longValue() != 0;
+    	} else if (secondOperandType == Type.SHORT) {
+    		secondOperandBoolean = ((Short) secondOperandValue).shortValue() != 0;
+    	} else {
+    		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
+    	}
+
+    	if (operator == Operator.AND) {
+    		setResult(this.calc.val_(firstOperandBoolean && secondOperandBoolean));
+    	} else if (operator == Operator.OR) {
+    		setResult(this.calc.val_(firstOperandBoolean || secondOperandBoolean));
+    	} else {
+    		throw new UnexpectedInternalException("Found unexpected operator " + operator);
+    	}
+    }
+
     private void applyOperator(Simplex firstOperand, Operator operator, Simplex secondOperand)
     throws NoResultException {
         final char firstOperandType = firstOperand.getType();
         final Object firstOperandValue = ((Simplex) firstOperand).getActualValue();
-        final char secondOperandType = secondOperand.getType();
-        final Object secondOperandValue = ((Simplex) secondOperand).getActualValue();
+        final char secondOperandType = (secondOperand == null ? Type.UNKNOWN : secondOperand.getType());
+        final Object secondOperandValue = (secondOperand == null ? null : ((Simplex) secondOperand).getActualValue());
 
         if (operator == Operator.NOT) {
         	if (firstOperandType == Type.BOOLEAN) {
@@ -721,74 +770,8 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
         	} else {
         		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
         	}
-        } else if(operator == Operator.AND) {
-        	final boolean firstOperandBoolean;
-        	if (firstOperandType == Type.BOOLEAN) {
-        		firstOperandBoolean = ((Boolean) firstOperandValue).booleanValue();
-        	} else if (firstOperandType == Type.BYTE) {
-        		firstOperandBoolean = ((Byte) firstOperandValue).byteValue() != 0;
-        	} else if (firstOperandType == Type.CHAR) {
-        		firstOperandBoolean = ((Character) firstOperandValue).charValue() != 0;
-        	} else if (firstOperandType == Type.INT) {
-        		firstOperandBoolean = ((Integer) firstOperandValue).intValue() != 0;
-        	} else if (firstOperandType == Type.LONG) {
-        		firstOperandBoolean = ((Long) firstOperandValue).longValue() != 0;
-        	} else if (firstOperandType == Type.SHORT) {
-        		firstOperandBoolean = ((Short) firstOperandValue).shortValue() != 0;
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
-        	}
-        	final boolean secondOperandBoolean;
-        	if (firstOperandType == Type.BOOLEAN) {
-        		secondOperandBoolean = ((Boolean) secondOperandValue).booleanValue();
-        	} else if (firstOperandType == Type.BYTE) {
-        		secondOperandBoolean = ((Byte) secondOperandValue).byteValue() != 0;
-        	} else if (firstOperandType == Type.CHAR) {
-        		secondOperandBoolean = ((Character) secondOperandValue).charValue() != 0;
-        	} else if (firstOperandType == Type.INT) {
-        		secondOperandBoolean = ((Integer) secondOperandValue).intValue() != 0;
-        	} else if (firstOperandType == Type.LONG) {
-        		secondOperandBoolean = ((Long) secondOperandValue).longValue() != 0;
-        	} else if (firstOperandType == Type.SHORT) {
-        		secondOperandBoolean = ((Short) secondOperandValue).shortValue() != 0;
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
-        	}
-        	setResult(this.calc.val_(firstOperandBoolean && secondOperandBoolean));
-        } else if (operator == Operator.OR) {
-        	final boolean firstOperandBoolean;
-        	if (firstOperandType == Type.BOOLEAN) {
-        		firstOperandBoolean = ((Boolean) firstOperandValue).booleanValue();
-        	} else if (firstOperandType == Type.BYTE) {
-        		firstOperandBoolean = ((Byte) firstOperandValue).byteValue() != 0;
-        	} else if (firstOperandType == Type.CHAR) {
-        		firstOperandBoolean = ((Character) firstOperandValue).charValue() != 0;
-        	} else if (firstOperandType == Type.INT) {
-        		firstOperandBoolean = ((Integer) firstOperandValue).intValue() != 0;
-        	} else if (firstOperandType == Type.LONG) {
-        		firstOperandBoolean = ((Long) firstOperandValue).longValue() != 0;
-        	} else if (firstOperandType == Type.SHORT) {
-        		firstOperandBoolean = ((Short) firstOperandValue).shortValue() != 0;
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
-        	}
-        	final boolean secondOperandBoolean;
-        	if (firstOperandType == Type.BOOLEAN) {
-        		secondOperandBoolean = ((Boolean) secondOperandValue).booleanValue();
-        	} else if (firstOperandType == Type.BYTE) {
-        		secondOperandBoolean = ((Byte) secondOperandValue).byteValue() != 0;
-        	} else if (firstOperandType == Type.CHAR) {
-        		secondOperandBoolean = ((Character) secondOperandValue).charValue() != 0;
-        	} else if (firstOperandType == Type.INT) {
-        		secondOperandBoolean = ((Integer) secondOperandValue).intValue() != 0;
-        	} else if (firstOperandType == Type.LONG) {
-        		secondOperandBoolean = ((Long) secondOperandValue).longValue() != 0;
-        	} else if (firstOperandType == Type.SHORT) {
-        		secondOperandBoolean = ((Short) secondOperandValue).shortValue() != 0;
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
-        	}
-        	setResult(this.calc.val_(firstOperandBoolean || secondOperandBoolean));
+        } else if (operator == Operator.AND || operator == Operator.OR) {
+        	applyOperatorBooleanBinary(firstOperand, operator, secondOperand);
         } else if (operator == Operator.EQ) {
         	final char operandsTypesLub = Type.lub(firstOperandType, secondOperandType);
         	if (Type.isPrimitiveFloating(operandsTypesLub)) { 
