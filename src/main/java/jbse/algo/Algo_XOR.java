@@ -2,11 +2,7 @@ package jbse.algo;
 
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.throwVerifyError;
-import static jbse.bc.Offsets.MATH_LOGICAL_OP_OFFSET;
 
-import java.util.function.Supplier;
-
-import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.exc.InvalidOperandException;
