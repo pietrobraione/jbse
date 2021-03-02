@@ -36,26 +36,21 @@ public final class Simplex extends Primitive implements Cloneable {
     throws InvalidOperandException, InvalidTypeException {
         super(type);
         //checks on parameters
-        if (value == null || !(
-            value instanceof Boolean || 
-            value instanceof Byte || 
-            value instanceof Character ||
-            value instanceof Double ||
-            value instanceof Float || 
-            value instanceof Integer ||
-            value instanceof Long ||
-            value instanceof Short)) {
-            throw new InvalidOperandException("no operand in simplex construction");
+        if (value == null) {
+            throw new InvalidOperandException("Simplex constructor received a null Object value parameter");
         }
-        if ((type == Type.BOOLEAN && !(value instanceof Boolean)) ||
-            (type == Type.BYTE && !(value instanceof Byte)) ||
-            (type == Type.CHAR && !(value instanceof Character)) ||
-            (type == Type.DOUBLE && !(value instanceof Double)) ||
-            (type == Type.FLOAT && !(value instanceof Float)) ||
-            (type == Type.INT && !(value instanceof Integer)) ||
-            (type == Type.LONG && !(value instanceof Long)) ||
-            (type == Type.SHORT && !(value instanceof Short))) {
-            throw new InvalidTypeException("type does not agree with value in simplex construction");
+        final boolean isBoolean = (type == Type.BOOLEAN && (value instanceof Boolean));
+        final boolean isByte    = (type == Type.BYTE    && (value instanceof Byte));
+        final boolean isChar    = (type == Type.CHAR    && (value instanceof Character));
+        final boolean isDouble  = (type == Type.DOUBLE  && (value instanceof Double));
+        final boolean isFloat   = (type == Type.FLOAT   && (value instanceof Float));
+        final boolean isInt     = (type == Type.INT     && (value instanceof Integer));
+        final boolean isLong    = (type == Type.LONG    && (value instanceof Long));
+        final boolean isShort   = (type == Type.SHORT   && (value instanceof Short));
+        final boolean isCorrect = isBoolean || isByte || isChar || isDouble || 
+                                  isFloat || isInt || isLong || isShort;
+        if (!isCorrect) {
+            throw new InvalidTypeException("Simplex constructor char type and Object value parameters disagree");
         }
         this.value = value;
 
@@ -96,24 +91,28 @@ public final class Simplex extends Primitive implements Cloneable {
      *         {@link Long}, or {@link Short}).
      */
     public static Simplex make(Object n) throws InvalidOperandException {
+    	final Simplex retVal;
         try {
         	if (n instanceof Boolean) {
-        		return new Simplex(Type.BOOLEAN, n);
+        		retVal = new Simplex(Type.BOOLEAN, n);
         	} else if (n instanceof Byte) {
-        		return new Simplex(Type.BYTE, n);
+        		retVal = new Simplex(Type.BYTE, n);
         	} else if (n instanceof Character) {
-        		return new Simplex(Type.CHAR, n);
+        		retVal = new Simplex(Type.CHAR, n);
         	} else if (n instanceof Double) {
-        		return new Simplex(Type.DOUBLE, n);
+        		retVal = new Simplex(Type.DOUBLE, n);
         	} else if (n instanceof Float) {
-        		return new Simplex(Type.FLOAT, n);
+        		retVal = new Simplex(Type.FLOAT, n);
         	} else if (n instanceof Integer) {
-        		return new Simplex(Type.INT, n);
+        		retVal = new Simplex(Type.INT, n);
         	} else if (n instanceof Long) {
-        		return new Simplex(Type.LONG, n);
+        		retVal = new Simplex(Type.LONG, n);
+        	} else if (n instanceof Short) {
+        		retVal = new Simplex(Type.SHORT, n);
         	} else {
-        		return new Simplex(Type.SHORT, n);
+        		throw new InvalidOperandException("Invoked Simplex.make with an Object n parameter with class " + n.getClass().getCanonicalName());
         	}
+        	return retVal;
 		} catch (InvalidTypeException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);

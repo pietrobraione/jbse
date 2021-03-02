@@ -121,14 +121,30 @@ class LocalVariablesArea implements Cloneable {
             return true;
         } else {
             final char slotType = r.descriptor.charAt(0);
+            final boolean slotTypeIsObjectCloneableOrSerializable = 
+            (r.descriptor.equals(REFERENCE_JAVA_OBJECT) ||
+            r.descriptor.equals(REFERENCE_JAVA_CLONEABLE) ||
+            r.descriptor.equals(REFERENCE_JAVA_SERIALIZABLE));
             final char valueType = val.getType();
-            return (slotType == UNKNOWN || valueType == KNOWN || 
-            		slotType == valueType ||
-                   (isPrimitiveIntegral(slotType) && isCat_1(slotType) && valueType == INT) || 
-                   ((slotType == REFERENCE || slotType == ARRAYOF) && (valueType == REFERENCE || valueType == NULLREF)) || //note that references to arrays may have type REFERENCE!!!! 
-                   ((r.descriptor.equals(REFERENCE_JAVA_OBJECT) ||
-                     r.descriptor.equals(REFERENCE_JAVA_CLONEABLE) ||
-                     r.descriptor.equals(REFERENCE_JAVA_SERIALIZABLE)) && valueType == ARRAYOF));
+            final boolean retVal;
+            if (slotType == UNKNOWN || valueType == KNOWN || slotType == valueType) {
+            	//trivial compatibility or identity between slot type and value type
+            	retVal = true;
+            } else if (isPrimitiveIntegral(slotType) && isCat_1(slotType) && valueType == INT) {
+            	//compatibility between integral types
+            	retVal = true;
+            } else if ((slotType == REFERENCE || slotType == ARRAYOF) && (valueType == REFERENCE || valueType == NULLREF)) {
+            	//the slot may receive a reference, and the value is a reference;
+            	//note that references to arrays may have type REFERENCE!!!!
+            	retVal = true;
+            } else if (slotTypeIsObjectCloneableOrSerializable && valueType == ARRAYOF) {
+            	//the slot may receive a java.lang.Object, java.lang.Cloneable, or java.lang.Serializable,
+            	//and the value is an array
+            	retVal = true;
+            } else {
+            	retVal = false;
+            }
+            return retVal;
         }
     }
 
