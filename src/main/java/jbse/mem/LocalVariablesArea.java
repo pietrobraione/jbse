@@ -15,7 +15,6 @@ import static jbse.common.Type.UNKNOWN;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.TreeMap;
 
 import jbse.bc.LocalVariableTable;
@@ -32,7 +31,7 @@ class LocalVariablesArea implements Cloneable {
     private final LocalVariableTable lvt;
 
     /** Values in the memory area, accessible by slot. */
-    private SortedMap<Integer, Value> values = new TreeMap<Integer, Value>();
+    private TreeMap<Integer, Value> values = new TreeMap<>();
 
     /**
      * Constructor.
@@ -65,20 +64,10 @@ class LocalVariablesArea implements Cloneable {
         int j = 0;
         int slot = 0;
         while (slot < this.lvt.getSlots()) {
-            final Value val;
-            if (j < nargs) {
-                val = args[j];
-                ++j;
-            } else {
-                val = DefaultValue.getInstance();
-            }
+            final Value val = (j < nargs) ? args[j] : DefaultValue.getInstance();
             set(slot, 0, val);
-
-            //next slot
-            ++slot;
-            if (!isCat_1(val.getType())) {
-                ++slot;
-            }
+            ++j;
+            slot += isCat_1(val.getType()) ? 1 : 2;
         }
     }
 
@@ -117,35 +106,36 @@ class LocalVariablesArea implements Cloneable {
     private static final String REFERENCE_JAVA_SERIALIZABLE = "" + REFERENCE + JAVA_SERIALIZABLE + TYPEEND;
 
     private boolean slotMayReceive(Row r, Value val) {
+        final boolean retVal;
         if (r == null) {
-            return true;
+        	retVal = true;
         } else {
-            final char slotType = r.descriptor.charAt(0);
-            final boolean slotTypeIsObjectCloneableOrSerializable = 
-            (r.descriptor.equals(REFERENCE_JAVA_OBJECT) ||
-            r.descriptor.equals(REFERENCE_JAVA_CLONEABLE) ||
-            r.descriptor.equals(REFERENCE_JAVA_SERIALIZABLE));
-            final char valueType = val.getType();
-            final boolean retVal;
-            if (slotType == UNKNOWN || valueType == KNOWN || slotType == valueType) {
-            	//trivial compatibility or identity between slot type and value type
-            	retVal = true;
-            } else if (isPrimitiveIntegral(slotType) && isCat_1(slotType) && valueType == INT) {
-            	//compatibility between integral types
-            	retVal = true;
-            } else if ((slotType == REFERENCE || slotType == ARRAYOF) && (valueType == REFERENCE || valueType == NULLREF)) {
-            	//the slot may receive a reference, and the value is a reference;
-            	//note that references to arrays may have type REFERENCE!!!!
-            	retVal = true;
-            } else if (slotTypeIsObjectCloneableOrSerializable && valueType == ARRAYOF) {
-            	//the slot may receive a java.lang.Object, java.lang.Cloneable, or java.lang.Serializable,
-            	//and the value is an array
-            	retVal = true;
-            } else {
-            	retVal = false;
-            }
-            return retVal;
+        	final char slotType = r.descriptor.charAt(0);
+        	final char valueType = val.getType();        	
+        	final boolean slotTypeIsObjectCloneableOrSerializable = 
+        	(r.descriptor.equals(REFERENCE_JAVA_OBJECT) ||
+        	r.descriptor.equals(REFERENCE_JAVA_CLONEABLE) ||
+        	r.descriptor.equals(REFERENCE_JAVA_SERIALIZABLE));
+        	if (slotType == UNKNOWN || valueType == KNOWN || slotType == valueType) {
+        		//trivial compatibility or identity between slot type and value type
+        		retVal = true;
+        	} else if (isPrimitiveIntegral(slotType) && isCat_1(slotType) && valueType == INT) {
+        		//compatibility between integral types
+        		retVal = true;
+        	} else if ((slotType == REFERENCE || slotType == ARRAYOF) && (valueType == REFERENCE || valueType == NULLREF)) {
+        		//the slot may receive a reference, and the value is a reference;
+        		//note that references to arrays may have type REFERENCE!!!!
+        		retVal = true;
+        	} else if (slotTypeIsObjectCloneableOrSerializable && valueType == ARRAYOF) {
+        		//the slot may receive a java.lang.Object, java.lang.Cloneable, or java.lang.Serializable,
+        		//and the value is an array
+        		retVal = true;
+        	} else {
+        		retVal = false;
+        	}
         }
+        
+        return retVal;
     }
 
     /**
@@ -198,14 +188,14 @@ class LocalVariablesArea implements Cloneable {
      * debug information of the class.
      *  
      * @param slot the number of the slot of a local variable.
-     * @param curPC the current program counter.
+     * @param currentProgramCounter the current program counter.
      * @return a {@link String} containing the name of the local
      *         variable at {@code slot} as from the available debug 
      *         information, or {@code null} if no debug information is 
      *         available for the {@code (slot, curPC)} combination.
      */
-    String getLocalVariableDeclaredName(int slot, int curPC) {
-        final LocalVariableTable.Row r = this.lvt.row(slot, curPC);
+    String getLocalVariableDeclaredName(int slot, int currentProgramCounter) {
+        final LocalVariableTable.Row r = this.lvt.row(slot, currentProgramCounter);
         return (r == null ? null : r.name);
     }
 
@@ -213,17 +203,17 @@ class LocalVariablesArea implements Cloneable {
      * Builds a (read-only) local variable.
      * 
      * @param slot the number of the slot.
-     * @param curPC the current program counter.
+     * @param currentProgramCounter the current program counter.
      * @return a {@link Variable} at position.
      * @throws InvalidSlotException if {@code slot}
      * is invalid.
      */
-    Variable buildLocalVariable(int slot, int curPC) throws InvalidSlotException {
+    Variable buildLocalVariable(int slot, int currentProgramCounter) throws InvalidSlotException {
         //gets the value
         final Value val = get(slot);
 
         //finds static information
-        final LocalVariableTable.Row r = this.lvt.row(slot, curPC);
+        final LocalVariableTable.Row r = this.lvt.row(slot, currentProgramCounter);
         final Variable retVal;
         if (r == null) {
             retVal = new Variable("" + UNKNOWN, "__LOCAL[" + slot + "]", val);
@@ -242,7 +232,7 @@ class LocalVariablesArea implements Cloneable {
             throw new InternalError(e);
         }
 
-        final SortedMap<Integer, Value> valuesCopy = new TreeMap<>(this.values);        
+        final TreeMap<Integer, Value> valuesCopy = new TreeMap<>(this.values);        
         o.values = valuesCopy;
         return o;
     }
@@ -252,11 +242,11 @@ class LocalVariablesArea implements Cloneable {
         final StringBuilder buf = new StringBuilder();
         buf.append("[");
         int j = 0;
-        for (Map.Entry<Integer, Value> e : values.entrySet()) {
+        for (Map.Entry<Integer, Value> e : this.values.entrySet()) {
             buf.append(e.getKey());
             buf.append(":");
             buf.append(e.getValue());
-            if (j < values.size() - 1) {
+            if (j < this.values.size() - 1) {
                 buf.append(", ");
             }
             ++j;

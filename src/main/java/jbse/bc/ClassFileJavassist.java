@@ -91,7 +91,7 @@ public class ClassFileJavassist extends ClassFile {
     private ArrayList<Signature> fieldsObject; //lazily initialized, but actually final
     private ArrayList<Signature> methods; //lazily initialized, but actually final
     private ArrayList<Signature> constructors; //lazily initialized, but actually final
-
+    
     /**
      * Constructor for nonanonymous classes.
      * 
@@ -116,7 +116,7 @@ public class ClassFileJavassist extends ClassFile {
     ClassFileJavassist(int definingClassLoader, String className, byte[] bytecode, ClassFile superClass, ClassFile[] superInterfaces) 
     throws ClassFileIllFormedException, InvalidInputException {
         try {
-            //checks
+            //checks bytecode
             if (bytecode == null) {
                 throw new InvalidInputException("ClassFile constructor invoked with bytecode parameters whose value is null.");
             }
@@ -124,24 +124,8 @@ public class ClassFileJavassist extends ClassFile {
             //reads the bytecode
             this.cf = new javassist.bytecode.ClassFile(new DataInputStream(new ByteArrayInputStream(bytecode)));
             
-            //checks
-            if (superClass != null && !superClass.getClassName().equals(getSuperclassName())) {
-                throw new InvalidInputException("ClassFile constructor invoked with superClass and bytecode parameters that do not agree: superClass is for class " + superClass.getClassName() + " but bytecode requires " + this.cf.getSuperclass() + ".");
-            }
-            if (superInterfaces != null) {
-                final String[] superInterfaceNames = Arrays.stream(superInterfaces).map(ClassFile::getClassName).toArray(String[]::new);
-                final String[] bytecodeSuperInterfaceNames = Arrays.stream(this.cf.getInterfaces()).map(Type::internalClassName).toArray(String[]::new);
-                Arrays.sort(superInterfaceNames);
-                Arrays.sort(bytecodeSuperInterfaceNames);
-                if (superInterfaceNames.length != bytecodeSuperInterfaceNames.length) {
-                    throw new InvalidInputException("ClassFile constructor invoked with superInterfaces and bytecode parameters that do not agree: superInterfaces counts " + superInterfaceNames.length + " superinterfaces but bytecode requires " + bytecodeSuperInterfaceNames.length + " superinterfaces." );
-                }
-                for (int i = 0; i < superInterfaceNames.length; ++i) {
-                    if (!superInterfaceNames[i].equals(bytecodeSuperInterfaceNames[i])) {
-                        throw new InvalidInputException("ClassFile constructor invoked with superInterfaces and bytecode parameters that do not agree: superInterfaces has superinterface " + superInterfaceNames[i] + " that does not match with bytecode superinterface " + bytecodeSuperInterfaceNames[i] + "." );
-                    }
-                }
-            }
+            //checks superClass and superInterfaces
+            checkSuper(this.cf, superClass, superInterfaces);
             
             //inits
             this.isAnonymousUnregistered = false;
@@ -187,7 +171,7 @@ public class ClassFileJavassist extends ClassFile {
     ClassFileJavassist(ClassFile hostClass, byte[] bytecode, ClassFile superClass, ClassFile[] superInterfaces, Object[] cpPatches) 
     throws ClassFileIllFormedException, InvalidInputException {
         try {
-            //checks
+            //checks bytecode
             if (bytecode == null) {
                 throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with bytecode parameter whose value is null.");
             }
@@ -195,7 +179,7 @@ public class ClassFileJavassist extends ClassFile {
             //determines if it is dummy
             final boolean isDummy = (superClass == null);
             
-            //checks
+            //checks superInterfaces, isDummy and hostClass
             if (superInterfaces == null && !isDummy) {
                 throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with superInterfaces parameter whose value is null but the ClassFile is not dummy.");
             }
@@ -208,24 +192,8 @@ public class ClassFileJavassist extends ClassFile {
             checkCpPatches(this.cf.getConstPool(), cpPatches);
             patch(this.cf.getConstPool(), cpPatches);
             
-            //checks
-            if (superClass != null && !superClass.getClassName().equals(getSuperclassName())) {
-                throw new InvalidInputException("ClassFile constructor invoked with superClass and bytecode parameters that do not agree: superClass is for class " + superClass.getClassName() + " but bytecode requires " + this.cf.getSuperclass() + ".");
-            }
-            if (superInterfaces != null) {
-                final String[] superInterfaceNames = Arrays.stream(superInterfaces).map(ClassFile::getClassName).toArray(String[]::new);
-                final String[] bytecodeSuperInterfaceNames = Arrays.stream(this.cf.getInterfaces()).map(Type::internalClassName).toArray(String[]::new);
-                Arrays.sort(superInterfaceNames);
-                Arrays.sort(bytecodeSuperInterfaceNames);
-                if (superInterfaceNames.length != bytecodeSuperInterfaceNames.length) {
-                    throw new InvalidInputException("ClassFile constructor invoked with superInterfaces and bytecode parameters that do not agree: superInterfaces counts " + superInterfaceNames.length + " superinterfaces but bytecode requires " + bytecodeSuperInterfaceNames.length + " superinterfaces." );
-                }
-                for (int i = 0; i < superInterfaceNames.length; ++i) {
-                    if (!superInterfaceNames[i].equals(bytecodeSuperInterfaceNames[i])) {
-                        throw new InvalidInputException("ClassFile constructor invoked with superInterfaces and bytecode parameters that do not agree: superInterfaces has superinterface " + superInterfaceNames[i] + " that does not match with bytecode superinterface " + bytecodeSuperInterfaceNames[i] + "." );
-                    }
-                }
-            }
+            //checks superClass and superInterfaces
+            checkSuper(this.cf, superClass, superInterfaces);
             
             //modifies the class name by adding the hash
             final String defaultName = this.cf.getName(); //the (possibly patched) name in the bytecode
@@ -247,8 +215,29 @@ public class ClassFileJavassist extends ClassFile {
             throw new ClassFileIllFormedException("anonymous");
         }
     }
+
+    private static void checkSuper(javassist.bytecode.ClassFile thisClassfile, ClassFile superClass, ClassFile[] superInterfaces) 
+    throws InvalidInputException {
+        if (superClass != null && !superClass.getClassName().equals(internalClassName(thisClassfile.getSuperclass()))) {
+            throw new InvalidInputException("ClassFile constructor invoked with superClass and bytecode parameters that do not agree: superClass is for class " + superClass.getClassName() + " but bytecode requires " + internalClassName(thisClassfile.getSuperclass()) + ".");
+        }
+        if (superInterfaces != null) {
+            final String[] superInterfaceNames = Arrays.stream(superInterfaces).map(ClassFile::getClassName).toArray(String[]::new);
+            final String[] bytecodeSuperInterfaceNames = Arrays.stream(thisClassfile.getInterfaces()).map(Type::internalClassName).toArray(String[]::new);
+            Arrays.sort(superInterfaceNames);
+            Arrays.sort(bytecodeSuperInterfaceNames);
+            if (superInterfaceNames.length != bytecodeSuperInterfaceNames.length) {
+                throw new InvalidInputException("ClassFile constructor invoked with superInterfaces and bytecode parameters that do not agree: superInterfaces counts " + superInterfaceNames.length + " superinterfaces but bytecode requires " + bytecodeSuperInterfaceNames.length + " superinterfaces." );
+            }
+            for (int i = 0; i < superInterfaceNames.length; ++i) {
+                if (!superInterfaceNames[i].equals(bytecodeSuperInterfaceNames[i])) {
+                    throw new InvalidInputException("ClassFile constructor invoked with superInterfaces and bytecode parameters that do not agree: superInterfaces has superinterface " + superInterfaceNames[i] + " that does not match with bytecode superinterface " + bytecodeSuperInterfaceNames[i] + "." );
+                }
+            }
+        }
+    }
     
-    private void checkCpPatches(javassist.bytecode.ConstPool cp, Object[] cpPatches) 
+    private static void checkCpPatches(javassist.bytecode.ConstPool cp, Object[] cpPatches) 
     throws InvalidInputException {
         if (cpPatches == null) {
             return;
@@ -815,48 +804,55 @@ public class ClassFileJavassist extends ClassFile {
             return new ConstantPoolMethodType(this.cp.getUtf8Info(this.cp.getMethodTypeInfo(index)));
         case ConstPool.CONST_MethodHandle:
         	try {
-        		switch (this.cp.getMethodHandleKind(index)) {
-        		case ConstPool.REF_getField:
-        			return new ConstantPoolMethodHandleGetField(getFieldSignature(this.cp.getMethodHandleIndex(index)));
-        		case ConstPool.REF_getStatic:
-        			return new ConstantPoolMethodHandleGetStatic(getFieldSignature(this.cp.getMethodHandleIndex(index)));
-        		case ConstPool.REF_putField:
-        			return new ConstantPoolMethodHandlePutField(getFieldSignature(this.cp.getMethodHandleIndex(index)));
-        		case ConstPool.REF_putStatic:
-        			return new ConstantPoolMethodHandlePutStatic(getFieldSignature(this.cp.getMethodHandleIndex(index)));
-        		case ConstPool.REF_invokeVirtual:
-        			return new ConstantPoolMethodHandleInvokeVirtual(getMethodSignature(this.cp.getMethodHandleIndex(index)));
-        		case ConstPool.REF_invokeStatic:
-        			try {
-        				return new ConstantPoolMethodHandleInvokeStatic(getMethodSignature(this.cp.getMethodHandleIndex(index)));
-        			} catch (InvalidIndexException e) {
-        				if (getMajorVersion() >= 52) {
-        					return new ConstantPoolMethodHandleInvokeStatic(getInterfaceMethodSignature(this.cp.getMethodHandleIndex(index)));
-        				} else {
-        					throw e;
-        				}
-        			}
-        		case ConstPool.REF_invokeSpecial:
-        			try {
-        				return new ConstantPoolMethodHandleInvokeSpecial(getMethodSignature(this.cp.getMethodHandleIndex(index)));
-        			} catch (InvalidIndexException e) {
-        				if (getMajorVersion() >= 52) {
-        					return new ConstantPoolMethodHandleInvokeSpecial(getInterfaceMethodSignature(this.cp.getMethodHandleIndex(index)));
-        				} else {
-        					throw e;
-        				}
-        			}
-        		case ConstPool.REF_newInvokeSpecial:
-        			return new ConstantPoolMethodHandleNewInvokeSpecial(getMethodSignature(this.cp.getMethodHandleIndex(index)));
-        		case ConstPool.REF_invokeInterface:
-        			return new ConstantPoolMethodHandleInvokeInterface(getInterfaceMethodSignature(this.cp.getMethodHandleIndex(index)));
-        		}
+            	return getMethodHandleValueFromConstantPool(index);
         	} catch (InvalidIndexException e) {
         		throw new ClassFileIllFormedException(e);
         	}
         }
         throw new InvalidIndexException(entryInvalidMessage(index));
     }
+    
+    private ConstantPoolValue getMethodHandleValueFromConstantPool(int index) 
+    throws InvalidIndexException {
+		switch (this.cp.getMethodHandleKind(index)) {
+		case ConstPool.REF_getField:
+			return new ConstantPoolMethodHandleGetField(getFieldSignature(this.cp.getMethodHandleIndex(index)));
+		case ConstPool.REF_getStatic:
+			return new ConstantPoolMethodHandleGetStatic(getFieldSignature(this.cp.getMethodHandleIndex(index)));
+		case ConstPool.REF_putField:
+			return new ConstantPoolMethodHandlePutField(getFieldSignature(this.cp.getMethodHandleIndex(index)));
+		case ConstPool.REF_putStatic:
+			return new ConstantPoolMethodHandlePutStatic(getFieldSignature(this.cp.getMethodHandleIndex(index)));
+		case ConstPool.REF_invokeVirtual:
+			return new ConstantPoolMethodHandleInvokeVirtual(getMethodSignature(this.cp.getMethodHandleIndex(index)));
+		case ConstPool.REF_invokeStatic:
+			try {
+				return new ConstantPoolMethodHandleInvokeStatic(getMethodSignature(this.cp.getMethodHandleIndex(index)));
+			} catch (InvalidIndexException e) {
+				if (getMajorVersion() >= JAVA_8) {
+					return new ConstantPoolMethodHandleInvokeStatic(getInterfaceMethodSignature(this.cp.getMethodHandleIndex(index)));
+				} else {
+					throw e;
+				}
+			}
+		case ConstPool.REF_invokeSpecial:
+			try {
+				return new ConstantPoolMethodHandleInvokeSpecial(getMethodSignature(this.cp.getMethodHandleIndex(index)));
+			} catch (InvalidIndexException e) {
+				if (getMajorVersion() >= JAVA_8) {
+					return new ConstantPoolMethodHandleInvokeSpecial(getInterfaceMethodSignature(this.cp.getMethodHandleIndex(index)));
+				} else {
+					throw e;
+				}
+			}
+		case ConstPool.REF_newInvokeSpecial:
+			return new ConstantPoolMethodHandleNewInvokeSpecial(getMethodSignature(this.cp.getMethodHandleIndex(index)));
+		case ConstPool.REF_invokeInterface:
+			return new ConstantPoolMethodHandleInvokeInterface(getInterfaceMethodSignature(this.cp.getMethodHandleIndex(index)));
+		}
+        throw new InvalidIndexException(entryInvalidMessage(index));
+    }
+
 
     @Override
     public boolean hasMethodDeclaration(Signature methodSignature) {
