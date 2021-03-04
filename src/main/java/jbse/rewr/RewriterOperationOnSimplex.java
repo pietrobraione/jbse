@@ -753,24 +753,24 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
         		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
         	}
         } else if (operator == Operator.SHL) {
-        	if (firstOperandType == INT && secondOperandType == LONG) {
-        		setResult(this.calc.val_(((Integer) firstOperandValue).intValue() << ((Long) secondOperandValue).longValue()));
+        	if (firstOperandType == LONG && secondOperandType == INT) {
+        		setResult(this.calc.val_(((Long) firstOperandValue).longValue() << ((Integer) secondOperandValue).intValue()));
         	} else if (firstOperandType == INT && secondOperandType == INT){
         		setResult(this.calc.val_(((Integer) firstOperandValue).intValue() << ((Integer) secondOperandValue).intValue()));
         	} else {
         		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
         	}
         } else if (operator == Operator.SHR) {
-        	if (firstOperandType == INT && secondOperandType == LONG) {
-        		setResult(this.calc.val_(((Integer) firstOperandValue).intValue() >> ((Long) secondOperandValue).longValue()));
+        	if (firstOperandType == LONG && secondOperandType == INT) {
+        		setResult(this.calc.val_(((Long) firstOperandValue).longValue() >> ((Integer) secondOperandValue).intValue()));
         	} else if (firstOperandType == INT && secondOperandType == INT){
         		setResult(this.calc.val_(((Integer) firstOperandValue).intValue() >> ((Integer) secondOperandValue).intValue()));
         	} else {
         		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
         	}
         } else if (operator == Operator.USHR) {
-        	if (firstOperandType == INT && secondOperandType == LONG) {
-        		setResult(this.calc.val_(((Integer) firstOperandValue).intValue() >>> ((Long) secondOperandValue).longValue()));
+        	if (firstOperandType == LONG && secondOperandType == INT) {
+        		setResult(this.calc.val_(((Long) firstOperandValue).longValue() >>> ((Integer) secondOperandValue).intValue()));
         	} else if (firstOperandType == INT && secondOperandType == INT){
         		setResult(this.calc.val_(((Integer) firstOperandValue).intValue() >>> ((Integer) secondOperandValue).intValue()));
         	} else {
