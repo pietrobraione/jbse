@@ -2,7 +2,6 @@ package jbse.mem;
 
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
-import static jbse.bc.Opcodes.OP_INVOKEDYNAMIC;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_CLASSLOADER;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER;
@@ -15,21 +14,10 @@ import static jbse.bc.Signatures.JAVA_THROWABLE;
 import static jbse.common.Type.parametersNumber;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isPrimitiveOrVoidCanonicalName;
-import static jbse.common.Util.unsafe;
 
-import java.io.FileDescriptor;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FilterInputStream;
-import java.io.FilterOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -97,200 +85,12 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Class that represents the state of execution.
+ * Class that represents the state of the execution.
  */
 public final class State implements Cloneable {
     /** The slot number of the "this" (method receiver) object. */
     private static final int ROOT_THIS_SLOT = 0;
-    
-    //gets reflectively some fields for later access
-    private static final Field FIS_PATH;
-    private static final Field FOS_PATH;
-    private static final Field RAF_PATH;
-    private static final Field FIS_IN;
-    private static final Field FOS_OUT;
-    private static final Field FILEDESCRIPTOR_FD;
-    private static final Field FILEDESCRIPTOR_HANDLE;
-    private static final FileInputStream INPUT_NULL;
-    private static final FileOutputStream OUTPUT_NULL;
-    private static final FileOutputStream ERROR_NULL;
-    static {
-        //these are always present
-        try {
-            FIS_PATH = FileInputStream.class.getDeclaredField("path");
-            FOS_PATH = FileOutputStream.class.getDeclaredField("path");
-            RAF_PATH = RandomAccessFile.class.getDeclaredField("path");
-            FIS_IN = FilterInputStream.class.getDeclaredField("in");
-            FOS_OUT = FilterOutputStream.class.getDeclaredField("out");
-            FILEDESCRIPTOR_FD = FileDescriptor.class.getDeclaredField("fd");
-        } catch (NoSuchFieldException | SecurityException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
-    	
-    	//this is present only on Windows
-    	Field fileDescriptorHandle;
-        try {
-        	fileDescriptorHandle = FileDescriptor.class.getDeclaredField("handle");
-        } catch (NoSuchFieldException e) {
-        	//we are not on Windows
-        	fileDescriptorHandle = null;
-        }
-        FILEDESCRIPTOR_HANDLE = fileDescriptorHandle;
-        
-        //sets all Fields accessible
-    	FIS_PATH.setAccessible(true);
-    	FOS_PATH.setAccessible(true);
-        FIS_IN.setAccessible(true);
-        FOS_OUT.setAccessible(true);
-        FILEDESCRIPTOR_FD.setAccessible(true);
-    	if (FILEDESCRIPTOR_HANDLE != null) {
-    		FILEDESCRIPTOR_HANDLE.setAccessible(true);
-    	}
-    	
-    	//opens the null file
-		try {
-			if (FILEDESCRIPTOR_HANDLE == null) {
-				//macOS and Linux
-				INPUT_NULL = new FileInputStream("/dev/null");
-				OUTPUT_NULL = new FileOutputStream("/dev/null");
-				ERROR_NULL = new FileOutputStream("/dev/null");
-			} else {
-				//Windows
-				INPUT_NULL = new FileInputStream("NUL");
-				OUTPUT_NULL = new FileOutputStream("NUL");
-				ERROR_NULL = new FileOutputStream("NUL");
-			}
-		} catch (FileNotFoundException e) {
-			throw new UnexpectedInternalException(e);
-		}
-    }
 
-
-    /**
-     * Class that stores the information about a raw memory
-     * block allocated to support {@link sun.misc.Unsafe}
-     * raw allocation methods.
-     * 
-     * @author Pietro Braione
-     */
-	private static final class MemoryBlock {
-        /** The base address of the memory block. */
-        final long address;
-        
-        /** The size in bytes of the memory block. */
-        final long size;
-        
-        MemoryBlock(long address, long size) {
-            this.address = address;
-            this.size = size;
-        }        
-    }
-    
-    /**
-     * Class that stores information about an open
-     * zip file to support {@link java.util.zip.ZipFile}
-     * and {@link java.util.jar.JarFile} native methods.
-     * 
-     * @author Pietro Braione
-     */
-    private static final class ZipFile {
-        /** 
-         * The address of a jzfile C data structure for the
-         * entry. 
-         */
-        final long jzfile;
-        
-        /** The name of the file. */
-        final String name;
-        
-        /** The file opening mode. */
-        final int mode;
-        
-        /** When the file was modified. */
-        final long lastModified;
-        
-        /** Should we use mmap? */
-        final boolean usemmap;
-        
-        ZipFile(long jzfile, String name, int mode, long lastModified, boolean usemmap) {
-            this.jzfile = jzfile;
-            this.name = name;
-            this.mode = mode;
-            this.lastModified = lastModified;
-            this.usemmap = usemmap;
-        }
-    }
-    
-    /**
-     * Class that stores the information about an open
-     * zip file's entries to support {@link java.util.zip.ZipFile}
-     * and {@link java.util.jar.JarFile} native methods.
-     * 
-     * @author Pietro Braione
-     */
-    private static final class ZipFileEntry {
-        /** 
-         * The address of a jzentry C data structure for the
-         * entry. 
-         */
-        final long jzentry;
-        
-        /** 
-         * The (base-level) jzfile for the file this entry
-         * belongs to. 
-         */
-        final long jzfile;
-        
-        /** The name of the entry. */
-        final byte[] name;
-        
-        ZipFileEntry(long jzentry, long jzfile, byte[] name) {
-            this.jzentry = jzentry;
-            this.jzfile = jzfile;
-            this.name = name.clone();
-        }
-    }
-    
-    private static final class Inflater {
-        final long address;
-        
-        final boolean nowrap;
-        
-        final byte[] dictionary;
-        
-        Inflater(long address, boolean nowrap, byte[] dictionary, int off, int len) {
-            this.address = address;
-            this.nowrap = nowrap;
-            if (dictionary == null) {
-                this.dictionary = null;
-            } else {
-                this.dictionary = new byte[len];
-                System.arraycopy(dictionary, off, this.dictionary, 0, len);
-            }
-        }
-        
-        Inflater(long address, boolean nowrap) {
-            this(address, nowrap, null, 0, 0);
-        }
-    }
-    
-    /**
-     * Class used to wrap {@link RandomAccessFile} information.
-     * 
-     * @author Pietro Braione
-     *
-     */
-    private static final class RandomAccessFileWrapper {
-        final RandomAccessFile raf;
-        final String modeString;
-        
-        RandomAccessFileWrapper(RandomAccessFile raf, String modeString) {
-            this.raf = raf;
-            this.modeString = modeString;
-        }
-    }
-    
     /**
      * Class used as key for the method handles cache.
      * 
@@ -354,87 +154,6 @@ public final class State implements Cloneable {
 		}
     }
     
-    /**
-     * Class used as key for the call sites link maps
-     * .
-     * @author Pietro Braione
-     *
-     */
-    private static final class CSKey {
-    	final ClassFile containerClass;
-    	final String descriptor;
-    	final String name;
-    	final int programCounter;
-    	
-    	final int hashCode;
-    	
-    	CSKey(ClassFile containerClass, String descriptor, String name, int programCounter) throws InvalidInputException {
-    		if (containerClass == null || descriptor == null || name == null || programCounter < 0) {
-    			throw new InvalidInputException("Tried to create a call site key with null containerClass, descriptor or name, or with negative program counter.");
-    		}
-    		final Signature methodSignature = new Signature(containerClass.getClassName(), descriptor, name);
-    		if (!containerClass.hasMethodImplementation(methodSignature)) {
-    			throw new InvalidInputException("Tried to create a call site key for nonexisting method.");
-    		}
-    		final byte[] methodCode;
-			try {
-				methodCode = containerClass.getMethodCodeBySignature(methodSignature);
-			} catch (MethodNotFoundException | MethodCodeNotFoundException e) {
-				//this should never happen
-				throw new UnexpectedInternalException(e);
-			}
-    		if (programCounter >= methodCode.length) {
-    			throw new InvalidInputException("Tried to create a call site key for a programCounter exceeding the code length.");
-    		}
-    		if (methodCode[programCounter] != OP_INVOKEDYNAMIC) {
-    			throw new InvalidInputException("Tried to create a call site key for a programCounter not pointing to a dynamic call site.");
-    		}
-    		this.containerClass = containerClass;
-    		this.descriptor = descriptor;
-    		this.name = name;
-    		this.programCounter = programCounter;
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + this.containerClass.hashCode();
-			result = prime * result + this.descriptor.hashCode();
-			result = prime * result + this.name.hashCode();
-			result = prime * result + this.programCounter;
-			this.hashCode = result;
-    	}
-
-		@Override
-		public int hashCode() {
-			return this.hashCode;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj) {
-				return true;
-			}
-			if (obj == null) {
-				return false;
-			}
-			if (getClass() != obj.getClass()) {
-				return false;
-			}
-			final CSKey other = (CSKey) obj;
-			if (!this.containerClass.equals(other.containerClass)) {
-				return false;
-			}
-			if (!this.descriptor.equals(other.descriptor)) {
-				return false;
-			}
-			if (!this.name.equals(other.name)) {
-				return false;
-			}
-			if (this.programCounter != other.programCounter) {
-				return false;
-			}
-			return true;
-		}
-    }
-
     /** 
      * {@code true} iff the bootstrap classloader should also load classes defined by the
      * extensions and application classloaders. 
@@ -489,35 +208,10 @@ public final class State implements Cloneable {
     /** The {@link ReferenceConcrete}s to {@link Instance}s of {@code java.lang.invoke.MethodHandle}. */
     private HashMap<MHKey, ReferenceConcrete> methodHandles = new HashMap<>();
     
-    /** Maps file descriptors/handles to (meta-level) open files. */
-    private HashMap<Long, Object> files = new HashMap<>();
+    /** Maps file identifier to meta-level open files. */
+    private FilesMapper filesMapper = new FilesMapper();
     
-    /** The file descriptor/handle of the (standard) input. */
-    private long inFileId; //nonfinal only because initialized outside the constructor, but it is effectively final
-    
-    /** The file descriptor/handle of the (standard) output. */
-    private long outFileId; //nonfinal only because initialized outside the constructor, but it is effectively final
-    
-    /** The file descriptor/handle of the (standard) error. */
-    private long errFileId; //nonfinal only because initialized outside the constructor, but it is effectively final
-    
-    /** Maps memory addresses to (meta-level) allocated memory blocks. */
-    private HashMap<Long, MemoryBlock> allocatedMemory = new HashMap<>();
-    
-    /** 
-     * Maps (base-level) jzfile C structure addresses to 
-     * (meta-level) open zip files. 
-     */
-    private HashMap<Long, ZipFile> zipFiles = new HashMap<>();
-    
-    /** 
-     * Maps (base-level) jzentry C structure addresses to 
-     * (meta-level) open zip file entries.
-     */
-    private HashMap<Long, ZipFileEntry> zipFileEntries = new HashMap<>();
-    
-    /** Maps (base-level) inflater addresses to (meta-level) inflaters. */
-    private HashMap<Long, Inflater> inflaters = new HashMap<>();
+    private MemoryAddressesMapper memoryAddressesMapper = new MemoryAddressesMapper();
     
     /** The registered performance counters. */
     private HashSet<String> perfCounters = new HashSet<>();
@@ -586,34 +280,11 @@ public final class State implements Cloneable {
     /** {@code true} iff the next bytecode must be executed in its WIDE variant. */
     private boolean wide = false;
     
-    /** 
-     * Links signature polymorphic methods that have nonintrinsic
-     * (type checking) semantics to their adapter methods, indicated
-     * as {@link ReferenceConcrete}s to their respective {@code java.lang.invoke.MemberName}s.
-     */
-    private HashMap<Signature, ReferenceConcrete> methodAdapters = new HashMap<>();
-    
-    /** 
-     * Links signature polymorphic methods that have nonintrinsic
-     * (type checking) semantics to their invocation appendices, indicated
-     * as {@link ReferenceConcrete}s to {@code Object[]}s.
-     */
-    private HashMap<Signature, ReferenceConcrete> methodAppendices = new HashMap<>();
-    
-    /** 
-     * Links dynamic call sites to their adapter methods, indicated
-     * as {@link ReferenceConcrete}s to their respective {@code java.lang.invoke.MemberName}s.
-     */
-    private HashMap<CSKey, ReferenceConcrete> callSiteAdapters = new HashMap<>();
-    
-    /** 
-     * Links dynamic call sites to their invocation appendices, indicated
-     * as {@link ReferenceConcrete}s to {@code Object[]}s.
-     */
-    private HashMap<CSKey, ReferenceConcrete> callSiteAppendices = new HashMap<>();
-    
     /** The maximum length an array may have to be granted simple representation. */
     private final int maxSimpleArrayLength;
+    
+    /** The storage of the linked adapted methods. */
+    private AdapterMethodLinker adapterMethodLinker = new AdapterMethodLinker();
 
     /** 
      * The generator for unambiguous symbol identifiers; mutable
@@ -685,93 +356,10 @@ public final class State implements Cloneable {
     	this.frozen = false;
         this.historyPoint = historyPoint;
         this.classLoaders.add(Null.getInstance()); //classloader 0 is the bootstrap classloader
-        setStandardFiles();
         this.heap = new Heap(maxHeapSize);
         this.classHierarchy = new ClassHierarchy(classPath, factoryClass, expansionBackdoor, modelClassSubstitutions);
         this.maxSimpleArrayLength = maxSimpleArrayLength;
         this.symbolFactory = symbolFactory;
-    }
-    
-    private void setStandardFiles() {
-        try {            
-            //gets the stdin
-            FileInputStream in = null;
-            for (InputStream is = System.in; (is instanceof FilterInputStream) || (is instanceof FileInputStream); is = (InputStream) FIS_IN.get(is)) {
-                if (is instanceof FileInputStream) {
-                    in = (FileInputStream) is;
-                    break;
-                }
-            }
-            
-            //if in == null, considers the null file
-            //as the stdin
-            if (in == null) {
-            	in = INPUT_NULL;
-            }
-            
-        	//gets the stdin identifier 
-            if (FILEDESCRIPTOR_HANDLE == null) {
-            	this.inFileId = ((Integer) FILEDESCRIPTOR_FD.get(in.getFD())).longValue();
-            } else {
-            	this.inFileId = ((Long) FILEDESCRIPTOR_HANDLE.get(in.getFD())).longValue();
-            }
-            
-            //registers the stdin
-            setFile(this.inFileId, in);
-            
-            //gets the stdout
-            FileOutputStream out = null;
-            for (OutputStream os = System.out; (os instanceof FilterOutputStream) || (os instanceof FileOutputStream); os = (OutputStream) FOS_OUT.get(os)) {                
-                if (os instanceof FileOutputStream) {
-                    out = (FileOutputStream) os;
-                    break;
-                }
-            }
-            
-            //if out == null, considers the null file
-            //as the stdout
-            if (out == null) {
-            	out = OUTPUT_NULL;
-            }
-            
-            //gets the stdout identifier
-            if (FILEDESCRIPTOR_HANDLE == null) {
-            	this.outFileId = ((Integer) FILEDESCRIPTOR_FD.get(out.getFD())).longValue();
-            } else {
-            	this.outFileId = ((Long) FILEDESCRIPTOR_HANDLE.get(out.getFD())).longValue();
-            }
-            
-            //registers the stdout
-            setFile(this.outFileId, out);
-            
-            //gets the stderr
-            FileOutputStream err = null;
-            for (OutputStream os = System.err; (os instanceof FilterOutputStream) || (os instanceof FileOutputStream); os = (OutputStream) FOS_OUT.get(os)) {
-                if (os instanceof FileOutputStream) {
-                    err = (FileOutputStream) os;
-                    break;
-                }
-            }
-            
-            //if err == null, considers the null file
-            //as the stderr
-            if (err == null) {
-            	err = ERROR_NULL;
-            }
-            
-            //gets the stderr identifier
-            if (FILEDESCRIPTOR_HANDLE == null) {
-            	this.errFileId = ((Integer) FILEDESCRIPTOR_FD.get(err.getFD())).longValue();
-            } else {
-            	this.errFileId = ((Long) FILEDESCRIPTOR_HANDLE.get(err.getFD())).longValue();
-            }
-            
-            //registers the stderr
-            setFile(this.errFileId, err);
-        } catch (IllegalArgumentException | IllegalAccessException | 
-        InvalidInputException | IOException e) {
-            throw new UnexpectedInternalException(e);
-        }
     }
     
     /**
@@ -1065,7 +653,8 @@ public final class State implements Cloneable {
      * @throws InvalidSlotException if {@code slot} is not a valid slot number.
      * @throws FrozenStateException if the state is frozen.
      */
-    public Value getLocalVariableValue(int slot) throws ThreadStackEmptyException, InvalidSlotException, FrozenStateException {
+    public Value getLocalVariableValue(int slot) 
+    throws ThreadStackEmptyException, InvalidSlotException, FrozenStateException {
         return getCurrentFrame().getLocalVariableValue(slot);
     }
 
@@ -1079,7 +668,8 @@ public final class State implements Cloneable {
      * @throws InvalidSlotException if {@code slot} is not a valid slot number.
      * @throws FrozenStateException if the state is frozen.
      */
-    public void setLocalVariable(int slot, Value val) throws ThreadStackEmptyException, InvalidSlotException, FrozenStateException {
+    public void setLocalVariable(int slot, Value val) 
+    throws ThreadStackEmptyException, InvalidSlotException, FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
@@ -1286,7 +876,7 @@ public final class State implements Cloneable {
      *         linked to an adapter method.
      */
     public boolean isMethodLinked(Signature signature) {
-        return this.methodAdapters.containsKey(signature);
+        return this.adapterMethodLinker.isMethodLinked(signature);
     }
 
     /**
@@ -1303,18 +893,15 @@ public final class State implements Cloneable {
      * @param appendix a {@link ReferenceConcrete}. It should
      *        refer an {@link Instance} of a {@link java.lang.Object[]},
      *        but this is not checked.
-     * @throws FrozenStateException if the state is frozen.
-     * @throws NullPointerException if {@code signature == null || adapter == null || appendix == null}.
+     * @throws InvalidInputException if the state is frozen or any of the 
+     *         parameters is {@code null}.
      */
-    public void linkMethod(Signature signature, ReferenceConcrete adapter, ReferenceConcrete appendix) throws FrozenStateException {
+    public void linkMethod(Signature signature, ReferenceConcrete adapter, ReferenceConcrete appendix) 
+    throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (signature == null || adapter == null || appendix == null) {
-            throw new NullPointerException(); //TODO throw better exception
-        }
-        this.methodAdapters.put(signature, adapter);
-        this.methodAppendices.put(signature, appendix);
+    	this.adapterMethodLinker.linkMethod(signature, adapter, appendix);
     }
     
     /**
@@ -1327,7 +914,7 @@ public final class State implements Cloneable {
      *         or {@code null} if {@code signature} was not previously linked.
      */
     public ReferenceConcrete getMethodAdapter(Signature signature) {
-        return this.methodAdapters.get(signature);
+        return this.adapterMethodLinker.getMethodAdapter(signature);
     }
     
     /**
@@ -1340,7 +927,7 @@ public final class State implements Cloneable {
      *         or {@code null} if {@code signature} was not previously linked.
      */
     public ReferenceConcrete getMethodAppendix(Signature signature) {
-        return this.methodAppendices.get(signature);
+        return this.adapterMethodLinker.getMethodAppendix(signature);
     }
     
     /**
@@ -1363,7 +950,7 @@ public final class State implements Cloneable {
      */
     public boolean isCallSiteLinked(ClassFile containerClass, String descriptor, String name, int programCounter) 
     throws InvalidInputException {
-        return this.callSiteAdapters.containsKey(new CSKey(containerClass, descriptor, name, programCounter));
+        return this.adapterMethodLinker.isCallSiteLinked(containerClass, descriptor, name, programCounter);
     }
 
     /**
@@ -1395,8 +982,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        this.callSiteAdapters.put(new CSKey(containerClass, descriptor, name, programCounter), adapter);
-        this.callSiteAppendices.put(new CSKey(containerClass, descriptor, name, programCounter), appendix);
+        this.adapterMethodLinker.linkCallSite(containerClass, descriptor, name, programCounter, adapter, appendix);
     }
     
     /**
@@ -1419,7 +1005,7 @@ public final class State implements Cloneable {
      */
     public ReferenceConcrete getCallSiteAdapter(ClassFile containerClass, String descriptor, String name, int programCounter) 
     throws InvalidInputException {
-        return this.callSiteAdapters.get(new CSKey(containerClass, descriptor, name, programCounter));
+        return this.adapterMethodLinker.getCallSiteAdapter(containerClass, descriptor, name, programCounter);
     }
     
     /**
@@ -1443,14 +1029,14 @@ public final class State implements Cloneable {
      */
     public ReferenceConcrete getCallSiteAppendix(ClassFile containerClass, String descriptor, String name, int programCounter) 
     throws InvalidInputException {
-        return this.callSiteAppendices.get(new CSKey(containerClass, descriptor, name, programCounter));
+        return this.adapterMethodLinker.getCallSiteAppendix(containerClass, descriptor, name, programCounter);
     }
     
     /**
      * Returns the file stream associated to a open file.
      * 
      * @param id a {@code long}, either a file descriptor cast to {@code long} 
-     *        (if we are on a Unix-like platform) or a file handle (if we are on Windows).
+     *        (if we are on a UNIX-like platform) or a file handle (if we are on Windows).
      * @return a {@link FileInputStream}, or a {@link FileOutputStream}, or a {@link RandomAccessFile}, or
      *         {@code null} if {@code id} is not the descriptor/handle
      *         of an open file previously associated with a call to {@link #setFile(long, Object)}.
@@ -1460,48 +1046,37 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     	    throw new FrozenStateException();
     	}
-        final Object obj = this.files.get(Long.valueOf(id));
-        if (obj instanceof RandomAccessFileWrapper) {
-            return ((RandomAccessFileWrapper) obj).raf;
-        } else {
-            return obj;
-        }
+    	return this.filesMapper.getFile(id);
     }
     
     /**
      * Associates a {@link FileInputStream} to an open file id.
      * 
      * @param id a {@code long}, either a file descriptor cast to {@code long} 
-     *        (if we are on a Unix-like platform) or a file handle (if we are on Windows).
+     *        (if we are on a UNIX-like platform) or a file handle (if we are on Windows).
      * @param file a {@link FileInputStream}.
      * @throws InvalidInputException if {@code file == null} or the state is frozen.
      */
     public void setFile(long id, FileInputStream file) throws InvalidInputException {
-        if (file == null) {
-            throw new InvalidInputException("Invoked State.setFile with a null FileInputStream file parameter.");
-        }
     	if (this.frozen) {
     	    throw new FrozenStateException();
     	}
-    	this.files.put(Long.valueOf(id), file);
+    	this.filesMapper.setFile(id, file);
     }
     
     /**
      * Associates a {@link FileOutputStream} to an open file id.
      * 
      * @param id a {@code long}, either a file descriptor cast to {@code long} 
-     *        (if we are on a Unix-like platform) or a file handle (if we are on Windows).
+     *        (if we are on a UNIX-like platform) or a file handle (if we are on Windows).
      * @param file a {@link FileOutputStream}.
      * @throws InvalidInputException if {@code file == null} or the state is frozen.
      */
     public void setFile(long id, FileOutputStream file) throws InvalidInputException {
-        if (file == null) {
-            throw new InvalidInputException("Invoked State.setFile with a null FileOutputStream file parameter.");
-        }
         if (this.frozen) {
             throw new FrozenStateException();
         }
-        this.files.put(Long.valueOf(id), file);
+        this.filesMapper.setFile(id, file);
     }
     
     /**
@@ -1514,14 +1089,12 @@ public final class State implements Cloneable {
      * @throws InvalidInputException if {@code file == null} or {@code modeString == null} or 
      *         the state is frozen.
      */
-    public void setFile(long id, RandomAccessFile file, String modeString) throws InvalidInputException {
-        if (file == null || modeString == null) {
-            throw new InvalidInputException("Invoked State.setFile with a null RandomAccessFile file or String modeString parameter.");
-        }
+    public void setFile(long id, RandomAccessFile file, String modeString) 
+    throws InvalidInputException {
         if (this.frozen) {
             throw new FrozenStateException();
         }
-        this.files.put(Long.valueOf(id), new RandomAccessFileWrapper(file, modeString));
+        this.filesMapper.setFile(id, file, modeString);
     }
     
     /**
@@ -1536,7 +1109,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     	    throw new FrozenStateException();
     	}
-        this.files.remove(Long.valueOf(id));
+        this.filesMapper.removeFile(id);
     }
     
     /**
@@ -1552,13 +1125,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (this.allocatedMemory.containsKey(address)) {
-            throw new InvalidInputException("Tried to add a raw memory block with an already known address.");
-        }
-        if (size <= 0) {
-            throw new InvalidInputException("Tried to add a raw memory block with a nonpositive size.");
-        }
-        this.allocatedMemory.put(address, new MemoryBlock(address, size));
+    	this.memoryAddressesMapper.addMemoryBlock(address, size);
     }
     
     /**
@@ -1572,10 +1139,7 @@ public final class State implements Cloneable {
      *         address previously registered by a call to {@link #addMemoryBlock(long, long) addMemoryBlock}.
      */
     public long getMemoryBlockAddress(long address) throws InvalidInputException {
-        if (!this.allocatedMemory.containsKey(address)) {
-            throw new InvalidInputException("Tried to get the address of a raw memory block corresponding to an unknown (base-level) address.");
-        }
-        return this.allocatedMemory.get(address).address;
+    	return this.memoryAddressesMapper.getMemoryBlockAddress(address);
     }
 
     /**
@@ -1588,10 +1152,7 @@ public final class State implements Cloneable {
      *         address previously registered by a call to {@link #addMemoryBlock(long, long) addMemoryBlock}.
      */
     public long getMemoryBlockSize(long address) throws InvalidInputException {
-        if (!this.allocatedMemory.containsKey(address)) {
-            throw new InvalidInputException("Tried to get the size of a raw memory block corresponding to an unknown (base-level) address.");
-        }
-        return this.allocatedMemory.get(address).size;
+    	return this.memoryAddressesMapper.getMemoryBlockSize(address);
     }
 
     /**
@@ -1607,10 +1168,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (!this.allocatedMemory.containsKey(address)) {
-            throw new InvalidInputException("Tried to remove a raw memory block corresponding to an unknown (base-level) address.");
-        }
-        this.allocatedMemory.remove(address);
+    	this.memoryAddressesMapper.removeMemoryBlock(address);
     }
     
     /**
@@ -1627,24 +1185,12 @@ public final class State implements Cloneable {
      *         {@code jzfile} was already added before, or
      *         {@code name == null}.
      */
-    public void addZipFile(long jzfile, String name, int mode, long lastModified, boolean usemmap) throws InvalidInputException {
+    public void addZipFile(long jzfile, String name, int mode, long lastModified, boolean usemmap) 
+    throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (this.zipFiles.containsKey(jzfile)) {
-            final ZipFile zf = this.zipFiles.get(jzfile);
-            if (zf.name.equals(name) && zf.lastModified == lastModified) {
-                //already opened, zlib reuses the allocated C data structure
-                return;
-            } else {
-                throw new InvalidInputException("Tried to add a zipfile with an already existing jzfile address.");
-            }
-        }
-        if (name == null) {
-            throw new InvalidInputException("Tried to add a zip file with null name.");
-        }
-        final ZipFile zf = new ZipFile(jzfile, name, mode, lastModified, usemmap);
-        this.zipFiles.put(jzfile, zf);
+    	this.memoryAddressesMapper.addZipFile(jzfile, name, mode, lastModified, usemmap);
     }
     
     /**
@@ -1661,21 +1207,12 @@ public final class State implements Cloneable {
      *         {@code jzentry} was already added before, or
      *         {@code name == null}.
      */
-    public void addZipFileEntry(long jzentry, long jzfile, byte[] name) throws InvalidInputException {
+    public void addZipFileEntry(long jzentry, long jzfile, byte[] name) 
+    throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (!this.zipFiles.containsKey(jzfile)) {
-            throw new InvalidInputException("Tried to add a zip file entry for an unknown zip file.");
-        }
-        if (this.zipFileEntries.containsKey(jzentry)) {
-            throw new InvalidInputException("Tried to add an already existing zip file entry.");
-        }
-        if (name == null) {
-            throw new InvalidInputException("Tried to add a zip file entry with null name.");
-        }
-        final ZipFileEntry zfe = new ZipFileEntry(jzentry, jzfile, name);
-        this.zipFileEntries.put(jzentry, zfe);
+    	this.memoryAddressesMapper.addZipFileEntry(jzentry, jzfile, name);
     }
     
     /**
@@ -1687,7 +1224,7 @@ public final class State implements Cloneable {
      *         {@link #addZipFile(long, String, int, long, boolean) addZipFile}.
      */
     public boolean hasZipFile(long jzfile) {
-        return this.zipFiles.containsKey(jzfile);
+        return this.memoryAddressesMapper.hasZipFile(jzfile);
     }
     
     /**
@@ -1698,12 +1235,7 @@ public final class State implements Cloneable {
      *         a jzfile C structure (meta-level address).
      */
     public boolean hasZipFileEntryJzInverse(long jzentry) {
-        for (ZipFileEntry entry : this.zipFileEntries.values()) {
-            if (entry.jzentry == jzentry) {
-                return true;
-            }
-        }
-        return false;
+    	return this.memoryAddressesMapper.hasZipFileEntryJzInverse(jzentry);
     }
     
     /**
@@ -1717,12 +1249,7 @@ public final class State implements Cloneable {
      *         of a jzentry data structure.
      */
     public long getZipFileEntryJzInverse(long jzentry) throws InvalidInputException {
-        for (Map.Entry<Long, ZipFileEntry> entry : this.zipFileEntries.entrySet()) {
-            if (entry.getValue().jzentry == jzentry) {
-                return entry.getKey();
-            }
-        }
-        throw new InvalidInputException("Tried to invert an unknown jzentry C structure address.");
+    	return this.memoryAddressesMapper.getZipFileEntryJzInverse(jzentry);
     }
     
     /**
@@ -1736,10 +1263,7 @@ public final class State implements Cloneable {
      *         {@link #addZipFile(long, String, int, long, boolean) addZipFile}.
      */
     public long getZipFileJz(long jzfile) throws InvalidInputException {
-        if (!this.zipFiles.containsKey(jzfile)) {
-            throw new InvalidInputException("Tried to get a jzfile for an unknown zip file.");
-        }
-        return this.zipFiles.get(jzfile).jzfile;
+    	return this.memoryAddressesMapper.getZipFileJz(jzfile);
     }
     
     /**
@@ -1753,10 +1277,7 @@ public final class State implements Cloneable {
      *         {@link #addZipFileEntry(long, long, byte[]) addZipFileEntry}.
      */
     public long getZipFileEntryJz(long jzentry) throws InvalidInputException {
-        if (!this.zipFileEntries.containsKey(jzentry)) {
-            throw new InvalidInputException("Tried to get a jzentry for an unknown zip file entry.");
-        }
-        return this.zipFileEntries.get(jzentry).jzentry;
+    	return this.memoryAddressesMapper.getZipFileEntryJz(jzentry);
     }
     
     /**
@@ -1772,19 +1293,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (!this.zipFiles.containsKey(jzfile)) {
-            throw new InvalidInputException("Tried to remove an unknown zip file.");
-        }
-        this.zipFiles.remove(jzfile);
-        final HashSet<Long> toRemove = new HashSet<>();
-        for (Map.Entry<Long, ZipFileEntry> entry : this.zipFileEntries.entrySet()) {
-            if (entry.getValue().jzfile == jzfile) {
-                toRemove.add(entry.getKey());
-            }
-        }
-        for (long jzentry : toRemove) {
-            this.zipFileEntries.remove(jzentry);
-        }
+    	this.memoryAddressesMapper.removeZipFile(jzfile);
     }
     
     /**
@@ -1800,10 +1309,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (!this.zipFileEntries.containsKey(jzentry)) {
-            throw new InvalidInputException("Tried to remove an unknown zip file entry.");
-        }
-        this.zipFileEntries.remove(jzentry);
+    	this.memoryAddressesMapper.removeZipFileEntry(jzentry);
     }
     
     /**
@@ -1819,11 +1325,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (this.inflaters.containsKey(address)) {
-            throw new InvalidInputException("Tried to add an already registered inflater block address.");
-        }
-        final Inflater inflater = new Inflater(address, nowrap);
-        this.inflaters.put(address, inflater);
+    	this.memoryAddressesMapper.addInflater(address, nowrap);
     }
     
     /**
@@ -1837,10 +1339,7 @@ public final class State implements Cloneable {
      *         registered.
      */
     public long getInflater(long address) throws InvalidInputException {
-        if (!this.inflaters.containsKey(address)) {
-            throw new InvalidInputException("Tried to get the address of an unknown inflater.");
-        }
-        return this.inflaters.get(address).address;
+    	return this.memoryAddressesMapper.getInflater(address);
     }
     
     /**
@@ -1862,15 +1361,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (!this.inflaters.containsKey(address)) {
-            throw new InvalidInputException("Tried to set the dictionary of an unknown inflater.");
-        }
-        if (dictionary == null || ofst < 0 || len < 0 || ofst >= dictionary.length || ofst + len > dictionary.length) {
-            throw new InvalidInputException("Tried to set the dictionary of an inflater with wrong dictionary, offset or length.");
-        }
-        final Inflater inflaterOld = this.inflaters.get(address);
-        final Inflater inflaterNew = new Inflater(inflaterOld.address, inflaterOld.nowrap, dictionary, ofst, len);
-        this.inflaters.put(address, inflaterNew);
+    	this.memoryAddressesMapper.setInflaterDictionary(address, dictionary, ofst, len);
     }
     
     /**
@@ -1885,10 +1376,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (!this.inflaters.containsKey(address)) {
-            throw new InvalidInputException("Tried to remove an unknown inflater.");
-        }
-        this.inflaters.remove(address);
+    	this.memoryAddressesMapper.removeInflater(address);
     }
     
     /**
@@ -2372,7 +1860,7 @@ public final class State implements Cloneable {
      * @param myObj the {@link Objekt} whose identity hash code will be initialized.
      * @param myRef a {@link ReferenceConcrete} to {@code myObj}.
      */
-    //TODO delete - all the objects should have a symbolic identity hash code for genericity (currently this does not play well with hash maps and thus with all the JVM bootstrap code).
+    //TODO delete - all the objects should have a symbolic identity hash code for genericity.
     private void initIdentityHashCodeConcrete(Calculator calc, Objekt myObj, ReferenceConcrete myRef) {
         myObj.setIdentityHashCode(calc.valInt((int) myRef.getHeapPosition()));
     }
@@ -2672,7 +2160,7 @@ public final class State implements Cloneable {
             return; //nothing to do
         }
         if (this.classLoaders.size() <= CLASSLOADER_APP) {
-            throw new InvalidInputException("Invoked jbse.mem.state.setStandardClassLoadersReady with true parameter, but the standard class loaders were not created yet.");
+            throw new InvalidInputException("Invoked " + getClass().getName() + ".setStandardClassLoadersReady with true parameter, but the standard class loaders were not created yet.");
         }
         this.standardClassLoadersNotReady = false;
     }
@@ -4568,120 +4056,12 @@ public final class State implements Cloneable {
         //methodHandles
         o.methodHandles = new HashMap<>(o.methodHandles);
         
-        //files
-        try {
-            o.files = new HashMap<>();
-            for (Map.Entry<Long, Object> entry : this.files.entrySet()) {
-                if (entry.getValue() instanceof FileInputStream) {
-                    final FileInputStream fisClone;
-                    if (entry.getKey() == this.inFileId) {
-                        fisClone = (FileInputStream) entry.getValue();
-                    } else {
-                        final FileInputStream fisThis = (FileInputStream) entry.getValue();
-                        final String path = (String) FIS_PATH.get(fisThis);
-                        fisClone = new FileInputStream(path);
-                        fisClone.skip(fisThis.getChannel().position());
-                    }
-                    o.files.put(entry.getKey(), fisClone);
-                } else if (entry.getValue() instanceof FileOutputStream) {
-                    final FileOutputStream fosClone;
-                    if (entry.getKey() == this.outFileId ||  entry.getKey() == this.errFileId) {
-                        fosClone = (FileOutputStream) entry.getValue();
-                    } else {
-                        final FileOutputStream fosThis = (FileOutputStream) entry.getValue();
-                        final String path = (String) FOS_PATH.get(fosThis);
-                        fosClone = new FileOutputStream(path);
-                    }
-                    o.files.put(entry.getKey(), fosClone);
-                } else { //entry.getValue() instanceof RandomAccessFileWrapper
-                    final RandomAccessFileWrapper rafWrapperThis = (RandomAccessFileWrapper) entry.getValue();
-                    final String path = (String) RAF_PATH.get(rafWrapperThis.raf);
-                    final RandomAccessFile rafClone = new RandomAccessFile(path, rafWrapperThis.modeString);
-                    o.files.put(entry.getKey(), new RandomAccessFileWrapper(rafClone, rafWrapperThis.modeString));
-                }
-            }
-        } catch (IllegalArgumentException | IllegalAccessException | IOException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
+        //filesMapper
+        o.filesMapper = o.filesMapper.clone();
         
-        //allocatedMemory
-        o.allocatedMemory = new HashMap<>();
-        for (Map.Entry<Long, MemoryBlock> entry : this.allocatedMemory.entrySet()) {
-            final long baseLevelAddress = entry.getKey();
-            final long oldMemoryBlockAddress = entry.getValue().address;
-            final long size = entry.getValue().size;
-            final long newMemoryBlockAddress = unsafe().allocateMemory(size);
-            unsafe().copyMemory(oldMemoryBlockAddress, newMemoryBlockAddress, size);
-            o.allocatedMemory.put(baseLevelAddress, new MemoryBlock(newMemoryBlockAddress, size));
-        }
+        //memoryAddressesMapper
+        o.memoryAddressesMapper = o.memoryAddressesMapper.clone();
         
-        //zipFiles
-        o.zipFiles = new HashMap<>();
-        try {
-            final Method methodOpen = java.util.zip.ZipFile.class.getDeclaredMethod("open", String.class, int.class, long.class, boolean.class);
-            methodOpen.setAccessible(true);
-            for (Map.Entry<Long, ZipFile> entry : this.zipFiles.entrySet()) {
-                final ZipFile zf = entry.getValue();
-                final String name = zf.name;
-                final int mode = zf.mode;
-                final long lastModified = zf.lastModified;
-                final boolean usemmap = zf.usemmap;
-                final long jzfileNew = (long) methodOpen.invoke(null, name, mode, lastModified, usemmap);
-                final ZipFile zfNew = new ZipFile(jzfileNew, name, mode, lastModified, usemmap);
-                o.zipFiles.put(entry.getKey(), zfNew);
-            }
-        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | 
-                 NoSuchMethodException | SecurityException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
-        
-        //zipFileEntries
-        o.zipFileEntries = new HashMap<>();
-        try {
-            final Method methodGetEntry = java.util.zip.ZipFile.class.getDeclaredMethod("getEntry", long.class, byte[].class, boolean.class);
-            methodGetEntry.setAccessible(true);
-            for (Map.Entry<Long, ZipFileEntry> entry : this.zipFileEntries.entrySet()) {
-                final ZipFileEntry zfe = entry.getValue();
-                final long _jzfile = zfe.jzfile;
-                final long jzfile = o.zipFiles.get(_jzfile).jzfile;
-                final byte[] name = zfe.name;
-                final long jzentryNew = (long) methodGetEntry.invoke(null, jzfile, name, true);
-                final ZipFileEntry zfeNew = new ZipFileEntry(jzentryNew, _jzfile, name);
-                o.zipFileEntries.put(entry.getKey(), zfeNew);
-            }
-        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | 
-                 IllegalArgumentException | InvocationTargetException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
-        
-        //inflaters
-        o.inflaters = new HashMap<>();
-        try {
-            final Method methodInit = java.util.zip.Inflater.class.getDeclaredMethod("init", boolean.class);
-            methodInit.setAccessible(true);
-            final Method methodSetDictionary = java.util.zip.Inflater.class.getDeclaredMethod("setDictionary", long.class, byte[].class, int.class, int.class);
-            methodSetDictionary.setAccessible(true);
-            for (Map.Entry<Long, Inflater> entry : this.inflaters.entrySet()) {
-                final Inflater inf = entry.getValue();
-                final long addressNew = (long) methodInit.invoke(null, inf.nowrap);
-                final Inflater infNew;
-                if (inf.dictionary == null) {
-                    infNew = new Inflater(addressNew, inf.nowrap);
-                } else {
-                    methodSetDictionary.invoke(null, addressNew, inf.dictionary, 0, inf.dictionary.length);
-                    infNew = new Inflater(addressNew, inf.nowrap, inf.dictionary, 0, inf.dictionary.length);
-                }
-                o.inflaters.put(entry.getKey(), infNew);
-            }
-        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | 
-                 IllegalArgumentException | InvocationTargetException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
-
         //perfCounters
         o.perfCounters = new HashSet<>(o.perfCounters);
 
@@ -4696,18 +4076,9 @@ public final class State implements Cloneable {
 
         //exc and val are Values, so they are immutable
         
-        //methodAdapters
-        o.methodAdapters = new HashMap<>(o.methodAdapters);
+        //adapterMethodLinker
+        o.adapterMethodLinker = o.adapterMethodLinker.clone();
         
-        //methodAppendices
-        o.methodAppendices = new HashMap<>(o.methodAppendices);
-        
-        //callSiteAdapters
-        o.callSiteAdapters = new HashMap<>(o.callSiteAdapters);
-        
-        //callSiteAppendices
-        o.callSiteAppendices = new HashMap<>(o.callSiteAppendices);
-
         //symbolFactory
         o.symbolFactory = o.symbolFactory.clone();
         
@@ -4728,34 +4099,6 @@ public final class State implements Cloneable {
         return o;
     }
     
-    @Override
-    protected void finalize() {
-        //closes all files except stdin/out/err
-        for (Map.Entry<Long, Object> fileEntry : this.files.entrySet()) {
-            final long fileId = fileEntry.getKey();
-            if (fileId == this.inFileId || fileId == this.outFileId || fileId == this.errFileId) {
-                continue;
-            }
-            final Object file = fileEntry.getValue();
-            try {
-                if (file instanceof FileInputStream) {
-                    ((FileInputStream) file).close();
-                } else if (file instanceof FileOutputStream) {
-                    ((FileOutputStream) file).close();
-                } else { //file instanceof RandomAccessFileWrapper
-                    ((RandomAccessFileWrapper) file).raf.close();
-                }
-            } catch (IOException e) {
-                //go on with the next file
-            }
-        }
-        
-        //deallocates all memory blocks
-        for (MemoryBlock memoryBlock : this.allocatedMemory.values()) {
-        	unsafe().freeMemory(memoryBlock.address);
-        }
-    }
-
     @Override
     public String toString() {
         String tmp = "[ID:\"" + this.historyPoint.toString() + "\", ";
