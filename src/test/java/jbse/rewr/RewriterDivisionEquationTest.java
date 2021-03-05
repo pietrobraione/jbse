@@ -19,13 +19,15 @@ public final class RewriterDivisionEquationTest {
 	public void before() {
 		this.hist = HistoryPoint.unknown();
 		this.calcPoly = new CalculatorRewriting();
-		this.calcPoly.addRewriter(new RewriterOperationOnSimplex());
+		this.calcPoly.addRewriter(new RewriterExpressionOrConversionOnSimplex());
+        this.calcPoly.addRewriter(new RewriterFunctionApplicationOnSimplex());
         this.calcPoly.addRewriter(new RewriterZeroUnit());
         this.calcPoly.addRewriter(new RewriterNegationElimination());
 		this.calcPoly.addRewriter(new RewriterPolynomials());
 		this.calcPoly.addRewriter(new RewriterDivisionEqualsZero());
 		this.calcNoPoly = new CalculatorRewriting();
-		this.calcNoPoly.addRewriter(new RewriterOperationOnSimplex());
+		this.calcNoPoly.addRewriter(new RewriterExpressionOrConversionOnSimplex());
+        this.calcNoPoly.addRewriter(new RewriterFunctionApplicationOnSimplex());
         this.calcNoPoly.addRewriter(new RewriterZeroUnit());
         this.calcNoPoly.addRewriter(new RewriterNegationElimination());
 		this.calcNoPoly.addRewriter(new RewriterDivisionEqualsZero());

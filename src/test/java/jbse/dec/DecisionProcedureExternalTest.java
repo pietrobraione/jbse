@@ -18,7 +18,8 @@ import jbse.mem.ClauseAssume;
 import jbse.mem.Objekt;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.RewriterNegationElimination;
-import jbse.rewr.RewriterOperationOnSimplex;
+import jbse.rewr.RewriterExpressionOrConversionOnSimplex;
+import jbse.rewr.RewriterFunctionApplicationOnSimplex;
 import jbse.rewr.RewriterZeroUnit;
 import jbse.val.Expression;
 import jbse.val.Primitive;
@@ -180,7 +181,8 @@ public class DecisionProcedureExternalTest {
     @Before
     public void setUp() throws InvalidInputException {
         this.calc = new CalculatorRewriting();
-        this.calc.addRewriter(new RewriterOperationOnSimplex());
+        this.calc.addRewriter(new RewriterExpressionOrConversionOnSimplex());
+        this.calc.addRewriter(new RewriterFunctionApplicationOnSimplex());
         this.calc.addRewriter(new RewriterZeroUnit());
         this.calc.addRewriter(new RewriterNegationElimination());
         this.extIf = new DecisionProcedureExternalInterfaceStub();

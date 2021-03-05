@@ -47,7 +47,8 @@ import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.RewriterNegationElimination;
-import jbse.rewr.RewriterOperationOnSimplex;
+import jbse.rewr.RewriterExpressionOrConversionOnSimplex;
+import jbse.rewr.RewriterFunctionApplicationOnSimplex;
 import jbse.rewr.RewriterZeroUnit;
 import jbse.rules.ClassInitRulesRepo;
 import jbse.rules.TriggerRulesRepo;
@@ -63,7 +64,8 @@ public class ClassInitTest {
         userPaths.add(Paths.get("src/test/resources/jbse/bc/testdata"));
         final Classpath cp = new Classpath(Paths.get("build/classes/java/main"), Paths.get(System.getProperty("java.home", "")), Collections.emptyList(), userPaths);
         final CalculatorRewriting calc = new CalculatorRewriting();
-        calc.addRewriter(new RewriterOperationOnSimplex());
+        calc.addRewriter(new RewriterExpressionOrConversionOnSimplex()); //indispensable
+        calc.addRewriter(new RewriterFunctionApplicationOnSimplex()); //indispensable
 		calc.addRewriter(new RewriterZeroUnit()); //indispensable
 		calc.addRewriter(new RewriterNegationElimination()); //indispensable?
         final DecisionProcedureAlgorithms dec = new DecisionProcedureAlgorithms(new DecisionProcedureClassInit(new DecisionProcedureAlwSat(calc), new ClassInitRulesRepo()));

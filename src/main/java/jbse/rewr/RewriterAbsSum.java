@@ -18,7 +18,7 @@ import jbse.val.exc.NoResultException;
 
 /**
  * Rewrites comparisons of {@code A +/- abs(A)} with {@code 0}.
- * Requires {@link RewriterOperationOnSimplex} and {@link RewriterPolynomials}.
+ * Requires {@link RewriterExpressionOrConversionOnSimplex} and {@link RewriterPolynomials}.
  * 
  * @author Pietro Braione
  */

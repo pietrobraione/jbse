@@ -65,7 +65,8 @@ import jbse.meta.annotations.ConcretizationCheck;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.RewriterCalculatorRewriting;
 import jbse.rewr.RewriterNegationElimination;
-import jbse.rewr.RewriterOperationOnSimplex;
+import jbse.rewr.RewriterExpressionOrConversionOnSimplex;
+import jbse.rewr.RewriterFunctionApplicationOnSimplex;
 import jbse.rewr.RewriterZeroUnit;
 import jbse.tree.StateTree.BranchPoint;
 import jbse.val.PrimitiveSymbolic;
@@ -855,7 +856,8 @@ public final class Run {
         final CalculatorRewriting calc;
         try {
             calc = new CalculatorRewriting();
-            calc.addRewriter(new RewriterOperationOnSimplex()); //indispensable
+            calc.addRewriter(new RewriterExpressionOrConversionOnSimplex()); //indispensable
+            calc.addRewriter(new RewriterFunctionApplicationOnSimplex()); //indispensable
     		calc.addRewriter(new RewriterZeroUnit()); //indispensable
     		calc.addRewriter(new RewriterNegationElimination()); //indispensable?
             for (final Class<? extends RewriterCalculatorRewriting> rewriterClass : this.parameters.getRewriters()) {

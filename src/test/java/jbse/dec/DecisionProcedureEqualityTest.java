@@ -18,7 +18,8 @@ import jbse.mem.ClauseAssume;
 import jbse.mem.Objekt;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.RewriterNegationElimination;
-import jbse.rewr.RewriterOperationOnSimplex;
+import jbse.rewr.RewriterExpressionOrConversionOnSimplex;
+import jbse.rewr.RewriterFunctionApplicationOnSimplex;
 import jbse.rewr.RewriterZeroUnit;
 import jbse.val.Calculator;
 import jbse.val.Expression;
@@ -83,7 +84,8 @@ public class DecisionProcedureEqualityTest {
     public void setUp() throws InvalidClassFileFactoryClassException, IOException, InvalidInputException {
         this.hist = HistoryPoint.unknown();
         this.calc = new CalculatorRewriting();
-        this.calc.addRewriter(new RewriterOperationOnSimplex());
+        this.calc.addRewriter(new RewriterExpressionOrConversionOnSimplex());
+        this.calc.addRewriter(new RewriterFunctionApplicationOnSimplex());
         this.calc.addRewriter(new RewriterZeroUnit());
         this.calc.addRewriter(new RewriterNegationElimination());
         this.dec = new DecisionProcedureEquality(new DecisionProcedureNoDecision(this.calc));

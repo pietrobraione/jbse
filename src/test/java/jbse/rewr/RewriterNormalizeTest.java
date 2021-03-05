@@ -22,7 +22,8 @@ public final class RewriterNormalizeTest {
 	public void before() {
 		this.hist = HistoryPoint.unknown();
 		this.calc = new CalculatorRewriting();
-		this.calc.addRewriter(new RewriterOperationOnSimplex());
+		this.calc.addRewriter(new RewriterExpressionOrConversionOnSimplex());
+        this.calc.addRewriter(new RewriterFunctionApplicationOnSimplex());
         this.calc.addRewriter(new RewriterZeroUnit());
         this.calc.addRewriter(new RewriterNegationElimination());
 		this.calc.addRewriter(new RewriterPolynomials());
