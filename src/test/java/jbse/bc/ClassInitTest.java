@@ -46,7 +46,9 @@ import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.rewr.CalculatorRewriting;
+import jbse.rewr.RewriterNegationElimination;
 import jbse.rewr.RewriterOperationOnSimplex;
+import jbse.rewr.RewriterZeroUnit;
 import jbse.rules.ClassInitRulesRepo;
 import jbse.rules.TriggerRulesRepo;
 import jbse.tree.DecisionAlternativeComparators;
@@ -62,6 +64,8 @@ public class ClassInitTest {
         final Classpath cp = new Classpath(Paths.get("build/classes/java/main"), Paths.get(System.getProperty("java.home", "")), Collections.emptyList(), userPaths);
         final CalculatorRewriting calc = new CalculatorRewriting();
         calc.addRewriter(new RewriterOperationOnSimplex());
+		calc.addRewriter(new RewriterZeroUnit()); //indispensable
+		calc.addRewriter(new RewriterNegationElimination()); //indispensable?
         final DecisionProcedureAlgorithms dec = new DecisionProcedureAlgorithms(new DecisionProcedureClassInit(new DecisionProcedureAlwSat(calc), new ClassInitRulesRepo()));
         this.ctx = new ExecutionContext(null, true, 20, 20, true, cp, ClassFileFactoryJavassist.class, Collections.emptyMap(), Collections.emptyMap(), calc, new DecisionAlternativeComparators(), new Signature("hier/A", "()V", "a"), dec, null, null, new TriggerRulesRepo(), new ArrayList<String>());
         this.state = this.ctx.createStateVirginPreInitial();

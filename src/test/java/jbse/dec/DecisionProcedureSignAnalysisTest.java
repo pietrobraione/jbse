@@ -18,9 +18,11 @@ import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
 import jbse.mem.Objekt;
 import jbse.rewr.CalculatorRewriting;
+import jbse.rewr.RewriterNegationElimination;
 import jbse.rewr.RewriterOperationOnSimplex;
 import jbse.rewr.RewriterPolynomials;
 import jbse.rewr.RewriterTrigNormalize;
+import jbse.rewr.RewriterZeroUnit;
 import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.HistoryPoint;
@@ -87,6 +89,8 @@ public class DecisionProcedureSignAnalysisTest {
 		this.hist = HistoryPoint.unknown();
         this.calc = new CalculatorRewriting();
         this.calc.addRewriter(new RewriterOperationOnSimplex());
+        this.calc.addRewriter(new RewriterZeroUnit());
+        this.calc.addRewriter(new RewriterNegationElimination());
 		this.dec = new DecisionProcedureSignAnalysis(new DecisionProcedureNoDecision(this.calc));
 	}
 	

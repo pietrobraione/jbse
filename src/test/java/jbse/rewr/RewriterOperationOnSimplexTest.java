@@ -18,6 +18,8 @@ public final class RewriterOperationOnSimplexTest {
 	public void before() {
 		this.calc = new CalculatorRewriting();
 		this.calc.addRewriter(new RewriterOperationOnSimplex());
+        this.calc.addRewriter(new RewriterZeroUnit());
+        this.calc.addRewriter(new RewriterNegationElimination());
 	}
 	
 	@Test

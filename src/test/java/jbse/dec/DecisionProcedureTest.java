@@ -14,7 +14,9 @@ import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.ClauseAssume;
 import jbse.rewr.CalculatorRewriting;
+import jbse.rewr.RewriterNegationElimination;
 import jbse.rewr.RewriterOperationOnSimplex;
+import jbse.rewr.RewriterZeroUnit;
 import jbse.tree.DecisionAlternative_XCMPY_Eq;
 import jbse.tree.DecisionAlternative_XCMPY_Gt;
 import jbse.tree.DecisionAlternative_XCMPY_Lt;
@@ -64,6 +66,8 @@ public class DecisionProcedureTest {
     public void setUp() throws DecisionException, InvalidInputException {
         this.calc = new CalculatorRewriting();
         this.calc.addRewriter(new RewriterOperationOnSimplex());
+        this.calc.addRewriter(new RewriterZeroUnit());
+        this.calc.addRewriter(new RewriterNegationElimination());
         this.cmp = new DecisionAlternativeComparators();
         this.dec = 
         new DecisionProcedureAlgorithms(

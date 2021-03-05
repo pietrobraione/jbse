@@ -20,6 +20,8 @@ public class RewriterSinCosTest {
 		this.hist = HistoryPoint.unknown();
 		this.calc = new CalculatorRewriting();
 		this.calc.addRewriter(new RewriterOperationOnSimplex());
+        this.calc.addRewriter(new RewriterZeroUnit());
+        this.calc.addRewriter(new RewriterNegationElimination());
 		this.calc.addRewriter(new RewriterPolynomials());
 		this.calc.addRewriter(new RewriterSinCos());
 	}

@@ -4,7 +4,6 @@ import static jbse.common.Type.BOOLEAN;
 import static jbse.common.Type.BYTE;
 import static jbse.common.Type.CHAR;
 import static jbse.common.Type.DOUBLE;
-import static jbse.common.Type.ERROR;
 import static jbse.common.Type.isPrimitiveFloating;
 import static jbse.common.Type.isPrimitiveIntegral;
 import static jbse.common.Type.FLOAT;
@@ -34,8 +33,6 @@ import static jbse.val.PrimitiveSymbolicApply.SIN;
 import static jbse.val.PrimitiveSymbolicApply.SQRT;
 import static jbse.val.PrimitiveSymbolicApply.TAN;
 
-import java.util.NoSuchElementException;
-
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.Any;
 import jbse.val.Expression;
@@ -46,17 +43,16 @@ import jbse.val.Primitive;
 import jbse.val.Simplex;
 import jbse.val.Value;
 import jbse.val.WideningConversion;
-import jbse.val.exc.InvalidOperandException;
-import jbse.val.exc.InvalidTypeException;
 import jbse.val.exc.NoResultException;
 
 /**
- * Rewrites all the {@link Expression}s or {@link PrimitiveSymbolicApply}s 
- * with enough {@link Simplex} operands to calculate a result.
+ * Rewrites the {@link Expression}s, {@link PrimitiveSymbolicApply}s, 
+ * {@link WideningConversion}s and {@link NarrowingConversion}s
+ * with {@link Simplex} operands to their corresponding values.
  * 
  * @author Pietro Braione
  */
-public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
+public final class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
     public RewriterOperationOnSimplex() { }
 
     @Override
@@ -78,7 +74,7 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
         }
 
         final String function = x.getOperator();
-        final Primitive result = tryFunctionApplication(function, args, argsType);
+        final Primitive result = applyFunction(function, args, argsType);
         if (result == null) { 
         	setResult(x); //failed
         } else {
@@ -108,135 +104,12 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
         } else if (firstOperand instanceof Simplex && (unary || secondOperand instanceof Simplex)) {
             //all operands are Simplex: apply operator and return Simplex
             applyOperator((Simplex) firstOperand, operator, (Simplex) secondOperand);
-        } else if (operator == Operator.AND && firstOperand.equals(secondOperand)) {
-            //x && x -> x
-        	setResult(x.getFirstOperand());
-        } else if (operator == Operator.OR && firstOperand.equals(secondOperand)) {
-            //x || x -> x
-        	setResult(x.getFirstOperand());
-        } else if (operator == Operator.NOT && firstOperand instanceof Expression) {
-        	//negation of expression
-        	attemptRewriteNegationOfExpression(x);
-        } else if (!unary && (firstOperand instanceof Simplex || secondOperand instanceof Simplex)) {
-            //binary operation with one Simplex operand
-            attemptRewriteBinaryWithSimplex(x);
         } else {
         	//none of the above cases
         	setResult(x);
         }
     }
     
-    private void attemptRewriteNegationOfExpression(Expression x) throws NoResultException {
-    	final Primitive operand = x.getOperand();
-        final Expression operandExpression = (Expression) operand;
-        final Operator operandOperator = operandExpression.getOperator();
-        try {
-            if (operandOperator == Operator.EQ) {
-            	//! (x == y) -> x != y
-                setResult(this.calc.push(operandExpression.getFirstOperand()).ne(operandExpression.getSecondOperand()).pop());
-            } else if (operandOperator == Operator.NE) {
-            	//! (x != y) -> x == y
-                setResult(this.calc.push(operandExpression.getFirstOperand()).eq(operandExpression.getSecondOperand()).pop());
-            } else if (operandOperator == Operator.GT) {
-            	//! (x > y) -> x <= y
-                setResult(this.calc.push(operandExpression.getFirstOperand()).le(operandExpression.getSecondOperand()).pop());
-            } else if (operandOperator == Operator.GE) {
-            	//! (x >= y) -> x < y
-                setResult(this.calc.push(operandExpression.getFirstOperand()).lt(operandExpression.getSecondOperand()).pop());
-            } else if (operandOperator == Operator.LT) {
-            	//! (x < y) -> x >= y
-                setResult(this.calc.push(operandExpression.getFirstOperand()).ge(operandExpression.getSecondOperand()).pop());
-            } else if (operandOperator == Operator.LE) {
-            	//! (x <= y) -> x > y
-                setResult(this.calc.push(operandExpression.getFirstOperand()).gt(operandExpression.getSecondOperand()).pop());
-            } else {
-            	setResult(x);
-            }
-            //TODO could we propagate more?
-        } catch (InvalidOperandException | InvalidTypeException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
-    }
-    
-    private void attemptRewriteBinaryWithSimplex(Expression x) throws NoResultException {
-        final Operator operator = x.getOperator();
-    	final Primitive firstOperand = x.getFirstOperand();
-    	final Primitive secondOperand = x.getSecondOperand();
-        final boolean firstIsSimplex = (firstOperand instanceof Simplex);
-        final Simplex simplexOperand = (Simplex) (firstIsSimplex ? firstOperand : secondOperand);
-        final Primitive otherOperand = (firstIsSimplex ? secondOperand : firstOperand);
-        
-		try {
-			if (operator == Operator.AND) {
-				//x && true -> x, x && false -> false, true && x -> x, false && x -> false
-				if ((Boolean) simplexOperand.getActualValue()) {
-					setResult(otherOperand);
-				} else {
-					setResult(simplexOperand);
-				}
-			} else if (operator == Operator.OR) {
-				//x || true -> true, x || false -> x, true || x -> true, false || x -> x
-				if ((Boolean) simplexOperand.getActualValue()) {
-					setResult(simplexOperand);
-				} else {
-					setResult(otherOperand);
-				}
-			} else if (operator == Operator.ADD && simplexOperand.isZeroOne(true)) {
-				//x + 0 -> x, 0 + x -> x
-				setResult(otherOperand);
-			} else if (operator == Operator.SUB && simplexOperand.isZeroOne(true)) {
-				//x - 0 -> x, 0 - x -> -x
-				if (firstIsSimplex) {
-					try {
-						setResult(this.calc.push(otherOperand).neg().pop());
-					} catch (InvalidTypeException e) {
-						//does nothing, falls through
-					} catch (InvalidOperandException e) {
-						//this should never happen
-						throw new UnexpectedInternalException(e);
-					}
-				} else {
-					setResult(otherOperand);
-				}
-			} else if (operator == Operator.MUL && simplexOperand.isZeroOne(true)) {
-				//x * 0 -> 0, 0 * x -> 0
-				setResult(simplexOperand);
-			} else if (operator == Operator.MUL && simplexOperand.isZeroOne(false)) {
-				//x * 1 -> x, 1 * x -> x
-				setResult(otherOperand);
-			} else if (operator == Operator.DIV && firstIsSimplex && simplexOperand.isZeroOne(true)) {
-				//0 / x -> 0
-				setResult(simplexOperand);
-			} else if (operator == Operator.DIV && !firstIsSimplex && simplexOperand.isZeroOne(false)) {
-				//x / 1 -> x
-				setResult(otherOperand);
-			} else if (operator == Operator.REM && firstIsSimplex && simplexOperand.isZeroOne(true)) {
-				//0 % x -> 0
-				setResult(simplexOperand);
-			} else if (operator == Operator.REM && !firstIsSimplex && simplexOperand.isZeroOne(false)) {
-				//x % 1 -> 0
-				setResult(this.calc.pushInt(0).to(x.getType()).pop());
-			} else if (operator == Operator.REM && !firstIsSimplex && ((Simplex) this.calc.push(simplexOperand).neg().pop()).isZeroOne(false)) {
-				//x % (-1) -> 0
-				setResult(this.calc.pushInt(0).to(x.getType()).pop());
-			} else if (operator == Operator.DIV && firstOperand instanceof Expression && secondOperand instanceof Simplex) {
-				//(x / n1) / n2 -> x / (n1 * n2)
-				final Expression firstOperandExpression = (Expression) x.getFirstOperand();
-				if (firstOperandExpression.getOperator() == Operator.DIV && firstOperandExpression.getSecondOperand() instanceof Simplex) {
-					setResult(this.calc.push(firstOperandExpression.getFirstOperand()).div(this.calc.push(firstOperandExpression.getSecondOperand()).mul(secondOperand).pop()).pop());
-				} else {
-					setResult(x);
-				}
-			} else {
-				setResult(x);
-			}
-		} catch (NoSuchElementException | NoResultException | InvalidTypeException | InvalidOperandException e) {
-			//this should never happen
-			throw new UnexpectedInternalException(e);
-		}
-    }
-
     @Override
     protected void rewriteWideningConversion(WideningConversion x) 
     throws NoResultException {
@@ -248,7 +121,7 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
         } else if (arg instanceof Simplex) {
             //widening applied to Simplex
             final Simplex argSimplex = (Simplex) arg;
-            applyConversion(argSimplex, x.getType());
+            applyWideningNarrowingConversion(argSimplex, x.getType());
         } else {
         	//none of the above cases
         	setResult(x);
@@ -266,25 +139,14 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
         } else if (arg instanceof Simplex) {
             //narrowing applied to Simplex
             final Simplex argSimplex = (Simplex) arg;
-            applyConversion(argSimplex, x.getType());
-        } else if (arg instanceof WideningConversion) {
-            //narrowing a widening back to the starting type
-        	final Primitive wideningArg = ((WideningConversion) arg).getArg();
-        	if (x.getType() == wideningArg.getType()) {
-        		setResult(wideningArg);
-        	} else {
-        		setResult(x);
-        	}
+            applyWideningNarrowingConversion(argSimplex, x.getType());
         } else {
         	//none of the above cases
         	setResult(x);
         }
     }
 
-    //////////////////////////////////////////////
-    //private part: tons of manual dispatching
-    
-    private Primitive tryFunctionApplicationAbs(String function, Object arg, char argType) {
+    private Primitive applyAbs(String function, Object arg, char argType) {
     	final Primitive retVal;
         if (function.equals(ABS_DOUBLE) && argType == DOUBLE) { //typing: D -> D
         	retVal = this.calc.val_(Math.abs(((Double) arg).doubleValue()));
@@ -310,7 +172,7 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
         return retVal;
     }
     
-    private Primitive tryFunctionApplicationMin(String function, Object arg0, Object arg1, char argType0, char argType1) {
+    private Primitive applyMin(String function, Object arg0, Object arg1, char argType0, char argType1) {
     	final Primitive retVal;
         if (function.equals(MIN_DOUBLE) && argType0 == DOUBLE && argType1 == DOUBLE) { //typing: D -> D
         	retVal = this.calc.val_(Math.min(((Double) arg0).doubleValue(), ((Double) arg1).doubleValue()));
@@ -336,7 +198,7 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
         return retVal;
     }
     
-    private Primitive tryFunctionApplicationMax(String function, Object arg0, Object arg1, char argType0, char argType1) {
+    private Primitive applyMax(String function, Object arg0, Object arg1, char argType0, char argType1) {
     	final Primitive retVal;
         if (function.equals(MAX_DOUBLE) && argType0 == DOUBLE && argType1 == DOUBLE) { //typing: D -> D
         	retVal = this.calc.val_(Math.max(((Double) arg0).doubleValue(), ((Double) arg1).doubleValue()));
@@ -362,7 +224,7 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
         return retVal;
     }
     
-    private Primitive tryFunctionApplicationSin(Object arg, char argType) {
+    private Primitive applySin(Object arg, char argType) {
     	//typing: T -> D
     	final Primitive retVal;
     	if (argType == DOUBLE) {
@@ -385,7 +247,7 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
     	return retVal;
     }
     
-    private Primitive tryFunctionApplicationCos(Object arg, char argType) {
+    private Primitive applyCos(Object arg, char argType) {
     	//typing: T -> D
     	final Primitive retVal;
     	if (argType == DOUBLE) {
@@ -408,7 +270,7 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
     	return retVal;
     }
 
-    private Primitive tryFunctionApplicationTan(Object arg, char argType) {
+    private Primitive applyTan(Object arg, char argType) {
     	 //typing: T -> D
     	final Primitive retVal;
         if (argType == DOUBLE) {
@@ -431,7 +293,7 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
         return retVal;
     }
     
-    private Primitive tryFunctionApplicationAsin(Object arg, char argType) {
+    private Primitive applyAsin(Object arg, char argType) {
     	//typing: T -> D
     	final Primitive retVal;
     	if (argType == DOUBLE) {
@@ -454,7 +316,7 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
     	return retVal;
     }
 
-    private Primitive tryFunctionApplicationAcos(Object arg, char argType) {
+    private Primitive applyAcos(Object arg, char argType) {
     	//typing: T -> D
     	final Primitive retVal;
     	if (argType == DOUBLE) {
@@ -477,7 +339,7 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
     	return retVal;
     }
 
-    private Primitive tryFunctionApplicationAtan(Object arg, char argType) {
+    private Primitive applyAtan(Object arg, char argType) {
     	//typing: T -> D
     	final Primitive retVal;
     	if (argType == DOUBLE) {
@@ -500,7 +362,7 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
     	return retVal;
     }
 
-    private Primitive tryFunctionApplicationSqrt(Object arg, char argType) {
+    private Primitive applySqrt(Object arg, char argType) {
     	//typing: T -> D
     	final Primitive retVal;
     	if (argType == DOUBLE) {
@@ -523,7 +385,7 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
     	return retVal;
     }
 
-    private Primitive tryFunctionApplicationExp(Object arg, char argType) {
+    private Primitive applyExp(Object arg, char argType) {
     	//typing: T -> D
     	final Primitive retVal;
     	if (argType == DOUBLE) {
@@ -546,7 +408,7 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
     	return retVal;
     }
 
-    private Primitive tryFunctionApplicationPow(Object arg0, Object arg1, char argType0, char argType1) {
+    private Primitive applyPow(Object arg0, Object arg1, char argType0, char argType1) {
     	final Primitive retVal;
         if (argType0 == DOUBLE && argType1 == DOUBLE) {
         	//typing: D x D -> D
@@ -574,38 +436,209 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
         return retVal;
     }
     
-    private Primitive tryFunctionApplication(String function, Object[] args, char[] argsType) {
+    private Primitive applyFunction(String function, Object[] args, char[] argsType) {
     	final Primitive retVal;
     	
         if (function.equals(ABS_DOUBLE) || function.equals(ABS_FLOAT) || function.equals(ABS_LONG) || function.equals(ABS_INT)) {
-        	retVal = tryFunctionApplicationAbs(function, args[0], argsType[0]);
+        	retVal = applyAbs(function, args[0], argsType[0]);
         } else if (function.equals(MIN_DOUBLE) || function.equals(MIN_FLOAT) || function.equals(MIN_LONG) || function.equals(MIN_INT)) {
-        	retVal = tryFunctionApplicationMin(function, args[0], args[1], argsType[0], argsType[1]);
+        	retVal = applyMin(function, args[0], args[1], argsType[0], argsType[1]);
         } else if (function.equals(MAX_DOUBLE) || function.equals(MAX_FLOAT) || function.equals(MAX_LONG) || function.equals(MAX_INT)) {
-        	retVal = tryFunctionApplicationMax(function, args[0], args[1], argsType[0], argsType[1]);
+        	retVal = applyMax(function, args[0], args[1], argsType[0], argsType[1]);
         } else if (function.equals(SIN)) { 
-        	retVal = tryFunctionApplicationSin(args[0], argsType[0]);
+        	retVal = applySin(args[0], argsType[0]);
         } else if (function.equals(COS)) { 
-        	retVal = tryFunctionApplicationCos(args[0], argsType[0]);
+        	retVal = applyCos(args[0], argsType[0]);
         } else if (function.equals(TAN)) { 
-        	retVal = tryFunctionApplicationTan(args[0], argsType[0]);
+        	retVal = applyTan(args[0], argsType[0]);
         } else if (function.equals(ASIN)) { 
-        	retVal = tryFunctionApplicationAsin(args[0], argsType[0]);
+        	retVal = applyAsin(args[0], argsType[0]);
         } else if (function.equals(ACOS)) { 
-        	retVal = tryFunctionApplicationAcos(args[0], argsType[0]);
+        	retVal = applyAcos(args[0], argsType[0]);
         } else if (function.equals(ATAN)) { 
-        	retVal = tryFunctionApplicationAtan(args[0], argsType[0]);
+        	retVal = applyAtan(args[0], argsType[0]);
         } else if (function.equals(SQRT)) { 
-        	retVal = tryFunctionApplicationSqrt(args[0], argsType[0]);
+        	retVal = applySqrt(args[0], argsType[0]);
         } else if (function.equals(EXP)) { 
-        	retVal = tryFunctionApplicationExp(args[0], argsType[0]);
+        	retVal = applyExp(args[0], argsType[0]);
         } else if (function.equals(POW)) { 
-        	retVal = tryFunctionApplicationPow(args[0], args[1], argsType[0], argsType[1]);
+        	retVal = applyPow(args[0], args[1], argsType[0], argsType[1]);
         } else {
         	retVal = null;
         }
         
         return retVal;
+    }
+    
+    private void applyOperatorUnary(Simplex firstOperand, Operator operator)
+    throws NoResultException {
+    	final char firstOperandType = firstOperand.getType();
+    	final Object firstOperandValue = ((Simplex) firstOperand).getActualValue();
+
+        if (operator == Operator.NOT) {
+        	if (firstOperandType == BOOLEAN) {
+            	setResult(this.calc.val_(!((Boolean) firstOperandValue).booleanValue()));
+        	} else if (firstOperandType == BYTE) {
+        		setResult(this.calc.val_(!(((Byte) firstOperandValue).byteValue() != 0)));
+        	} else if (firstOperandType == CHAR) {
+        		setResult(this.calc.val_(!(((Character) firstOperandValue).charValue() != 0)));
+        	} else if (firstOperandType == INT) {
+        		setResult(this.calc.val_(!(((Integer) firstOperandValue).intValue() != 0)));
+        	} else if (firstOperandType == LONG) {
+        		setResult(this.calc.val_(!(((Long) firstOperandValue).longValue() != 0)));
+        	} else if (firstOperandType == SHORT) {
+        		setResult(this.calc.val_(!(((Short) firstOperandValue).shortValue() != 0)));
+        	} else {
+        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
+        	}
+        } else if (operator == Operator.NEG) {
+        	if (firstOperandType == DOUBLE) {
+        		setResult(this.calc.val_(-((Double) firstOperandValue).doubleValue()));
+        	} else if (firstOperandType == FLOAT) {
+        		setResult(this.calc.val_(-((Float) firstOperandValue).floatValue()));
+        	} else if (firstOperandType == LONG) {
+        		setResult(this.calc.val_(-((Long) firstOperandValue).longValue()));
+        	} else if (firstOperandType == INT) {
+        		setResult(this.calc.val_(-((Integer) firstOperandValue).intValue()));
+        	} else {
+        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
+        	}
+    	} else {
+    		throw new UnexpectedInternalException("Found unexpected operator " + operator);
+    	}
+    }
+
+    private void applyOperatorArithBinary(Simplex firstOperand, Operator operator, Simplex secondOperand)
+    throws NoResultException {
+    	final char firstOperandType = firstOperand.getType();
+    	final Object firstOperandValue = ((Simplex) firstOperand).getActualValue();
+    	final char secondOperandType = secondOperand.getType();
+    	final Object secondOperandValue = ((Simplex) secondOperand).getActualValue();
+
+    	if (operator == Operator.ADD) {
+    		if (firstOperandType == DOUBLE && secondOperandType == DOUBLE) {
+    			setResult(this.calc.val_(((Double) firstOperandValue).doubleValue() + ((Double) secondOperandValue).doubleValue()));
+    		} else if (firstOperandType == FLOAT && secondOperandType == FLOAT) {
+    			setResult(this.calc.val_(((Float) firstOperandValue).floatValue() + ((Float) secondOperandValue).floatValue()));
+    		} else if (firstOperandType == LONG && secondOperandType == LONG) {
+    			setResult(this.calc.val_(((Long) firstOperandValue).longValue() + ((Long) secondOperandValue).longValue()));
+    		} else if (firstOperandType == INT && secondOperandType == INT) {
+    			setResult(this.calc.val_(((Integer) firstOperandValue).intValue() + ((Integer) secondOperandValue).intValue()));
+    		} else {
+    			throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
+    		}
+    	} else if (operator == Operator.SUB) {
+    		if (firstOperandType == DOUBLE && secondOperandType == DOUBLE) {
+    			setResult(this.calc.val_(((Double) firstOperandValue).doubleValue() - ((Double) secondOperandValue).doubleValue()));
+    		} else if (firstOperandType == FLOAT && secondOperandType == FLOAT) {
+    			setResult(this.calc.val_(((Float) firstOperandValue).floatValue() - ((Float) secondOperandValue).floatValue()));
+    		} else if (firstOperandType == LONG && secondOperandType == LONG) {
+    			setResult(this.calc.val_(((Long) firstOperandValue).longValue() - ((Long) secondOperandValue).longValue()));
+    		} else if (firstOperandType == INT && secondOperandType == INT) {
+    			setResult(this.calc.val_(((Integer) firstOperandValue).intValue() - ((Integer) secondOperandValue).intValue()));
+    		} else {
+    			throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
+    		}
+    	} else if (operator == Operator.MUL) {
+    		if (firstOperandType == DOUBLE && secondOperandType == DOUBLE) {
+    			setResult(this.calc.val_(((Double) firstOperandValue).doubleValue() * ((Double) secondOperandValue).doubleValue()));
+    		} else if (firstOperandType == FLOAT && secondOperandType == FLOAT) {
+    			setResult(this.calc.val_(((Float) firstOperandValue).floatValue() * ((Float) secondOperandValue).floatValue()));
+    		} else if (firstOperandType == LONG && secondOperandType == LONG) {
+    			setResult(this.calc.val_(((Long) firstOperandValue).longValue() * ((Long) secondOperandValue).longValue()));
+    		} else if (firstOperandType == INT && secondOperandType == INT) {
+    			setResult(this.calc.val_(((Integer) firstOperandValue).intValue() * ((Integer) secondOperandValue).intValue()));
+    		} else {
+    			throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
+    		}
+    	} else if (operator == Operator.DIV) {
+    		if (firstOperandType == DOUBLE && secondOperandType == DOUBLE) {
+    			setResult(this.calc.val_(((Double) firstOperandValue).doubleValue() / ((Double) secondOperandValue).doubleValue()));
+    		} else if (firstOperandType == FLOAT && secondOperandType == FLOAT) {
+    			setResult(this.calc.val_(((Float) firstOperandValue).floatValue() / ((Float) secondOperandValue).floatValue()));
+    		} else if (firstOperandType == LONG && secondOperandType == LONG) {
+    			setResult(this.calc.val_(((Long) firstOperandValue).longValue() / ((Long) secondOperandValue).longValue()));
+    		} else if (firstOperandType == INT && secondOperandType == INT) {
+    			setResult(this.calc.val_(((Integer) firstOperandValue).intValue() / ((Integer) secondOperandValue).intValue()));
+    		} else {
+    			throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
+    		}
+    	} else if (operator == Operator.REM) {
+    		if (firstOperandType == DOUBLE && secondOperandType == DOUBLE) {
+    			setResult(this.calc.val_(((Double) firstOperandValue).doubleValue() % ((Double) secondOperandValue).doubleValue()));
+    		} else if (firstOperandType == FLOAT && secondOperandType == FLOAT) {
+    			setResult(this.calc.val_(((Float) firstOperandValue).floatValue() % ((Float) secondOperandValue).floatValue()));
+    		} else if (firstOperandType == LONG && secondOperandType == LONG) {
+    			setResult(this.calc.val_(((Long) firstOperandValue).longValue() % ((Long) secondOperandValue).longValue()));
+    		} else if (firstOperandType == INT && secondOperandType == INT) {
+    			setResult(this.calc.val_(((Integer) firstOperandValue).intValue() % ((Integer) secondOperandValue).intValue()));
+    		} else {
+    			throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
+    		}
+    	} else {
+    		throw new UnexpectedInternalException("Found unexpected operator " + operator);
+    	}
+    }
+
+    
+    private void applyOperatorBitwise(Simplex firstOperand, Operator operator, Simplex secondOperand)
+    throws NoResultException {
+    	final char firstOperandType = firstOperand.getType();
+    	final Object firstOperandValue = ((Simplex) firstOperand).getActualValue();
+    	final char secondOperandType = secondOperand.getType();
+    	final Object secondOperandValue = ((Simplex) secondOperand).getActualValue();
+
+    	if (operator == Operator.SHL) {
+    		if (firstOperandType == LONG && secondOperandType == INT) {
+    			setResult(this.calc.val_(((Long) firstOperandValue).longValue() << ((Integer) secondOperandValue).intValue()));
+    		} else if (firstOperandType == INT && secondOperandType == INT){
+    			setResult(this.calc.val_(((Integer) firstOperandValue).intValue() << ((Integer) secondOperandValue).intValue()));
+    		} else {
+    			throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
+    		}
+    	} else if (operator == Operator.SHR) {
+    		if (firstOperandType == LONG && secondOperandType == INT) {
+    			setResult(this.calc.val_(((Long) firstOperandValue).longValue() >> ((Integer) secondOperandValue).intValue()));
+    		} else if (firstOperandType == INT && secondOperandType == INT){
+    			setResult(this.calc.val_(((Integer) firstOperandValue).intValue() >> ((Integer) secondOperandValue).intValue()));
+    		} else {
+    			throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
+    		}
+    	} else if (operator == Operator.USHR) {
+    		if (firstOperandType == LONG && secondOperandType == INT) {
+    			setResult(this.calc.val_(((Long) firstOperandValue).longValue() >>> ((Integer) secondOperandValue).intValue()));
+    		} else if (firstOperandType == INT && secondOperandType == INT){
+    			setResult(this.calc.val_(((Integer) firstOperandValue).intValue() >>> ((Integer) secondOperandValue).intValue()));
+    		} else {
+    			throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
+    		}
+    	} else if (operator == Operator.ANDBW) {
+    		if (firstOperandType == INT && secondOperandType == INT) {
+    			setResult(this.calc.val_(((Integer) firstOperandValue).intValue() & ((Integer) secondOperandValue).intValue()));
+    		} else if (firstOperandType == LONG && secondOperandType == LONG) {
+    			setResult(this.calc.val_(((Long) firstOperandValue).longValue() & ((Long) secondOperandValue).longValue()));
+    		} else {
+    			throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
+    		}
+    	} else if (operator == Operator.ORBW) {
+    		if (firstOperandType == INT && secondOperandType == INT) {
+    			setResult(this.calc.val_(((Integer) firstOperandValue).intValue() | ((Integer) secondOperandValue).intValue()));
+    		} else if (firstOperandType == LONG && secondOperandType == LONG) {
+    			setResult(this.calc.val_(((Long) firstOperandValue).longValue() | ((Long) secondOperandValue).longValue()));
+    		} else {
+    			throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
+    		}
+    	} else if (operator == Operator.XORBW) {
+    		if (firstOperandType == INT && secondOperandType == INT) {
+    			setResult(this.calc.val_(((Integer) firstOperandValue).intValue() ^ ((Integer) secondOperandValue).intValue()));
+    		} else if (firstOperandType == LONG && secondOperandType == LONG) {
+    			setResult(this.calc.val_(((Long) firstOperandValue).longValue() ^ ((Long) secondOperandValue).longValue()));
+    		} else {
+    			throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
+    		}
+    	} else {
+    		throw new UnexpectedInternalException("Found unexpected operator " + operator);
+    	}
     }
 
     private void applyOperatorBooleanBinary(Simplex firstOperand, Operator operator, Simplex secondOperand)
@@ -656,212 +689,86 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
     		throw new UnexpectedInternalException("Found unexpected operator " + operator);
     	}
     }
+    
+    private void applyOperatorRelational(Simplex firstOperand, Operator operator, Simplex secondOperand) 
+    throws NoResultException {
+    	final char firstOperandType = firstOperand.getType();
+    	final Object firstOperandValue = ((Simplex) firstOperand).getActualValue();
+    	final char secondOperandType = secondOperand.getType();
+    	final Object secondOperandValue = ((Simplex) secondOperand).getActualValue();
+
+		final char operandsTypesLub = lub(firstOperandType, secondOperandType);
+    	if (operator == Operator.EQ) {
+    		if (isPrimitiveFloating(operandsTypesLub)) { 
+    			setResult(this.calc.val_((boolean) (((Number) firstOperandValue).doubleValue() == ((Number) secondOperandValue).doubleValue()))); 
+    		} else if (isPrimitiveIntegral(operandsTypesLub)) { 
+    			setResult(this.calc.val_((boolean) (((Number) firstOperandValue).longValue() == ((Number) secondOperandValue).longValue()))); 
+    		} else {
+    			throw new UnexpectedInternalException("Found ill-formed comparison expression");
+    		}
+    	} else if (operator == Operator.NE) {
+    		if (isPrimitiveFloating(operandsTypesLub)) { 
+    			setResult(this.calc.val_((boolean) (((Number) firstOperandValue).doubleValue() != ((Number) secondOperandValue).doubleValue()))); 
+    		} else if (isPrimitiveIntegral(operandsTypesLub)) { 
+    			setResult(this.calc.val_((boolean) (((Number) firstOperandValue).longValue() != ((Number) secondOperandValue).longValue()))); 
+    		} else {
+    			throw new UnexpectedInternalException("Found ill-formed comparison expression");
+    		}
+    	} else if (operator == Operator.GT) {
+    		if (isPrimitiveFloating(operandsTypesLub)) { 
+    			setResult(this.calc.val_((boolean) (((Number) firstOperandValue).doubleValue() > ((Number) secondOperandValue).doubleValue()))); 
+    		} else if (isPrimitiveIntegral(operandsTypesLub)) { 
+    			setResult(this.calc.val_((boolean) (((Number) firstOperandValue).longValue() > ((Number) secondOperandValue).longValue()))); 
+    		} else {
+    			throw new UnexpectedInternalException("Found ill-formed comparison expression");
+    		}
+    	} else if (operator == Operator.GE) {
+    		if (isPrimitiveFloating(operandsTypesLub)) { 
+    			setResult(this.calc.val_((boolean) (((Number) firstOperandValue).doubleValue() >= ((Number) secondOperandValue).doubleValue()))); 
+    		} else if (isPrimitiveIntegral(operandsTypesLub)) { 
+    			setResult(this.calc.val_((boolean) (((Number) firstOperandValue).longValue() >= ((Number) secondOperandValue).longValue()))); 
+    		} else {
+    			throw new UnexpectedInternalException("Found ill-formed comparison expression");
+    		}
+    	} else if (operator == Operator.LT) {
+    		if (isPrimitiveFloating(operandsTypesLub)) { 
+    			setResult(this.calc.val_((boolean) (((Number) firstOperandValue).doubleValue() < ((Number) secondOperandValue).doubleValue()))); 
+    		} else if (isPrimitiveIntegral(operandsTypesLub)) { 
+    			setResult(this.calc.val_((boolean) (((Number) firstOperandValue).longValue() < ((Number) secondOperandValue).longValue()))); 
+    		} else {
+    			throw new UnexpectedInternalException("Found ill-formed comparison expression");
+    		}
+    	} else if (operator == Operator.LE) {
+    		if (isPrimitiveFloating(operandsTypesLub)) { 
+    			setResult(this.calc.val_((boolean) (((Number) firstOperandValue).doubleValue() <= ((Number) secondOperandValue).doubleValue()))); 
+    		} else if (isPrimitiveIntegral(operandsTypesLub)) { 
+    			setResult(this.calc.val_((boolean) (((Number) firstOperandValue).longValue() <= ((Number) secondOperandValue).longValue()))); 
+    		} else {
+    			throw new UnexpectedInternalException("Found ill-formed comparison expression");
+    		}
+    	} else {
+    		throw new UnexpectedInternalException("Found unexpected operator " + operator);
+    	}
+    }
 
     private void applyOperator(Simplex firstOperand, Operator operator, Simplex secondOperand)
     throws NoResultException {
-        final char firstOperandType = firstOperand.getType();
-        final Object firstOperandValue = ((Simplex) firstOperand).getActualValue();
-        final char secondOperandType = (secondOperand == null ? ERROR : secondOperand.getType());
-        final Object secondOperandValue = (secondOperand == null ? null : ((Simplex) secondOperand).getActualValue());
-
-        if (operator == Operator.NOT) {
-        	if (firstOperandType == BOOLEAN) {
-            	setResult(this.calc.val_(!((Boolean) firstOperandValue).booleanValue()));
-        	} else if (firstOperandType == BYTE) {
-        		setResult(this.calc.val_(!(((Byte) firstOperandValue).byteValue() != 0)));
-        	} else if (firstOperandType == CHAR) {
-        		setResult(this.calc.val_(!(((Character) firstOperandValue).charValue() != 0)));
-        	} else if (firstOperandType == INT) {
-        		setResult(this.calc.val_(!(((Integer) firstOperandValue).intValue() != 0)));
-        	} else if (firstOperandType == LONG) {
-        		setResult(this.calc.val_(!(((Long) firstOperandValue).longValue() != 0)));
-        	} else if (firstOperandType == SHORT) {
-        		setResult(this.calc.val_(!(((Short) firstOperandValue).shortValue() != 0)));
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
-        	}
-        } else if (operator == Operator.NEG) {
-        	if (firstOperandType == DOUBLE) {
-        		setResult(this.calc.val_(-((Double) firstOperandValue).doubleValue()));
-        	} else if (firstOperandType == FLOAT) {
-        		setResult(this.calc.val_(-((Float) firstOperandValue).floatValue()));
-        	} else if (firstOperandType == LONG) {
-        		setResult(this.calc.val_(-((Long) firstOperandValue).longValue()));
-        	} else if (firstOperandType == INT) {
-        		setResult(this.calc.val_(-((Integer) firstOperandValue).intValue()));
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
-        	}
-        } else if (operator == Operator.ADD) {
-        	if (firstOperandType == DOUBLE && secondOperandType == DOUBLE) {
-        		setResult(this.calc.val_(((Double) firstOperandValue).doubleValue() + ((Double) secondOperandValue).doubleValue()));
-        	} else if (firstOperandType == FLOAT && secondOperandType == FLOAT) {
-        		setResult(this.calc.val_(((Float) firstOperandValue).floatValue() + ((Float) secondOperandValue).floatValue()));
-        	} else if (firstOperandType == LONG && secondOperandType == LONG) {
-        		setResult(this.calc.val_(((Long) firstOperandValue).longValue() + ((Long) secondOperandValue).longValue()));
-        	} else if (firstOperandType == INT && secondOperandType == INT) {
-        		setResult(this.calc.val_(((Integer) firstOperandValue).intValue() + ((Integer) secondOperandValue).intValue()));
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
-        	}
-        } else if (operator == Operator.SUB) {
-        	if (firstOperandType == DOUBLE && secondOperandType == DOUBLE) {
-        		setResult(this.calc.val_(((Double) firstOperandValue).doubleValue() - ((Double) secondOperandValue).doubleValue()));
-        	} else if (firstOperandType == FLOAT && secondOperandType == FLOAT) {
-        		setResult(this.calc.val_(((Float) firstOperandValue).floatValue() - ((Float) secondOperandValue).floatValue()));
-        	} else if (firstOperandType == LONG && secondOperandType == LONG) {
-        		setResult(this.calc.val_(((Long) firstOperandValue).longValue() - ((Long) secondOperandValue).longValue()));
-        	} else if (firstOperandType == INT && secondOperandType == INT) {
-        		setResult(this.calc.val_(((Integer) firstOperandValue).intValue() - ((Integer) secondOperandValue).intValue()));
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
-        	}
-        } else if (operator == Operator.MUL) {
-        	if (firstOperandType == DOUBLE && secondOperandType == DOUBLE) {
-        		setResult(this.calc.val_(((Double) firstOperandValue).doubleValue() * ((Double) secondOperandValue).doubleValue()));
-        	} else if (firstOperandType == FLOAT && secondOperandType == FLOAT) {
-        		setResult(this.calc.val_(((Float) firstOperandValue).floatValue() * ((Float) secondOperandValue).floatValue()));
-        	} else if (firstOperandType == LONG && secondOperandType == LONG) {
-        		setResult(this.calc.val_(((Long) firstOperandValue).longValue() * ((Long) secondOperandValue).longValue()));
-        	} else if (firstOperandType == INT && secondOperandType == INT) {
-        		setResult(this.calc.val_(((Integer) firstOperandValue).intValue() * ((Integer) secondOperandValue).intValue()));
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
-        	}
-        } else if (operator == Operator.DIV) {
-        	if (firstOperandType == DOUBLE && secondOperandType == DOUBLE) {
-        		setResult(this.calc.val_(((Double) firstOperandValue).doubleValue() / ((Double) secondOperandValue).doubleValue()));
-        	} else if (firstOperandType == FLOAT && secondOperandType == FLOAT) {
-        		setResult(this.calc.val_(((Float) firstOperandValue).floatValue() / ((Float) secondOperandValue).floatValue()));
-        	} else if (firstOperandType == LONG && secondOperandType == LONG) {
-        		setResult(this.calc.val_(((Long) firstOperandValue).longValue() / ((Long) secondOperandValue).longValue()));
-        	} else if (firstOperandType == INT && secondOperandType == INT) {
-        		setResult(this.calc.val_(((Integer) firstOperandValue).intValue() / ((Integer) secondOperandValue).intValue()));
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
-        	}
-        } else if (operator == Operator.REM) {
-        	if (firstOperandType == DOUBLE && secondOperandType == DOUBLE) {
-        		setResult(this.calc.val_(((Double) firstOperandValue).doubleValue() % ((Double) secondOperandValue).doubleValue()));
-        	} else if (firstOperandType == FLOAT && secondOperandType == FLOAT) {
-        		setResult(this.calc.val_(((Float) firstOperandValue).floatValue() % ((Float) secondOperandValue).floatValue()));
-        	} else if (firstOperandType == LONG && secondOperandType == LONG) {
-        		setResult(this.calc.val_(((Long) firstOperandValue).longValue() % ((Long) secondOperandValue).longValue()));
-        	} else if (firstOperandType == INT && secondOperandType == INT) {
-        		setResult(this.calc.val_(((Integer) firstOperandValue).intValue() % ((Integer) secondOperandValue).intValue()));
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
-        	}
-        } else if (operator == Operator.SHL) {
-        	if (firstOperandType == LONG && secondOperandType == INT) {
-        		setResult(this.calc.val_(((Long) firstOperandValue).longValue() << ((Integer) secondOperandValue).intValue()));
-        	} else if (firstOperandType == INT && secondOperandType == INT){
-        		setResult(this.calc.val_(((Integer) firstOperandValue).intValue() << ((Integer) secondOperandValue).intValue()));
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
-        	}
-        } else if (operator == Operator.SHR) {
-        	if (firstOperandType == LONG && secondOperandType == INT) {
-        		setResult(this.calc.val_(((Long) firstOperandValue).longValue() >> ((Integer) secondOperandValue).intValue()));
-        	} else if (firstOperandType == INT && secondOperandType == INT){
-        		setResult(this.calc.val_(((Integer) firstOperandValue).intValue() >> ((Integer) secondOperandValue).intValue()));
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
-        	}
-        } else if (operator == Operator.USHR) {
-        	if (firstOperandType == LONG && secondOperandType == INT) {
-        		setResult(this.calc.val_(((Long) firstOperandValue).longValue() >>> ((Integer) secondOperandValue).intValue()));
-        	} else if (firstOperandType == INT && secondOperandType == INT){
-        		setResult(this.calc.val_(((Integer) firstOperandValue).intValue() >>> ((Integer) secondOperandValue).intValue()));
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
-        	}
-        } else if (operator == Operator.ANDBW) {
-        	if (firstOperandType == INT && secondOperandType == INT) {
-        		setResult(this.calc.val_(((Integer) firstOperandValue).intValue() & ((Integer) secondOperandValue).intValue()));
-        	} else if (firstOperandType == LONG && secondOperandType == LONG) {
-        		setResult(this.calc.val_(((Long) firstOperandValue).longValue() & ((Long) secondOperandValue).longValue()));
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
-        	}
-        } else if (operator == Operator.ORBW) {
-        	if (firstOperandType == INT && secondOperandType == INT) {
-        		setResult(this.calc.val_(((Integer) firstOperandValue).intValue() | ((Integer) secondOperandValue).intValue()));
-        	} else if (firstOperandType == LONG && secondOperandType == LONG) {
-        		setResult(this.calc.val_(((Long) firstOperandValue).longValue() | ((Long) secondOperandValue).longValue()));
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
-        	}
-        } else if (operator == Operator.XORBW) {
-        	if (firstOperandType == INT && secondOperandType == INT) {
-        		setResult(this.calc.val_(((Integer) firstOperandValue).intValue() ^ ((Integer) secondOperandValue).intValue()));
-        	} else if (firstOperandType == LONG && secondOperandType == LONG) {
-        		setResult(this.calc.val_(((Long) firstOperandValue).longValue() ^ ((Long) secondOperandValue).longValue()));
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed arithmetic expression");
-        	}
+        if (operator == Operator.NOT || operator == Operator.NEG) {
+        	applyOperatorUnary(firstOperand, operator);
+        } else if (operator == Operator.ADD || operator == Operator.SUB || operator == Operator.MUL || operator == Operator.DIV || operator == Operator.REM) {
+        	applyOperatorArithBinary(firstOperand, operator, secondOperand);
+        } else if (operator == Operator.SHL || operator == Operator.SHR || operator == Operator.USHR || operator == Operator.ANDBW || operator == Operator.ORBW || operator == Operator.XORBW) {
+        	applyOperatorBitwise(firstOperand, operator, secondOperand);
         } else if (operator == Operator.AND || operator == Operator.OR) {
         	applyOperatorBooleanBinary(firstOperand, operator, secondOperand);
-        } else if (operator == Operator.EQ) {
-        	final char operandsTypesLub = lub(firstOperandType, secondOperandType);
-        	if (isPrimitiveFloating(operandsTypesLub)) { 
-        		setResult(this.calc.val_((boolean) (((Number) firstOperandValue).doubleValue() == ((Number) secondOperandValue).doubleValue()))); 
-        	} else if (isPrimitiveIntegral(operandsTypesLub)) { 
-        		setResult(this.calc.val_((boolean) (((Number) firstOperandValue).longValue() == ((Number) secondOperandValue).longValue()))); 
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed comparison expression");
-        	}
-        } else if (operator == Operator.NE) {
-        	final char operandsTypesLub = lub(firstOperandType, secondOperandType);
-        	if (isPrimitiveFloating(operandsTypesLub)) { 
-        		setResult(this.calc.val_((boolean) (((Number) firstOperandValue).doubleValue() != ((Number) secondOperandValue).doubleValue()))); 
-        	} else if (isPrimitiveIntegral(operandsTypesLub)) { 
-        		setResult(this.calc.val_((boolean) (((Number) firstOperandValue).longValue() != ((Number) secondOperandValue).longValue()))); 
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed comparison expression");
-        	}
-        } else if (operator == Operator.GT) {
-        	final char operandsTypesLub = lub(firstOperandType, secondOperandType);
-        	if (isPrimitiveFloating(operandsTypesLub)) { 
-        		setResult(this.calc.val_((boolean) (((Number) firstOperandValue).doubleValue() > ((Number) secondOperandValue).doubleValue()))); 
-        	} else if (isPrimitiveIntegral(operandsTypesLub)) { 
-        		setResult(this.calc.val_((boolean) (((Number) firstOperandValue).longValue() > ((Number) secondOperandValue).longValue()))); 
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed comparison expression");
-        	}
-        } else if (operator == Operator.GE) {
-        	final char operandsTypesLub = lub(firstOperandType, secondOperandType);
-        	if (isPrimitiveFloating(operandsTypesLub)) { 
-        		setResult(this.calc.val_((boolean) (((Number) firstOperandValue).doubleValue() >= ((Number) secondOperandValue).doubleValue()))); 
-        	} else if (isPrimitiveIntegral(operandsTypesLub)) { 
-        		setResult(this.calc.val_((boolean) (((Number) firstOperandValue).longValue() >= ((Number) secondOperandValue).longValue()))); 
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed comparison expression");
-        	}
-        } else if (operator == Operator.LT) {
-        	final char operandsTypesLub = lub(firstOperandType, secondOperandType);
-        	if (isPrimitiveFloating(operandsTypesLub)) { 
-        		setResult(this.calc.val_((boolean) (((Number) firstOperandValue).doubleValue() < ((Number) secondOperandValue).doubleValue()))); 
-        	} else if (isPrimitiveIntegral(operandsTypesLub)) { 
-        		setResult(this.calc.val_((boolean) (((Number) firstOperandValue).longValue() < ((Number) secondOperandValue).longValue()))); 
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed comparison expression");
-        	}
-        } else if (operator == Operator.LE) {
-        	final char operandsTypesLub = lub(firstOperandType, secondOperandType);
-        	if (isPrimitiveFloating(operandsTypesLub)) { 
-        		setResult(this.calc.val_((boolean) (((Number) firstOperandValue).doubleValue() <= ((Number) secondOperandValue).doubleValue()))); 
-        	} else if (isPrimitiveIntegral(operandsTypesLub)) { 
-        		setResult(this.calc.val_((boolean) (((Number) firstOperandValue).longValue() <= ((Number) secondOperandValue).longValue()))); 
-        	} else {
-        		throw new UnexpectedInternalException("Found ill-formed comparison expression");
-        	}
+        } else if (operator == Operator.EQ || operator == Operator.NE || operator == Operator.GT || operator == Operator.GE || operator == Operator.LT || operator == Operator.LE) {
+        	applyOperatorRelational(firstOperand, operator, secondOperand);
         } else {
         	throw new UnexpectedInternalException("Found unexpected operator " + operator);
         }
     } 
 
-    private void applyConversion(Simplex toConvert, char to) 
+    private void applyWideningNarrowingConversion(Simplex toConvert, char to) 
     throws NoResultException {
         final char from = toConvert.getType();
         final Number n;
