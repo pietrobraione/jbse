@@ -1,6 +1,6 @@
 package jbse.algo;
 
-import static jbse.algo.Util.failExecution;
+import static jbse.algo.UtilControlFlow.failExecution;
 import static jbse.bc.Offsets.XCONST_OFFSET;
 
 import java.util.function.Supplier;

@@ -1,6 +1,6 @@
 package jbse.apps.run;
 
-import static jbse.algo.Util.failExecution;
+import static jbse.algo.UtilControlFlow.failExecution;
 import static jbse.apps.run.JAVA_MAP_Utils.classImplementsJavaUtilMap;
 import static jbse.apps.run.JAVA_MAP_Utils.isInitialMapField;
 import static jbse.apps.run.JAVA_MAP_Utils.isSymbolicApplyOnInitialMap;

@@ -1,13 +1,13 @@
 package jbse.algo.meta;
 
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.failExecution;
+import static jbse.algo.UtilControlFlow.throwNew;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.algo.Util.checkOverridingMethodFits;
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.lookupMethodImpl;
 import static jbse.algo.Util.lookupMethodImplOverriding;
-import static jbse.algo.Util.throwNew;
-import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.Offsets.offsetInvoke;

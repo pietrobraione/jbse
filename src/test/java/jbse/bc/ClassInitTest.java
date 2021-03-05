@@ -22,7 +22,7 @@ import org.junit.Test;
 
 import jbse.algo.ExecutionContext;
 import jbse.algo.InterruptException;
-import jbse.algo.Util;
+import jbse.algo.UtilClassInitialization;
 import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
@@ -82,7 +82,7 @@ public class ClassInitTest {
         final ClassFile cf_A = this.state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, "hier/A", true);
         this.state.pushFrameSymbolic(cf_A, this.ctx.rootMethodSignature); //or initialization will fail
         try {
-            Util.ensureClassInitialized(this.state, this.ctx, cf_A);
+            UtilClassInitialization.ensureClassInitialized(this.state, this.ctx, cf_A);
             assertTrue(false); //should not arrive here
         } catch (InterruptException e) {
             //that's right, go on

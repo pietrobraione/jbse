@@ -1,13 +1,13 @@
 package jbse.algo;
 
 import static java.lang.System.arraycopy;
-import static jbse.algo.Util.continueWithBaseLevelImpl;
-import static jbse.algo.Util.ensureClassInitialized;
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
+import static jbse.algo.UtilClassInitialization.ensureClassInitialized;
+import static jbse.algo.UtilControlFlow.continueWithBaseLevelImpl;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.failExecution;
+import static jbse.algo.UtilControlFlow.throwNew;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.algo.Util.findClassFile;
-import static jbse.algo.Util.throwNew;
-import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
 import static jbse.bc.Offsets.offsetInvoke;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;

@@ -1,11 +1,11 @@
 package jbse.algo.meta;
 
 import static jbse.algo.BytecodeData_1KME.Kind.kind;
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.failExecution;
+import static jbse.algo.UtilControlFlow.throwNew;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.algo.Util.invokeClassLoaderLoadClass;
-import static jbse.algo.Util.throwNew;
-import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.bc.Signatures.ILLEGAL_ARGUMENT_EXCEPTION;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;

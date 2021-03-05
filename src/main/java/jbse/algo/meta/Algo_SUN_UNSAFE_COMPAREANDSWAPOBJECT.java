@@ -1,8 +1,8 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
-import static jbse.algo.Util.throwVerifyError;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.failExecution;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.mem.Util.areAlias;
 import static jbse.mem.Util.areNotAlias;
 

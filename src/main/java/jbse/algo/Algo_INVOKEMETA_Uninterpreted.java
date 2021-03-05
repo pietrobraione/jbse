@@ -1,7 +1,7 @@
 package jbse.algo;
 
-import static jbse.algo.Util.continueWith;
-import static jbse.algo.Util.continueWithBaseLevelImpl;
+import static jbse.algo.UtilControlFlow.continueWith;
+import static jbse.algo.UtilControlFlow.continueWithBaseLevelImpl;
 import static jbse.common.Type.parametersNumber;
 
 import java.util.function.Supplier;

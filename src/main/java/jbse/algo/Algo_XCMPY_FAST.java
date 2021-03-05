@@ -1,7 +1,7 @@
 package jbse.algo;
 
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.throwVerifyError;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.bc.Offsets.XCMPY_OFFSET;
 import static jbse.common.Type.DOUBLE;
 import static jbse.common.Type.FLOAT;

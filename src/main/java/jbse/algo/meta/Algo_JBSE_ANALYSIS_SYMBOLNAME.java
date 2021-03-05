@@ -1,7 +1,7 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.throwNew;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.throwNew;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
 import java.util.function.Supplier;

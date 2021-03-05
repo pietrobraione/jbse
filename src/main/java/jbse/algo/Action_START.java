@@ -1,7 +1,7 @@
 package jbse.algo;
 
-import static jbse.algo.Util.ensureClassInitialized;
-import static jbse.algo.Util.failExecution;
+import static jbse.algo.UtilClassInitialization.ensureClassInitialized;
+import static jbse.algo.UtilControlFlow.failExecution;
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.ClassLoaders.CLASSLOADER_EXT;

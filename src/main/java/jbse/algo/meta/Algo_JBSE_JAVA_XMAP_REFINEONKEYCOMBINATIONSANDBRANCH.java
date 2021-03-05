@@ -1,8 +1,8 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
-import static jbse.algo.Util.throwVerifyError;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.failExecution;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.bc.Signatures.JAVA_MAP_CONTAINSKEY;
 import static jbse.common.Type.BOOLEAN;

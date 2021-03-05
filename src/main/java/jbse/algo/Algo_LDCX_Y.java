@@ -1,12 +1,12 @@
 package jbse.algo;
 
-import static jbse.algo.Util.ensureInstance_JAVA_METHODHANDLE;
-import static jbse.algo.Util.ensureInstance_JAVA_METHODTYPE;
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.failExecution;
+import static jbse.algo.UtilControlFlow.throwNew;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
+import static jbse.algo.UtilJavaLangInvokeObjects.ensureInstance_JAVA_METHODHANDLE;
+import static jbse.algo.UtilJavaLangInvokeObjects.ensureInstance_JAVA_METHODTYPE;
 import static jbse.algo.Util.invokeClassLoaderLoadClass;
-import static jbse.algo.Util.throwNew;
-import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.LDC_OFFSET;
 import static jbse.bc.Offsets.LDC_W_OFFSET;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;

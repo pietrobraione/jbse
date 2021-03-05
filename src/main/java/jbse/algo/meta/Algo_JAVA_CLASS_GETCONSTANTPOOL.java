@@ -1,10 +1,10 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.ensureClassInitialized;
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
-import static jbse.algo.Util.throwNew;
-import static jbse.algo.Util.throwVerifyError;
+import static jbse.algo.UtilClassInitialization.ensureClassInitialized;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.failExecution;
+import static jbse.algo.UtilControlFlow.throwNew;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.SUN_CONSTANTPOOL;
 import static jbse.bc.Signatures.SUN_CONSTANTPOOL_CONSTANTPOOLOOP;

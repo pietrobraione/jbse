@@ -1,6 +1,6 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.failExecution;
+import static jbse.algo.UtilControlFlow.failExecution;
 import static jbse.algo.Util.storeInArray;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.common.Type.INT;

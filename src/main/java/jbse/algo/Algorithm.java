@@ -1,7 +1,7 @@
 package jbse.algo;
 
-import static jbse.algo.Util.failExecution;
-import static jbse.algo.Util.throwVerifyError;
+import static jbse.algo.UtilControlFlow.failExecution;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
 
 import java.util.Collection;
 import java.util.Collections;

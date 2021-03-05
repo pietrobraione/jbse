@@ -1,6 +1,6 @@
 package jbse.apps.run;
 
-import static jbse.algo.Util.ensureClassInitialized;
+import static jbse.algo.UtilClassInitialization.ensureClassInitialized;
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 
 import java.util.Collection;

@@ -1,7 +1,7 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.failExecution;
 
 import java.util.function.Supplier;
 
