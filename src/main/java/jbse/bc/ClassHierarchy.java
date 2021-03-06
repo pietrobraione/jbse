@@ -789,18 +789,8 @@ public final class ClassHierarchy implements Cloneable {
         //uses the dummy ClassFile to recursively resolve all the immediate 
         //ancestor classes
         //TODO check circularity
-        final ClassFile superClass = (classDummy.getSuperclassName() == null ? null : resolveClass(classDummy, classDummy.getSuperclassName(), bypassStandardLoading));
-        if (superClass != null && superClass.isInterface()) {
-            throw new IncompatibleClassFileException("Superclass " + classDummy.getSuperclassName() + " of class " + classDummy.getClassName() + " actually is an interface.");
-        }
-        final List<String> superInterfaceNames = classDummy.getSuperInterfaceNames();
-        final ClassFile[] superInterfaces = new ClassFile[superInterfaceNames.size()];
-        for (int i = 0; i < superInterfaces.length; ++i) {
-            superInterfaces[i] = resolveClass(classDummy, superInterfaceNames.get(i), bypassStandardLoading);
-            if (!superInterfaces[i].isInterface()) {
-                throw new IncompatibleClassFileException("Superinterface " + superInterfaceNames.get(i) + " of class " + classDummy.getClassName() + " actually is not an interface.");
-            }
-        }
+        final ClassFile superClass = resolveSuperclass(classDummy, bypassStandardLoading);
+        final ClassFile[] superInterfaces = resolveSuperinterfaces(classDummy, bypassStandardLoading);
 
         //creates a complete ClassFile for the class, registers it and returns it
         final ClassFile retVal = createClassFileClass(classDummy, superClass, superInterfaces);
@@ -826,10 +816,25 @@ public final class ClassHierarchy implements Cloneable {
         //uses the dummy ClassFile to recursively resolve all the immediate 
         //ancestor classes
         //TODO check circularity
+        final ClassFile superClass = resolveSuperclass(classDummy, bypassStandardLoading);
+        final ClassFile[] superInterfaces = resolveSuperinterfaces(classDummy, bypassStandardLoading);
+        
+        //creates a complete ClassFile for the class, registers it and returns it
+        final ClassFile retVal = createClassFileAnonymous(classDummy, superClass, superInterfaces, cpPatches);
+        addClassFileAnonymous(retVal);
+        return retVal;
+    }
+    
+    private ClassFile resolveSuperclass(ClassFile classDummy, boolean bypassStandardLoading) throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException {
+        //TODO check circularity
         final ClassFile superClass = (classDummy.getSuperclassName() == null ? null : resolveClass(classDummy, classDummy.getSuperclassName(), bypassStandardLoading));
         if (superClass != null && superClass.isInterface()) {
             throw new IncompatibleClassFileException("Superclass " + classDummy.getSuperclassName() + " of class " + classDummy.getClassName() + " actually is an interface.");
         }
+        return superClass;
+    }
+    
+    private ClassFile[] resolveSuperinterfaces(ClassFile classDummy, boolean bypassStandardLoading) throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException {
         final List<String> superInterfaceNames = classDummy.getSuperInterfaceNames();
         final ClassFile[] superInterfaces = new ClassFile[superInterfaceNames.size()];
         for (int i = 0; i < superInterfaces.length; ++i) {
@@ -838,11 +843,7 @@ public final class ClassHierarchy implements Cloneable {
                 throw new IncompatibleClassFileException("Superinterface " + superInterfaceNames.get(i) + " of class " + classDummy.getClassName() + " actually is not an interface.");
             }
         }
-        
-        //creates a complete ClassFile for the class, registers it and returns it
-        final ClassFile retVal = createClassFileAnonymous(classDummy, superClass, superInterfaces, cpPatches);
-        addClassFileAnonymous(retVal);
-        return retVal;
+        return superInterfaces;
     }
     
     /**
@@ -1483,13 +1484,21 @@ public final class ClassHierarchy implements Cloneable {
      * @param accessed a {@link ClassFile}.
      * @return {@code true} iff {@code accessed} is accessible to 
      *         {@code accessor}.
+     * @throws InvalidInputException if {@code accessor == null || accessed == null}.
      */
-    public boolean isClassAccessible(ClassFile accessor, ClassFile accessed) {
-        final boolean sameRuntimePackage = (accessor.getDefiningClassLoader() == accessed.getDefiningClassLoader() && accessed.getPackageName().equals(accessor.getPackageName()));
+    public boolean isClassAccessible(ClassFile accessor, ClassFile accessed) throws InvalidInputException {
+    	if (accessor == null || accessed == null) {
+    		throw new InvalidInputException("Invoked ClassHierarchy.isClassAccessible with a null parameter");
+    	}
         if (accessor.equals(accessed) || accessed.isPublic()) {
             return true;
         } else {
-            return sameRuntimePackage;
+        	try {
+        		return accessor.sameRuntimePackage(accessed);
+        	} catch (InvalidInputException e) {
+        		//this should never happen
+        		throw new UnexpectedInternalException(e);
+        	}
         }
     }
 
@@ -1515,7 +1524,7 @@ public final class ClassHierarchy implements Cloneable {
     		while (accessorHost.isAnonymousUnregistered()) {
     			accessorHost = accessorHost.getHostClass();
     		}
-	        final boolean sameRuntimePackage = (accessorHost.getDefiningClassLoader() == accessed.getDefiningClassLoader() && accessed.getPackageName().equals(accessorHost.getPackageName()));
+	        final boolean sameRuntimePackage = accessorHost.sameRuntimePackage(accessed);
 	        if (accessor.equals(accessed) || accessed.isFieldPublic(fieldSignature)) {
 	            return true;
 	        } else if (accessed.isFieldProtected(fieldSignature)) {
@@ -1535,7 +1544,7 @@ public final class ClassHierarchy implements Cloneable {
 	            //TODO there was a || accessorHost.isInner(accessed) clause but it is *wrong*!
 	        }
     	} catch (InvalidInputException e) {
-    		//this should never happen, NullPointerException shall be thrown before
+    		//this should never happen
     		throw new UnexpectedInternalException(e);
     	}
     }
@@ -1570,7 +1579,7 @@ public final class ClassHierarchy implements Cloneable {
     		while (accessorHost.isAnonymousUnregistered()) {
     			accessorHost = accessorHost.getHostClass();
     		}
-    		final boolean sameRuntimePackage = (accessorHost.getDefiningClassLoader() == accessed.getDefiningClassLoader() && accessed.getPackageName().equals(accessorHost.getPackageName()));
+    		final boolean sameRuntimePackage = accessorHost.sameRuntimePackage(accessed);
     		if (accessor.equals(accessed) || accessed.isMethodPublic(methodSignature)) {
     			return true;
     		} else if (accessed.isMethodProtected(methodSignature)) {
@@ -1695,8 +1704,10 @@ public final class ClassHierarchy implements Cloneable {
     	if (resolutionClass == null) {
     		throw new InvalidInputException("Invoked " + this.getClass().getName() + ".lookupMethodImplSpecial with a null resolutionClass.");
     	}
+    	
+    	ClassFile retVal;
         if (resolutionClass.isMethodSignaturePolymorphic(methodSignature)) {
-            return resolutionClass;
+        	retVal = resolutionClass;
         } else {
         	//determines whether should start looking for the implementation in 
         	//the superclass of the current class (virtual semantics, for super 
@@ -1715,74 +1726,98 @@ public final class ClassHierarchy implements Cloneable {
         			currentClass.isSuperInvoke());
         	final ClassFile c = (useVirtualSemantics ? currentClass.getSuperclass() : resolutionClass);
         	if (c == null) {
-        		throw new InvalidInputException("Invoked " + this.getClass().getName() + ".lookupMethodImplSpecial with a virtual invocation semantics (\"super\") but currentClass has not a superclass.");
+        		throw new InvalidInputException("Invoked " + getClass().getName() + ".lookupMethodImplSpecial with a virtual invocation semantics (\"super\") but currentClass has not a superclass.");
         	}
 
         	//applies lookup
-        	ClassFile retVal = null;
         	try {
-        		//step 1
-        		if (c.hasMethodDeclaration(methodSignature) && 
-        				!c.isMethodStatic(methodSignature)) {
-        			retVal = c;
-        			//third run-time exception
-        			if (retVal.isMethodAbstract(methodSignature)) {
-        				throw new MethodAbstractException(methodSignature.toString());
-        			}
-        		} 
-
-        		//step 2
-        		if (retVal == null && !c.isInterface() && c.getSuperclass() != null) {
-        			for (ClassFile f : c.getSuperclass().superclasses()) {
-        				if (f.hasMethodDeclaration(methodSignature)) {
-        					retVal = f;
-        					//third run-time exception
-        					if (retVal.isMethodAbstract(methodSignature)) {
-        						throw new MethodAbstractException(methodSignature.toString());
-        					}
-        					break;
-        				}
-        			}
-        		}
-
-        		//step 3
-        		if (retVal == null && c.isInterface()) {
-        			final ClassFile cf_JAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT); //surely loaded
-        			if (cf_JAVA_OBJECT == null) {
-        				throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".lookupMethodImplSpecial was unable to find standard class java.lang.Object.");
-        			}
-        			if (c.hasMethodDeclaration(methodSignature) && 
-        					!c.isMethodStatic(methodSignature) && 
-        					c.isMethodPublic(methodSignature)) {
-        				retVal = cf_JAVA_OBJECT;
-        				//third run-time exception
-        				if (retVal.isMethodAbstract(methodSignature)) {
-        					throw new MethodAbstractException(methodSignature.toString());
-        				}
-        			}
-        		}
-
-        		//step 4
-        		if (retVal == null) {
-        			final Set<ClassFile> nonabstractMaxSpecMethods = 
-        					maximallySpecificSuperinterfaceMethods(resolutionClass, methodSignature, true);
-        			if (nonabstractMaxSpecMethods.size() == 0) {
-        				//sixth run-time exception
-        				throw new MethodAbstractException(methodSignature.toString());
-        			} else if (nonabstractMaxSpecMethods.size() == 1) {
-        				retVal = nonabstractMaxSpecMethods.iterator().next();
-        			} else { //nonabstractMaxSpecMethods.size() > 1
-        				//fifth run-time exception
-        				throw new IncompatibleClassFileException(methodSignature.toString());
-        			}
-        		}
+        		retVal = lookupMethodImplSpecial_step1(c, methodSignature);
+        		retVal = (retVal == null) ? lookupMethodImplSpecial_step2(c, methodSignature) : retVal;
+        		retVal = (retVal == null) ? lookupMethodImplSpecial_step3(c, methodSignature) : retVal;
+        		retVal = (retVal == null) ? lookupMethodImplSpecial_step4(c, methodSignature, resolutionClass) : retVal;
         	} catch (MethodNotFoundException e) {
         		//this should never happen
         		throw new UnexpectedInternalException(e);
         	}
-
-        	return retVal;
         }
+        
+    	return retVal;
+    }
+    
+    private ClassFile lookupMethodImplSpecial_step1(ClassFile c, Signature methodSignature) 
+    throws MethodNotFoundException, MethodAbstractException {
+    	final ClassFile retVal;
+    	if (c.hasMethodDeclaration(methodSignature) && 
+    	!c.isMethodStatic(methodSignature)) {
+    		retVal = c;
+    		//third run-time exception
+    		if (retVal.isMethodAbstract(methodSignature)) {
+    			throw new MethodAbstractException(methodSignature.toString());
+    		}
+    	} else {
+    		retVal = null;
+    	}
+    	return retVal;
+    }
+    
+    private ClassFile lookupMethodImplSpecial_step2(ClassFile c, Signature methodSignature) 
+    throws MethodNotFoundException, MethodAbstractException {
+    	ClassFile retVal = null;
+		if (!c.isInterface() && c.getSuperclass() != null) {
+			for (ClassFile f : c.getSuperclass().superclasses()) {
+				if (f.hasMethodDeclaration(methodSignature)) {
+					retVal = f;
+					//third run-time exception
+					if (retVal.isMethodAbstract(methodSignature)) {
+						throw new MethodAbstractException(methodSignature.toString());
+					}
+					break;
+				}
+			}
+		}
+		return retVal;
+    }
+    
+    private ClassFile lookupMethodImplSpecial_step3(ClassFile c, Signature methodSignature) 
+    throws MethodNotFoundException, MethodAbstractException {
+    	final ClassFile retVal;
+		if (c.isInterface()) {
+			final ClassFile cf_JAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT); //surely loaded
+			if (cf_JAVA_OBJECT == null) {
+				throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".lookupMethodImplSpecial was unable to find standard class java.lang.Object.");
+			}
+			if (c.hasMethodDeclaration(methodSignature) && 
+					!c.isMethodStatic(methodSignature) && 
+					c.isMethodPublic(methodSignature)) {
+				retVal = cf_JAVA_OBJECT;
+				//third run-time exception
+				if (retVal.isMethodAbstract(methodSignature)) {
+					throw new MethodAbstractException(methodSignature.toString());
+				}
+			} else {
+				retVal = null;
+			}
+		} else {
+			retVal = null;
+		}
+		return retVal;
+    }
+
+    private ClassFile lookupMethodImplSpecial_step4(ClassFile c, Signature methodSignature, ClassFile resolutionClass) 
+    throws MethodAbstractException, IncompatibleClassFileException {
+    	final ClassFile retVal;
+    	final Set<ClassFile> nonabstractMaxSpecMethods = 
+    	maximallySpecificSuperinterfaceMethods(resolutionClass, methodSignature, true);
+    	if (nonabstractMaxSpecMethods.size() == 0) {
+    		//sixth run-time exception
+    		throw new MethodAbstractException(methodSignature.toString());
+    	} else if (nonabstractMaxSpecMethods.size() == 1) {
+    		retVal = nonabstractMaxSpecMethods.iterator().next();
+    	} else { //nonabstractMaxSpecMethods.size() > 1
+    		//fifth run-time exception
+    		throw new IncompatibleClassFileException(methodSignature.toString());
+    	}
+    	return retVal;
     }
 
     /**
@@ -1969,48 +2004,48 @@ public final class ClassHierarchy implements Cloneable {
     	if (sub == null || sup == null || subMethodSignature == null || supMethodSignature == null) {
     		throw new InvalidInputException("Invoked ClassHierarchy.overrides with a null parameter.");
     	}
-        //first case: same method
+    	
+    	final boolean retVal;
+    	
         if (sub.equals(sup) && 
             subMethodSignature.getDescriptor().equals(supMethodSignature.getDescriptor()) &&
             subMethodSignature.getName().equals(supMethodSignature.getName()) ) {
-            return true;
+            //first case: same method
+        	retVal = true;
+        } else if (sub.getSuperclass() == null || !sub.getSuperclass().isSubclass(sup)) {
+            //second case: all of the following must be true
+            //1- subMethod's class is a (proper) subclass of supMethod's class 
+        	retVal = false;
+        } else if (!subMethodSignature.getName().equals(supMethodSignature.getName())) {
+            //2- subMethod has same name and descriptor of supMethod
+        	retVal = false;
+        } else if (!subMethodSignature.getDescriptor().equals(supMethodSignature.getDescriptor())) {
+        	retVal = false;
+        } else if (sub.isMethodPrivate(subMethodSignature)) {
+            //3- subMethod is not private
+        	retVal = false;
+        } else if (sup.isMethodPublic(supMethodSignature)) {
+            //4- one of the following is true:
+            //4a- supMethod is public, or protected, or (package in the same runtime package of subMethod)
+        	retVal = true;
+        } else if (sup.isMethodProtected(supMethodSignature)) {
+        	retVal = true;
+        } else if (sup.isMethodPackage(supMethodSignature) && sub.sameRuntimePackage(sup)) {
+        	retVal = true;
+        } else if (overrides_step4b(sub, sup, subMethodSignature, supMethodSignature)) {
+            //4b- there is another method m such that subMethod overrides 
+            //m and m overrides supMethod; we look for such m in subMethod's 
+            //superclasses up to supMethods
+        	retVal = true;
+        } else {
+        	retVal = false;
         }
         
-        //second case: all of the following must be true
-        //1- subMethod's class is a (proper) subclass of supMethod's class 
-        if (sub.getSuperclass() == null || !sub.getSuperclass().isSubclass(sup)) {
-            return false;
-        }
-        
-        //2- subMethod has same name and descriptor of supMethod
-        if (!subMethodSignature.getName().equals(supMethodSignature.getName())) {
-            return false;
-        }
-        if (!subMethodSignature.getDescriptor().equals(supMethodSignature.getDescriptor())) {
-            return false;
-        }
-        
-        //3- subMethod is not private
-        if (sub.isMethodPrivate(subMethodSignature)) {
-            return false;
-        }
-        
-        //4- one of the following is true:
-        //4a- supMethod is public, or protected, or (package in the same runtime package of subMethod)
-        if (sup.isMethodPublic(supMethodSignature)) {
-            return true;
-        }
-        if (sup.isMethodProtected(supMethodSignature)) {
-            return true;
-        }
-        final boolean sameRuntimePackage = (sub.getDefiningClassLoader() == sup.getDefiningClassLoader() && sub.getPackageName().equals(sup.getPackageName()));
-        if (sup.isMethodPackage(supMethodSignature) && sameRuntimePackage) {
-            return true;
-        }
-        
-        //4b- there is another method m such that subMethod overrides 
-        //m and m overrides supMethod; we look for such m in subMethod's 
-        //superclasses up to supMethods
+        return retVal;
+    }
+    
+    private boolean overrides_step4b(ClassFile sub, ClassFile sup, Signature subMethodSignature, Signature supMethodSignature) 
+    throws MethodNotFoundException, InvalidInputException {
         if (sub.getSuperclass() != null) {
         	for (ClassFile cf : sub.getSuperclass().superclasses()) {
         		if (sup.equals(cf)) {
@@ -2023,8 +2058,7 @@ public final class ClassHierarchy implements Cloneable {
         		}
         	}
         }
-        
-        return false; //no such m was found
+        return false;
     }
     
     @Override

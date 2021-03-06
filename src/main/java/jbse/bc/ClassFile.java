@@ -1273,6 +1273,21 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      *         class (empty if none).
      */
     public abstract List<String> getSuperInterfaceNames();
+    
+    /**
+     * Checks whether this class has the same runtime package as
+     * another one.
+     * 
+     * @param other a {@link ClassFile}.
+     * @return {@code true} iff {@link #getDefiningClassLoader() getDefiningClassLoader}{@code () == other.}{@link #getDefiningClassLoader() getDefiningClassLoader}{@code () && }{@link #getPackageName() getPackageName}{@code ().}{@link String#equals(Object) equals}{@code (other.}{@link #getPackageName() getPackageName}{@code ())}.
+     * @throws InvalidInputException if {@code other == null}.
+     */
+    public final boolean sameRuntimePackage(ClassFile other) throws InvalidInputException {
+    	if (other == null) {
+    		throw new InvalidInputException("Invoked ClassFile.sameRuntimePackage with null parameter");
+    	}
+    	return (getDefiningClassLoader() == other.getDefiningClassLoader() && getPackageName().equals(other.getPackageName()));
+    }
 
     /**
      * Checks whether this class (nonstrictly) extends/implements another one.
@@ -1283,9 +1298,9 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      *         {@code false} otherwise.
      * @throws InvalidInputException if {@code sup == null}.
      */
-    public boolean isSubclass(ClassFile sup) throws InvalidInputException {
+    public final boolean isSubclass(ClassFile sup) throws InvalidInputException {
     	if (sup == null) {
-    		throw new InvalidInputException("Invoked ClassFile.isSubclass with null parameter.");
+    		throw new InvalidInputException("Invoked ClassFile.isSubclass with null parameter");
     	}
     	if (JAVA_OBJECT.equals(sup.getClassName())) {
     	    return true; //every class/interface is subclass of java.lang.Object
@@ -1322,7 +1337,7 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * @return an {@link Iterable}{@code <}{@link ClassFile}{@code >} containing 
      *         all the superclasses of {@code this} (included).
      */
-    public Iterable<ClassFile> superclasses() {
+    public final Iterable<ClassFile> superclasses() {
         return new IterableSuperclasses(this);
     }
 
@@ -1334,7 +1349,7 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      *         it is an interface). A same superinterface is not iterated
      *         more than once even if the class inherits it more than once. 
      */
-    public Iterable<ClassFile> superinterfaces() {
+    public final Iterable<ClassFile> superinterfaces() {
         return new IterableSuperinterfaces(this);
     }
 
@@ -1496,7 +1511,7 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     }
 
     @Override
-    public int compareTo(ClassFile other) {
+    public final int compareTo(ClassFile other) {
         final int compareNames = getClassName().compareTo(other.getClassName());
         if (compareNames == 0) {
             final int d = other.getDefiningClassLoader() - getDefiningClassLoader();
