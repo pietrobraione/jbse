@@ -158,49 +158,9 @@ public final class ReachableObjectsCollector {
             }
         }
         
-        //possibly adds the string literals
+        //possibly adds the objects in the state's object dictionary
         if (precise) {
-            s.getStringLiterals().stream()
-                .filter(r -> !s.isNull(r))
-                .map(ReferenceConcrete::getHeapPosition)
-                .forEachOrdered(reachable::add);
-        }
-        
-        //possibly adds the classes
-        if (precise) {
-            s.getClasses().stream()
-                .filter(r -> !s.isNull(r))
-                .map(ReferenceConcrete::getHeapPosition)
-                .forEachOrdered(reachable::add);
-        }
-        
-        //possibly adds the primitive classes
-        if (precise) {
-            s.getClassesPrimitive().stream()
-                .filter(r -> !s.isNull(r))
-                .map(ReferenceConcrete::getHeapPosition)
-                .forEachOrdered(reachable::add);
-        }
-
-        //possibly adds the classloaders
-        if (precise) {
-            s.getClassLoaders().stream()
-                .filter(r -> !s.isNull(r))
-                .map(ReferenceConcrete::getHeapPosition)
-                .forEachOrdered(reachable::add);
-        }
-
-        //possibly adds the method types
-        if (precise) {
-            s.getMethodTypes().stream()
-                .filter(r -> !s.isNull(r))
-                .map(ReferenceConcrete::getHeapPosition)
-                .forEachOrdered(reachable::add);
-        }
-        
-        //possibly adds the method handles
-        if (precise) {
-            s.getMethodHandles().stream()
+            s.getObjectsInDictionary().stream()
                 .filter(r -> !s.isNull(r))
                 .map(ReferenceConcrete::getHeapPosition)
                 .forEachOrdered(reachable::add);

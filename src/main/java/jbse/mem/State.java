@@ -19,10 +19,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -88,71 +86,24 @@ import jbse.val.exc.InvalidTypeException;
  * Class that represents the state of the execution.
  */
 public final class State implements Cloneable {
-    /** The slot number of the "this" (method receiver) object. */
-    private static final int ROOT_THIS_SLOT = 0;
-
     /**
-     * Class used as key for the method handles cache.
+     * The phase types of the symbolic execution.
      * 
      * @author Pietro Braione
      */
-    private static final class MHKey {
-    	final int refKind; 
-    	final ClassFile container;
-    	final List<ClassFile> descriptorResolved;
-    	final String name;
+    public enum Phase { 
+    	/** This state comes strictly before the initial state. */
+    	PRE_INITIAL, 
     	
-    	final int hashCode;
+    	/** This state is the initial state. */
+    	INITIAL, 
     	
-    	MHKey(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name) throws InvalidInputException {
-    		if (container == null || descriptorResolved == null || name == null) {
-    			throw new InvalidInputException("Tried to create a method handle key with null container class, or descriptor, or name of the field/method.");
-    		}
-    		this.refKind = refKind;
-    		this.container = container;
-    		this.descriptorResolved = Collections.unmodifiableList(Arrays.asList(descriptorResolved));
-    		this.name = name;
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + this.refKind;
-			result = prime * result + this.container.hashCode();
-			result = prime * result + this.descriptorResolved.hashCode();
-			result = prime * result + this.name.hashCode();
-			this.hashCode = result;
-    	}
-
-		@Override
-		public int hashCode() {
-			return this.hashCode;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj) {
-				return true;
-			}
-			if (obj == null) {
-				return false;
-			}
-			if (getClass() != obj.getClass()) {
-				return false;
-			}
-			final MHKey other = (MHKey) obj;
-			if (this.refKind != other.refKind) {
-				return false;
-			}
-			if (!this.container.equals(other.container)) {
-				return false;
-			}
-			if (!this.descriptorResolved.equals(other.descriptorResolved)) {
-				return false;
-			}
-			if (!this.name.equals(other.name)) { 
-				return false;
-			}
-			return true;
-		}
+    	/** This state comes strictly after the initial state. */
+    	POST_INITIAL 
     }
+    
+    /** The slot number of the "this" (method receiver) object. */
+    private static final int ROOT_THIS_SLOT = 0;
     
     /** 
      * {@code true} iff the bootstrap classloader should also load classes defined by the
@@ -181,20 +132,8 @@ public final class State implements Cloneable {
     /** The count of the state, i.e., the number of states from the previous branch point. */
     private int count = 0;
 
-    /** The string literals. */
-    private HashMap<String, ReferenceConcrete> stringLiterals = new HashMap<>();
-
-    /** The {@link ReferenceConcrete}s to {@link Instance_JAVA_CLASS}es for nonprimitive types. */
-    private HashMap<ClassFile, ReferenceConcrete> classes = new HashMap<>();
-
-    /** The {@link ReferenceConcrete}s to {@link Instance_JAVA_CLASS}es for primitive types. */
-    private HashMap<String, ReferenceConcrete> classesPrimitive = new HashMap<>();
-    
     /** The identifier of the next {@link Instance_JAVA_CLASSLOADER} to be created. */
     private int nextClassLoaderIdentifier = 1;
-    
-    /** Maps classloader identifiers to {@link ReferenceConcrete}s to {@link Instance_JAVA_CLASSLOADER}. */
-    private ArrayList<ReferenceConcrete> classLoaders = new ArrayList<>();
     
     /** 
      * Used to check whether the {@link Instance_JAVA_CLASSLOADER} for the standard (ext and app) 
@@ -202,11 +141,8 @@ public final class State implements Cloneable {
      */
     private boolean standardClassLoadersNotReady = true;
     
-    /** The {@link ReferenceConcrete}s to {@link Instance}s of {@code java.lang.invoke.MethodType}. */
-    private HashMap<List<ClassFile>, ReferenceConcrete> methodTypes = new HashMap<>();
-    
-    /** The {@link ReferenceConcrete}s to {@link Instance}s of {@code java.lang.invoke.MethodHandle}. */
-    private HashMap<MHKey, ReferenceConcrete> methodHandles = new HashMap<>();
+    /** Records the notable objects in the heap. */
+    private ObjectDictionary objectDictionary = new ObjectDictionary();
     
     /** Maps file identifier to meta-level open files. */
     private FilesMapper filesMapper = new FilesMapper();
@@ -230,22 +166,6 @@ public final class State implements Cloneable {
 
     /** The JVM static method area. */
     private StaticMethodArea staticMethodArea = new StaticMethodArea();
-    
-    /**
-     * The phase types of the symbolic execution.
-     * 
-     * @author Pietro Braione
-     */
-    public enum Phase { 
-    	/** This state comes strictly before the initial state. */
-    	PRE_INITIAL, 
-    	
-    	/** This state is the initial state. */
-    	INITIAL, 
-    	
-    	/** This state comes strictly after the initial state. */
-    	POST_INITIAL 
-    }
     
     /** The current phase of symbolic execution. */
     private Phase phase = Phase.PRE_INITIAL;
@@ -355,7 +275,7 @@ public final class State implements Cloneable {
         this.bypassStandardLoading = bypassStandardLoading;
     	this.frozen = false;
         this.historyPoint = historyPoint;
-        this.classLoaders.add(Null.getInstance()); //classloader 0 is the bootstrap classloader
+        this.objectDictionary.addClassLoader(Null.getInstance()); //classloader 0 is the bootstrap classloader
         this.heap = new Heap(maxHeapSize);
         this.classHierarchy = new ClassHierarchy(classPath, factoryClass, expansionBackdoor, modelClassSubstitutions);
         this.maxSimpleArrayLength = maxSimpleArrayLength;
@@ -1464,7 +1384,7 @@ public final class State implements Cloneable {
         final InstanceImpl myObj = doCreateInstance(calc, classFile);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
         if (myObj instanceof Instance_JAVA_CLASSLOADER) {
-            this.classLoaders.add(retVal);
+            this.objectDictionary.addClassLoader(retVal);
         }
         initIdentityHashCodeConcrete(calc, myObj, retVal);
         return retVal;
@@ -1592,7 +1512,7 @@ public final class State implements Cloneable {
             
             //class loader
             final int classLoader = (representedClass.isAnonymousUnregistered() ? CLASSLOADER_BOOT : representedClass.getDefiningClassLoader()); //Instance_JAVA_CLASS for anonymous classfiles have the classloader field set to null
-            myObj.setFieldValue(JAVA_CLASS_CLASSLOADER, this.classLoaders.get(classLoader));
+            myObj.setFieldValue(JAVA_CLASS_CLASSLOADER, this.objectDictionary.getClassLoader(classLoader));
             
             return retVal;
         } catch (InvalidTypeException e) {
@@ -1881,26 +1801,26 @@ public final class State implements Cloneable {
     /**
      * Checks if there is a string literal in this state's heap.
      * 
-     * @param stringLit a {@link String} representing a string literal.
+     * @param stringLiteral a {@link String} representing a string literal.
      * @return {@code true} iff there is a {@link Instance} in 
      *         this state's {@link Heap} corresponding to {@code stringLit}.
      */
-    public boolean hasStringLiteral(String stringLit) {
-        return this.stringLiterals.containsKey(stringLit);
+    public boolean hasStringLiteral(String stringLiteral) {
+        return this.objectDictionary.hasStringLiteral(stringLiteral);
     }
 
     /**
      * Returns a {@link ReferenceConcrete} to a {@code java.lang.String} 
      * corresponding to a string literal. 
      * 
-     * @param stringLit a {@link String} representing a string literal.
+     * @param stringLiteral a {@link String} representing a string literal.
      * @return a {@link ReferenceConcrete} to the {@link Instance} in 
      *         this state's {@link Heap} corresponding to 
-     *         {@code stringLit}, or {@code null} if such instance does not
+     *         {@code stringLiteral}, or {@code null} if such instance does not
      *         exist. 
      */
-    public ReferenceConcrete referenceToStringLiteral(String stringLit) {
-        return this.stringLiterals.get(stringLit);
+    public ReferenceConcrete referenceToStringLiteral(String stringLiteral) {
+        return this.objectDictionary.getStringLiteral(stringLiteral);
     }
 
     /**
@@ -1913,26 +1833,26 @@ public final class State implements Cloneable {
      * If the literal already exists, does nothing.
      * 
      * @param calc a Calculator. It must not be {@code null}.
-     * @param stringLit a {@link String} representing a string literal.
-     * @throws InvalidInputException if {@code calc == null || stringLit == null}.
+     * @param stringLiteral a {@link String} representing a string literal.
+     * @throws InvalidInputException if {@code calc == null || stringLiteral == null}.
      * @throws HeapMemoryExhaustedException if the heap is full.
      * @throws FrozenStateException if the state is frozen.
      */
-    public void ensureStringLiteral(Calculator calc, String stringLit) 
+    public void ensureStringLiteral(Calculator calc, String stringLiteral) 
     throws InvalidInputException, HeapMemoryExhaustedException, FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (calc == null || stringLit == null) {
+        if (calc == null || stringLiteral == null) {
             throw new InvalidInputException("Invoked method " + getClass().getName() + ".ensureStringLiteral with null Calculator calc or String stringLit parameter.");
         }
-        if (hasStringLiteral(stringLit)) {
+        if (hasStringLiteral(stringLiteral)) {
             return;
         }
 
         try {
-            final ReferenceConcrete value = createArrayOfChars(calc, stringLit);
-            final Simplex hash = calc.valInt(stringLit.hashCode());
+            final ReferenceConcrete value = createArrayOfChars(calc, stringLiteral);
+            final Simplex hash = calc.valInt(stringLiteral.hashCode());
             final ClassFile cf_JAVA_STRING = this.classHierarchy.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING); //surely loaded
             if (cf_JAVA_STRING == null) {
                 throw new UnexpectedInternalException("Could not find classfile for type java.lang.String.");
@@ -1941,7 +1861,7 @@ public final class State implements Cloneable {
             final Instance i = (Instance) getObject(retVal);
             i.setFieldValue(JAVA_STRING_VALUE,  value);
             i.setFieldValue(JAVA_STRING_HASH,   hash);
-            this.stringLiterals.put(stringLit, retVal);
+            this.objectDictionary.putStringLiteral(stringLiteral, retVal);
         } catch (InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -1988,7 +1908,7 @@ public final class State implements Cloneable {
      *         this state's {@link Heap} corresponding to {@code classFile}.
      */
     public boolean hasInstance_JAVA_CLASS(ClassFile classFile) {
-        return (classFile.isPrimitiveOrVoid() ? hasInstance_JAVA_CLASS_primitiveOrVoid(classFile.getClassName()) : this.classes.containsKey(classFile));
+        return (classFile.isPrimitiveOrVoid() ? hasInstance_JAVA_CLASS_primitiveOrVoid(classFile.getClassName()) : this.objectDictionary.hasClassNonprimitive(classFile));
     }
 
     /**
@@ -2001,7 +1921,7 @@ public final class State implements Cloneable {
      *         this state's {@link Heap} corresponding to {@code typeName}.
      */
     public boolean hasInstance_JAVA_CLASS_primitiveOrVoid(String typeName) {
-        return this.classesPrimitive.containsKey(typeName);
+        return this.objectDictionary.hasClassPrimitive(typeName);
     }
 
     /**
@@ -2014,7 +1934,7 @@ public final class State implements Cloneable {
      *         or {@code null} if such instance does not exist. 
      */
     public ReferenceConcrete referenceToInstance_JAVA_CLASS(ClassFile classFile) {
-        return (classFile.isPrimitiveOrVoid() ? referenceToInstance_JAVA_CLASS_primitiveOrVoid(classFile.getClassName()) : this.classes.get(classFile));
+        return (classFile.isPrimitiveOrVoid() ? referenceToInstance_JAVA_CLASS_primitiveOrVoid(classFile.getClassName()) : this.objectDictionary.getClassNonprimitive(classFile));
     }
 
     /**
@@ -2029,7 +1949,7 @@ public final class State implements Cloneable {
      *         such instance does not exist in the heap. 
      */
     public ReferenceConcrete referenceToInstance_JAVA_CLASS_primitiveOrVoid(String typeName) {
-        return this.classesPrimitive.get(typeName);
+        return this.objectDictionary.getClassPrimitive(typeName);
     }
 
     /**
@@ -2066,7 +1986,7 @@ public final class State implements Cloneable {
                 throw new UnexpectedInternalException(e);
             }
         } else {
-            this.classes.put(representedClass, createInstance_JAVA_CLASS(calc, representedClass));
+            this.objectDictionary.putClassNonprimitive(representedClass, createInstance_JAVA_CLASS(calc, representedClass));
         }
     }
 
@@ -2104,7 +2024,7 @@ public final class State implements Cloneable {
                     throw new UnexpectedInternalException("Could not find the classfile for the primitive type " + typeName + ".");
                 }
                 final ReferenceConcrete retVal = createInstance_JAVA_CLASS(calc, cf);
-                this.classesPrimitive.put(typeName, retVal);
+                this.objectDictionary.putClassPrimitive(typeName, retVal);
             } catch (InvalidInputException e) {
                 throw new UnexpectedInternalException(e);
             }
@@ -2122,7 +2042,7 @@ public final class State implements Cloneable {
      *         (or subclass) in this state's {@link Heap} associated to {@code id}.
      */
     public boolean hasInstance_JAVA_CLASSLOADER(int id) {
-        return 0 < id && id < this.classLoaders.size();
+        return 0 < id && id < this.objectDictionary.maxClassLoaders();
     }
     
     /**
@@ -2136,7 +2056,7 @@ public final class State implements Cloneable {
      */
     public ReferenceConcrete referenceToInstance_JAVA_CLASSLOADER(int id) {
         if (hasInstance_JAVA_CLASSLOADER(id)) {
-            return this.classLoaders.get(id);
+            return this.objectDictionary.getClassLoader(id);
         } else {
             return null;
         }
@@ -2159,7 +2079,7 @@ public final class State implements Cloneable {
         if (!this.standardClassLoadersNotReady) {
             return; //nothing to do
         }
-        if (this.classLoaders.size() <= CLASSLOADER_APP) {
+        if (this.objectDictionary.maxClassLoaders() <= CLASSLOADER_APP) {
             throw new InvalidInputException("Invoked " + getClass().getName() + ".setStandardClassLoadersReady with true parameter, but the standard class loaders were not created yet.");
         }
         this.standardClassLoadersNotReady = false;
@@ -2206,7 +2126,7 @@ public final class State implements Cloneable {
      *         {@link #setReferenceToInstance_JAVA_METHODTYPE(ClassFile[], ReferenceConcrete)}.
      */
     public boolean hasInstance_JAVA_METHODTYPE(ClassFile[] descriptorResolved) {
-        return this.methodTypes.containsKey(Arrays.asList(descriptorResolved));
+        return this.objectDictionary.hasMethodType(descriptorResolved);
     }
     
     /**
@@ -2222,7 +2142,7 @@ public final class State implements Cloneable {
      *         or {@code null} if there is not.
      */
     public ReferenceConcrete referenceToInstance_JAVA_METHODTYPE(ClassFile[] descriptorResolved) {
-        return this.methodTypes.get(Arrays.asList(descriptorResolved));
+        return this.objectDictionary.getMethodType(descriptorResolved);
     }
     
     /**
@@ -2232,18 +2152,18 @@ public final class State implements Cloneable {
      * @param descriptorResolved a {@link ClassFile}{@code []} representing a resolved 
      *        method (the {@link ClassFile} for the return value 
      *        comes last) or field descriptor.
-     * @param ref a {@link ReferenceConcrete}. It should refer an {@link Instance}
-     *        of {@code java.lang.invoke.MethodType} 
-     *        in this state's {@link Heap} that is semantically equivalent to
+     * @param referenceMethodType a {@link ReferenceConcrete}. It should refer 
+     *        an {@link Instance} of {@code java.lang.invoke.MethodType} in 
+     *        this state's {@link Heap} that is semantically equivalent to
      *        {@code descriptorResolved}, but this is not checked.
      * @throws FrozenStateException if the state is frozen.
      */
-    public void setReferenceToInstance_JAVA_METHODTYPE(ClassFile[] descriptorResolved, ReferenceConcrete ref) 
+    public void setReferenceToInstance_JAVA_METHODTYPE(ClassFile[] descriptorResolved, ReferenceConcrete referenceMethodType) 
     throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        this.methodTypes.put(Collections.unmodifiableList(Arrays.asList(descriptorResolved)), ref);
+        this.objectDictionary.putMethodType(descriptorResolved, referenceMethodType);
     }
 
     /**
@@ -2264,8 +2184,9 @@ public final class State implements Cloneable {
      *         {@link #setReferenceToInstance_JAVA_METHODHANDLE(int, ClassFile, ClassFile[], String, ReferenceConcrete)}.
      * @throws InvalidInputException if a parameter is invalid (null).
      */
-    public boolean hasInstance_JAVA_METHODHANDLE(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name) throws InvalidInputException {
-        return this.methodHandles.containsKey(new MHKey(refKind, container, descriptorResolved, name));
+    public boolean hasInstance_JAVA_METHODHANDLE(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name) 
+    throws InvalidInputException {
+        return this.objectDictionary.hasMethodHandle(refKind, container, descriptorResolved, name);
     }
     
     /**
@@ -2288,7 +2209,7 @@ public final class State implements Cloneable {
      * @throws InvalidInputException if a parameter is invalid (null).
      */
     public ReferenceConcrete referenceToInstance_JAVA_METHODHANDLE(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name) throws InvalidInputException {
-        return this.methodHandles.get(new MHKey(refKind, container, descriptorResolved, name));
+        return this.objectDictionary.getMethodHandle(refKind, container, descriptorResolved, name);
     }
     
     /**
@@ -2303,18 +2224,18 @@ public final class State implements Cloneable {
      *        method (the {@link ClassFile} for the return value 
      *        comes last) or field descriptor. It must not be {@code null}.
      * @param name a {@link String}, the name of the method or field.  It must not be {@code null}.
-     * @param ref a {@link ReferenceConcrete}. It should refer an {@link Instance}
+     * @param referenceMethodHandle a {@link ReferenceConcrete}. It should refer an {@link Instance}
      *        of {@code java.lang.invoke.MethodHandle} 
      *        in this state's {@link Heap} that is semantically equivalent to
      *        the key {@code (refKind, container, descriptorResolved, name)}, but this is not checked.
      * @throws InvalidInputException if a parameter is invalid (null).
      */
-    public void setReferenceToInstance_JAVA_METHODHANDLE(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name, ReferenceConcrete ref) 
+    public void setReferenceToInstance_JAVA_METHODHANDLE(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name, ReferenceConcrete referenceMethodHandle) 
     throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        this.methodHandles.put(new MHKey(refKind, container, descriptorResolved, name), ref);
+        this.objectDictionary.putMethodHandle(refKind, container, descriptorResolved, name, referenceMethodHandle);
     }
 
     /**
@@ -3974,60 +3895,10 @@ public final class State implements Cloneable {
      * Getter for garbage collection.
      * 
      * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
-     *         of all the references to string literals.
+     *         of all the references in the object dictionary.
      */
-    Collection<ReferenceConcrete> getStringLiterals() {
-        return this.stringLiterals.values();
-    }
-    
-    /**
-     * Getter for garbage collection.
-     * 
-     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
-     *         of all the references to {@link Instance_JAVA_CLASS} (non primitive).
-     */
-    Collection<ReferenceConcrete> getClasses() {
-        return this.classes.values();
-    }
-    
-    /**
-     * Getter for garbage collection.
-     * 
-     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
-     *         of all the references to {@link Instance_JAVA_CLASS} (primitive).
-     */
-    Collection<ReferenceConcrete> getClassesPrimitive() {
-        return this.classesPrimitive.values();
-    }
-    
-    /**
-     * Getter for garbage collection.
-     * 
-     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
-     *         of all the references to {@link Instance} of {@link java.lang.ClassLoader}.
-     */
-    Collection<ReferenceConcrete> getClassLoaders() {
-        return this.classLoaders;
-    }
-    
-    /**
-     * Getter for garbage collection.
-     * 
-     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
-     *         of all the references to {@link Instance} of {@link java.lang.invoke.MethodType}.
-     */
-    Collection<ReferenceConcrete> getMethodTypes() {
-        return this.methodTypes.values();
-    }
-    
-    /**
-     * Getter for garbage collection.
-     * 
-     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
-     *         of all the references to {@link Instance} of {@link java.lang.invoke.MethodHandle}.
-     */
-    Collection<ReferenceConcrete> getMethodHandles() {
-        return this.methodHandles.values();
+    Collection<ReferenceConcrete> getObjectsInDictionary() {
+        return this.objectDictionary.getReferences();
     }
     
     private State deepCopyHeapAndStaticAreaExcluded() {
@@ -4038,23 +3909,8 @@ public final class State implements Cloneable {
             throw new InternalError(e);
         }
         
-        //stringLiterals
-        o.stringLiterals = new HashMap<>(o.stringLiterals);
-
-        //classes
-        o.classes = new HashMap<>(o.classes);
-        
-        //classLoaders
-        o.classLoaders = new ArrayList<>(o.classLoaders);
-
-        //classesPrimitive
-        o.classesPrimitive = new HashMap<>(o.classesPrimitive);
-        
-        //methodTypes
-        o.methodTypes = new HashMap<>(o.methodTypes);
-        
-        //methodHandles
-        o.methodHandles = new HashMap<>(o.methodHandles);
+        //objectDictionary
+        o.objectDictionary = o.objectDictionary.clone();
         
         //filesMapper
         o.filesMapper = o.filesMapper.clone();
