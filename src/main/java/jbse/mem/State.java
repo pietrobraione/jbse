@@ -14,6 +14,7 @@ import static jbse.bc.Signatures.JAVA_THROWABLE;
 import static jbse.common.Type.parametersNumber;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isPrimitiveOrVoidCanonicalName;
+import static jbse.mem.Util.forAllInitialObjects;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -692,36 +693,6 @@ public final class State implements Cloneable {
             retVal = this.heap.getObject(pos);
         }
         return retVal;
-    }
-
-    /**
-     * Gets a symbolic object as it was initially in this state.
-     * 
-     * @param origin a {@link ReferenceSymbolic}.
-     * @return the symbolic {@link HeapObjekt} whose origin is {@code origin} 
-     *         in the state it was at its epoch (equivalently, at the
-     *         moment of its assumption), or 
-     *         {@code null} if {@code origin} does not refer to 
-     *         anything (e.g., is {@link Null}, or is an unresolved 
-     *         symbolic reference, or is resolved to null).
-     * @throws FrozenStateException if the state is frozen.
-     */
-    //TODO eliminate this method!!!
-    private HeapObjekt getObjectInitial(ReferenceSymbolic origin) throws FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-
-        //TODO extract this code and share with DecisionProcedureAlgorithms.getPossibleAliases
-        for (Clause c : this.pathCondition.getClauses()) {
-            if (c instanceof ClauseAssumeExpands) {
-                final ClauseAssumeExpands cExpands = (ClauseAssumeExpands) c;
-                if (cExpands.getObjekt().getOrigin().equals(origin)) {
-                    return cExpands.getObjekt();
-                }
-            }
-        }
-        return null;
     }
 
     /**
@@ -3072,6 +3043,29 @@ public final class State implements Cloneable {
     }
 
     /**
+     * Gets a symbolic object as it was initially in this state.
+     * 
+     * @param origin a {@link ReferenceSymbolic}.
+     * @return the symbolic {@link HeapObjekt} whose origin is {@code origin} 
+     *         in the state it was at its epoch (equivalently, at the
+     *         moment of its assumption), or 
+     *         {@code null} if {@code origin} does not refer to 
+     *         anything (e.g., is {@link Null}, or is an unresolved 
+     *         symbolic reference, or is resolved to null).
+     * @throws FrozenStateException if the state is frozen.
+     */
+    private HeapObjekt getObjectInitial(ReferenceSymbolic origin) throws FrozenStateException {
+    	HeapObjekt[] retVal = new HeapObjekt[1];
+    	forAllInitialObjects(getPathCondition(), (object, heapPosition) -> {
+            final ReferenceSymbolic originObject = object.getOrigin();
+            if (originObject.equals(origin)) {
+            	retVal[0] = object;
+            }
+    	});
+    	return retVal[0];
+    }
+
+    /**
      * Assumes the resolution of a symbolic reference to some alias.  
      * Its effects are refining all the symbolic references with 
      * same origin, and adding a clause to the path condition.
@@ -3248,7 +3242,7 @@ public final class State implements Cloneable {
     	}
         this.wereResetLastPathConditionClauses = true;
     }
-
+    
     /**
      * Sets the {@link State} stuck because of a return
      * from the topmost method,

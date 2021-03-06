@@ -10,6 +10,7 @@ import static jbse.common.Type.splitClassGenericSignatureTypeParameters;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.TYPEVAR;
 import static jbse.common.Type.typeParameterIdentifier;
+import static jbse.mem.Util.forAllInitialObjects;
 import static jbse.mem.Util.isResolved;
 
 import java.util.ArrayList;
@@ -46,7 +47,6 @@ import jbse.dec.SolverEquationGenericTypes.Var;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.Clause;
-import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
@@ -1534,28 +1534,20 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 
         final TreeMap<Long, Objekt> retVal = new TreeMap<>();
 
-        //TODO extract this code and share with State.getObjectInitial and jbse.rule.Util.getTriggerMethodParameterObject
         //scans the path condition for compatible objects
         final List<Clause> pathCondition = getAssumptions();
-        for (Clause c : pathCondition) {
-            if (c instanceof ClauseAssumeExpands) {
-                //gets the object and its position in the heap
-                final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
-                final Long i = cExp.getHeapPosition();
-                final Objekt o = cExp.getObjekt();
-
-                //if it is type and epoch compatible, adds the object
-                //to the result
-                try {
-                    if (isAliasCompatible(o, ref, refClass)) {
-                        retVal.put(i, o);
-                    }
-                } catch (InvalidInputException e) {
-                    //this should never happen (checked before)
-                    throw new UnexpectedInternalException(e);
+        forAllInitialObjects(pathCondition, (object, heapPosition) -> {
+            //if it is type and epoch compatible, adds the object
+            //to the result
+            try {
+                if (isAliasCompatible(object, ref, refClass)) {
+                    retVal.put(heapPosition, object);
                 }
+            } catch (InvalidInputException e) {
+                //this should never happen (checked before)
+                throw new UnexpectedInternalException(e);
             }
-        }
+        });
         return retVal;
     }
 

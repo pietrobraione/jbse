@@ -211,7 +211,7 @@ final class PathCondition implements Cloneable {
     List<Clause> getClauses() {
         return Collections.unmodifiableList(this.clauses);
     }
-
+    
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();
