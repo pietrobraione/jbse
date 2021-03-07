@@ -7,6 +7,12 @@ package jbse.algo.meta;
  */
 public final class Algo_JAVA_ZIPFILE_GETENTRYTIME extends Algo_JAVA_ZIPFILE_GETENTRY_STARTS {
 	public Algo_JAVA_ZIPFILE_GETENTRYTIME() {
-		super("getEntryTime");
+		super("getEntryTime", true);
+	}
+	
+	@Override
+	protected void setToPush(Object retVal) {
+		final long l = ((Long) retVal).longValue();
+		this.toPush = this.ctx.getCalculator().valLong(l);
 	}
 }

@@ -26,18 +26,23 @@ import jbse.val.Simplex;
 /**
  * Meta-level implementation of the methods {@link java.util.zip.ZipFile#getEntryCrc(long)}, 
  * {@link java.util.zip.ZipFile#getEntryCSize(long)}, {@link java.util.zip.ZipFile#getEntryFlag(long)}, 
- * {@link java.util.zip.ZipFile#getEntryMethod(long)}, {@link java.util.zip.ZipFile#getEntryTime(long)}, 
- * {@link java.util.zip.ZipFile#getTotal(long)} and {@link java.util.zip.ZipFile#startsWithLOC(long)}.
+ * {@link java.util.zip.ZipFile#getEntryMethod(long)}, {@link java.util.zip.ZipFile#getEntrySize(long)}, 
+ * {@link java.util.zip.ZipFile#getEntryTime(long)}, {@link java.util.zip.ZipFile#getTotal(long)} and 
+ * {@link java.util.zip.ZipFile#startsWithLOC(long)}.
  * 
  * @author Pietro Braione
  */
 public abstract class Algo_JAVA_ZIPFILE_GETENTRY_STARTS extends Algo_INVOKEMETA_Nonbranching {
 	private final String methodName; //set by constructor
-	private Simplex toPush;          //set by cookMore
+	private final boolean isEntry;   //set by constructor
+	protected Simplex toPush;        //set by cookMore (via subclass method setToPush)
 	
-	public Algo_JAVA_ZIPFILE_GETENTRY_STARTS(String methodName) {
+	public Algo_JAVA_ZIPFILE_GETENTRY_STARTS(String methodName, boolean isEntry) {
 		this.methodName = methodName;
+		this.isEntry = isEntry;
 	}
+	
+	protected abstract void setToPush(Object retVal);
     
     @Override
     protected final Supplier<Integer> numOperands() {
@@ -49,19 +54,20 @@ public abstract class Algo_JAVA_ZIPFILE_GETENTRY_STARTS extends Algo_INVOKEMETA_
     throws InterruptException, ClasspathException, SymbolicValueNotAllowedException, InvalidInputException {
         final Calculator calc = this.ctx.getCalculator();
         try {
-            //gets the (long jzentry) parameter
-            final Primitive _jzentry = (Primitive) this.data.operand(0);
-            if (_jzentry.isSymbolic()) {
+            //gets the long parameter
+            final Primitive _jzValue = (Primitive) this.data.operand(0);
+            if (_jzValue.isSymbolic()) {
                 throw new SymbolicValueNotAllowedException("The long jzentry parameter to invocation of method java.util.zip.ZipFile." + this.methodName + " cannot be a symbolic value.");
             }
-            final long jzentry = ((Long) ((Simplex) _jzentry).getActualValue()).longValue();
+            final long jzValue = ((Long) ((Simplex) _jzValue).getActualValue()).longValue();
             //TODO what if jzentry is not open?
             
             //invokes metacircularly the method
             final Method method = ZipFile.class.getDeclaredMethod(this.methodName, long.class);
             method.setAccessible(true);
-            final long retVal = (long) method.invoke(null, state.getZipFileEntryJz(jzentry));
-            this.toPush = calc.valLong(retVal);
+            final long param = this.isEntry ? state.getZipFileEntryJz(jzValue) : state.getZipFileJz(jzValue);
+            final Object retVal = method.invoke(null, param);
+            setToPush(retVal);
         } catch (InvocationTargetException e) {
             final String cause = internalClassName(e.getCause().getClass().getName());
             throwNew(state, calc, cause);

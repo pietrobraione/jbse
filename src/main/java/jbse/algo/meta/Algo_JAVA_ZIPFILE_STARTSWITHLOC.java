@@ -7,6 +7,12 @@ package jbse.algo.meta;
  */
 public final class Algo_JAVA_ZIPFILE_STARTSWITHLOC extends Algo_JAVA_ZIPFILE_GETENTRY_STARTS {
 	public Algo_JAVA_ZIPFILE_STARTSWITHLOC() {
-		super("startsWithLOC");
+		super("startsWithLOC", false);
+	}
+	
+	@Override
+	protected void setToPush(Object retVal) {
+		final boolean b = ((Boolean) retVal).booleanValue();
+		this.toPush = this.ctx.getCalculator().valInt(b ? 1 : 0);
 	}
 }

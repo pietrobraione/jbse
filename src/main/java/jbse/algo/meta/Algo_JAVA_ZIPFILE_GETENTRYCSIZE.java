@@ -7,6 +7,12 @@ package jbse.algo.meta;
  */
 public final class Algo_JAVA_ZIPFILE_GETENTRYCSIZE extends Algo_JAVA_ZIPFILE_GETENTRY_STARTS {
 	public Algo_JAVA_ZIPFILE_GETENTRYCSIZE() {
-		super("getEntryCSize");
+		super("getEntryCSize", true);
+	}
+	
+	@Override
+	protected void setToPush(Object retVal) {
+		final long l = ((Long) retVal).longValue();
+		this.toPush = this.ctx.getCalculator().valLong(l);
 	}
 }
