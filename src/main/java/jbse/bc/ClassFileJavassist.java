@@ -306,47 +306,36 @@ public class ClassFileJavassist extends ClassFile {
                     final Field integerInfoValueField = integerInfoClass.getDeclaredField("value");
                     integerInfoValueField.setAccessible(true);
                     integerInfoValueField.set(cpItem, value);
-                    continue;
-                }
-                if (tag == ConstPool.CONST_Long) {
+                } else if (tag == ConstPool.CONST_Long) {
                     final Long value = (Long) cpPatches[i];
                     final Class<?> longInfoClass = Class.forName("javassist.bytecode.LongInfo");
                     final Field longInfoValueField = longInfoClass.getDeclaredField("value");
                     longInfoValueField.setAccessible(true);
                     longInfoValueField.set(cpItem, value);
-                    continue;
-                }
-                if (tag == ConstPool.CONST_Float) {
+                } else if (tag == ConstPool.CONST_Float) {
                     final Float value = (Float) cpPatches[i];
                     final Class<?> floatInfoClass = Class.forName("javassist.bytecode.FloatInfo");
                     final Field floatInfoValueField = floatInfoClass.getDeclaredField("value");
                     floatInfoValueField.setAccessible(true);
                     floatInfoValueField.set(cpItem, value);
-                    continue;
-                }
-                if (tag == ConstPool.CONST_Double) {
+                } else if (tag == ConstPool.CONST_Double) {
                     final Double value = (Double) cpPatches[i];
                     final Class<?> doubleInfoClass = Class.forName("javassist.bytecode.DoubleInfo");
                     final Field doubleInfoValueField = doubleInfoClass.getDeclaredField("value");
                     doubleInfoValueField.setAccessible(true);
                     doubleInfoValueField.set(cpItem, value);
-                    continue;
-                }
-                if (tag == ConstPool.CONST_Utf8) {
+                } else if (tag == ConstPool.CONST_Utf8) {
                     final String value = (String) cpPatches[i];
                     final Class<?> utf8InfoClass = Class.forName("javassist.bytecode.Utf8Info");
                     final Field utf8InfoStringField = utf8InfoClass.getDeclaredField("string");
                     utf8InfoStringField.setAccessible(true);
                     utf8InfoStringField.set(cpItem, value);
-                    continue;
-                }
-                if (tag == ConstPool.CONST_Class) {
+                } else if (tag == ConstPool.CONST_Class) {
                     final int value = cp.addUtf8Info(((ClassFile) cpPatches[i]).getClassName());
                     final Class<?> classInfoClass = Class.forName("javassist.bytecode.ClassInfo");
                     final Field classInfoNameField = classInfoClass.getDeclaredField("name");
                     classInfoNameField.setAccessible(true);
                     classInfoNameField.set(cpItem, Integer.valueOf(value));
-                    continue;
                 }
             }
         } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | 
