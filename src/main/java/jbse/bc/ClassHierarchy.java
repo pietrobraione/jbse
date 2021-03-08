@@ -1242,7 +1242,7 @@ public final class ClassHierarchy implements Cloneable {
     MethodNotFoundException, MethodNotAccessibleException, PleaseLoadClassException {
         //checks the parameters
         if (methodSignature.getName() == null) {
-            throw new InvalidInputException("Invoked " + this.getClass().getName() + ".resolveMethod with an invalid signature (null name field).");
+            throw new InvalidInputException("Invoked " + getClass().getName() + ".resolveMethod with an invalid signature (null name field).");
         }
 
         //resolves the class of the method's signature
@@ -1256,58 +1256,26 @@ public final class ClassHierarchy implements Cloneable {
 
         //attempts to find a superclass or superinterface containing 
         //a declaration for the method
-        ClassFile accessed = null;
-        Signature methodSignaturePolymorphic = methodSignature;
+        Signature methodSignaturePolymorphic = resolveMethodSignaturePolymorphic(methodSignature, isInterface, methodSignatureClass);
 
         //searches for the method declaration in the superclasses; for
         //interfaces this means searching only in the interface
         //(JVMS v8, section 5.4.3.3 step 2 and section 5.4.3.4 step 2)
-        for (ClassFile cf : methodSignatureClass.superclasses()) {
-            if (!isInterface && cf.hasOneSignaturePolymorphicMethodDeclaration(methodSignature.getName())) {
-                accessed = cf;
-                methodSignaturePolymorphic = new Signature(methodSignature.getClassName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR, methodSignature.getName());
-                //TODO resolve all the class names in methodSignature.getDescriptor() (it is unclear how the resolved names should be used)
-                break;
-            } else if (cf.hasMethodDeclaration(methodSignature)) {
-                accessed = cf; 
-                break;
-            }
-        }
+        //TODO resolve all the class names in methodSignature.getDescriptor() (it is unclear how the resolved names should be used)
+        ClassFile accessed = resolveMethodSuperclasses(methodSignature, isInterface, methodSignatureClass);
         
         //searches for the method declaration in java.lang.Object, thing that
         //the previous code does not do in the case of interfaces
         //(JVMS v8, section 5.4.3.4 step 3)
-        if (accessed == null && isInterface) {
-            final ClassFile cfJAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT); //surely loaded
-            if (cfJAVA_OBJECT == null) {
-                throw new InvalidInputException("Invoked " + this.getClass().getName() + ".resolveMethod before the class java.lang.Object were loaded.");
-            }
-            if (cfJAVA_OBJECT.hasMethodDeclaration(methodSignature)) {
-                accessed = cfJAVA_OBJECT;
-            }
-        }
+        accessed = accessed == null ? resolveMethodJavaLangObject(methodSignature, isInterface) : accessed;
 
         //searches for a single, non-abstract, maximally specific superinterface method 
         //(JVMS v8, section 5.4.3.3 step 3a and section 5.4.3.4 step 4)
-        if (accessed == null) {
-            final Set<ClassFile> nonabstractMaxSpecMethods = maximallySpecificSuperinterfaceMethods(methodSignatureClass, methodSignature, true);
-            if (nonabstractMaxSpecMethods.size() == 1) {
-                accessed = nonabstractMaxSpecMethods.iterator().next();
-            }
-        }
+        accessed = accessed == null ? resolveMethodmaximallySpecificSuperinterface(methodSignature, methodSignatureClass) : accessed;
 
         //searches in the superinterfaces
         //(JVMS v8, section 5.4.3.3 step 3b and 5.4.3.4 step 5)
-        if (accessed == null) {
-            for (ClassFile cf : methodSignatureClass.superinterfaces()) {
-                if (cf.hasMethodDeclaration(methodSignature) && 
-                    !cf.isMethodPrivate(methodSignature) && 
-                    !cf.isMethodStatic(methodSignature)) {
-                    accessed = cf;
-                    break;
-                }
-            }
-        }
+        accessed = accessed == null ? resolveMethodSuperinterfaces(methodSignature, methodSignatureClass) : accessed;
 
         //exits if lookup failed
         if (accessed == null) {
@@ -1327,6 +1295,69 @@ public final class ClassHierarchy implements Cloneable {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
+    }
+    
+    private Signature resolveMethodSignaturePolymorphic(Signature methodSignature, boolean isInterface, ClassFile methodSignatureClass) {
+    	Signature methodSignaturePolymorphic = null;
+        for (ClassFile cf : methodSignatureClass.superclasses()) {
+            if (!isInterface && cf.hasOneSignaturePolymorphicMethodDeclaration(methodSignature.getName())) {
+                methodSignaturePolymorphic = new Signature(methodSignature.getClassName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR, methodSignature.getName());
+                break;
+            }
+        }
+        return methodSignaturePolymorphic;
+    }
+    
+    private ClassFile resolveMethodSuperclasses(Signature methodSignature, boolean isInterface, ClassFile methodSignatureClass) {
+    	ClassFile retVal = null;
+        for (ClassFile cf : methodSignatureClass.superclasses()) {
+            if (!isInterface && cf.hasOneSignaturePolymorphicMethodDeclaration(methodSignature.getName())) {
+                retVal = cf;
+                break;
+            } else if (cf.hasMethodDeclaration(methodSignature)) {
+                retVal = cf; 
+                break;
+            }
+        }
+        return retVal;
+    }
+    
+    private ClassFile resolveMethodJavaLangObject(Signature methodSignature, boolean isInterface) 
+    throws InvalidInputException {
+    	ClassFile retVal = null;
+        if (isInterface) {
+            final ClassFile cfJAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT); //surely loaded
+            if (cfJAVA_OBJECT == null) {
+                throw new InvalidInputException("Invoked " + getClass().getName() + ".resolveMethodJavaLangObject before the class java.lang.Object was loaded.");
+            }
+            if (cfJAVA_OBJECT.hasMethodDeclaration(methodSignature)) {
+                retVal = cfJAVA_OBJECT;
+            }
+        }
+        return retVal;
+    }
+    
+    private ClassFile resolveMethodmaximallySpecificSuperinterface(Signature methodSignature, ClassFile methodSignatureClass) {
+    	ClassFile retVal = null;
+        final Set<ClassFile> nonabstractMaxSpecMethods = maximallySpecificSuperinterfaceMethods(methodSignatureClass, methodSignature, true);
+        if (nonabstractMaxSpecMethods.size() == 1) {
+            retVal = nonabstractMaxSpecMethods.iterator().next();
+        }
+        return retVal;
+    }
+    
+    private ClassFile resolveMethodSuperinterfaces(Signature methodSignature, ClassFile methodSignatureClass) 
+    throws MethodNotFoundException {
+    	ClassFile retVal = null;
+        for (ClassFile cf : methodSignatureClass.superinterfaces()) {
+            if (cf.hasMethodDeclaration(methodSignature) && 
+                !cf.isMethodPrivate(methodSignature) && 
+                !cf.isMethodStatic(methodSignature)) {
+            	retVal = cf;
+                break;
+            }
+        }
+        return retVal;
     }
     
     /**
