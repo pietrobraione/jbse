@@ -5,6 +5,9 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 
 import jbse.common.exc.UnexpectedInternalException;
 import sun.misc.Unsafe;
@@ -96,4 +99,37 @@ public final class Util {
     private Util() {
         //intentionally empty
     }
+
+	/**
+	 * Returns an {@link Iterable} that scans a {@link List} in 
+	 * reverse order, from tail to head.
+	 * 
+	 * @param list a {@link List}{@code <T>}. It must not be {@code null}.
+	 * @return an {@link Iterable}{@code <T>}.
+	 */
+	public static <T> Iterable<T> reverse(final List<T> list) {
+		return new Iterable<T>() {
+			@Override
+			public Iterator<T> iterator() {
+				return new Iterator<T>() {
+					private ListIterator<T> delegate = list.listIterator(list.size());
+	
+					@Override
+					public boolean hasNext() {
+						return this.delegate.hasPrevious();
+					}
+	
+					@Override
+					public T next() {
+						return this.delegate.previous();
+					}
+	
+					@Override
+					public void remove() {
+						this.delegate.remove();
+					}
+				};
+			}
+		};
+	}
 }

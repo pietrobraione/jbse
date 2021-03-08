@@ -898,14 +898,7 @@ public final class ClassHierarchy implements Cloneable {
                         if (e == null) {
                             continue;
                         }
-                        final InputStream inStr = f.getInputStream(e);
-                        final ByteArrayOutputStream outStr = new ByteArrayOutputStream();
-                        final byte[] buf = new byte[2048];
-                        int nbytes;
-                        while ((nbytes = inStr.read(buf)) != -1) {
-                            outStr.write(buf, 0, nbytes);
-                        }
-                        return new FindBytecodeResult(outStr.toByteArray(), path);
+                        return new FindBytecodeResult(jarEntryBytes(f, e), path);
                     }
                 } //else do nothing
             } catch (IOException e) {
@@ -913,6 +906,17 @@ public final class ClassHierarchy implements Cloneable {
             }
         }
         return null;
+    }
+    
+    private static byte[] jarEntryBytes(JarFile f, JarEntry e) throws IOException {
+        final InputStream inStr = f.getInputStream(e);
+        final ByteArrayOutputStream outStr = new ByteArrayOutputStream();
+        final byte[] buf = new byte[2048];
+        int nbytes;
+        while ((nbytes = inStr.read(buf)) != -1) {
+            outStr.write(buf, 0, nbytes);
+        }
+        return outStr.toByteArray();
     }
     
     /**
@@ -1298,7 +1302,7 @@ public final class ClassHierarchy implements Cloneable {
     }
     
     private Signature resolveMethodSignaturePolymorphic(Signature methodSignature, boolean isInterface, ClassFile methodSignatureClass) {
-    	Signature methodSignaturePolymorphic = null;
+    	Signature methodSignaturePolymorphic = methodSignature;
         for (ClassFile cf : methodSignatureClass.superclasses()) {
             if (!isInterface && cf.hasOneSignaturePolymorphicMethodDeclaration(methodSignature.getName())) {
                 methodSignaturePolymorphic = new Signature(methodSignature.getClassName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR, methodSignature.getName());

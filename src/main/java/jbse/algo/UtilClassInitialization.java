@@ -11,8 +11,6 @@ import static jbse.bc.Signatures.VERIFY_ERROR;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
 
@@ -37,6 +35,7 @@ import jbse.bc.exc.PleaseLoadClassException;
 import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.Type;
+import jbse.common.Util;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -414,40 +413,7 @@ public final class UtilClassInitialization {
 			return false;
 		}
 
-		/**
-		 * Returns an {@link Iterable} that scans a {@link List} in 
-		 * reverse order, from tail to head.
-		 * 
-		 * @param list a {@link List}{@code <T>}. It must not be {@code null}.
-		 * @return an {@link Iterable}{@code <T>}.
-		 */
-		private static <T> Iterable<T> reverse(final List<T> list) {
-			return new Iterable<T>() {
-				@Override
-				public Iterator<T> iterator() {
-					return new Iterator<T>() {
-						private ListIterator<T> delegate = list.listIterator(list.size());
-
-						@Override
-						public boolean hasNext() {
-							return this.delegate.hasPrevious();
-						}
-
-						@Override
-						public T next() {
-							return this.delegate.previous();
-						}
-
-						@Override
-						public void remove() {
-							this.delegate.remove();
-						}
-					};
-				}
-			};
-		}
-
-		private boolean hasANonStaticImplementedMethod(ClassFile cf) {
+		private static boolean hasANonStaticImplementedMethod(ClassFile cf) {
 			final Signature[] methods = cf.getDeclaredMethods();
 			for (Signature method : methods) {
 				try {
@@ -497,7 +463,8 @@ public final class UtilClassInitialization {
 				//and is in the "initialization started" status (means 
 				//initialization in progress or already initialized),
 				//skip it
-				if (this.s.existsKlass(classFile) && this.s.getKlass(classFile).initializationStarted()) {
+				final boolean klassAlreadyExists = this.s.existsKlass(classFile);
+				if (klassAlreadyExists && this.s.getKlass(classFile).initializationStarted()) {
 					continue;
 				}
 
@@ -508,48 +475,10 @@ public final class UtilClassInitialization {
 				//decides whether the class is assumed pre-initialized and whether
 				//a symbolic or concrete Klass object should be created
 				//TODO here we assume mutual exclusion of the initialized/not initialized assumptions. Withdraw this assumption and branch.
-				final ClassHierarchy hier = this.s.getClassHierarchy();
-				final boolean klassAlreadyExists = this.s.existsKlass(classFile);
-				final boolean symbolicKlass;
-				boolean assumeInitialized = false; //bogus initialization to keep the compiler happy
-				//invariant: symbolicKlass implies assumeInitialized
-				if (klassAlreadyExists) {
-					symbolicKlass = this.s.getKlass(classFile).isSymbolic();
-					//search assumeInitialized in the path condition - if there is a 
-					//Klass in the state there must also be a path condition clause
-					boolean found = false;
-					for (Clause c : this.s.getPathCondition()) {
-						if (c instanceof ClauseAssumeClassInitialized) {
-							if (((ClauseAssumeClassInitialized) c).getClassFile().equals(classFile)) {
-								found = true;
-								assumeInitialized = true;
-							}
-						} else if (c instanceof ClauseAssumeClassNotInitialized) {
-							if (((ClauseAssumeClassNotInitialized) c).getClassFile().equals(classFile)) {
-								found = true;
-								assumeInitialized = false;
-							}
-						}
-					}
-					if (!found) {
-						throw new UnexpectedInternalException("Ill-formed state: Klass present in the static store but ClassFile not present in the path condition.");
-					}
-				} else {
-					if (this.s.phase() == Phase.PRE_INITIAL) {
-						symbolicKlass = false; //...and they are also assumed to be pure (or unmodified since their initialization)
-						assumeInitialized = true; //all pre-initial class are assumed to be pre-initialized...
-					} else if (this.ctx.decisionProcedure.isSatInitialized(classFile)) { 
-						final boolean shallRunStaticInitializer = classFile.isPure() || this.ctx.classHasAPureInitializer(hier, classFile) || this.ctx.classInvariantAfterInitialization(classFile);
-						symbolicKlass = !shallRunStaticInitializer;
-						assumeInitialized = true;
-					} else {
-						symbolicKlass = false;
-						assumeInitialized = false;
-					}
-				}
+				final Initialization isSymbolicInitialized = isSymbolicInitialized(classFile);
 
 				//creates the Klass object
-				if (symbolicKlass) {
+				if (isSymbolicInitialized == Initialization.SYMBOLIC_INITIALIZED) {
 					//creates a symbolic Klass
 					this.s.ensureKlassSymbolic(this.ctx.getCalculator(), classFile);
 				} else {
@@ -564,7 +493,8 @@ public final class UtilClassInitialization {
 
 				//pushes the assumption
 				if (!klassAlreadyExists) { //if klassAlreadyExists, the clause is already present
-					if (assumeInitialized) { 
+					if (isSymbolicInitialized == Initialization.SYMBOLIC_INITIALIZED || 
+					isSymbolicInitialized == Initialization.CONCRETE_INITIALIZED) { 
 						final Klass k = this.s.getKlass(classFile);
 						this.s.assumeClassInitialized(classFile, k);
 					} else {
@@ -572,21 +502,20 @@ public final class UtilClassInitialization {
 					}
 				}
 
-				//if the created Klass is concrete but 
-				//the class is assumed to be pre-initialized, 
-				//schedules the Klass to become symbolic (if
+				//if the created Klass is concrete and pre-initialized, 
+				//schedules the Klass to become symbolic (when
 				//the corresponding flag is active)
-				if (!symbolicKlass && assumeInitialized && this.makePreInitClassesSymbolic
+				if (isSymbolicInitialized == Initialization.CONCRETE_INITIALIZED && this.makePreInitClassesSymbolic
 				&& !JBSE_BASE.equals(classFile.getClassName()) /* HACK */) {
 					this.preInitializedClasses.add(classFile);
 				}
 
-				//if classFile denotes a class rather than an interface
-				//and has a superclass, then recursively performs phase1 
+				//if classFile denotes a class rather than an interface, 
+				//then recursively performs phase1 
 				//on its superclass and superinterfaces, according to
 				//JVMS v8 section 5.5, point 7
 				if (!classFile.isInterface() || recurSuperinterfaces) {
-					for (ClassFile superinterface : reverse(classFile.getSuperInterfaces())) {
+					for (ClassFile superinterface : Util.reverse(classFile.getSuperInterfaces())) {
 						if (hasANonStaticImplementedMethod(classFile)) {
 							phase1(true, superinterface);
 						}
@@ -605,6 +534,65 @@ public final class UtilClassInitialization {
 					phase1(false, classFile.getMemberClass());
 				}
 			}
+		}
+		
+		private enum Initialization { SYMBOLIC_INITIALIZED, CONCRETE_INITIALIZED, CONCRETE_NOTINITIALIZED };
+		
+		private Initialization isSymbolicInitialized(ClassFile classFile) 
+		throws InvalidInputException, DecisionException {
+			final ClassHierarchy hier = this.s.getClassHierarchy();
+			final boolean symbolicKlass;
+			boolean assumeInitialized = false; //bogus initialization to keep the compiler happy
+			
+			final boolean klassAlreadyExists = this.s.existsKlass(classFile);
+			if (klassAlreadyExists) {
+				symbolicKlass = this.s.getKlass(classFile).isSymbolic();
+				//search assumeInitialized in the path condition - if there is a 
+				//Klass in the state there must also be a path condition clause
+				boolean found = false;
+				for (Clause c : this.s.getPathCondition()) {
+					if (c instanceof ClauseAssumeClassInitialized) {
+						if (((ClauseAssumeClassInitialized) c).getClassFile().equals(classFile)) {
+							found = true;
+							assumeInitialized = true;
+						}
+					} else if (c instanceof ClauseAssumeClassNotInitialized) {
+						if (((ClauseAssumeClassNotInitialized) c).getClassFile().equals(classFile)) {
+							found = true;
+							assumeInitialized = false;
+						}
+					}
+				}
+				if (!found) {
+					throw new UnexpectedInternalException("Ill-formed state: Klass present in the static store but ClassFile not present in the path condition.");
+				}
+			} else {
+				if (this.s.phase() == Phase.PRE_INITIAL) {
+					symbolicKlass = false; //...and they are also assumed to be pure (or unmodified since their initialization)
+					assumeInitialized = true; //all pre-initial class are assumed to be pre-initialized...
+				} else if (this.ctx.decisionProcedure.isSatInitialized(classFile)) { 
+					final boolean shallRunStaticInitializer = classFile.isPure() || this.ctx.classHasAPureInitializer(hier, classFile) || this.ctx.classInvariantAfterInitialization(classFile);
+					symbolicKlass = !shallRunStaticInitializer;
+					assumeInitialized = true;
+				} else {
+					symbolicKlass = false;
+					assumeInitialized = false;
+				}
+			}
+			
+			//invariant: symbolicKlass implies assumeInitialized
+			final Initialization retVal;
+			if (symbolicKlass && assumeInitialized) {
+				retVal = Initialization.SYMBOLIC_INITIALIZED;
+			} else if (!symbolicKlass && assumeInitialized) {
+				retVal = Initialization.CONCRETE_INITIALIZED;
+			} else if (!symbolicKlass && !assumeInitialized) {
+				retVal = Initialization.CONCRETE_NOTINITIALIZED;
+			} else {
+				throw new UnexpectedInternalException("Found class that is symbolic and is not assumed to be pre-initialized");
+			}
+			
+			return retVal;
 		}
 
 		/**
@@ -625,36 +613,41 @@ public final class UtilClassInitialization {
 				final Klass k = this.s.getKlass(classFile);
 				final Signature[] flds = classFile.getDeclaredFieldsStatic();
 				for (final Signature sig : flds) {
-					try {
-						if (classFile.isFieldConstant(sig)) {
-							//sig is directly extracted from the classfile, 
-							//so no resolution is necessary
-							Value v = null; //to keep the compiler happy
-							final ConstantPoolValue cpv = classFile.fieldConstantValue(sig);
-							if (cpv instanceof ConstantPoolPrimitive) {
-								v = this.ctx.getCalculator().val_(cpv.getValue());
-							} else if (cpv instanceof ConstantPoolString) {
-								final String stringLit = ((ConstantPoolString) cpv).getValue();
-								s.ensureStringLiteral(this.ctx.getCalculator(), stringLit);
-								v = s.referenceToStringLiteral(stringLit);
-							} else { //should never happen
-								/* 
-								 * TODO is it true that it should never happen? Especially, 
-								 * what about ConstantPoolClass/MethodType/MethodHandle values? 
-								 * Give another look at the JVMS and determine whether other kind 
-								 * of constant static fields may be present.
-								 */
-								failExecution("Unexpected constant from constant pool (neither primitive nor String)."); 
-								//TODO put string in constant or throw better exception
-							}
-							k.setFieldValue(sig, v);
-						}
-					} catch (FieldNotFoundException | AttributeNotFoundException | 
-					InvalidIndexException | InvalidInputException | ClassFileIllFormedException e) {
-						//this should never happen
-						failExecution(e);
-					}
+					//sig is directly extracted from the classfile, 
+					//so no resolution is necessary
+					setConstantField(k, sig, classFile);
 				}
+			}
+		}
+		
+		private void setConstantField(Klass k, Signature sig, ClassFile classFile) 
+		throws HeapMemoryExhaustedException {
+			try {
+				if (classFile.isFieldConstant(sig)) {
+					Value v = null; //to keep the compiler happy
+					final ConstantPoolValue cpv = classFile.fieldConstantValue(sig);
+					if (cpv instanceof ConstantPoolPrimitive) {
+						v = this.ctx.getCalculator().val_(cpv.getValue());
+					} else if (cpv instanceof ConstantPoolString) {
+						final String stringLit = ((ConstantPoolString) cpv).getValue();
+						s.ensureStringLiteral(this.ctx.getCalculator(), stringLit);
+						v = s.referenceToStringLiteral(stringLit);
+					} else { //should never happen
+						/* 
+						 * TODO is it true that it should never happen? Especially, 
+						 * what about ConstantPoolClass/MethodType/MethodHandle values? 
+						 * Give another look at the JVMS and determine whether other kind 
+						 * of constant static fields may be present.
+						 */
+						failExecution("Unexpected constant from constant pool (neither primitive nor String)."); 
+						//TODO put string in constant or throw better exception
+					}
+					k.setFieldValue(sig, v);
+				}
+			} catch (FieldNotFoundException | AttributeNotFoundException | 
+			InvalidIndexException | InvalidInputException | ClassFileIllFormedException e) {
+				//this should never happen
+				failExecution(e);
 			}
 		}
 
@@ -673,43 +666,10 @@ public final class UtilClassInitialization {
 			try {
 				boolean exceptionBoxFrameYetToPush = true; 
 				for (ClassFile classFile : this.classesForPhase3) {
-					final Signature sigClinit = new Signature(classFile.getClassName(), "()" + Type.VOID, "<clinit>");
-					if (classFile.hasMethodImplementation(sigClinit)) {
-						try {
-							if (this.preInitializedClasses.contains(classFile)) {
-								this.s.ensureStringLiteral(this.ctx.getCalculator(), classFile.getClassName());
-								this.s.pushFrame(this.ctx.getCalculator(), this.cf_JBSE_BASE, JBSE_BASE_MAKEKLASSSYMBOLIC, root(), 0, this.ctx.getCalculator().valInt(classFile.getDefiningClassLoader()), this.s.referenceToStringLiteral(classFile.getClassName()));
-								++this.createdFrames;
-							}
-							if (this.boxExceptionMethodSignature != null && exceptionBoxFrameYetToPush) {
-								this.s.pushFrame(this.ctx.getCalculator(), this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);
-								++this.createdFrames;
-							}
-							this.s.pushFrame(this.ctx.getCalculator(), classFile, sigClinit, root(), 0);
-							++this.createdFrames;
-						} catch (InvalidInputException e) {
-							//this should never happen
-							failExecution("Could not find the classfile for " + classFile.getClassName() + " or for jbse/base/Base.");
-						}
-					}
+					exceptionBoxFrameYetToPush = invokeClinit(classFile, exceptionBoxFrameYetToPush);
 				}
 				if (this.pushClinitFor_JAVA_OBJECT) {
-					try {
-						if (this.boxExceptionMethodSignature != null && exceptionBoxFrameYetToPush) {
-							this.s.pushFrame(this.ctx.getCalculator(), this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);
-							++this.createdFrames;
-						}
-						final Signature sigClinit_JAVA_OBJECT = new Signature(JAVA_OBJECT, "()" + Type.VOID, "<clinit>");
-						final ClassFile cf_JAVA_OBJECT = this.s.getClassHierarchy().loadCreateClass(JAVA_OBJECT);
-						this.s.pushFrame(this.ctx.getCalculator(), cf_JAVA_OBJECT, sigClinit_JAVA_OBJECT, root(), 0);
-						++this.createdFrames;
-					} catch (ClassFileNotFoundException | IncompatibleClassFileException | 
-					ClassFileIllFormedException | BadClassFileVersionException | 
-					RenameUnsupportedException | WrongClassNameException | 
-					InvalidInputException | ClassFileNotAccessibleException e) {
-						//this should never happen
-						failExecution("Could not find the classfile for java.lang.Object.");
-					}
+					invokeClinitJavaObject(exceptionBoxFrameYetToPush);
 				}
 			} catch (MethodNotFoundException | MethodCodeNotFoundException e) {
 				/* TODO Here I am in doubt about how I should manage exceptional
@@ -730,6 +690,54 @@ public final class UtilClassInitialization {
 				//this should never happen
 				failExecution(e);
 			} 
+		}
+		
+		private boolean invokeClinit(ClassFile classFile, boolean exceptionBoxFrameYetToPush) 
+		throws HeapMemoryExhaustedException, NullMethodReceiverException, MethodNotFoundException, 
+		MethodCodeNotFoundException, InvalidSlotException, InvalidTypeException, InvalidProgramCounterException, 
+		ThreadStackEmptyException {
+			final Signature sigClinit = new Signature(classFile.getClassName(), "()" + Type.VOID, "<clinit>");
+			if (classFile.hasMethodImplementation(sigClinit)) {
+				try {
+					if (this.preInitializedClasses.contains(classFile)) {
+						this.s.ensureStringLiteral(this.ctx.getCalculator(), classFile.getClassName());
+						this.s.pushFrame(this.ctx.getCalculator(), this.cf_JBSE_BASE, JBSE_BASE_MAKEKLASSSYMBOLIC, root(), 0, this.ctx.getCalculator().valInt(classFile.getDefiningClassLoader()), this.s.referenceToStringLiteral(classFile.getClassName()));
+						++this.createdFrames;
+					}
+					if (this.boxExceptionMethodSignature != null && exceptionBoxFrameYetToPush) {
+						this.s.pushFrame(this.ctx.getCalculator(), this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);
+						exceptionBoxFrameYetToPush = false;
+						++this.createdFrames;
+					}
+					this.s.pushFrame(this.ctx.getCalculator(), classFile, sigClinit, root(), 0);
+					++this.createdFrames;
+				} catch (InvalidInputException e) {
+					//this should never happen
+					failExecution("Could not find the classfile for " + classFile.getClassName() + " or for jbse/base/Base.");
+				}
+			}
+			return exceptionBoxFrameYetToPush;
+		}
+		
+		private void invokeClinitJavaObject(boolean exceptionBoxFrameYetToPush) 
+		throws NullMethodReceiverException, MethodNotFoundException, MethodCodeNotFoundException, 
+		InvalidSlotException, InvalidTypeException, InvalidProgramCounterException, ThreadStackEmptyException {
+			try {
+				if (this.boxExceptionMethodSignature != null && exceptionBoxFrameYetToPush) {
+					this.s.pushFrame(this.ctx.getCalculator(), this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);
+					++this.createdFrames;
+				}
+				final Signature sigClinit_JAVA_OBJECT = new Signature(JAVA_OBJECT, "()" + Type.VOID, "<clinit>");
+				final ClassFile cf_JAVA_OBJECT = this.s.getClassHierarchy().loadCreateClass(JAVA_OBJECT);
+				this.s.pushFrame(this.ctx.getCalculator(), cf_JAVA_OBJECT, sigClinit_JAVA_OBJECT, root(), 0);
+				++this.createdFrames;
+			} catch (ClassFileNotFoundException | IncompatibleClassFileException | 
+			ClassFileIllFormedException | BadClassFileVersionException | 
+			RenameUnsupportedException | WrongClassNameException | 
+			InvalidInputException | ClassFileNotAccessibleException e) {
+				//this should never happen
+				failExecution("Could not find the classfile for java.lang.Object.");
+			}
 		}
 
 		/**
