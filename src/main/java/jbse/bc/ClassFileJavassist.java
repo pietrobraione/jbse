@@ -301,49 +301,33 @@ public class ClassFileJavassist extends ClassFile {
                 }
                 final Object cpItem = longVectorElementAt.invoke(cpItems, Integer.valueOf(i));
                 if (tag == ConstPool.CONST_Integer) {
-                    final Integer value = (Integer) cpPatches[i];
-                    final Class<?> integerInfoClass = Class.forName("javassist.bytecode.IntegerInfo");
-                    final Field integerInfoValueField = integerInfoClass.getDeclaredField("value");
-                    integerInfoValueField.setAccessible(true);
-                    integerInfoValueField.set(cpItem, value);
+                	setPatch(cpItem, cpPatches[i], "javassist.bytecode.IntegerInfo", "value");
                 } else if (tag == ConstPool.CONST_Long) {
-                    final Long value = (Long) cpPatches[i];
-                    final Class<?> longInfoClass = Class.forName("javassist.bytecode.LongInfo");
-                    final Field longInfoValueField = longInfoClass.getDeclaredField("value");
-                    longInfoValueField.setAccessible(true);
-                    longInfoValueField.set(cpItem, value);
+                	setPatch(cpItem, cpPatches[i], "javassist.bytecode.LongInfo", "value");
                 } else if (tag == ConstPool.CONST_Float) {
-                    final Float value = (Float) cpPatches[i];
-                    final Class<?> floatInfoClass = Class.forName("javassist.bytecode.FloatInfo");
-                    final Field floatInfoValueField = floatInfoClass.getDeclaredField("value");
-                    floatInfoValueField.setAccessible(true);
-                    floatInfoValueField.set(cpItem, value);
+                	setPatch(cpItem, cpPatches[i], "javassist.bytecode.FloatInfo", "value");
                 } else if (tag == ConstPool.CONST_Double) {
-                    final Double value = (Double) cpPatches[i];
-                    final Class<?> doubleInfoClass = Class.forName("javassist.bytecode.DoubleInfo");
-                    final Field doubleInfoValueField = doubleInfoClass.getDeclaredField("value");
-                    doubleInfoValueField.setAccessible(true);
-                    doubleInfoValueField.set(cpItem, value);
+                	setPatch(cpItem, cpPatches[i], "javassist.bytecode.DoubleInfo", "value");
                 } else if (tag == ConstPool.CONST_Utf8) {
-                    final String value = (String) cpPatches[i];
-                    final Class<?> utf8InfoClass = Class.forName("javassist.bytecode.Utf8Info");
-                    final Field utf8InfoStringField = utf8InfoClass.getDeclaredField("string");
-                    utf8InfoStringField.setAccessible(true);
-                    utf8InfoStringField.set(cpItem, value);
+                	setPatch(cpItem, cpPatches[i], "javassist.bytecode.Utf8Info", "string");
                 } else if (tag == ConstPool.CONST_Class) {
-                    final int value = cp.addUtf8Info(((ClassFile) cpPatches[i]).getClassName());
-                    final Class<?> classInfoClass = Class.forName("javassist.bytecode.ClassInfo");
-                    final Field classInfoNameField = classInfoClass.getDeclaredField("name");
-                    classInfoNameField.setAccessible(true);
-                    classInfoNameField.set(cpItem, Integer.valueOf(value));
+                	setPatch(cpItem, Integer.valueOf(cp.addUtf8Info(((ClassFile) cpPatches[i]).getClassName())), "javassist.bytecode.ClassInfo", "name");
                 }
             }
-        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | 
-                 IllegalAccessException | ClassNotFoundException | NoSuchMethodException | 
+        } catch (ClassNotFoundException | NoSuchFieldException | SecurityException | 
+                 IllegalArgumentException | IllegalAccessException  | NoSuchMethodException | 
                  InvocationTargetException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
+    }
+    
+    private void setPatch(Object cpItem, Object patch, String className, String fieldName) 
+    throws ClassNotFoundException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+        final Class<?> utf8InfoClass = Class.forName(className);
+        final Field utf8InfoStringField = utf8InfoClass.getDeclaredField(fieldName);
+        utf8InfoStringField.setAccessible(true);
+        utf8InfoStringField.set(cpItem, patch);
     }
     
     @Override
@@ -772,77 +756,96 @@ public class ClassFileJavassist extends ClassFile {
             throw new InvalidIndexException(indexOutOfRangeMessage(index));
         }
         final int tag = this.cp.getTag(index);
+        final ConstantPoolValue retVal;
         switch (tag) {
         case ConstPool.CONST_Integer:
-            return new ConstantPoolPrimitive(this.cp.getIntegerInfo(index));
+            retVal = new ConstantPoolPrimitive(this.cp.getIntegerInfo(index)); break;
         case ConstPool.CONST_Float:
-            return new ConstantPoolPrimitive(this.cp.getFloatInfo(index));
+        	retVal = new ConstantPoolPrimitive(this.cp.getFloatInfo(index)); break;
         case ConstPool.CONST_Long:
-            return new ConstantPoolPrimitive(this.cp.getLongInfo(index));
+        	retVal = new ConstantPoolPrimitive(this.cp.getLongInfo(index)); break;
         case ConstPool.CONST_Double:
-            return new ConstantPoolPrimitive(this.cp.getDoubleInfo(index));
+        	retVal = new ConstantPoolPrimitive(this.cp.getDoubleInfo(index)); break;
         case ConstPool.CONST_String:
             if (this.cpPatches != null && index < this.cpPatches.length && this.cpPatches[index] != null) {
-                return new ConstantPoolObject((Reference) this.cpPatches[index]);
+            	retVal = new ConstantPoolObject((Reference) this.cpPatches[index]);
+            } else {
+            	retVal = new ConstantPoolString(this.cp.getStringInfo(index));
             }
-            return new ConstantPoolString(this.cp.getStringInfo(index));
+            break;
         case ConstPool.CONST_Class:
-            return new ConstantPoolClass(internalClassName(this.cp.getClassInfo(index)));
+        	retVal = new ConstantPoolClass(internalClassName(this.cp.getClassInfo(index))); break;
         case ConstPool.CONST_Utf8:
-            return new ConstantPoolUtf8(this.cp.getUtf8Info(index));
+        	retVal = new ConstantPoolUtf8(this.cp.getUtf8Info(index)); break;
         case ConstPool.CONST_MethodType:
-            return new ConstantPoolMethodType(this.cp.getUtf8Info(this.cp.getMethodTypeInfo(index)));
+        	retVal = new ConstantPoolMethodType(this.cp.getUtf8Info(this.cp.getMethodTypeInfo(index))); break;
         case ConstPool.CONST_MethodHandle:
         	try {
-            	return getMethodHandleValueFromConstantPool(index);
+        		retVal = getMethodHandleValueFromConstantPool(index); break;
         	} catch (InvalidIndexException e) {
         		throw new ClassFileIllFormedException(e);
         	}
+        default:
+            throw new InvalidIndexException(entryInvalidMessage(index));
         }
-        throw new InvalidIndexException(entryInvalidMessage(index));
+        
+        return retVal;
     }
     
     private ConstantPoolValue getMethodHandleValueFromConstantPool(int index) 
     throws InvalidIndexException {
+        final ConstantPoolValue retVal;
 		switch (this.cp.getMethodHandleKind(index)) {
 		case ConstPool.REF_getField:
-			return new ConstantPoolMethodHandleGetField(getFieldSignature(this.cp.getMethodHandleIndex(index)));
+			retVal = new ConstantPoolMethodHandleGetField(getFieldSignature(this.cp.getMethodHandleIndex(index))); break;
 		case ConstPool.REF_getStatic:
-			return new ConstantPoolMethodHandleGetStatic(getFieldSignature(this.cp.getMethodHandleIndex(index)));
+			retVal = new ConstantPoolMethodHandleGetStatic(getFieldSignature(this.cp.getMethodHandleIndex(index))); break;
 		case ConstPool.REF_putField:
-			return new ConstantPoolMethodHandlePutField(getFieldSignature(this.cp.getMethodHandleIndex(index)));
+			retVal = new ConstantPoolMethodHandlePutField(getFieldSignature(this.cp.getMethodHandleIndex(index))); break;
 		case ConstPool.REF_putStatic:
-			return new ConstantPoolMethodHandlePutStatic(getFieldSignature(this.cp.getMethodHandleIndex(index)));
+			retVal = new ConstantPoolMethodHandlePutStatic(getFieldSignature(this.cp.getMethodHandleIndex(index))); break;
 		case ConstPool.REF_invokeVirtual:
-			return new ConstantPoolMethodHandleInvokeVirtual(getMethodSignature(this.cp.getMethodHandleIndex(index)));
+			retVal = new ConstantPoolMethodHandleInvokeVirtual(getMethodSignature(this.cp.getMethodHandleIndex(index))); break;
 		case ConstPool.REF_invokeStatic:
+		{
+			ConstantPoolValue _retVal;
 			try {
-				return new ConstantPoolMethodHandleInvokeStatic(getMethodSignature(this.cp.getMethodHandleIndex(index)));
+				_retVal = new ConstantPoolMethodHandleInvokeStatic(getMethodSignature(this.cp.getMethodHandleIndex(index)));
 			} catch (InvalidIndexException e) {
 				if (getMajorVersion() >= JAVA_8) {
-					return new ConstantPoolMethodHandleInvokeStatic(getInterfaceMethodSignature(this.cp.getMethodHandleIndex(index)));
+					_retVal = new ConstantPoolMethodHandleInvokeStatic(getInterfaceMethodSignature(this.cp.getMethodHandleIndex(index)));
 				} else {
 					throw e;
 				}
 			}
-		case ConstPool.REF_invokeSpecial:
-			try {
-				return new ConstantPoolMethodHandleInvokeSpecial(getMethodSignature(this.cp.getMethodHandleIndex(index)));
-			} catch (InvalidIndexException e) {
-				if (getMajorVersion() >= JAVA_8) {
-					return new ConstantPoolMethodHandleInvokeSpecial(getInterfaceMethodSignature(this.cp.getMethodHandleIndex(index)));
-				} else {
-					throw e;
-				}
-			}
-		case ConstPool.REF_newInvokeSpecial:
-			return new ConstantPoolMethodHandleNewInvokeSpecial(getMethodSignature(this.cp.getMethodHandleIndex(index)));
-		case ConstPool.REF_invokeInterface:
-			return new ConstantPoolMethodHandleInvokeInterface(getInterfaceMethodSignature(this.cp.getMethodHandleIndex(index)));
+			retVal = _retVal;
+			break;
 		}
-        throw new InvalidIndexException(entryInvalidMessage(index));
+		case ConstPool.REF_invokeSpecial:
+		{
+			ConstantPoolValue _retVal;
+			try {
+				_retVal = new ConstantPoolMethodHandleInvokeSpecial(getMethodSignature(this.cp.getMethodHandleIndex(index)));
+			} catch (InvalidIndexException e) {
+				if (getMajorVersion() >= JAVA_8) {
+					_retVal = new ConstantPoolMethodHandleInvokeSpecial(getInterfaceMethodSignature(this.cp.getMethodHandleIndex(index)));
+				} else {
+					throw e;
+				}
+			}
+			retVal = _retVal;
+			break;
+		}
+		case ConstPool.REF_newInvokeSpecial:
+			retVal = new ConstantPoolMethodHandleNewInvokeSpecial(getMethodSignature(this.cp.getMethodHandleIndex(index))); break;
+		case ConstPool.REF_invokeInterface:
+			retVal = new ConstantPoolMethodHandleInvokeInterface(getInterfaceMethodSignature(this.cp.getMethodHandleIndex(index))); break;
+		default:
+	        throw new InvalidIndexException(entryInvalidMessage(index));
+		}
+		
+		return retVal;
     }
-
 
     @Override
     public boolean hasMethodDeclaration(Signature methodSignature) {
@@ -872,29 +875,27 @@ public class ClassFileJavassist extends ClassFile {
 
     @Override
     public boolean hasOneSignaturePolymorphicMethodDeclaration(String methodName) {
-        //cannot be signature polymorphic if it is not in JAVA_METHODHANDLE
-        if (!JAVA_METHODHANDLE.equals(getClassName())) {
-            return false;
-        }
-        
-        //the method declaration must be unique
-        final MethodInfo uniqueMethod = findUniqueMethodDeclarationWithName(methodName);
-        if (uniqueMethod == null) {
-            return false;
-        }
-        
-        //cannot be signature polymorphic if it has wrong descriptor
-        if (!SIGNATURE_POLYMORPHIC_DESCRIPTOR.equals(uniqueMethod.getDescriptor())) {
-            return false;
-        }
-        
-        //cannot be signature polymorphic if it not native or if it is not varargs
-        if (!Modifier.isNative(AccessFlag.toModifier(uniqueMethod.getAccessFlags())) || (AccessFlag.toModifier(uniqueMethod.getAccessFlags()) & Modifier.VARARGS) == 0) {
-            return false;
+    	final boolean retVal;
+        if (JAVA_METHODHANDLE.equals(getClassName())) {
+        	//the method declaration must be unique
+        	final MethodInfo uniqueMethod = findUniqueMethodDeclarationWithName(methodName);
+        	if (uniqueMethod == null) {
+        		retVal = false;
+        	} else if (!SIGNATURE_POLYMORPHIC_DESCRIPTOR.equals(uniqueMethod.getDescriptor())) {
+            	//cannot be signature polymorphic if it has wrong descriptor
+        		retVal = false;
+        	} else if (!Modifier.isNative(AccessFlag.toModifier(uniqueMethod.getAccessFlags())) || (AccessFlag.toModifier(uniqueMethod.getAccessFlags()) & Modifier.VARARGS) == 0) {
+            	//cannot be signature polymorphic if it not native or if it is not varargs
+        		retVal = false;
+        	} else {
+        		retVal = true;
+        	}
+        } else {
+            //cannot be signature polymorphic if it is not in JAVA_METHODHANDLE
+        	retVal = false;
         }
 
-        //all checks passed
-        return true;
+        return retVal;
     }
 
     @Override
@@ -1287,7 +1288,7 @@ public class ClassFileJavassist extends ClassFile {
     public String getFieldGenericSignatureType(Signature fieldSignature) 
     throws FieldNotFoundException {
         final FieldInfo fld = findField(fieldSignature, true);
-        SignatureAttribute sa = (SignatureAttribute) fld.getAttribute(SignatureAttribute.tag);
+        final SignatureAttribute sa = (SignatureAttribute) fld.getAttribute(SignatureAttribute.tag);
         return (sa == null ? null : sa.getSignature());
     }
 

@@ -13,7 +13,7 @@ import java.util.HashSet;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 
 import jbse.bc.exc.ClassFileIllFormedException;
@@ -23,12 +23,11 @@ import jbse.bc.exc.MethodNotFoundException;
 import jbse.common.exc.InvalidInputException;
 
 public class ClassFileFactoryTest {
-    private static ClassFileFactory f;
+    private ClassFileFactory f;
 
-    @BeforeClass
-    public static void setUpClass() {
-        //Javassist
-        f = new ClassFileFactoryJavassist(); 
+    @Before
+    public void setUp() {
+        this.f = new ClassFileFactoryJavassist(); 
     }
     
     private static byte[] getFromJar(String className) throws IOException {
