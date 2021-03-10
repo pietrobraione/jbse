@@ -139,6 +139,10 @@ public final class Util {
 		return null;
 	}
 
-	//do not instantiate it!
-	private Util() { }
+	/** 
+	 * Do not instantiate me! 
+	 */
+	private Util() { 
+		//nothing to do
+	}
 }

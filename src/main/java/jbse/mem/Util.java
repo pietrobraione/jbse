@@ -198,16 +198,17 @@ public class Util {
      * condition.
      * 
      * @param clauses a {@link List}{@code <}{@link Clause}{@code >}. 
-     * @param heapObjectAction a {@link Consumer}{@code <}{@link HeapObjekt}{@code >}
-     *        that is invoked for each initial object.
+     * @param action a {@link Consumer}{@code <}{@link HeapObjekt}{@code >}
+     *        that is invoked for each initial object. It receives in input
+     *        the object and its heap position.
      */
-    public static void forAllInitialObjects(List<Clause> clauses, BiConsumer<HeapObjekt, Long> heapObjectAction) {
+    public static void forAllInitialObjects(List<Clause> clauses, BiConsumer<HeapObjekt, Long> action) {
         for (Clause c : clauses) {
             if (c instanceof ClauseAssumeExpands) {
                 final ClauseAssumeExpands cExpands = (ClauseAssumeExpands) c;
                 final HeapObjekt object = cExpands.getObjekt();
                 final Long heapPosition = cExpands.getHeapPosition();
-                heapObjectAction.accept(object, heapPosition);
+                action.accept(object, heapPosition);
             }
         }
     }
