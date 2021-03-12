@@ -925,7 +925,8 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     	if (this.classFile.getMemberClass().getClassName().equals("char") && isSimple()) {
     		final StringBuilder buf = new StringBuilder();
     		for (AccessOutcomeIn e : this.entries) {
-    			buf.append(((AccessOutcomeInValue) e).getValue().toString().substring(1, 2));
+    			final Simplex value = (Simplex) ((AccessOutcomeInValue) e).getValue();
+    			buf.append(((Character) value.getActualValue()).charValue());
     		}
     		return buf.toString();
     	} else {
