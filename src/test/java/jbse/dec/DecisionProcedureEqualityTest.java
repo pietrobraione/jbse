@@ -4,6 +4,7 @@ import static org.junit.Assert.assertFalse;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -16,6 +17,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
 import jbse.mem.Objekt;
+import jbse.mem.exc.ContradictionException;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.RewriterNegationElimination;
 import jbse.rewr.RewriterExpressionOrConversionOnSimplex;
@@ -93,7 +95,7 @@ public class DecisionProcedureEqualityTest {
 
     @Test(expected=NoDecisionException.class)
     public void simpleTest1() 
-    throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
+    throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException, NoSuchElementException, ContradictionException {
         //A == B |- B == A
         final Term A = this.calc.valTerm(Type.INT, "A");
         final Term B = this.calc.valTerm(Type.INT, "B");
@@ -103,7 +105,7 @@ public class DecisionProcedureEqualityTest {
 
     @Test(expected=NoDecisionException.class)
     public void simpleTest2() 
-    throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
+    throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException, NoSuchElementException, ContradictionException {
         //A == B |- f(A) == f(B)
     	final Term A = this.calc.valTerm(Type.INT, "A");
     	final Term B = this.calc.valTerm(Type.INT, "B");
@@ -113,7 +115,7 @@ public class DecisionProcedureEqualityTest {
 
     @Test(expected=NoDecisionException.class)
     public void simpleTest3() 
-    throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
+    throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException, NoSuchElementException, ContradictionException {
         //A == E, B == F, C == G, D == H |- f((A - B) / (C - D)) == f((E - F) / (G - H))
     	final Term A = this.calc.valTerm(Type.INT, "A");
     	final Term B = this.calc.valTerm(Type.INT, "B");
@@ -132,7 +134,7 @@ public class DecisionProcedureEqualityTest {
 
     @Test
     public void simpleTest4() 
-    throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
+    throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException, NoSuchElementException, ContradictionException {
         //A == E, B == F, C == G, D == H |-/- f((A - B) / (C - D)) != f((E - F) / (G - H))
     	final Term A = this.calc.valTerm(Type.INT, "A");
     	final Term B = this.calc.valTerm(Type.INT, "B");
@@ -151,7 +153,7 @@ public class DecisionProcedureEqualityTest {
 
     @Test(expected=NoDecisionException.class)
     public void simpleTest5() 
-    throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
+    throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException, NoSuchElementException, ContradictionException {
         //A == E, B == F, C == G, D == H |- !(f((A - B) / (C - D)) != f((E - F) / (G - H)))
     	final Term A = this.calc.valTerm(Type.INT, "A");
     	final Term B = this.calc.valTerm(Type.INT, "B");
@@ -170,7 +172,7 @@ public class DecisionProcedureEqualityTest {
 
     @Test(expected=NoDecisionException.class)
     public void pushExpTest1() 
-    throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
+    throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException, NoSuchElementException, ContradictionException {
         //f(A) == g(B) |- A + g(f(A)) == A + g(g(B))
     	final Term A = this.calc.valTerm(Type.INT, "A");
     	final Term B = this.calc.valTerm(Type.INT, "B");
@@ -180,7 +182,7 @@ public class DecisionProcedureEqualityTest {
 
     @Test(expected=NoDecisionException.class)
     public void transitiveTest1() 
-    throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+    throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
         //A == B, B == C |- A == C
     	final Term A = this.calc.valTerm(Type.INT, "A");
     	final Term B = this.calc.valTerm(Type.INT, "B");
@@ -192,7 +194,7 @@ public class DecisionProcedureEqualityTest {
 
     @Test
     public void complexExpressionTest1() 
-    throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+    throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
         //A + -1 * B == 0 |-/- A + -1 * B != 0
     	final Term A = this.calc.valTerm(Type.INT, "A");
     	final Term B = this.calc.valTerm(Type.INT, "B");

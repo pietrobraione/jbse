@@ -46,6 +46,7 @@ import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -205,7 +206,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
         return new StrategyRefine_SUN_UNSAFE_GETX_Array() {
             @Override
             public void refineResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved)
-            throws DecisionException, InvalidInputException {
+            throws DecisionException, ContradictionException, InvalidInputException {
                 //augments the path condition
             	final Expression accessExpression = altResolved.getArrayAccessExpressionSimplified();
             	if (accessExpression != null) {
@@ -222,7 +223,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
 
             @Override
             public void refineOut(State state, DecisionAlternative_XALOAD_Out altOut) 
-            throws InvalidInputException {
+            throws ContradictionException, InvalidInputException {
                 //augments the path condition
                 try {
                 	final Expression accessExpression = altOut.getArrayAccessExpressionSimplified();

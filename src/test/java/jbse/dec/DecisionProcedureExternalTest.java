@@ -16,6 +16,7 @@ import jbse.dec.exc.ExternalProtocolInterfaceException;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
 import jbse.mem.Objekt;
+import jbse.mem.exc.ContradictionException;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.RewriterNegationElimination;
 import jbse.rewr.RewriterExpressionOrConversionOnSimplex;
@@ -194,7 +195,7 @@ public class DecisionProcedureExternalTest {
     }
     
     @Test
-    public void test0() throws NoSuchElementException, InvalidInputException, InvalidOperandException, InvalidTypeException, DecisionException {
+    public void test0() throws NoSuchElementException, InvalidInputException, InvalidOperandException, InvalidTypeException, DecisionException, ContradictionException {
         final ClauseAssume c0 = new ClauseAssume(this.calc.pushTerm(Type.INT, "A").eq(this.calc.valInt(0)).pop());
         final ClauseAssume c1 = new ClauseAssume(this.calc.pushTerm(Type.INT, "A").eq(this.calc.valInt(1)).pop());
         final ClauseAssume c2 = new ClauseAssume(this.calc.pushTerm(Type.INT, "A").eq(this.calc.valInt(2)).pop());
@@ -209,7 +210,7 @@ public class DecisionProcedureExternalTest {
     }
     
     @Test
-    public void test1() throws NoSuchElementException, InvalidInputException, InvalidOperandException, InvalidTypeException, DecisionException {
+    public void test1() throws NoSuchElementException, InvalidInputException, InvalidOperandException, InvalidTypeException, DecisionException, ContradictionException {
         final ClauseAssume c0 = new ClauseAssume(this.calc.pushTerm(Type.INT, "A").eq(this.calc.valInt(0)).pop());
         final ClauseAssume c1 = new ClauseAssume(this.calc.pushTerm(Type.INT, "A").eq(this.calc.valInt(1)).pop());
         final ClauseAssume c2 = new ClauseAssume(this.calc.pushTerm(Type.INT, "A").eq(this.calc.valInt(2)).pop());
@@ -228,7 +229,7 @@ public class DecisionProcedureExternalTest {
     }
     
     @Test
-    public void test2() throws NoSuchElementException, InvalidInputException, InvalidOperandException, InvalidTypeException, DecisionException {
+    public void test2() throws NoSuchElementException, InvalidInputException, InvalidOperandException, InvalidTypeException, DecisionException, ContradictionException {
         final ClauseAssume c0 = new ClauseAssume(this.calc.pushTerm(Type.INT, "A").eq(this.calc.valInt(0)).pop());
         final ClauseAssume c1 = new ClauseAssume(this.calc.pushTerm(Type.INT, "A").eq(this.calc.valInt(1)).pop());
         final ClauseAssume c2 = new ClauseAssume(this.calc.pushTerm(Type.INT, "A").eq(this.calc.valInt(2)).pop());

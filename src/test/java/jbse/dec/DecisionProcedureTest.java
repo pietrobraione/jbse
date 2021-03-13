@@ -13,6 +13,7 @@ import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.ClauseAssume;
+import jbse.mem.exc.ContradictionException;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.RewriterNegationElimination;
 import jbse.rewr.RewriterExpressionOrConversionOnSimplex;
@@ -131,7 +132,7 @@ public class DecisionProcedureTest {
 
     @Test
     public void testSimplifyComparison2() 
-    throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+    throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, ContradictionException {
         // A >= 0 |- 2 * A ? A
         Term A = this.calc.valTerm(Type.INT, "A");
         Expression Agezero = (Expression) this.calc.push(A).ge(this.calc.valInt(0)).pop();

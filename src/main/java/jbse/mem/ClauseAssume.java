@@ -19,21 +19,21 @@ public class ClauseAssume implements Clause {
 	/**
 	 * Constructor.
 	 * 
-	 * @param p a {@link Primitive}. It must not be {@code null},
-	 * it must be an instance of either {@link Simplex} or {@link Expression}, 
-	 * and must have boolean type.
-	 * @throws NullPointerException if {@code p == null}.
-	 * @throws InvalidInputException if {@code p} has not boolean type, or
-	 * is not an instance of either {@link Simplex} or {@link Expression}.
+	 * @param condition a {@link Primitive}. It must not be {@code null},
+	 *        it must be an instance of either {@link Simplex} or {@link Expression}, 
+	 *        and must have boolean type.
+	 * @throws InvalidInputException if {@code condition == null or {@code condition} has 
+	 *         not boolean type, or is not an instance of either {@link Simplex} 
+	 *         or {@link Expression}.
 	 */
-	public ClauseAssume(Primitive p) throws InvalidInputException {
-		if (p == null) {
-			throw new NullPointerException("Tried to build a ClauseAssume with null Primitive value.");
+	public ClauseAssume(Primitive condition) throws InvalidInputException {
+		if (condition == null) {
+			throw new InvalidInputException("Tried to build a ClauseAssume with null Primitive condition.");
 		}
-		if (p.getType() != Type.BOOLEAN || (! (p instanceof Simplex) && ! (p instanceof Expression))) {
-			throw new InvalidInputException("Tried to build a ClauseAssume with Primitive value " + p.toString() + ".");
+		if (condition.getType() != Type.BOOLEAN || (! (condition instanceof Simplex) && ! (condition instanceof Expression))) {
+			throw new InvalidInputException("Tried to build a ClauseAssume with Primitive condition " + condition.toString() + ".");
 		}
-		this.p = p; 
+		this.p = condition; 
 	}
 	
 	/**

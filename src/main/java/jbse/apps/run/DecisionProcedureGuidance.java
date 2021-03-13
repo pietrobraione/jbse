@@ -115,7 +115,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
     @Override
     public final void pushAssumption(Clause c) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         super.pushAssumption(c);
         if (this.guiding) {
             if (c instanceof ClauseAssumeExpands) {
@@ -123,7 +123,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                 try {
                 	markAsSeen(cExp.getReference());
 				} catch (ImpureMethodException e) {
-					throw new DecisionException("Expansion clause for symbolic reference " + cExp.getReference().asOriginString() + " violates the assumption that the reference is a pure function application");
+					throw new ContradictionException("Expansion clause for symbolic reference " + cExp.getReference().asOriginString() + " violates the assumption that the reference is a pure function application");
 				}
             }
         }
@@ -139,7 +139,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     
     @Override
     public final void addAssumptions(Iterable<Clause> assumptionsToAdd) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         super.addAssumptions(assumptionsToAdd);
         if (this.guiding) {
             for (Clause c : assumptionsToAdd) {
@@ -148,7 +148,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                     try {
 						markAsSeen(cExp.getReference());
 					} catch (ImpureMethodException e) {
-						throw new DecisionException("Expansion clause for symbolic reference " + cExp.getReference().asOriginString() + " violates the assumption that the reference is a pure function application");
+						throw new ContradictionException("Expansion clause for symbolic reference " + cExp.getReference().asOriginString() + " violates the assumption that the reference is a pure function application");
 					}
                 }
             }
@@ -157,7 +157,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     
     @Override
     public final void addAssumptions(Clause... assumptionsToAdd) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         super.addAssumptions(assumptionsToAdd);
         if (this.guiding) {
             for (Clause c : assumptionsToAdd) {
@@ -166,7 +166,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                     try {
                     	markAsSeen(cExp.getReference());
 					} catch (ImpureMethodException e) {
-						throw new DecisionException("Expansion clause for symbolic reference " + cExp.getReference().asOriginString() + " violates the assumption that the reference is a pure function application");
+						throw new ContradictionException("Expansion clause for symbolic reference " + cExp.getReference().asOriginString() + " violates the assumption that the reference is a pure function application");
 					}
                 }
             }
@@ -175,7 +175,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     
     @Override
     public final void setAssumptions(Collection<Clause> newAssumptions) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         super.setAssumptions(newAssumptions);
         if (this.guiding) {
             clearSeen();
@@ -185,7 +185,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                     try {
                     	markAsSeen(cExp.getReference());
 					} catch (ImpureMethodException e) {
-						throw new DecisionException("Expansion clause for symbolic reference " + cExp.getReference().asOriginString() + " violates the assumption that the reference is a pure function application");
+						throw new ContradictionException("Expansion clause for symbolic reference " + cExp.getReference().asOriginString() + " violates the assumption that the reference is a pure function application");
 					}
                 }
             }
@@ -382,7 +382,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     			ensureClassInitialized(state, this.ctx, cf);
     		}
     	} catch (ImpureMethodException e) {
-    		throw new DecisionException("Symbolic reference " + refToLoad.asOriginString() + " violates the assumption that the reference is returned by a pure function application");
+    		throw new ContradictionException("Symbolic reference " + refToLoad.asOriginString() + " violates the assumption that the reference is returned by a pure function application");
     	} catch (ClassFileNotFoundException | ClassFileIllFormedException | 
     	ClassFileNotAccessibleException | IncompatibleClassFileException | 
     	BadClassFileVersionException | WrongClassNameException e) {

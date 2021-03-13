@@ -272,7 +272,7 @@ StrategyUpdate_XALOAD> {
 
             @Override
             public void refineResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved)
-            throws DecisionException, InvalidInputException {
+            throws DecisionException, ContradictionException, InvalidInputException {
                 //augments the path condition
             	final Expression accessExpression = altResolved.getArrayAccessExpressionSimplified();
             	if (accessExpression != null) {
@@ -290,7 +290,7 @@ StrategyUpdate_XALOAD> {
 
             @Override
             public void refineOut(State state, DecisionAlternative_XALOAD_Out altOut) 
-            throws InvalidInputException {
+            throws ContradictionException, InvalidInputException {
                 //augments the path condition
                 try {
                 	final Expression accessExpression = altOut.getArrayAccessExpressionSimplified();

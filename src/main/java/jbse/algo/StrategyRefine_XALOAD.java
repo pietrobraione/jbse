@@ -40,10 +40,10 @@ abstract class StrategyRefine_XALOAD implements StrategyRefine<DecisionAlternati
     throws DecisionException, ContradictionException, InvalidInputException;
 
     abstract public void refineResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
-    throws DecisionException, InvalidInputException;
+    throws DecisionException, ContradictionException, InvalidInputException;
 
     abstract public void refineOut(State s, DecisionAlternative_XALOAD_Out dao) 
-    throws InvalidInputException;
+    throws InvalidInputException, ContradictionException;
 
     @Override
     public final void refine(final State s, DecisionAlternative_XALOAD r)
@@ -74,13 +74,13 @@ abstract class StrategyRefine_XALOAD implements StrategyRefine<DecisionAlternati
     
                 @Override
                 public void visitDecisionAlternative_XALOAD_Resolved(DecisionAlternative_XALOAD_Resolved dav)
-                throws DecisionException, InvalidInputException {
+                throws DecisionException, ContradictionException, InvalidInputException {
                     StrategyRefine_XALOAD.this.refineResolved(s, dav);
                 }
     
                 @Override
                 public void visitDecisionAlternative_XALOAD_Out(DecisionAlternative_XALOAD_Out dao) 
-                throws InvalidInputException {
+                throws ContradictionException, InvalidInputException {
                     StrategyRefine_XALOAD.this.refineOut(s, dao);
                 }
             };

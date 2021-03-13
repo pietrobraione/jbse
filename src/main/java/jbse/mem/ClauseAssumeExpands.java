@@ -1,5 +1,6 @@
 package jbse.mem;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -17,13 +18,16 @@ public class ClauseAssumeExpands extends ClauseAssumeReferenceSymbolic {
 	/**
 	 * Constructor.
 	 * 
-	 * @param r a {@link ReferenceSymbolic}. It must be resolved to a fresh object.
-	 * @param heapPosition an {@code int}, the heap position. It must be 
-	 *        the position of a fresh (not yet aliased) expansion object. 
-	 * @param object the expansion {@link HeapObjekt}.
+	 * @param referenceSymbolic a {@link ReferenceSymbolic}. 
+	 *        It must not be {@code null}.
+	 * @param heapPosition a {@code long}, a heap position.
+	 * @throws InvalidInputException if {@code referenceSymbolic == null || object == null}.
 	 */
-	public ClauseAssumeExpands(ReferenceSymbolic r, long heapPosition, HeapObjekt object) { 
-		super(r);
+	public ClauseAssumeExpands(ReferenceSymbolic referenceSymbolic, long heapPosition, HeapObjekt object) throws InvalidInputException { 
+		super(referenceSymbolic);
+		if (object == null) {
+			throw new InvalidInputException("Tried to build a " + getClass().getName() + " with null object.");
+		}
 		this.heapPosition = heapPosition;
 		this.object = object.clone(); //safety copy
 	}

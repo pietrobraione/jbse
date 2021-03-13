@@ -2940,20 +2940,26 @@ public final class State implements Cloneable {
      * Assumes a predicate over primitive values (numeric assumption).
      * Its effect is adding a clause to the path condition.
      * 
-     * @param p the primitive clause which must be added to the state's 
-     *          path condition. It must be {@code p != null && 
-     *          (p instanceof }{@link Expression} {@code || p instanceof }{@link Simplex}
-     *          {@code ) && p.}{@link Value#getType() getType()} {@code  == }{@link Type#BOOLEAN BOOLEAN}.
-     * @throws NullPointerException if {@code p == null}.
-     * @throws InvalidInputException if {@code (!( p instanceof }{@link Expression} {@code ) && !( p instanceof }{@link Simplex}
-     *          {@code )) || p.}{@link Value#getType() getType()} {@code  != }{@link Type#BOOLEAN BOOLEAN}.
+     * @param condition the primitive clause which must be added to the state's 
+     *        path condition. It must be {@code condition != null && 
+     *        (condition instanceof }{@link Expression} {@code || condition instanceof }{@link Simplex}
+     *        {@code ) && condition.}{@link Value#getType() getType} {@code () == }{@link Type#BOOLEAN BOOLEAN}.
+     * @throws InvalidInputException if this state if frozen or {@code condition == null || (!( condition instanceof }{@link Expression} {@code ) && !( condition instanceof }{@link Simplex}
+     *         {@code )) || condition.}{@link Value#getType() getType} {@code () != }{@link Type#BOOLEAN BOOLEAN}.
+	 * @throws ContradictionException if {@code condition.}{@link Primitive#surelyFalse() surelyFalse}{@code ()}.
      */
-    public void assume(Primitive p) throws InvalidInputException {
+    public void assume(Primitive condition) throws InvalidInputException, ContradictionException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
+        if (condition == null) {
+            throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assume with a null p.");
+        }
+		if (condition.getType() != Type.BOOLEAN || (! (condition instanceof Simplex) && ! (condition instanceof Expression))) {
+			throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assume with Primitive value " + condition.toString() + ".");
+		}
     	possiblyReset();
-        this.pathCondition.addClauseAssume(p);
+        this.pathCondition.addClauseAssume(condition);
         ++this.nPushedClauses;
     }
 
@@ -2968,33 +2974,26 @@ public final class State implements Cloneable {
      * @param classFile a {@code ClassFile}, the class of the fresh 
      *        object to which {@code referenceSymbolic} is expanded. 
      *        It must not be {@code null}.
-     * @throws InvalidInputException if 
+     * @throws InvalidInputException if this state is frozen of
      *         {@code calc == null || referenceSymbolic == null || classFile == null}.
-     * @throws FrozenStateException if the state is frozen.
-     * @throws ContradictionException if {@code referenceSymbolic} is already 
-     *         resolved.
-     * @throws InvalidTypeException if {@code classFile} is invalid. 
+     * @throws ContradictionException if {@link #resolved(ReferenceSymbolic) resolved}{@code (referenceSymbolic)}.
      * @throws HeapMemoryExhaustedException if the heap is full.
      * @throws CannotAssumeSymbolicObjectException if {@code classFile} is
      *         a class that cannot be assumed to be symbolic
      *         (currently {@code java.lang.Class} and {@code java.lang.ClassLoader}).
      */
     public void assumeExpands(Calculator calc, ReferenceSymbolic referenceSymbolic, ClassFile classFile) 
-    throws InvalidInputException, InvalidTypeException, ContradictionException, HeapMemoryExhaustedException, 
-    CannotAssumeSymbolicObjectException, FrozenStateException {
+    throws InvalidInputException, ContradictionException, HeapMemoryExhaustedException, 
+    CannotAssumeSymbolicObjectException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
         if (calc == null || referenceSymbolic == null || classFile == null) {
             throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeExpands with a null calc or referenceSymbolic or classFile.");
         }
-        if (resolved(referenceSymbolic)) {
-            throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".assumeExpands with an already resolved referenceSymbolic.");
-        }
-        
-    	possiblyReset();
         final long objectPosition = createObjectSymbolic(calc, classFile, referenceSymbolic);
         final HeapObjekt object = this.heap.getObject(objectPosition);
+    	possiblyReset();
         this.pathCondition.addClauseAssumeExpands(referenceSymbolic, objectPosition, object);
         ++this.nPushedClauses;
     }
@@ -3012,11 +3011,10 @@ public final class State implements Cloneable {
      *        the heap to which {@code referenceSymbolic} is expanded. Note that
      *        this method does <em>not</em> check that no other symbolic reference
      *        exists that expands to the object at {@code freshObjectPosition}!
-     * @throws InvalidInputException if either {@code referenceSymbolic} is {@code null}, 
-     *         or no symbolic object is stored at {@code freshObjectPosition}, or the 
-     *         state is frozen.
-     * @throws ContradictionException if {@code referenceSymbolic} is already 
-     *         resolved. 
+     * @throws InvalidInputException if this state is frozen or {@code referenceSymbolic == null}, 
+     *         or no symbolic object is stored at {@code freshObjectPosition}.
+     * @throws ContradictionException if {@link #resolved(ReferenceSymbolic) resolved}{@code (referenceSymbolic)}
+     *         to a different heap position.
      */
     public void assumeExpandsAlreadyPresent(ReferenceSymbolic referenceSymbolic, long freshObjectPosition) 
     throws InvalidInputException, ContradictionException {
@@ -3026,9 +3024,6 @@ public final class State implements Cloneable {
         if (referenceSymbolic == null) {
             throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeExpandsAlreadyPresent with a null referenceSymbolic.");
         }
-        if (resolved(referenceSymbolic)) {
-            throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".assumeExpandsAlreadyPresent with an already resolved referenceSymbolic.");
-        }
         final HeapObjekt freshObject = this.heap.getObject(freshObjectPosition);
         if (freshObject == null) {
             throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeExpandsAlreadyPresent with a freshObjectPosition where no object is stored.");
@@ -3036,7 +3031,6 @@ public final class State implements Cloneable {
         if (!freshObject.isSymbolic()) {
             throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeExpandsAlreadyPresent with a freshObjectPosition where a concrete object is stored.");
         }
-        
     	possiblyReset();
         this.pathCondition.addClauseAssumeExpands(referenceSymbolic, freshObjectPosition, freshObject);
         ++this.nPushedClauses;
@@ -3076,10 +3070,9 @@ public final class State implements Cloneable {
      * @param aliasOrigin the origin of the symbolic {@link Objekt} to which 
      *        {@code referenceSymbolic} is resolved. It must be resolved by expansion
      *        to a heap object.
-     * @throws InvalidInputException if either {@code referenceSymbolic} is {@code null}, 
-     *         or no symbolic object is stored at {@code aliasObjectPosition}, or the 
-     *         state is frozen.
-     * @throws ContradictionException if {@code referenceSymbolic} is already resolved.
+     * @throws InvalidInputException if this state is frozen, or {@code referenceSymbolic == null || aliasOrigin == null}, 
+     *         or {@code aliasOrigin} is not the origin of an initial symbolic object.
+     * @throws ContradictionException if {@link #resolved(ReferenceSymbolic) resolved}{@code (referenceSymbolic)}.
      */
     public void assumeAliases(ReferenceSymbolic referenceSymbolic, ReferenceSymbolic aliasOrigin) 
     throws InvalidInputException, ContradictionException {
@@ -3089,14 +3082,10 @@ public final class State implements Cloneable {
         if (referenceSymbolic == null) {
             throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeAliases with a null referenceSymbolic.");
         }
-        if (resolved(referenceSymbolic)) {
-            throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".assumeAliases with an already resolved referenceSymbolic.");
-        }
         final HeapObjekt aliasObject = getObjectInitial(aliasOrigin);
         if (aliasObject == null) {
-            throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeAliases with an aliasOrigin that does not refer to any initial object.");
+            throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeAliases with an aliasOrigin that is not the origin of an initial symbolic object.");
         }
-        
     	possiblyReset();
         this.pathCondition.addClauseAssumeAliases(referenceSymbolic, getResolution(aliasOrigin), aliasObject.clone());
         ++this.nPushedClauses;
@@ -3110,9 +3099,9 @@ public final class State implements Cloneable {
      * @param referenceSymbolic the {@link ReferenceSymbolic} which is resolved. It 
      *        must be {@code referenceSymbolic != null} and {@code referenceSymbolic} 
      *        must not be already resolved.
-     * @throws InvalidInputException if either {@code referenceSymbolic} is {@code null}, 
-     *         or the state is frozen.
-     * @throws ContradictionException if {@code referenceSymbolic} is already resolved.
+     * @throws InvalidInputException if this state is frozen or {@code referenceSymbolic == null}. 
+     * @throws ContradictionException if {@link #resolved(ReferenceSymbolic) resolved}{@code (referenceSymbolic)}
+     *         to some (not null) heap position.
      */
     public void assumeNull(ReferenceSymbolic referenceSymbolic) 
     throws InvalidInputException, ContradictionException {
@@ -3122,10 +3111,6 @@ public final class State implements Cloneable {
         if (referenceSymbolic == null) {
             throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeNull with a null referenceSymbolic.");
         }
-        if (resolved(referenceSymbolic)) {
-            throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".assumeNull with an already resolved referenceSymbolic.");
-        }
-        
     	possiblyReset();
         this.pathCondition.addClauseAssumeNull(referenceSymbolic);
         ++this.nPushedClauses;
@@ -3140,8 +3125,8 @@ public final class State implements Cloneable {
      *        It must be {@code classFile != null}.
      * @param klass the symbolic or concrete {@link Klass} for {@code classFile}. 
      *        It must not be {@code null}. 
-     * @throws InvalidInputException if {@code classFile == null}, or
-     *         {@code klass == null}, or the state is frozen.
+     * @throws InvalidInputException if this state is frozen or 
+     *         {@code classFile == null !! klass == null}.
      */
     public void assumeClassInitialized(ClassFile classFile, Klass klass) 
     throws InvalidInputException {
@@ -3151,7 +3136,6 @@ public final class State implements Cloneable {
         if (classFile == null || klass == null) {
             throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeClassInitialized with a null classFile or klass parameter.");
         }
-        
     	possiblyReset();
         this.pathCondition.addClauseAssumeClassInitialized(classFile, klass);
         ++this.nPushedClauses;
@@ -3164,18 +3148,16 @@ public final class State implements Cloneable {
      * @param classFile the {@link ClassFile} for the class that
      *        is assumed to be not initialized. 
      *        It must be {@code classFile != null}.
-     * @throws InvalidInputException if {@code classFile == null}, or
-     *         the state is frozen.
+     * @throws InvalidInputException if this state is frozen or 
+     *         {@code classFile == null}.
      */
-    public void assumeClassNotInitialized(ClassFile classFile) 
-    throws InvalidInputException {
+    public void assumeClassNotInitialized(ClassFile classFile) throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
         if (classFile == null) {
             throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeClassNotInitialized with a null classFile.");
         }
-        
     	possiblyReset();
         this.pathCondition.addClauseAssumeClassNotInitialized(classFile);
         ++this.nPushedClauses;

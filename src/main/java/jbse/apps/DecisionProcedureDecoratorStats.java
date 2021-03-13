@@ -11,6 +11,7 @@ import jbse.dec.DecisionProcedureDecorator;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Clause;
 import jbse.mem.Objekt;
+import jbse.mem.exc.ContradictionException;
 import jbse.val.Expression;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolic;
@@ -41,7 +42,7 @@ public final class DecisionProcedureDecoratorStats extends DecisionProcedureDeco
 
     @Override
     public void pushAssumption(Clause c) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         startTimer();
         super.pushAssumption(c);
         final long elapsed = elapsed();
@@ -59,7 +60,7 @@ public final class DecisionProcedureDecoratorStats extends DecisionProcedureDeco
     
     @Override
     public void addAssumptions(Iterable<Clause> assumptionsToAdd) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         startTimer();
         super.addAssumptions(assumptionsToAdd);
         final long elapsed = elapsed();
@@ -68,7 +69,7 @@ public final class DecisionProcedureDecoratorStats extends DecisionProcedureDeco
     
     @Override
     public void addAssumptions(Clause... assumptionsToAdd) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         startTimer();
         super.addAssumptions(assumptionsToAdd);
         final long elapsed = elapsed();
@@ -77,7 +78,7 @@ public final class DecisionProcedureDecoratorStats extends DecisionProcedureDeco
 
     @Override
     public void setAssumptions(Collection<Clause> newAssumptions) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         startTimer();
         super.setAssumptions(newAssumptions);
         final long elapsed = elapsed();

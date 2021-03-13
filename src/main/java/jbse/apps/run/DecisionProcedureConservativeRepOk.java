@@ -18,7 +18,6 @@ import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.meta.annotations.ConservativeRepOk;
 import jbse.val.ReferenceSymbolic;
-import jbse.val.exc.InvalidTypeException;
 
 /**
  * {@link DecisionProcedureAlgorithms} based on the execution of conservative 
@@ -58,8 +57,7 @@ public final class DecisionProcedureConservativeRepOk extends DecisionProcedureC
             sIni.assumeExpands(this.calc, r, classFile);
         } catch (CannotAssumeSymbolicObjectException e) {
             return false;
-        } catch (InvalidInputException | InvalidTypeException | 
-                 ContradictionException | HeapMemoryExhaustedException e) {
+        } catch (InvalidInputException | ContradictionException | HeapMemoryExhaustedException e) {
             //this should not happen
             throw new UnexpectedInternalException(e);
         }

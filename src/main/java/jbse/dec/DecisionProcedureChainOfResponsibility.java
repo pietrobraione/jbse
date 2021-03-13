@@ -22,6 +22,7 @@ import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.ClauseAssumeNull;
 import jbse.mem.ClauseVisitor;
 import jbse.mem.Objekt;
+import jbse.mem.exc.ContradictionException;
 import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.Primitive;
@@ -144,7 +145,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 
     @Override
     public final void pushAssumption(Clause c) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         if (c == null) {
             throw new InvalidInputException("pushAssumption invoked with a null parameter.");
         }
@@ -167,11 +168,13 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      *        see also {@link #pushAssumption(Clause)}.
      *        It will be locally simplified.
      * @throws DecisionException see {@link #pushAssumption(Clause)}.
+     * @throws ContradictionException see {@link #pushAssumption(Clause)}.
      */
-    protected void pushAssumptionLocal(Clause cSimpl) throws DecisionException {
+    protected void pushAssumptionLocal(Clause cSimpl) 
+    throws DecisionException, ContradictionException {
         try {
             cSimpl.accept(this.redispatcher);
-        } catch (DecisionException e) {
+        } catch (DecisionException | ContradictionException | RuntimeException e) {
             throw e;
         } catch (Exception e) {
             //this should not happen
@@ -188,8 +191,10 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      *        see {@link #pushAssumption(Clause)} 
      *        (after local simplification).
      * @throws DecisionException see {@link #pushAssumption(Clause)}
+     * @throws ContradictionException see {@link #pushAssumption(Clause)}.
      */
-    protected void pushAssumptionLocal(ClauseAssume c) throws DecisionException {
+    protected void pushAssumptionLocal(ClauseAssume c) 
+    throws DecisionException, ContradictionException {
         //default implementation
     }
 
@@ -200,8 +205,10 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @param c a {@link ClauseAssumeAliases}, see {@link #pushAssumption(Clause)}
      *        (after local simplification).
      * @throws DecisionException see {@link #pushAssumption(Clause)}
+     * @throws ContradictionException see {@link #pushAssumption(Clause)}.
      */
-    protected void pushAssumptionLocal(ClauseAssumeAliases c) throws DecisionException {
+    protected void pushAssumptionLocal(ClauseAssumeAliases c) 
+    throws DecisionException, ContradictionException {
         //default implementation
     }
 
@@ -212,8 +219,10 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @param c a {@link ClauseAssumeExpands}, see {@link #pushAssumption(Clause)}
      *        (after local simplification).
      * @throws DecisionException see {@link #pushAssumption(Clause)}
+     * @throws ContradictionException see {@link #pushAssumption(Clause)}.
      */
-    protected void pushAssumptionLocal(ClauseAssumeExpands c) throws DecisionException {
+    protected void pushAssumptionLocal(ClauseAssumeExpands c) 
+    throws DecisionException, ContradictionException {
         //default implementation
     }
 
@@ -224,8 +233,10 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @param c a {@link ClauseAssumeNull}, see {@link #pushAssumption(Clause)}
      *        (after local simplification).
      * @throws DecisionException see {@link #pushAssumption(Clause)}
+     * @throws ContradictionException see {@link #pushAssumption(Clause)}.
      */
-    protected void pushAssumptionLocal(ClauseAssumeNull c) throws DecisionException {
+    protected void pushAssumptionLocal(ClauseAssumeNull c) 
+    throws DecisionException, ContradictionException {
         //default implementation
     }
 
@@ -236,8 +247,10 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @param c a {@link ClauseAssumeClassInitialized}, see {@link #pushAssumption(Clause)}
      *        (after local simplification).
      * @throws DecisionException see {@link #pushAssumption(Clause)}
+     * @throws ContradictionException see {@link #pushAssumption(Clause)}.
      */
-    protected void pushAssumptionLocal(ClauseAssumeClassInitialized c) throws DecisionException {
+    protected void pushAssumptionLocal(ClauseAssumeClassInitialized c) 
+    throws DecisionException, ContradictionException {
         //default implementation
     }
 
@@ -248,8 +261,10 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @param c a {@link ClauseAssumeClassNotInitialized}, see {@link #pushAssumption(Clause)}
      *        (after local simplification).
      * @throws DecisionException see {@link #pushAssumption(Clause)}
+     * @throws ContradictionException see {@link #pushAssumption(Clause)}.
      */
-    protected void pushAssumptionLocal(ClauseAssumeClassNotInitialized c) throws DecisionException {
+    protected void pushAssumptionLocal(ClauseAssumeClassNotInitialized c) 
+    throws DecisionException, ContradictionException {
         //default implementation
     }
 
@@ -261,32 +276,38 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      */
     private final ClauseVisitor redispatcher = new ClauseVisitor() {
         @Override
-        public void visitClauseAssume(ClauseAssume c) throws DecisionException {
+        public void visitClauseAssume(ClauseAssume c) 
+        throws DecisionException, ContradictionException {
             pushAssumptionLocal(c);
         }
 
         @Override
-        public void visitClauseAssumeAliases(ClauseAssumeAliases c) throws DecisionException { 
+        public void visitClauseAssumeAliases(ClauseAssumeAliases c) 
+        throws DecisionException, ContradictionException { 
             pushAssumptionLocal(c); 
         }
 
         @Override
-        public void visitClauseAssumeExpands(ClauseAssumeExpands c) throws DecisionException { 
+        public void visitClauseAssumeExpands(ClauseAssumeExpands c) 
+        throws DecisionException, ContradictionException { 
             pushAssumptionLocal(c); 
         }
 
         @Override
-        public void visitClauseAssumeNull(ClauseAssumeNull c) throws DecisionException { 
+        public void visitClauseAssumeNull(ClauseAssumeNull c) 
+        throws DecisionException, ContradictionException { 
             pushAssumptionLocal(c); 
         }
 
         @Override
-        public void visitClauseAssumeClassInitialized(ClauseAssumeClassInitialized c) throws DecisionException { 
+        public void visitClauseAssumeClassInitialized(ClauseAssumeClassInitialized c) 
+        throws DecisionException, ContradictionException { 
             pushAssumptionLocal(c); 
         }
 
         @Override
-        public void visitClauseAssumeClassNotInitialized(ClauseAssumeClassNotInitialized c) throws DecisionException { 
+        public void visitClauseAssumeClassNotInitialized(ClauseAssumeClassNotInitialized c) 
+        throws DecisionException, ContradictionException { 
             pushAssumptionLocal(c); 
         }
     };
@@ -312,7 +333,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 
     @Override
     public final void setAssumptions(Collection<Clause> newAssumptions) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         if (newAssumptions == null) {
             throw new InvalidInputException("setAssumptions invoked with a null parameter.");
         }
@@ -358,10 +379,14 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @param toPop see {@link #setAssumptions}.
      * @param toPush see {@link #setAssumptions}.
      * @throws DecisionException upon failure.
+     * @throws ContradictionException  when some assumption in {@code newAssumptions}
+     *         contradicts the current assumption (after a call to 
+     *         {@link #goFastAndImprecise()} the latter check 
+     *         <emph>might not</emph> be performed).
      */
     private void 
     setAssumptionsLocalConservatively(Collection<Clause> newAssumptions, int toPop, int toPush)
-    throws DecisionException {
+    throws DecisionException, ContradictionException {
         //pops
         for (int i = 1; i <= toPop; ++i) {
             popAssumptionLocal();
@@ -385,10 +410,14 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * 
      * @param newAssumptions see {@link #setAssumptions}.
      * @throws DecisionException upon failure.
+     * @throws ContradictionException  when some assumption in {@code newAssumptions}
+     *         contradicts the current assumption (after a call to 
+     *         {@link #goFastAndImprecise()} the latter check 
+     *         <emph>might not</emph> be performed).
      */
     private void 
     setAssumptionsLocalDestructively(Collection<Clause> newAssumptions) 
-    throws DecisionException {
+    throws DecisionException, ContradictionException {
         clearAssumptionsLocal();
         for (Clause c : newAssumptions) {
             final Clause cSimpl = simplifyLocal(c);

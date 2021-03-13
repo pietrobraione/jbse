@@ -12,6 +12,7 @@ import jbse.dec.exc.NoModelException;
 import jbse.mem.Clause;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
 import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.Primitive;
@@ -78,19 +79,20 @@ public interface DecisionProcedure extends AutoCloseable {
      * after a {@link #goFastAndImprecise()} call than when invoked 
      * after a {@link #stopFastAndImprecise()} call or after creation.
      * 
-     * @param c the {@link Clause} to be added. It must not be {@code null}. 
-     *        Note that, in the case {@code c} 
+     * @param assumption the {@link Clause} to be added. It must not be 
+     *        {@code null}. Note that, in the case {@code assumption} 
      *        is pushed after a call to {@link #goFastAndImprecise()}, the 
      *        {@link DecisionProcedure} <emph>might not</emph> check that 
-     *        {@code c} does not contradict the current assumption.
+     *        {@code assumption} does not contradict the current assumption.
      * @throws InvalidInputException when one of the parameters is incorrect.
-     * @throws DecisionException upon failure, and when {@code c}
+     * @throws DecisionException upon failure.
+     * @throws ContradictionException when {@code assumption}
      *         contradicts the current assumption (after a call to 
      *         {@link #goFastAndImprecise()} the latter check 
      *         <emph>might not</emph> be performed).
      */
-    void pushAssumption(Clause c) 
-    throws InvalidInputException, DecisionException;
+    void pushAssumption(Clause assumption) 
+    throws InvalidInputException, DecisionException, ContradictionException;
 
     /**
      * Drops the current assumptions.
@@ -108,9 +110,13 @@ public interface DecisionProcedure extends AutoCloseable {
      *        {@code null} as one of its elements.
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
+     * @throws ContradictionException when some assumption in {@code assumptionsToAdd}
+     *         contradicts the current assumption (after a call to 
+     *         {@link #goFastAndImprecise()} the latter check 
+     *         <emph>might not</emph> be performed).
      */	
     default void addAssumptions(Iterable<Clause> assumptionsToAdd) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         if (assumptionsToAdd == null) {
             throw new InvalidInputException("Method " + getClass().getName() + ".addAssumptions invoked with a null assumptionsToAdd parameter.");
         }
@@ -128,9 +134,13 @@ public interface DecisionProcedure extends AutoCloseable {
      *        {@code null} as one of its elements.
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
+     * @throws ContradictionException when some assumption in {@code assumptionsToAdd}
+     *         contradicts the current assumption (after a call to 
+     *         {@link #goFastAndImprecise()} the latter check 
+     *         <emph>might not</emph> be performed).
      */	
     default void addAssumptions(Clause... assumptionsToAdd) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         if (assumptionsToAdd == null) {
             throw new InvalidInputException("Method " + getClass().getName() + ".addAssumptions invoked with a null assumptionsToAdd parameter.");
         }
@@ -148,9 +158,13 @@ public interface DecisionProcedure extends AutoCloseable {
      *        {@code null}, nor have {@code null}s among its elements.
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
+     * @throws ContradictionException when some assumption in {@code assumptionsToAdd}
+     *         contradicts the current assumption (after a call to 
+     *         {@link #goFastAndImprecise()} the latter check 
+     *         <emph>might not</emph> be performed).
      */
     default void setAssumptions(Collection<Clause> newAssumptions) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         clearAssumptions();
         addAssumptions(newAssumptions);
     }

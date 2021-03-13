@@ -22,7 +22,6 @@ import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XLOAD_GETX_Expands;
 import jbse.val.ReferenceSymbolic;
-import jbse.val.exc.InvalidTypeException;
 
 /**
  * {@link Action} that creates an initial state by 
@@ -67,7 +66,7 @@ public final class Action_INIT implements Action {
             }
         } catch (MethodNotFoundException | MethodCodeNotFoundException e) {
             throw new ClasspathException(e);
-        } catch (ThreadStackEmptyException | ContradictionException | InvalidTypeException | InvalidInputException e) {
+        } catch (ThreadStackEmptyException | ContradictionException | InvalidInputException e) {
             //this should never happen
             failExecution(e);
         }
