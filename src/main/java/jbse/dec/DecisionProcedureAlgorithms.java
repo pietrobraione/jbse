@@ -915,9 +915,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *        where the method will put all the 
      *        {@link DecisionAlternative_XALOAD}s representing all the 
      *        satisfiable outcomes of the operation. It must not be {@code null}.
-     * @param nonExpandedRefs a {@link List}{@code <}{@link ReferenceSymbolic}{@code >} 
+     * @param partiallyResolvedReferences a {@link List}{@code <}{@link ReferenceSymbolic}{@code >} 
      *        that this method will populate with the {@link ReferenceSymbolic}s that 
-     *        were not expanded. It must not be {@code null}.
+     *        were partially resolved. It must not be {@code null}.
      * @return an {@link Outcome}.
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
@@ -966,14 +966,14 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         initialization of backdoor expansions.
      */
     //TODO should be final?
-    public Outcome resolve_XALOAD(List<ArrayAccessInfo> arrayAccessInfos, SortedSet<DecisionAlternative_XALOAD> result, List<ReferenceSymbolic> nonExpandedRefs)
+    public Outcome resolve_XALOAD(List<ArrayAccessInfo> arrayAccessInfos, SortedSet<DecisionAlternative_XALOAD> result, List<ReferenceSymbolic> partiallyResolvedReferences)
     throws InvalidInputException, DecisionException, ClassFileNotFoundException, 
     ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, 
     WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, ClasspathException, HeapMemoryExhaustedException, InterruptException, ContradictionException {
-        if (arrayAccessInfos == null || result == null || nonExpandedRefs == null) {
+        if (arrayAccessInfos == null || result == null || partiallyResolvedReferences == null) {
             throw new InvalidInputException("resolve_XALOAD invoked with a null parameter.");
         }
-        boolean someReferenceNotExpanded = false;
+        boolean partialReferenceResolution = false;
         boolean shouldRefine = false;
         boolean branchingDecision = false;
         for (ArrayAccessInfo arrayAccessInfo : arrayAccessInfos) {
@@ -989,10 +989,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
                 o = resolve_XALOAD_Unresolved(this.currentStateSupplier.get().getClassHierarchy(), arrayAccessInfo, result);
             }
             
-            //if the current resolution did not expand a reference, then records it
-            someReferenceNotExpanded = someReferenceNotExpanded || o.partialReferenceResolution();
+            //if the current resolution was partial, then records it
+            partialReferenceResolution = partialReferenceResolution || o.partialReferenceResolution();
             if (o.partialReferenceResolution()) {
-                nonExpandedRefs.add((ReferenceSymbolic) arrayAccessInfo.readValue);
+                partiallyResolvedReferences.add((ReferenceSymbolic) arrayAccessInfo.readValue);
             }
 
             //if at least one read requires refinement, then it should be refined
@@ -1011,7 +1011,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
         //be 1. Note that branchingDecision must be invariant
         //on the used decision procedure, so we cannot make it dependent
         //on result.size().
-        return Outcome.val(shouldRefine, someReferenceNotExpanded, branchingDecision);
+        return Outcome.val(shouldRefine, partialReferenceResolution, branchingDecision);
     }
 
     /**
