@@ -282,7 +282,7 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
             final ClassFile currentArrayMemberClass = currentArray.getType().getMemberClass();
             if (!currentArrayMemberClass.isPrimitiveOrVoid()) {
                 final String currentArrayMemberType = currentArrayMemberClass.getInternalTypeName();
-                for (Iterator<? extends AccessOutcomeIn> it = currentArray.entries(); it.hasNext(); ) {
+                for (Iterator<? extends AccessOutcomeIn> it = currentArray.entries().iterator(); it.hasNext(); ) {
                     final AccessOutcomeIn entry = it.next();
                     if (entry instanceof AccessOutcomeInValue) {
                         final AccessOutcomeInValue entryCast = (AccessOutcomeInValue) entry;

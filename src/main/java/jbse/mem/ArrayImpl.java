@@ -673,8 +673,8 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     }
     
     @Override
-    public Iterator<? extends AccessOutcomeIn> entries() {
-    	return this.entries.iterator();
+    public Collection<? extends AccessOutcomeIn> entries() {
+    	return this.entries;
     }
     
     @Override

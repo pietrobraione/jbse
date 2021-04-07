@@ -326,12 +326,12 @@ public interface Array extends HeapObjekt {
     throws InvalidInputException, InvalidTypeException;
 
     /**
-     * Returns an iterator to the entries of this array.
+     * Returns the collection of the entries of this array.
      * 
-     * @return an {@link Iterator}{@code <? extends }{@link AccessOutcomeIn}{@code >}
+     * @return a {@link Collection}{@code <? extends }{@link AccessOutcomeIn}{@code >}
      *         to the entries of this {@link Array}, allowing their direct modification.
      */
-    Iterator<? extends AccessOutcomeIn> entries();
+    Collection<? extends AccessOutcomeIn> entries();
 
     /**
      * Returns an iterator to the entries that are possibly affected by 
