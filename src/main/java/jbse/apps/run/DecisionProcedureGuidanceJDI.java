@@ -293,7 +293,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		private VirtualMachine createVM() 
 		throws GuidanceException {
 			try {
-				final Iterable<Path> classPath = this.runnerParameters.getClasspath().classPath();
+				final Iterable<Path> classPath = this.runnerParameters.getClasspath().userClassPath();
 				final ArrayList<String> listClassPath = new ArrayList<>();
 				classPath.forEach(p -> listClassPath.add(p.toString()));
 				final String stringClassPath = String.join(File.pathSeparator, listClassPath.toArray(new String[0]));
