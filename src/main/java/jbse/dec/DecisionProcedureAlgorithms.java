@@ -982,7 +982,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
             final boolean accessOutOfBounds = (arrayAccessInfo.readValue == null);
             final boolean valToLoadResolved = accessOutOfBounds || isResolved(getAssumptions(), arrayAccessInfo.readValue);
             final Outcome o;
-            final TreeSet<DecisionAlternative_XALOAD> localResult = new TreeSet<>();
+            final TreeSet<DecisionAlternative_XALOAD> localResult = new TreeSet<>(result.comparator());
             if (valToLoadResolved && accessConcrete) {
                 o = resolve_XALOAD_ResolvedConcrete(arrayAccessInfo, localResult);
             } else if (valToLoadResolved && !accessConcrete) {

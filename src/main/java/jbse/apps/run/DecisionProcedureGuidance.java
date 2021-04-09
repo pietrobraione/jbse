@@ -519,7 +519,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         public abstract Object getValue(Symbolic origin) throws GuidanceException, ImpureMethodException;
 
 
-        public Primitive eval_IFX(DecisionAlternative_IFX da, Primitive condition) throws GuidanceException, ImpureMethodException {
+        private Primitive eval_IFX(DecisionAlternative_IFX da, Primitive condition) throws GuidanceException, ImpureMethodException {
             try {
                 final Primitive conditionNot = this.calc.push(condition).not().pop();
                 final Primitive conditionToCheck  = (da.value() ? condition : conditionNot);
@@ -530,7 +530,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             }
         }
 
-        public Primitive eval_XCMPY(DecisionAlternative_XCMPY da, Primitive val1, Primitive val2) throws GuidanceException, ImpureMethodException {
+        private Primitive eval_XCMPY(DecisionAlternative_XCMPY da, Primitive val1, Primitive val2) throws GuidanceException, ImpureMethodException {
             try{
                 final Primitive comparisonGT = this.calc.push(val1).gt(val2).pop();
                 final Primitive comparisonEQ = this.calc.push(val1).eq(val2).pop();
@@ -546,7 +546,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             }
         }
 
-        public Primitive eval_XSWITCH(DecisionAlternative_XSWITCH da, Primitive selector, SwitchTable tab) throws GuidanceException, ImpureMethodException {
+        private Primitive eval_XSWITCH(DecisionAlternative_XSWITCH da, Primitive selector, SwitchTable tab) throws GuidanceException, ImpureMethodException {
             try {
                 final Primitive conditionToCheck = (da.isDefault() ?
                                                     tab.getDefaultClause(this.calc, selector) :
@@ -558,7 +558,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             }
         }
 
-        public Primitive eval_XNEWARRAY(DecisionAlternative_XNEWARRAY da, Primitive countsNonNegative) throws GuidanceException, ImpureMethodException {
+        private Primitive eval_XNEWARRAY(DecisionAlternative_XNEWARRAY da, Primitive countsNonNegative) throws GuidanceException, ImpureMethodException {
             try {
                 final Primitive conditionToCheck = (da.ok() ? countsNonNegative : this.calc.push(countsNonNegative).not().pop());
                 return eval(conditionToCheck);
@@ -568,7 +568,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             }
         }
 
-        public Primitive eval_XASTORE(DecisionAlternative_XASTORE da, Primitive inRange) throws GuidanceException, ImpureMethodException {
+        private Primitive eval_XASTORE(DecisionAlternative_XASTORE da, Primitive inRange) throws GuidanceException, ImpureMethodException {
             try {
                 final Primitive conditionToCheck = (da.isInRange() ? inRange : this.calc.push(inRange).not().pop());
                 return eval(conditionToCheck);
@@ -578,7 +578,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             }
         }
 
-        public Primitive eval_XALOAD(DecisionAlternative_XALOAD da) throws GuidanceException, ImpureMethodException {
+        private Primitive eval_XALOAD(DecisionAlternative_XALOAD da) throws GuidanceException, ImpureMethodException {
             final Expression conditionToCheck = da.getArrayAccessExpressionSimplified();
             return (conditionToCheck == null ? this.calc.valBoolean(true) : eval(conditionToCheck));
         }
