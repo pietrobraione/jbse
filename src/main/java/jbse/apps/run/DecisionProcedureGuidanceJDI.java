@@ -897,9 +897,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		@Override
 		protected boolean handleBreakpointEvents(Event event, int numberOfHits) throws GuidanceException {
 			if (this.postInitial && this.targetMethodExitedBreakpoint.equals(event.request())) {
-				try { //Did we exited from target method? Should not happen 
+				try { //Did we exit from target method? Should not happen 
 					if (numFramesFromRootFrameConcrete() < 0) {
-						throw new UnexpectedInternalException("Exited from target method, while looking for method " + symbolicApplyOperator + " - " + hitCallCtxs);
+						throw new UnexpectedInternalException("Exited from target method, while looking for method " + this.symbolicApplyOperator + " - " + this.hitCallCtxs);
 					}
 				} catch (IncompatibleThreadStateException e) {
 					throw new UnexpectedInternalException(e);

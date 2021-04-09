@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.function.Supplier;
 
 import jbse.algo.InterruptException;
@@ -981,13 +982,15 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
             final boolean accessOutOfBounds = (arrayAccessInfo.readValue == null);
             final boolean valToLoadResolved = accessOutOfBounds || isResolved(getAssumptions(), arrayAccessInfo.readValue);
             final Outcome o;
+            final TreeSet<DecisionAlternative_XALOAD> localResult = new TreeSet<>();
             if (valToLoadResolved && accessConcrete) {
-                o = resolve_XALOAD_ResolvedConcrete(arrayAccessInfo, result);
+                o = resolve_XALOAD_ResolvedConcrete(arrayAccessInfo, localResult);
             } else if (valToLoadResolved && !accessConcrete) {
-                o = resolve_XALOAD_ResolvedNonconcrete(arrayAccessInfo, result);
+                o = resolve_XALOAD_ResolvedNonconcrete(arrayAccessInfo, localResult);
             } else { //(!valToLoadResolved)
-                o = resolve_XALOAD_Unresolved(this.currentStateSupplier.get().getClassHierarchy(), arrayAccessInfo, result);
+                o = resolve_XALOAD_Unresolved(this.currentStateSupplier.get().getClassHierarchy(), arrayAccessInfo, localResult);
             }
+            result.addAll(localResult);
             
             //if the current resolution was partial, then records it
             partialReferenceResolution = partialReferenceResolution || o.partialReferenceResolution();
