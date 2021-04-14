@@ -300,7 +300,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 				final String mainClass = DecisionProcedureGuidanceJDILauncher.class.getName();
 				final String targetClass = binaryClassName(this.runnerParameters.getMethodSignature().getClassName());
 				final String startMethodName = this.runnerParameters.getMethodSignature().getName();
-				return launchTarget("-classpath \"" + stringClassPath + "\" " + mainClass + " " + targetClass + " " + startMethodName);
+				return launchTarget("-classpath \"" + stringClassPath + File.pathSeparator + this.runnerParameters.getClasspath().jbseLibPath() + "\" " + mainClass + " " + targetClass + " " + startMethodName);
 			} catch (IOException e) {
 				throw new GuidanceException(e);
 			}
