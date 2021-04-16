@@ -1600,11 +1600,12 @@ public final class ClassHierarchy implements Cloneable {
     private boolean isMethodAccessible(ClassFile accessor, ClassFile accessed, ClassFile methodSignatureClass, Signature methodSignature) 
     throws MethodNotFoundException {
     	try {
-    	        //special case: the resolution class is an array class and the method is
-    	        //clone; in this case, treat it as a public method
-    	        if (JAVA_OBJECT_CLONE_DESCRIPTOR.equals(methodSignature.getDescriptor()) && JAVA_OBJECT_CLONE_NAME.equals(methodSignature.getName()) && methodSignatureClass.isArray()) {
-    	            return true;
-    	        }
+    		//special case: the resolution class is an array class and the method is
+    		//clone; in this case, treat it as a public method
+    		if (JAVA_OBJECT_CLONE_DESCRIPTOR.equals(methodSignature.getDescriptor()) && JAVA_OBJECT_CLONE_NAME.equals(methodSignature.getName()) && methodSignatureClass.isArray()) {
+    			return true;
+    		}
+    		
     		ClassFile accessorHost = accessor;
     		while (accessorHost.isAnonymousUnregistered()) {
     			accessorHost = accessorHost.getHostClass();

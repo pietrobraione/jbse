@@ -7,7 +7,15 @@ import static jbse.bc.Signatures.JAVA_MAP_GET;
 
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
-
+import jbse.bc.exc.BadClassFileVersionException;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
+import jbse.bc.exc.WrongClassNameException;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
@@ -32,9 +40,14 @@ public final class JAVA_MAP_Utils {
 			return false;
 		}
 		final SymbolicMemberField originMemberField = (SymbolicMemberField) value;
-		final ClassFile originMemberClass = hier.getClassFileClassArray(CLASSLOADER_APP, originMemberField.getFieldClass());
-		if (originMemberClass == null) {
-			return false; //maps that are not loaded with the app classloader are not symbolic ones
+		final ClassFile originMemberClass;
+		try {
+			originMemberClass = hier.loadCreateClass(CLASSLOADER_APP, originMemberField.getFieldClass(), true);
+		} catch (InvalidInputException | ClassFileNotFoundException | ClassFileIllFormedException |
+		         ClassFileNotAccessibleException | IncompatibleClassFileException | PleaseLoadClassException |
+		         BadClassFileVersionException | RenameUnsupportedException | WrongClassNameException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
 		}
 		if (originMemberField.getFieldName().equals(INITIAL_MAP_FIELD_NAME) 
 			&& classImplementsJavaUtilMap(originMemberClass)) {
