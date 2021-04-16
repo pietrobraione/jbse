@@ -38,8 +38,8 @@ public class DecisionProcedureTest {
     private static final ArrayList<String> Z3_COMMAND_LINE = new ArrayList<>();
     
     static {
-        //Z3_COMMAND_LINE.add("/Users/denaro/Desktop/RTools/Z3/z3-4.3.2.d548c51a984e-x64-osx-10.8.5/bin/z3");
-    	Z3_COMMAND_LINE.add("/opt/local/bin/z3");
+        Z3_COMMAND_LINE.add("/Users/denaro/Desktop/RTools/Z3/z3-4.3.2.d548c51a984e-x64-osx-10.8.5/bin/z3");
+    	//Z3_COMMAND_LINE.add("/opt/local/bin/z3");
     	Z3_COMMAND_LINE.add(SWITCH_CHAR + "smt2");
     	Z3_COMMAND_LINE.add(SWITCH_CHAR + "in");
     	Z3_COMMAND_LINE.add(SWITCH_CHAR + "t:10");
