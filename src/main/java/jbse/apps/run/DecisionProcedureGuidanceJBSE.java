@@ -212,7 +212,7 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
         }
         
         @Override
-        public String typeOfObject(ReferenceSymbolic origin) throws GuidanceException {
+        public String typeOfObject(ReferenceSymbolic origin) throws GuidanceException, ImpureMethodException {
             final ReferenceConcrete refInConcreteState = (ReferenceConcrete) getValue(origin);
             if (this.initialStateConcrete.isNull(refInConcreteState)) {
                 return null;
@@ -228,20 +228,20 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
         }
 
         @Override
-        public boolean isNull(ReferenceSymbolic origin) throws GuidanceException {
+        public boolean isNull(ReferenceSymbolic origin) throws GuidanceException, ImpureMethodException {
             final ReferenceConcrete refInConcreteState = (ReferenceConcrete) getValue(origin);
             return (this.initialStateConcrete.isNull(refInConcreteState));
         }
 
         @Override
-        public boolean areAlias(ReferenceSymbolic first, ReferenceSymbolic second) throws GuidanceException {
+        public boolean areAlias(ReferenceSymbolic first, ReferenceSymbolic second) throws GuidanceException, ImpureMethodException {
             final ReferenceConcrete firstInConcreteState = (ReferenceConcrete) getValue(first);
             final ReferenceConcrete secondInConcreteState = (ReferenceConcrete) getValue(second);
             return Util.areAlias(this.initialStateConcrete, firstInConcreteState, secondInConcreteState);
         }
 
         @Override
-        public Object getValue(Symbolic origin) throws GuidanceException {
+        public Object getValue(Symbolic origin) throws GuidanceException, ImpureMethodException {
         	try {
         		if (origin instanceof SymbolicLocalVariable) {
         			final SymbolicLocalVariable al = (SymbolicLocalVariable) origin;

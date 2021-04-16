@@ -1,5 +1,6 @@
 package jbse.mem;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -14,9 +15,12 @@ public class ClauseAssumeNull extends ClauseAssumeReferenceSymbolic {
 	/**
 	 * Constructor.
 	 * 
-	 * @param r a {@link ReferenceSymbolic}. It must be resolved to null.
+	 * @param referenceSymbolic a {@link ReferenceSymbolic}. It must not be {@code null}.
+	 * @throws InvalidInputException if {@code referenceSymbolic == null}.
 	 */
-	public ClauseAssumeNull(ReferenceSymbolic r) { super(r); }
+	public ClauseAssumeNull(ReferenceSymbolic referenceSymbolic) throws InvalidInputException { 
+		super(referenceSymbolic); 
+	}
 	
 	@Override
 	public void accept(ClauseVisitor v) throws Exception {

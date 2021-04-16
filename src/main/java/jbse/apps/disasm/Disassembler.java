@@ -1,4 +1,4 @@
-package jbse.apps;
+package jbse.apps.disasm;
 
 import jbse.bc.ClassHierarchy;
 import jbse.mem.Frame;
@@ -7,24 +7,24 @@ import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 
 /**
- * A higher-level disassembler.
+ * A disassembler.
  * 
  * @author Pietro Braione
  *
  */
-public class BytecodeFormatter {
-    private DispatcherBytecodeFormatter dbf = new DispatcherBytecodeFormatter();
+public class Disassembler {
+    private DispatcherBytecodeDisassembler dbf = new DispatcherBytecodeDisassembler();
 
     /**
      * Disassemble the current bytecode in a frame.
      * 
      * @param f a {@link Frame}.
-     * @param cfi a {@link ClassHierarchy}.
+     * @param hier a {@link ClassHierarchy}.
      * @return a {@link String}, the disassembly of the current bytecode
      *         of {@code f}.
      */
-    public String format(Frame f, ClassHierarchy cfi) {
-        return this.dbf.select(f.getInstruction()).apply(f, cfi);
+    public String format(Frame f, ClassHierarchy hier) {
+        return this.dbf.select(f.getInstruction()).apply(f, hier);
     }
 
     /**

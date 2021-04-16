@@ -1,6 +1,6 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.failExecution;
+import static jbse.algo.UtilControlFlow.failExecution;
 import static jbse.common.Type.INT;
 
 import jbse.algo.InterruptException;

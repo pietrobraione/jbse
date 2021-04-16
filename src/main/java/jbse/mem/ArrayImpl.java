@@ -357,7 +357,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
      *        (i.e., not explicitly created during symbolic execution by
      *        a {@code new*} bytecode, but rather assumed).     
      * @param initSymbolic {@code true} iff the array must be initialized 
-     *        with symbolic values.
+     *        with symbolic values. Possible only if {@code symbolic == true}.
      * @param initValue a {@link Value} for initializing the array (ignored
      *        whenever {@code initSymbolic == true}); if {@code initValue == null}
      *        the default value for the array member type is used for initialization.
@@ -397,8 +397,8 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
         }
         setFieldValue(this.lengthSignature, length);
         try {
-            final Expression indexGreaterEqualZero = (Expression) calc.push(indexFormal).ge(calc.valInt(0)).pop();
-            final Expression indexLessThanLength = (Expression) calc.push(indexFormal).lt(length).pop();
+            final Expression indexGreaterEqualZero = (Expression) calc.push(this.indexFormal).ge(calc.valInt(0)).pop();
+            final Expression indexLessThanLength = (Expression) calc.push(this.indexFormal).lt(length).pop();
             this.indexInRange  = (Expression) calc.push(indexGreaterEqualZero).and(indexLessThanLength).pop();		
         } catch (InvalidOperandException | InvalidTypeException e) {
             //this should never happen
@@ -432,8 +432,8 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
         }
         this.fields.get(this.lengthSignature).setValue(otherArray.getLength());
         try {
-            final Expression indexGreaterEqualZero = (Expression) calc.push(indexFormal).ge(calc.valInt(0)).pop();
-            final Expression indexLessThanLength = (Expression) calc.push(indexFormal).lt(getLength()).pop();
+            final Expression indexGreaterEqualZero = (Expression) calc.push(this.indexFormal).ge(calc.valInt(0)).pop();
+            final Expression indexLessThanLength = (Expression) calc.push(this.indexFormal).lt(getLength()).pop();
             this.indexInRange  = (Expression) calc.push(indexGreaterEqualZero).and(indexLessThanLength).pop();		
         } catch (InvalidOperandException | InvalidTypeException e) {
             //this should never happen
@@ -673,8 +673,8 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     }
     
     @Override
-    public Iterator<? extends AccessOutcomeIn> entries() {
-    	return this.entries.iterator();
+    public Collection<? extends AccessOutcomeIn> entries() {
+    	return this.entries;
     }
     
     @Override
@@ -777,12 +777,12 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     	for (AccessOutcomeInImpl entry : otherImpl.entries) {
     		final AccessOutcomeInImpl entryClone = entry.clone();
     		try {
-    			entryClone.accessCondition = (Expression) calc.push(entryClone.accessCondition).replace(this.indexFormal, otherImpl.indexFormal).pop();
+    			entryClone.accessCondition = (Expression) calc.push(entryClone.accessCondition).replace(otherImpl.indexFormal, this.indexFormal).pop();
     		} catch (InvalidTypeException | InvalidOperandException e) {
     			//this should never happen
     			throw new UnexpectedInternalException(e);
     		}
-    		this.entries.add(entry.clone());
+    		this.entries.add(entryClone);
     	}
     }
 
@@ -925,7 +925,8 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     	if (this.classFile.getMemberClass().getClassName().equals("char") && isSimple()) {
     		final StringBuilder buf = new StringBuilder();
     		for (AccessOutcomeIn e : this.entries) {
-    			buf.append(((AccessOutcomeInValue) e).getValue().toString().substring(1, 2));
+    			final Simplex value = (Simplex) ((AccessOutcomeInValue) e).getValue();
+    			buf.append(((Character) value.getActualValue()).charValue());
     		}
     		return buf.toString();
     	} else {

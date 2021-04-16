@@ -1,10 +1,10 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
-import static jbse.algo.Util.isStatic;
-import static jbse.algo.Util.throwNew;
-import static jbse.algo.Util.throwVerifyError;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.failExecution;
+import static jbse.algo.UtilControlFlow.throwNew;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
+import static jbse.bc.Modifiers.isStatic;
 import static jbse.bc.Signatures.ILLEGAL_ARGUMENT_EXCEPTION;
 import static jbse.bc.Signatures.INTERNAL_ERROR;
 import static jbse.bc.Signatures.JAVA_FIELD_CLAZZ;

@@ -1,5 +1,6 @@
 package jbse.mem;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -17,15 +18,16 @@ public class ClauseAssumeAliases extends ClauseAssumeReferenceSymbolic {
 	/**
 	 * Constructor.
 	 * 
-	 * @param r a {@link ReferenceSymbolic}.
+	 * @param referenceSymbolic a {@link ReferenceSymbolic}. It must not be {@code null}.
 	 * @param heapPosition a {@code long}, the heap position. It must be 
 	 *        the position of an object assumed by a previous expansion. 
 	 * @param object the {@link HeapObjekt} at position {@code heapPosition}, 
 	 *        as it was at the beginning of symbolic execution (equivalently, 
 	 *        as it was when it was assumed).
+	 * @throws InvalidInputException if {@code referenceSymbolic == null || object == null}. 
 	 */
-	public ClauseAssumeAliases(ReferenceSymbolic r, long heapPosition, HeapObjekt object) { 
-		super(r);
+	public ClauseAssumeAliases(ReferenceSymbolic referenceSymbolic, long heapPosition, HeapObjekt object) throws InvalidInputException { 
+		super(referenceSymbolic);
 		this.heapPosition = heapPosition;
 		this.object = object;
 	}

@@ -9,6 +9,7 @@ import java.util.List;
 
 import jbse.bc.ClassFile;
 import jbse.common.exc.InvalidInputException;
+import jbse.mem.exc.ContradictionException;
 import jbse.val.Expression;
 import jbse.val.Primitive;
 import jbse.val.ReferenceSymbolic;
@@ -49,34 +50,53 @@ final class PathCondition implements Cloneable {
      * over primitive values.
      * 
      * @param condition the additional condition as a {@link Primitive}.
-     * It must not be {@code null}, it must be an instance of either 
-     * {@link Simplex} or {@link Expression}, and must have boolean type.
-	 * @throws NullPointerException if {@code condition == null}.
-	 * @throws InvalidInputException if {@code condition} has not boolean type, or
-	 * is not an instance of either {@link Simplex} or {@link Expression}.
+     *        It must not be {@code null}, it must be an instance of either 
+     *        {@link Simplex} or {@link Expression}, and must have boolean type.
+	 * @throws InvalidInputException if {@code condition == null} or 
+	 *         {@code condition} has not boolean type, or is not an 
+	 *         instance of either {@link Simplex} or {@link Expression}.
+	 * @throws ContradictionException if {@code condition.}{@link Primitive#surelyFalse() surelyFalse}{@code ()}.
      */
-    void addClauseAssume(Primitive condition) throws InvalidInputException {
+    void addClauseAssume(Primitive condition) throws InvalidInputException, ContradictionException {
+    	final ClauseAssume clause = new ClauseAssume(condition);
     	if (condition.surelyTrue()) {
     		return; //nothing to add
     	}
-    	//TODO what if condition.surelyFalse? Throw a ContradictionException?
-        this.clauses.add(new ClauseAssume(condition));
+    	if (condition.surelyFalse()) {
+    		throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".addClauseAssume with a surely false condition.");
+    	}
+        this.clauses.add(clause);
     }
 
     /**
      * Adds a clause to the path condition. The clause is the resolution 
      * of a symbolic reference by expansion. 
      * 
-     * @param reference the {@link ReferenceSymbolic} which is resolved. It 
-     *          must be {@code r != null} or the method has no effect.
+     * @param referenceSymbolic the {@link ReferenceSymbolic} which is resolved. It 
+     *        must be {@code referenceSymbolic != null} and it must not be already
+     *        {@link #resolved(ReferenceSymbolic) resolved}{@code (referenceSymbolic)}
+     *        to a different heap position.
      * @param heapPosition the position in the heap of the object to 
-     *        which {@code reference} is expanded.
-     * @param object the {@link HeapObjekt} to which {@code reference} 
-     *        is expanded.
+     *        which {@code referenceSymbolic} is expanded.
+     * @param object the {@link HeapObjekt} at position {@code heapPosition}
+     *        as it was at the beginning of symbolic execution, or equivalently 
+     *        at the time of its assumption. It must not be {@code null}.
+     * @throws InvalidInputException if {@code referenceSymbolic == null || object == null}.
+     * @throws ContradictionException if {@link #resolved(ReferenceSymbolic) resolved}{@code (referenceSymbolic)}
+     *         to a different heap position.
      */
-    void addClauseAssumeExpands(ReferenceSymbolic reference, long heapPosition, HeapObjekt object) {
-        this.clauses.add(new ClauseAssumeExpands(reference, heapPosition, object));
-        this.referenceResolutionMap.put(reference, heapPosition);
+    void addClauseAssumeExpands(ReferenceSymbolic referenceSymbolic, long heapPosition, HeapObjekt object) 
+    throws InvalidInputException, ContradictionException {
+    	final ClauseAssumeExpands clause = new ClauseAssumeExpands(referenceSymbolic, heapPosition, object);
+        if (resolved(referenceSymbolic)) {
+        	if (this.referenceResolutionMap.get(referenceSymbolic) == heapPosition) {
+        		return; //nothing to add
+        	} else {
+        		throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".addClauseAssumeExpands with an referenceSymbolic resolved to a heap position different to " + heapPosition + ".");
+        	}
+        }
+        this.clauses.add(clause);
+        this.referenceResolutionMap.put(referenceSymbolic, heapPosition);
 
         //increments objectCounters
         if (!this.objectCounters.containsKey(object.getType().getClassName())) {
@@ -90,27 +110,54 @@ final class PathCondition implements Cloneable {
      * Adds a clause to the path condition. The clause is the resolution 
      * of a symbolic reference by aliasing. 
      * 
-     * @param reference the {@link ReferenceSymbolic} which is resolved. 
+     * @param referenceSymbolic the {@link ReferenceSymbolic} which is resolved. 
+     *        It must not be {@code null} and it must not be already
+     *        {@link #resolved(ReferenceSymbolic) resolved}{@code (referenceSymbolic)}
+     *        to a different heap position.
      * @param heapPosition the position in the heap of the object to 
-     *        which {@code reference} is resolved.
+     *        which {@code referenceSymbolic} is resolved.
      * @param object the {@link HeapObjekt} at position {@code heapPosition}
      *        as it was at the beginning of symbolic execution, or equivalently 
-     *        at the time of its assumption.
+     *        at the time of its assumption. It must not be {@code null}.
+     * @throws InvalidInputException if {@code referenceSymbolic == null || object == null}.
+     * @throws ContradictionException if {@link #resolved(ReferenceSymbolic) resolved}{@code (referenceSymbolic)}
+     *         to a different heap position.
      */
-    void addClauseAssumeAliases(ReferenceSymbolic reference, long heapPosition, HeapObjekt object) {
-        this.clauses.add(new ClauseAssumeAliases(reference, heapPosition, object));
-        this.referenceResolutionMap.put(reference, heapPosition);
+    void addClauseAssumeAliases(ReferenceSymbolic referenceSymbolic, long heapPosition, HeapObjekt object) 
+    throws InvalidInputException, ContradictionException {
+    	final ClauseAssumeAliases clause = new ClauseAssumeAliases(referenceSymbolic, heapPosition, object);
+        if (resolved(referenceSymbolic)) {
+        	if (this.referenceResolutionMap.get(referenceSymbolic) == heapPosition) {
+        		return; //nothing to add
+        	} else {
+        		throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".addClauseAssumeAliases with an referenceSymbolic resolved to a heap position different to " + heapPosition + ".");
+        	}
+        }
+        this.clauses.add(clause);
+        this.referenceResolutionMap.put(referenceSymbolic, heapPosition);
     }
 
     /**
      * Adds a clause to the path condition. The clause is the resolution 
      * of a symbolic reference by assuming it null. 
      * 
-     * @param reference the {@link ReferenceSymbolic} which is resolved. 
+     * @param referenceSymbolic the {@link ReferenceSymbolic} which is resolved. 
+     * @throws InvalidInputException if {@code referenceSymbolic == null}.
+     * @throws ContradictionException if {@link #resolved(ReferenceSymbolic) resolved}{@code (referenceSymbolic)}
+     *         to some (not null) heap position.
      */
-    void addClauseAssumeNull(ReferenceSymbolic reference) {
-        this.clauses.add(new ClauseAssumeNull(reference));
-        this.referenceResolutionMap.put(reference, Util.POS_NULL);
+    void addClauseAssumeNull(ReferenceSymbolic referenceSymbolic) 
+    throws InvalidInputException, ContradictionException {
+    	final ClauseAssumeNull clause = new ClauseAssumeNull(referenceSymbolic);
+        if (resolved(referenceSymbolic)) {
+        	if (this.referenceResolutionMap.get(referenceSymbolic) == Util.POS_NULL) {
+        		return; //nothing to add
+        	} else {
+        		throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".addClauseAssumeNull with a referenceSymbolic that is already resolved but not to null.");
+        	}
+        }
+        this.clauses.add(clause);
+        this.referenceResolutionMap.put(referenceSymbolic, Util.POS_NULL);
     }
 
     /**
@@ -211,7 +258,7 @@ final class PathCondition implements Cloneable {
     List<Clause> getClauses() {
         return Collections.unmodifiableList(this.clauses);
     }
-
+    
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();

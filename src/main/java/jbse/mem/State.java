@@ -2,7 +2,6 @@ package jbse.mem;
 
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
-import static jbse.bc.Opcodes.OP_INVOKEDYNAMIC;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_CLASSLOADER;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER;
@@ -15,26 +14,14 @@ import static jbse.bc.Signatures.JAVA_THROWABLE;
 import static jbse.common.Type.parametersNumber;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isPrimitiveOrVoidCanonicalName;
-import static jbse.common.Util.unsafe;
+import static jbse.mem.Util.forAllInitialObjects;
 
-import java.io.FileDescriptor;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FilterInputStream;
-import java.io.FilterOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -97,344 +84,28 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Class that represents the state of execution.
+ * Class that represents the state of the execution.
  */
 public final class State implements Cloneable {
+    /**
+     * The phase types of the symbolic execution.
+     * 
+     * @author Pietro Braione
+     */
+    public enum Phase { 
+    	/** This state comes strictly before the initial state. */
+    	PRE_INITIAL, 
+    	
+    	/** This state is the initial state. */
+    	INITIAL, 
+    	
+    	/** This state comes strictly after the initial state. */
+    	POST_INITIAL 
+    }
+    
     /** The slot number of the "this" (method receiver) object. */
     private static final int ROOT_THIS_SLOT = 0;
     
-    //gets reflectively some fields for later access
-    private static final Field FIS_PATH;
-    private static final Field FOS_PATH;
-    private static final Field RAF_PATH;
-    private static final Field FIS_IN;
-    private static final Field FOS_OUT;
-    private static final Field FILEDESCRIPTOR_FD;
-    private static final Field FILEDESCRIPTOR_HANDLE;
-    private static final FileInputStream INPUT_NULL;
-    private static final FileOutputStream OUTPUT_NULL;
-    private static final FileOutputStream ERROR_NULL;
-    static {
-        //these are always present
-        try {
-            FIS_PATH = FileInputStream.class.getDeclaredField("path");
-            FOS_PATH = FileOutputStream.class.getDeclaredField("path");
-            RAF_PATH = RandomAccessFile.class.getDeclaredField("path");
-            FIS_IN = FilterInputStream.class.getDeclaredField("in");
-            FOS_OUT = FilterOutputStream.class.getDeclaredField("out");
-            FILEDESCRIPTOR_FD = FileDescriptor.class.getDeclaredField("fd");
-        } catch (NoSuchFieldException | SecurityException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
-    	
-    	//this is present only on Windows
-    	Field fileDescriptorHandle;
-        try {
-        	fileDescriptorHandle = FileDescriptor.class.getDeclaredField("handle");
-        } catch (NoSuchFieldException e) {
-        	//we are not on Windows
-        	fileDescriptorHandle = null;
-        }
-        FILEDESCRIPTOR_HANDLE = fileDescriptorHandle;
-        
-        //sets all Fields accessible
-    	FIS_PATH.setAccessible(true);
-    	FOS_PATH.setAccessible(true);
-        FIS_IN.setAccessible(true);
-        FOS_OUT.setAccessible(true);
-        FILEDESCRIPTOR_FD.setAccessible(true);
-    	if (FILEDESCRIPTOR_HANDLE != null) {
-    		FILEDESCRIPTOR_HANDLE.setAccessible(true);
-    	}
-    	
-    	//opens the null file
-		try {
-			if (FILEDESCRIPTOR_HANDLE == null) {
-				//macOS and Linux
-				INPUT_NULL = new FileInputStream("/dev/null");
-				OUTPUT_NULL = new FileOutputStream("/dev/null");
-				ERROR_NULL = new FileOutputStream("/dev/null");
-			} else {
-				//Windows
-				INPUT_NULL = new FileInputStream("NUL");
-				OUTPUT_NULL = new FileOutputStream("NUL");
-				ERROR_NULL = new FileOutputStream("NUL");
-			}
-		} catch (FileNotFoundException e) {
-			throw new UnexpectedInternalException(e);
-		}
-    }
-
-
-    /**
-     * Class that stores the information about a raw memory
-     * block allocated to support {@link sun.misc.Unsafe}
-     * raw allocation methods.
-     * 
-     * @author Pietro Braione
-     */
-	private static final class MemoryBlock {
-        /** The base address of the memory block. */
-        final long address;
-        
-        /** The size in bytes of the memory block. */
-        final long size;
-        
-        MemoryBlock(long address, long size) {
-            this.address = address;
-            this.size = size;
-        }        
-    }
-    
-    /**
-     * Class that stores information about an open
-     * zip file to support {@link java.util.zip.ZipFile}
-     * and {@link java.util.jar.JarFile} native methods.
-     * 
-     * @author Pietro Braione
-     */
-    private static final class ZipFile {
-        /** 
-         * The address of a jzfile C data structure for the
-         * entry. 
-         */
-        final long jzfile;
-        
-        /** The name of the file. */
-        final String name;
-        
-        /** The file opening mode. */
-        final int mode;
-        
-        /** When the file was modified. */
-        final long lastModified;
-        
-        /** Should we use mmap? */
-        final boolean usemmap;
-        
-        ZipFile(long jzfile, String name, int mode, long lastModified, boolean usemmap) {
-            this.jzfile = jzfile;
-            this.name = name;
-            this.mode = mode;
-            this.lastModified = lastModified;
-            this.usemmap = usemmap;
-        }
-    }
-    
-    /**
-     * Class that stores the information about an open
-     * zip file's entries to support {@link java.util.zip.ZipFile}
-     * and {@link java.util.jar.JarFile} native methods.
-     * 
-     * @author Pietro Braione
-     */
-    private static final class ZipFileEntry {
-        /** 
-         * The address of a jzentry C data structure for the
-         * entry. 
-         */
-        final long jzentry;
-        
-        /** 
-         * The (base-level) jzfile for the file this entry
-         * belongs to. 
-         */
-        final long jzfile;
-        
-        /** The name of the entry. */
-        final byte[] name;
-        
-        ZipFileEntry(long jzentry, long jzfile, byte[] name) {
-            this.jzentry = jzentry;
-            this.jzfile = jzfile;
-            this.name = name.clone();
-        }
-    }
-    
-    private static final class Inflater {
-        final long address;
-        
-        final boolean nowrap;
-        
-        final byte[] dictionary;
-        
-        Inflater(long address, boolean nowrap, byte[] dictionary, int off, int len) {
-            this.address = address;
-            this.nowrap = nowrap;
-            if (dictionary == null) {
-                this.dictionary = null;
-            } else {
-                this.dictionary = new byte[len];
-                System.arraycopy(dictionary, off, this.dictionary, 0, len);
-            }
-        }
-        
-        Inflater(long address, boolean nowrap) {
-            this(address, nowrap, null, 0, 0);
-        }
-    }
-    
-    /**
-     * Class used to wrap {@link RandomAccessFile} information.
-     * 
-     * @author Pietro Braione
-     *
-     */
-    private static final class RandomAccessFileWrapper {
-        final RandomAccessFile raf;
-        final String modeString;
-        
-        RandomAccessFileWrapper(RandomAccessFile raf, String modeString) {
-            this.raf = raf;
-            this.modeString = modeString;
-        }
-    }
-    
-    /**
-     * Class used as key for the method handles cache.
-     * 
-     * @author Pietro Braione
-     */
-    private static final class MHKey {
-    	final int refKind; 
-    	final ClassFile container;
-    	final List<ClassFile> descriptorResolved;
-    	final String name;
-    	
-    	final int hashCode;
-    	
-    	MHKey(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name) throws InvalidInputException {
-    		if (container == null || descriptorResolved == null || name == null) {
-    			throw new InvalidInputException("Tried to create a method handle key with null container class, or descriptor, or name of the field/method.");
-    		}
-    		this.refKind = refKind;
-    		this.container = container;
-    		this.descriptorResolved = Collections.unmodifiableList(Arrays.asList(descriptorResolved));
-    		this.name = name;
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + this.refKind;
-			result = prime * result + this.container.hashCode();
-			result = prime * result + this.descriptorResolved.hashCode();
-			result = prime * result + this.name.hashCode();
-			this.hashCode = result;
-    	}
-
-		@Override
-		public int hashCode() {
-			return this.hashCode;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj) {
-				return true;
-			}
-			if (obj == null) {
-				return false;
-			}
-			if (getClass() != obj.getClass()) {
-				return false;
-			}
-			final MHKey other = (MHKey) obj;
-			if (this.refKind != other.refKind) {
-				return false;
-			}
-			if (!this.container.equals(other.container)) {
-				return false;
-			}
-			if (!this.descriptorResolved.equals(other.descriptorResolved)) {
-				return false;
-			}
-			if (!this.name.equals(other.name)) { 
-				return false;
-			}
-			return true;
-		}
-    }
-    
-    /**
-     * Class used as key for the call sites link maps
-     * .
-     * @author Pietro Braione
-     *
-     */
-    private static final class CSKey {
-    	final ClassFile containerClass;
-    	final String descriptor;
-    	final String name;
-    	final int programCounter;
-    	
-    	final int hashCode;
-    	
-    	CSKey(ClassFile containerClass, String descriptor, String name, int programCounter) throws InvalidInputException {
-    		if (containerClass == null || descriptor == null || name == null || programCounter < 0) {
-    			throw new InvalidInputException("Tried to create a call site key with null containerClass, descriptor or name, or with negative program counter.");
-    		}
-    		final Signature methodSignature = new Signature(containerClass.getClassName(), descriptor, name);
-    		if (!containerClass.hasMethodImplementation(methodSignature)) {
-    			throw new InvalidInputException("Tried to create a call site key for nonexisting method.");
-    		}
-    		final byte[] methodCode;
-			try {
-				methodCode = containerClass.getMethodCodeBySignature(methodSignature);
-			} catch (MethodNotFoundException | MethodCodeNotFoundException e) {
-				//this should never happen
-				throw new UnexpectedInternalException(e);
-			}
-    		if (programCounter >= methodCode.length) {
-    			throw new InvalidInputException("Tried to create a call site key for a programCounter exceeding the code length.");
-    		}
-    		if (methodCode[programCounter] != OP_INVOKEDYNAMIC) {
-    			throw new InvalidInputException("Tried to create a call site key for a programCounter not pointing to a dynamic call site.");
-    		}
-    		this.containerClass = containerClass;
-    		this.descriptor = descriptor;
-    		this.name = name;
-    		this.programCounter = programCounter;
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + this.containerClass.hashCode();
-			result = prime * result + this.descriptor.hashCode();
-			result = prime * result + this.name.hashCode();
-			result = prime * result + this.programCounter;
-			this.hashCode = result;
-    	}
-
-		@Override
-		public int hashCode() {
-			return this.hashCode;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj) {
-				return true;
-			}
-			if (obj == null) {
-				return false;
-			}
-			if (getClass() != obj.getClass()) {
-				return false;
-			}
-			final CSKey other = (CSKey) obj;
-			if (!this.containerClass.equals(other.containerClass)) {
-				return false;
-			}
-			if (!this.descriptor.equals(other.descriptor)) {
-				return false;
-			}
-			if (!this.name.equals(other.name)) {
-				return false;
-			}
-			if (this.programCounter != other.programCounter) {
-				return false;
-			}
-			return true;
-		}
-    }
-
     /** 
      * {@code true} iff the bootstrap classloader should also load classes defined by the
      * extensions and application classloaders. 
@@ -462,20 +133,8 @@ public final class State implements Cloneable {
     /** The count of the state, i.e., the number of states from the previous branch point. */
     private int count = 0;
 
-    /** The string literals. */
-    private HashMap<String, ReferenceConcrete> stringLiterals = new HashMap<>();
-
-    /** The {@link ReferenceConcrete}s to {@link Instance_JAVA_CLASS}es for nonprimitive types. */
-    private HashMap<ClassFile, ReferenceConcrete> classes = new HashMap<>();
-
-    /** The {@link ReferenceConcrete}s to {@link Instance_JAVA_CLASS}es for primitive types. */
-    private HashMap<String, ReferenceConcrete> classesPrimitive = new HashMap<>();
-    
     /** The identifier of the next {@link Instance_JAVA_CLASSLOADER} to be created. */
     private int nextClassLoaderIdentifier = 1;
-    
-    /** Maps classloader identifiers to {@link ReferenceConcrete}s to {@link Instance_JAVA_CLASSLOADER}. */
-    private ArrayList<ReferenceConcrete> classLoaders = new ArrayList<>();
     
     /** 
      * Used to check whether the {@link Instance_JAVA_CLASSLOADER} for the standard (ext and app) 
@@ -483,41 +142,13 @@ public final class State implements Cloneable {
      */
     private boolean standardClassLoadersNotReady = true;
     
-    /** The {@link ReferenceConcrete}s to {@link Instance}s of {@code java.lang.invoke.MethodType}. */
-    private HashMap<List<ClassFile>, ReferenceConcrete> methodTypes = new HashMap<>();
+    /** Records the notable objects in the heap. */
+    private ObjectDictionary objectDictionary = new ObjectDictionary();
     
-    /** The {@link ReferenceConcrete}s to {@link Instance}s of {@code java.lang.invoke.MethodHandle}. */
-    private HashMap<MHKey, ReferenceConcrete> methodHandles = new HashMap<>();
+    /** Maps file identifier to meta-level open files. */
+    private FilesMapper filesMapper = new FilesMapper();
     
-    /** Maps file descriptors/handles to (meta-level) open files. */
-    private HashMap<Long, Object> files = new HashMap<>();
-    
-    /** The file descriptor/handle of the (standard) input. */
-    private long inFileId; //nonfinal only because initialized outside the constructor, but it is effectively final
-    
-    /** The file descriptor/handle of the (standard) output. */
-    private long outFileId; //nonfinal only because initialized outside the constructor, but it is effectively final
-    
-    /** The file descriptor/handle of the (standard) error. */
-    private long errFileId; //nonfinal only because initialized outside the constructor, but it is effectively final
-    
-    /** Maps memory addresses to (meta-level) allocated memory blocks. */
-    private HashMap<Long, MemoryBlock> allocatedMemory = new HashMap<>();
-    
-    /** 
-     * Maps (base-level) jzfile C structure addresses to 
-     * (meta-level) open zip files. 
-     */
-    private HashMap<Long, ZipFile> zipFiles = new HashMap<>();
-    
-    /** 
-     * Maps (base-level) jzentry C structure addresses to 
-     * (meta-level) open zip file entries.
-     */
-    private HashMap<Long, ZipFileEntry> zipFileEntries = new HashMap<>();
-    
-    /** Maps (base-level) inflater addresses to (meta-level) inflaters. */
-    private HashMap<Long, Inflater> inflaters = new HashMap<>();
+    private MemoryAddressesMapper memoryAddressesMapper = new MemoryAddressesMapper();
     
     /** The registered performance counters. */
     private HashSet<String> perfCounters = new HashSet<>();
@@ -536,22 +167,6 @@ public final class State implements Cloneable {
 
     /** The JVM static method area. */
     private StaticMethodArea staticMethodArea = new StaticMethodArea();
-    
-    /**
-     * The phase types of the symbolic execution.
-     * 
-     * @author Pietro Braione
-     */
-    public enum Phase { 
-    	/** This state comes strictly before the initial state. */
-    	PRE_INITIAL, 
-    	
-    	/** This state is the initial state. */
-    	INITIAL, 
-    	
-    	/** This state comes strictly after the initial state. */
-    	POST_INITIAL 
-    }
     
     /** The current phase of symbolic execution. */
     private Phase phase = Phase.PRE_INITIAL;
@@ -586,34 +201,11 @@ public final class State implements Cloneable {
     /** {@code true} iff the next bytecode must be executed in its WIDE variant. */
     private boolean wide = false;
     
-    /** 
-     * Links signature polymorphic methods that have nonintrinsic
-     * (type checking) semantics to their adapter methods, indicated
-     * as {@link ReferenceConcrete}s to their respective {@code java.lang.invoke.MemberName}s.
-     */
-    private HashMap<Signature, ReferenceConcrete> methodAdapters = new HashMap<>();
-    
-    /** 
-     * Links signature polymorphic methods that have nonintrinsic
-     * (type checking) semantics to their invocation appendices, indicated
-     * as {@link ReferenceConcrete}s to {@code Object[]}s.
-     */
-    private HashMap<Signature, ReferenceConcrete> methodAppendices = new HashMap<>();
-    
-    /** 
-     * Links dynamic call sites to their adapter methods, indicated
-     * as {@link ReferenceConcrete}s to their respective {@code java.lang.invoke.MemberName}s.
-     */
-    private HashMap<CSKey, ReferenceConcrete> callSiteAdapters = new HashMap<>();
-    
-    /** 
-     * Links dynamic call sites to their invocation appendices, indicated
-     * as {@link ReferenceConcrete}s to {@code Object[]}s.
-     */
-    private HashMap<CSKey, ReferenceConcrete> callSiteAppendices = new HashMap<>();
-    
     /** The maximum length an array may have to be granted simple representation. */
     private final int maxSimpleArrayLength;
+    
+    /** The storage of the linked adapted methods. */
+    private AdapterMethodLinker adapterMethodLinker = new AdapterMethodLinker();
 
     /** 
      * The generator for unambiguous symbol identifiers; mutable
@@ -684,94 +276,11 @@ public final class State implements Cloneable {
         this.bypassStandardLoading = bypassStandardLoading;
     	this.frozen = false;
         this.historyPoint = historyPoint;
-        this.classLoaders.add(Null.getInstance()); //classloader 0 is the bootstrap classloader
-        setStandardFiles();
+        this.objectDictionary.addClassLoader(Null.getInstance()); //classloader 0 is the bootstrap classloader
         this.heap = new Heap(maxHeapSize);
         this.classHierarchy = new ClassHierarchy(classPath, factoryClass, expansionBackdoor, modelClassSubstitutions);
         this.maxSimpleArrayLength = maxSimpleArrayLength;
         this.symbolFactory = symbolFactory;
-    }
-    
-    private void setStandardFiles() {
-        try {            
-            //gets the stdin
-            FileInputStream in = null;
-            for (InputStream is = System.in; (is instanceof FilterInputStream) || (is instanceof FileInputStream); is = (InputStream) FIS_IN.get(is)) {
-                if (is instanceof FileInputStream) {
-                    in = (FileInputStream) is;
-                    break;
-                }
-            }
-            
-            //if in == null, considers the null file
-            //as the stdin
-            if (in == null) {
-            	in = INPUT_NULL;
-            }
-            
-        	//gets the stdin identifier 
-            if (FILEDESCRIPTOR_HANDLE == null) {
-            	this.inFileId = ((Integer) FILEDESCRIPTOR_FD.get(in.getFD())).longValue();
-            } else {
-            	this.inFileId = ((Long) FILEDESCRIPTOR_HANDLE.get(in.getFD())).longValue();
-            }
-            
-            //registers the stdin
-            setFile(this.inFileId, in);
-            
-            //gets the stdout
-            FileOutputStream out = null;
-            for (OutputStream os = System.out; (os instanceof FilterOutputStream) || (os instanceof FileOutputStream); os = (OutputStream) FOS_OUT.get(os)) {                
-                if (os instanceof FileOutputStream) {
-                    out = (FileOutputStream) os;
-                    break;
-                }
-            }
-            
-            //if out == null, considers the null file
-            //as the stdout
-            if (out == null) {
-            	out = OUTPUT_NULL;
-            }
-            
-            //gets the stdout identifier
-            if (FILEDESCRIPTOR_HANDLE == null) {
-            	this.outFileId = ((Integer) FILEDESCRIPTOR_FD.get(out.getFD())).longValue();
-            } else {
-            	this.outFileId = ((Long) FILEDESCRIPTOR_HANDLE.get(out.getFD())).longValue();
-            }
-            
-            //registers the stdout
-            setFile(this.outFileId, out);
-            
-            //gets the stderr
-            FileOutputStream err = null;
-            for (OutputStream os = System.err; (os instanceof FilterOutputStream) || (os instanceof FileOutputStream); os = (OutputStream) FOS_OUT.get(os)) {
-                if (os instanceof FileOutputStream) {
-                    err = (FileOutputStream) os;
-                    break;
-                }
-            }
-            
-            //if err == null, considers the null file
-            //as the stderr
-            if (err == null) {
-            	err = ERROR_NULL;
-            }
-            
-            //gets the stderr identifier
-            if (FILEDESCRIPTOR_HANDLE == null) {
-            	this.errFileId = ((Integer) FILEDESCRIPTOR_FD.get(err.getFD())).longValue();
-            } else {
-            	this.errFileId = ((Long) FILEDESCRIPTOR_HANDLE.get(err.getFD())).longValue();
-            }
-            
-            //registers the stderr
-            setFile(this.errFileId, err);
-        } catch (IllegalArgumentException | IllegalAccessException | 
-        InvalidInputException | IOException e) {
-            throw new UnexpectedInternalException(e);
-        }
     }
     
     /**
@@ -1065,7 +574,8 @@ public final class State implements Cloneable {
      * @throws InvalidSlotException if {@code slot} is not a valid slot number.
      * @throws FrozenStateException if the state is frozen.
      */
-    public Value getLocalVariableValue(int slot) throws ThreadStackEmptyException, InvalidSlotException, FrozenStateException {
+    public Value getLocalVariableValue(int slot) 
+    throws ThreadStackEmptyException, InvalidSlotException, FrozenStateException {
         return getCurrentFrame().getLocalVariableValue(slot);
     }
 
@@ -1079,7 +589,8 @@ public final class State implements Cloneable {
      * @throws InvalidSlotException if {@code slot} is not a valid slot number.
      * @throws FrozenStateException if the state is frozen.
      */
-    public void setLocalVariable(int slot, Value val) throws ThreadStackEmptyException, InvalidSlotException, FrozenStateException {
+    public void setLocalVariable(int slot, Value val) 
+    throws ThreadStackEmptyException, InvalidSlotException, FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
@@ -1185,36 +696,6 @@ public final class State implements Cloneable {
     }
 
     /**
-     * Gets a symbolic object as it was initially in this state.
-     * 
-     * @param origin a {@link ReferenceSymbolic}.
-     * @return the symbolic {@link HeapObjekt} whose origin is {@code origin} 
-     *         in the state it was at its epoch (equivalently, at the
-     *         moment of its assumption), or 
-     *         {@code null} if {@code origin} does not refer to 
-     *         anything (e.g., is {@link Null}, or is an unresolved 
-     *         symbolic reference, or is resolved to null).
-     * @throws FrozenStateException if the state is frozen.
-     */
-    //TODO eliminate this method!!!
-    private HeapObjekt getObjectInitial(ReferenceSymbolic origin) throws FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-
-        //TODO extract this code and share with DecisionProcedureAlgorithms.getPossibleAliases
-        for (Clause c : this.pathCondition.getClauses()) {
-            if (c instanceof ClauseAssumeExpands) {
-                final ClauseAssumeExpands cExpands = (ClauseAssumeExpands) c;
-                if (cExpands.getObjekt().getOrigin().equals(origin)) {
-                    return cExpands.getObjekt();
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
      * Returns the state's {@link ClassHierarchy}. 
      * 
      * @return a {@link ClassHierarchy}.
@@ -1286,7 +767,7 @@ public final class State implements Cloneable {
      *         linked to an adapter method.
      */
     public boolean isMethodLinked(Signature signature) {
-        return this.methodAdapters.containsKey(signature);
+        return this.adapterMethodLinker.isMethodLinked(signature);
     }
 
     /**
@@ -1303,18 +784,15 @@ public final class State implements Cloneable {
      * @param appendix a {@link ReferenceConcrete}. It should
      *        refer an {@link Instance} of a {@link java.lang.Object[]},
      *        but this is not checked.
-     * @throws FrozenStateException if the state is frozen.
-     * @throws NullPointerException if {@code signature == null || adapter == null || appendix == null}.
+     * @throws InvalidInputException if the state is frozen or any of the 
+     *         parameters is {@code null}.
      */
-    public void linkMethod(Signature signature, ReferenceConcrete adapter, ReferenceConcrete appendix) throws FrozenStateException {
+    public void linkMethod(Signature signature, ReferenceConcrete adapter, ReferenceConcrete appendix) 
+    throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (signature == null || adapter == null || appendix == null) {
-            throw new NullPointerException(); //TODO throw better exception
-        }
-        this.methodAdapters.put(signature, adapter);
-        this.methodAppendices.put(signature, appendix);
+    	this.adapterMethodLinker.linkMethod(signature, adapter, appendix);
     }
     
     /**
@@ -1327,7 +805,7 @@ public final class State implements Cloneable {
      *         or {@code null} if {@code signature} was not previously linked.
      */
     public ReferenceConcrete getMethodAdapter(Signature signature) {
-        return this.methodAdapters.get(signature);
+        return this.adapterMethodLinker.getMethodAdapter(signature);
     }
     
     /**
@@ -1340,7 +818,7 @@ public final class State implements Cloneable {
      *         or {@code null} if {@code signature} was not previously linked.
      */
     public ReferenceConcrete getMethodAppendix(Signature signature) {
-        return this.methodAppendices.get(signature);
+        return this.adapterMethodLinker.getMethodAppendix(signature);
     }
     
     /**
@@ -1363,7 +841,7 @@ public final class State implements Cloneable {
      */
     public boolean isCallSiteLinked(ClassFile containerClass, String descriptor, String name, int programCounter) 
     throws InvalidInputException {
-        return this.callSiteAdapters.containsKey(new CSKey(containerClass, descriptor, name, programCounter));
+        return this.adapterMethodLinker.isCallSiteLinked(containerClass, descriptor, name, programCounter);
     }
 
     /**
@@ -1395,8 +873,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        this.callSiteAdapters.put(new CSKey(containerClass, descriptor, name, programCounter), adapter);
-        this.callSiteAppendices.put(new CSKey(containerClass, descriptor, name, programCounter), appendix);
+        this.adapterMethodLinker.linkCallSite(containerClass, descriptor, name, programCounter, adapter, appendix);
     }
     
     /**
@@ -1419,7 +896,7 @@ public final class State implements Cloneable {
      */
     public ReferenceConcrete getCallSiteAdapter(ClassFile containerClass, String descriptor, String name, int programCounter) 
     throws InvalidInputException {
-        return this.callSiteAdapters.get(new CSKey(containerClass, descriptor, name, programCounter));
+        return this.adapterMethodLinker.getCallSiteAdapter(containerClass, descriptor, name, programCounter);
     }
     
     /**
@@ -1443,14 +920,14 @@ public final class State implements Cloneable {
      */
     public ReferenceConcrete getCallSiteAppendix(ClassFile containerClass, String descriptor, String name, int programCounter) 
     throws InvalidInputException {
-        return this.callSiteAppendices.get(new CSKey(containerClass, descriptor, name, programCounter));
+        return this.adapterMethodLinker.getCallSiteAppendix(containerClass, descriptor, name, programCounter);
     }
     
     /**
      * Returns the file stream associated to a open file.
      * 
      * @param id a {@code long}, either a file descriptor cast to {@code long} 
-     *        (if we are on a Unix-like platform) or a file handle (if we are on Windows).
+     *        (if we are on a UNIX-like platform) or a file handle (if we are on Windows).
      * @return a {@link FileInputStream}, or a {@link FileOutputStream}, or a {@link RandomAccessFile}, or
      *         {@code null} if {@code id} is not the descriptor/handle
      *         of an open file previously associated with a call to {@link #setFile(long, Object)}.
@@ -1460,48 +937,37 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     	    throw new FrozenStateException();
     	}
-        final Object obj = this.files.get(Long.valueOf(id));
-        if (obj instanceof RandomAccessFileWrapper) {
-            return ((RandomAccessFileWrapper) obj).raf;
-        } else {
-            return obj;
-        }
+    	return this.filesMapper.getFile(id);
     }
     
     /**
      * Associates a {@link FileInputStream} to an open file id.
      * 
      * @param id a {@code long}, either a file descriptor cast to {@code long} 
-     *        (if we are on a Unix-like platform) or a file handle (if we are on Windows).
+     *        (if we are on a UNIX-like platform) or a file handle (if we are on Windows).
      * @param file a {@link FileInputStream}.
      * @throws InvalidInputException if {@code file == null} or the state is frozen.
      */
     public void setFile(long id, FileInputStream file) throws InvalidInputException {
-        if (file == null) {
-            throw new InvalidInputException("Invoked State.setFile with a null FileInputStream file parameter.");
-        }
     	if (this.frozen) {
     	    throw new FrozenStateException();
     	}
-    	this.files.put(Long.valueOf(id), file);
+    	this.filesMapper.setFile(id, file);
     }
     
     /**
      * Associates a {@link FileOutputStream} to an open file id.
      * 
      * @param id a {@code long}, either a file descriptor cast to {@code long} 
-     *        (if we are on a Unix-like platform) or a file handle (if we are on Windows).
+     *        (if we are on a UNIX-like platform) or a file handle (if we are on Windows).
      * @param file a {@link FileOutputStream}.
      * @throws InvalidInputException if {@code file == null} or the state is frozen.
      */
     public void setFile(long id, FileOutputStream file) throws InvalidInputException {
-        if (file == null) {
-            throw new InvalidInputException("Invoked State.setFile with a null FileOutputStream file parameter.");
-        }
         if (this.frozen) {
             throw new FrozenStateException();
         }
-        this.files.put(Long.valueOf(id), file);
+        this.filesMapper.setFile(id, file);
     }
     
     /**
@@ -1514,14 +980,12 @@ public final class State implements Cloneable {
      * @throws InvalidInputException if {@code file == null} or {@code modeString == null} or 
      *         the state is frozen.
      */
-    public void setFile(long id, RandomAccessFile file, String modeString) throws InvalidInputException {
-        if (file == null || modeString == null) {
-            throw new InvalidInputException("Invoked State.setFile with a null RandomAccessFile file or String modeString parameter.");
-        }
+    public void setFile(long id, RandomAccessFile file, String modeString) 
+    throws InvalidInputException {
         if (this.frozen) {
             throw new FrozenStateException();
         }
-        this.files.put(Long.valueOf(id), new RandomAccessFileWrapper(file, modeString));
+        this.filesMapper.setFile(id, file, modeString);
     }
     
     /**
@@ -1536,7 +1000,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     	    throw new FrozenStateException();
     	}
-        this.files.remove(Long.valueOf(id));
+        this.filesMapper.removeFile(id);
     }
     
     /**
@@ -1552,13 +1016,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (this.allocatedMemory.containsKey(address)) {
-            throw new InvalidInputException("Tried to add a raw memory block with an already known address.");
-        }
-        if (size <= 0) {
-            throw new InvalidInputException("Tried to add a raw memory block with a nonpositive size.");
-        }
-        this.allocatedMemory.put(address, new MemoryBlock(address, size));
+    	this.memoryAddressesMapper.addMemoryBlock(address, size);
     }
     
     /**
@@ -1572,10 +1030,7 @@ public final class State implements Cloneable {
      *         address previously registered by a call to {@link #addMemoryBlock(long, long) addMemoryBlock}.
      */
     public long getMemoryBlockAddress(long address) throws InvalidInputException {
-        if (!this.allocatedMemory.containsKey(address)) {
-            throw new InvalidInputException("Tried to get the address of a raw memory block corresponding to an unknown (base-level) address.");
-        }
-        return this.allocatedMemory.get(address).address;
+    	return this.memoryAddressesMapper.getMemoryBlockAddress(address);
     }
 
     /**
@@ -1588,10 +1043,7 @@ public final class State implements Cloneable {
      *         address previously registered by a call to {@link #addMemoryBlock(long, long) addMemoryBlock}.
      */
     public long getMemoryBlockSize(long address) throws InvalidInputException {
-        if (!this.allocatedMemory.containsKey(address)) {
-            throw new InvalidInputException("Tried to get the size of a raw memory block corresponding to an unknown (base-level) address.");
-        }
-        return this.allocatedMemory.get(address).size;
+    	return this.memoryAddressesMapper.getMemoryBlockSize(address);
     }
 
     /**
@@ -1607,10 +1059,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (!this.allocatedMemory.containsKey(address)) {
-            throw new InvalidInputException("Tried to remove a raw memory block corresponding to an unknown (base-level) address.");
-        }
-        this.allocatedMemory.remove(address);
+    	this.memoryAddressesMapper.removeMemoryBlock(address);
     }
     
     /**
@@ -1627,24 +1076,12 @@ public final class State implements Cloneable {
      *         {@code jzfile} was already added before, or
      *         {@code name == null}.
      */
-    public void addZipFile(long jzfile, String name, int mode, long lastModified, boolean usemmap) throws InvalidInputException {
+    public void addZipFile(long jzfile, String name, int mode, long lastModified, boolean usemmap) 
+    throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (this.zipFiles.containsKey(jzfile)) {
-            final ZipFile zf = this.zipFiles.get(jzfile);
-            if (zf.name.equals(name) && zf.lastModified == lastModified) {
-                //already opened, zlib reuses the allocated C data structure
-                return;
-            } else {
-                throw new InvalidInputException("Tried to add a zipfile with an already existing jzfile address.");
-            }
-        }
-        if (name == null) {
-            throw new InvalidInputException("Tried to add a zip file with null name.");
-        }
-        final ZipFile zf = new ZipFile(jzfile, name, mode, lastModified, usemmap);
-        this.zipFiles.put(jzfile, zf);
+    	this.memoryAddressesMapper.addZipFile(jzfile, name, mode, lastModified, usemmap);
     }
     
     /**
@@ -1661,21 +1098,12 @@ public final class State implements Cloneable {
      *         {@code jzentry} was already added before, or
      *         {@code name == null}.
      */
-    public void addZipFileEntry(long jzentry, long jzfile, byte[] name) throws InvalidInputException {
+    public void addZipFileEntry(long jzentry, long jzfile, byte[] name) 
+    throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (!this.zipFiles.containsKey(jzfile)) {
-            throw new InvalidInputException("Tried to add a zip file entry for an unknown zip file.");
-        }
-        if (this.zipFileEntries.containsKey(jzentry)) {
-            throw new InvalidInputException("Tried to add an already existing zip file entry.");
-        }
-        if (name == null) {
-            throw new InvalidInputException("Tried to add a zip file entry with null name.");
-        }
-        final ZipFileEntry zfe = new ZipFileEntry(jzentry, jzfile, name);
-        this.zipFileEntries.put(jzentry, zfe);
+    	this.memoryAddressesMapper.addZipFileEntry(jzentry, jzfile, name);
     }
     
     /**
@@ -1687,7 +1115,7 @@ public final class State implements Cloneable {
      *         {@link #addZipFile(long, String, int, long, boolean) addZipFile}.
      */
     public boolean hasZipFile(long jzfile) {
-        return this.zipFiles.containsKey(jzfile);
+        return this.memoryAddressesMapper.hasZipFile(jzfile);
     }
     
     /**
@@ -1698,12 +1126,7 @@ public final class State implements Cloneable {
      *         a jzfile C structure (meta-level address).
      */
     public boolean hasZipFileEntryJzInverse(long jzentry) {
-        for (ZipFileEntry entry : this.zipFileEntries.values()) {
-            if (entry.jzentry == jzentry) {
-                return true;
-            }
-        }
-        return false;
+    	return this.memoryAddressesMapper.hasZipFileEntryJzInverse(jzentry);
     }
     
     /**
@@ -1717,12 +1140,7 @@ public final class State implements Cloneable {
      *         of a jzentry data structure.
      */
     public long getZipFileEntryJzInverse(long jzentry) throws InvalidInputException {
-        for (Map.Entry<Long, ZipFileEntry> entry : this.zipFileEntries.entrySet()) {
-            if (entry.getValue().jzentry == jzentry) {
-                return entry.getKey();
-            }
-        }
-        throw new InvalidInputException("Tried to invert an unknown jzentry C structure address.");
+    	return this.memoryAddressesMapper.getZipFileEntryJzInverse(jzentry);
     }
     
     /**
@@ -1736,10 +1154,7 @@ public final class State implements Cloneable {
      *         {@link #addZipFile(long, String, int, long, boolean) addZipFile}.
      */
     public long getZipFileJz(long jzfile) throws InvalidInputException {
-        if (!this.zipFiles.containsKey(jzfile)) {
-            throw new InvalidInputException("Tried to get a jzfile for an unknown zip file.");
-        }
-        return this.zipFiles.get(jzfile).jzfile;
+    	return this.memoryAddressesMapper.getZipFileJz(jzfile);
     }
     
     /**
@@ -1753,10 +1168,7 @@ public final class State implements Cloneable {
      *         {@link #addZipFileEntry(long, long, byte[]) addZipFileEntry}.
      */
     public long getZipFileEntryJz(long jzentry) throws InvalidInputException {
-        if (!this.zipFileEntries.containsKey(jzentry)) {
-            throw new InvalidInputException("Tried to get a jzentry for an unknown zip file entry.");
-        }
-        return this.zipFileEntries.get(jzentry).jzentry;
+    	return this.memoryAddressesMapper.getZipFileEntryJz(jzentry);
     }
     
     /**
@@ -1772,19 +1184,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (!this.zipFiles.containsKey(jzfile)) {
-            throw new InvalidInputException("Tried to remove an unknown zip file.");
-        }
-        this.zipFiles.remove(jzfile);
-        final HashSet<Long> toRemove = new HashSet<>();
-        for (Map.Entry<Long, ZipFileEntry> entry : this.zipFileEntries.entrySet()) {
-            if (entry.getValue().jzfile == jzfile) {
-                toRemove.add(entry.getKey());
-            }
-        }
-        for (long jzentry : toRemove) {
-            this.zipFileEntries.remove(jzentry);
-        }
+    	this.memoryAddressesMapper.removeZipFile(jzfile);
     }
     
     /**
@@ -1800,10 +1200,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (!this.zipFileEntries.containsKey(jzentry)) {
-            throw new InvalidInputException("Tried to remove an unknown zip file entry.");
-        }
-        this.zipFileEntries.remove(jzentry);
+    	this.memoryAddressesMapper.removeZipFileEntry(jzentry);
     }
     
     /**
@@ -1819,11 +1216,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (this.inflaters.containsKey(address)) {
-            throw new InvalidInputException("Tried to add an already registered inflater block address.");
-        }
-        final Inflater inflater = new Inflater(address, nowrap);
-        this.inflaters.put(address, inflater);
+    	this.memoryAddressesMapper.addInflater(address, nowrap);
     }
     
     /**
@@ -1837,10 +1230,7 @@ public final class State implements Cloneable {
      *         registered.
      */
     public long getInflater(long address) throws InvalidInputException {
-        if (!this.inflaters.containsKey(address)) {
-            throw new InvalidInputException("Tried to get the address of an unknown inflater.");
-        }
-        return this.inflaters.get(address).address;
+    	return this.memoryAddressesMapper.getInflater(address);
     }
     
     /**
@@ -1862,15 +1252,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (!this.inflaters.containsKey(address)) {
-            throw new InvalidInputException("Tried to set the dictionary of an unknown inflater.");
-        }
-        if (dictionary == null || ofst < 0 || len < 0 || ofst >= dictionary.length || ofst + len > dictionary.length) {
-            throw new InvalidInputException("Tried to set the dictionary of an inflater with wrong dictionary, offset or length.");
-        }
-        final Inflater inflaterOld = this.inflaters.get(address);
-        final Inflater inflaterNew = new Inflater(inflaterOld.address, inflaterOld.nowrap, dictionary, ofst, len);
-        this.inflaters.put(address, inflaterNew);
+    	this.memoryAddressesMapper.setInflaterDictionary(address, dictionary, ofst, len);
     }
     
     /**
@@ -1885,10 +1267,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (!this.inflaters.containsKey(address)) {
-            throw new InvalidInputException("Tried to remove an unknown inflater.");
-        }
-        this.inflaters.remove(address);
+    	this.memoryAddressesMapper.removeInflater(address);
     }
     
     /**
@@ -1976,7 +1355,7 @@ public final class State implements Cloneable {
         final InstanceImpl myObj = doCreateInstance(calc, classFile);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
         if (myObj instanceof Instance_JAVA_CLASSLOADER) {
-            this.classLoaders.add(retVal);
+            this.objectDictionary.addClassLoader(retVal);
         }
         initIdentityHashCodeConcrete(calc, myObj, retVal);
         return retVal;
@@ -2104,7 +1483,7 @@ public final class State implements Cloneable {
             
             //class loader
             final int classLoader = (representedClass.isAnonymousUnregistered() ? CLASSLOADER_BOOT : representedClass.getDefiningClassLoader()); //Instance_JAVA_CLASS for anonymous classfiles have the classloader field set to null
-            myObj.setFieldValue(JAVA_CLASS_CLASSLOADER, this.classLoaders.get(classLoader));
+            myObj.setFieldValue(JAVA_CLASS_CLASSLOADER, this.objectDictionary.getClassLoader(classLoader));
             
             return retVal;
         } catch (InvalidTypeException e) {
@@ -2372,7 +1751,7 @@ public final class State implements Cloneable {
      * @param myObj the {@link Objekt} whose identity hash code will be initialized.
      * @param myRef a {@link ReferenceConcrete} to {@code myObj}.
      */
-    //TODO delete - all the objects should have a symbolic identity hash code for genericity (currently this does not play well with hash maps and thus with all the JVM bootstrap code).
+    //TODO delete - all the objects should have a symbolic identity hash code for genericity.
     private void initIdentityHashCodeConcrete(Calculator calc, Objekt myObj, ReferenceConcrete myRef) {
         myObj.setIdentityHashCode(calc.valInt((int) myRef.getHeapPosition()));
     }
@@ -2393,26 +1772,26 @@ public final class State implements Cloneable {
     /**
      * Checks if there is a string literal in this state's heap.
      * 
-     * @param stringLit a {@link String} representing a string literal.
+     * @param stringLiteral a {@link String} representing a string literal.
      * @return {@code true} iff there is a {@link Instance} in 
      *         this state's {@link Heap} corresponding to {@code stringLit}.
      */
-    public boolean hasStringLiteral(String stringLit) {
-        return this.stringLiterals.containsKey(stringLit);
+    public boolean hasStringLiteral(String stringLiteral) {
+        return this.objectDictionary.hasStringLiteral(stringLiteral);
     }
 
     /**
      * Returns a {@link ReferenceConcrete} to a {@code java.lang.String} 
      * corresponding to a string literal. 
      * 
-     * @param stringLit a {@link String} representing a string literal.
+     * @param stringLiteral a {@link String} representing a string literal.
      * @return a {@link ReferenceConcrete} to the {@link Instance} in 
      *         this state's {@link Heap} corresponding to 
-     *         {@code stringLit}, or {@code null} if such instance does not
+     *         {@code stringLiteral}, or {@code null} if such instance does not
      *         exist. 
      */
-    public ReferenceConcrete referenceToStringLiteral(String stringLit) {
-        return this.stringLiterals.get(stringLit);
+    public ReferenceConcrete referenceToStringLiteral(String stringLiteral) {
+        return this.objectDictionary.getStringLiteral(stringLiteral);
     }
 
     /**
@@ -2425,26 +1804,26 @@ public final class State implements Cloneable {
      * If the literal already exists, does nothing.
      * 
      * @param calc a Calculator. It must not be {@code null}.
-     * @param stringLit a {@link String} representing a string literal.
-     * @throws InvalidInputException if {@code calc == null || stringLit == null}.
+     * @param stringLiteral a {@link String} representing a string literal.
+     * @throws InvalidInputException if {@code calc == null || stringLiteral == null}.
      * @throws HeapMemoryExhaustedException if the heap is full.
      * @throws FrozenStateException if the state is frozen.
      */
-    public void ensureStringLiteral(Calculator calc, String stringLit) 
+    public void ensureStringLiteral(Calculator calc, String stringLiteral) 
     throws InvalidInputException, HeapMemoryExhaustedException, FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (calc == null || stringLit == null) {
+        if (calc == null || stringLiteral == null) {
             throw new InvalidInputException("Invoked method " + getClass().getName() + ".ensureStringLiteral with null Calculator calc or String stringLit parameter.");
         }
-        if (hasStringLiteral(stringLit)) {
+        if (hasStringLiteral(stringLiteral)) {
             return;
         }
 
         try {
-            final ReferenceConcrete value = createArrayOfChars(calc, stringLit);
-            final Simplex hash = calc.valInt(stringLit.hashCode());
+            final ReferenceConcrete value = createArrayOfChars(calc, stringLiteral);
+            final Simplex hash = calc.valInt(stringLiteral.hashCode());
             final ClassFile cf_JAVA_STRING = this.classHierarchy.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING); //surely loaded
             if (cf_JAVA_STRING == null) {
                 throw new UnexpectedInternalException("Could not find classfile for type java.lang.String.");
@@ -2453,7 +1832,7 @@ public final class State implements Cloneable {
             final Instance i = (Instance) getObject(retVal);
             i.setFieldValue(JAVA_STRING_VALUE,  value);
             i.setFieldValue(JAVA_STRING_HASH,   hash);
-            this.stringLiterals.put(stringLit, retVal);
+            this.objectDictionary.putStringLiteral(stringLiteral, retVal);
         } catch (InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -2500,7 +1879,7 @@ public final class State implements Cloneable {
      *         this state's {@link Heap} corresponding to {@code classFile}.
      */
     public boolean hasInstance_JAVA_CLASS(ClassFile classFile) {
-        return (classFile.isPrimitiveOrVoid() ? hasInstance_JAVA_CLASS_primitiveOrVoid(classFile.getClassName()) : this.classes.containsKey(classFile));
+        return (classFile.isPrimitiveOrVoid() ? hasInstance_JAVA_CLASS_primitiveOrVoid(classFile.getClassName()) : this.objectDictionary.hasClassNonprimitive(classFile));
     }
 
     /**
@@ -2513,7 +1892,7 @@ public final class State implements Cloneable {
      *         this state's {@link Heap} corresponding to {@code typeName}.
      */
     public boolean hasInstance_JAVA_CLASS_primitiveOrVoid(String typeName) {
-        return this.classesPrimitive.containsKey(typeName);
+        return this.objectDictionary.hasClassPrimitive(typeName);
     }
 
     /**
@@ -2526,7 +1905,7 @@ public final class State implements Cloneable {
      *         or {@code null} if such instance does not exist. 
      */
     public ReferenceConcrete referenceToInstance_JAVA_CLASS(ClassFile classFile) {
-        return (classFile.isPrimitiveOrVoid() ? referenceToInstance_JAVA_CLASS_primitiveOrVoid(classFile.getClassName()) : this.classes.get(classFile));
+        return (classFile.isPrimitiveOrVoid() ? referenceToInstance_JAVA_CLASS_primitiveOrVoid(classFile.getClassName()) : this.objectDictionary.getClassNonprimitive(classFile));
     }
 
     /**
@@ -2541,7 +1920,7 @@ public final class State implements Cloneable {
      *         such instance does not exist in the heap. 
      */
     public ReferenceConcrete referenceToInstance_JAVA_CLASS_primitiveOrVoid(String typeName) {
-        return this.classesPrimitive.get(typeName);
+        return this.objectDictionary.getClassPrimitive(typeName);
     }
 
     /**
@@ -2578,7 +1957,7 @@ public final class State implements Cloneable {
                 throw new UnexpectedInternalException(e);
             }
         } else {
-            this.classes.put(representedClass, createInstance_JAVA_CLASS(calc, representedClass));
+            this.objectDictionary.putClassNonprimitive(representedClass, createInstance_JAVA_CLASS(calc, representedClass));
         }
     }
 
@@ -2616,7 +1995,7 @@ public final class State implements Cloneable {
                     throw new UnexpectedInternalException("Could not find the classfile for the primitive type " + typeName + ".");
                 }
                 final ReferenceConcrete retVal = createInstance_JAVA_CLASS(calc, cf);
-                this.classesPrimitive.put(typeName, retVal);
+                this.objectDictionary.putClassPrimitive(typeName, retVal);
             } catch (InvalidInputException e) {
                 throw new UnexpectedInternalException(e);
             }
@@ -2634,7 +2013,7 @@ public final class State implements Cloneable {
      *         (or subclass) in this state's {@link Heap} associated to {@code id}.
      */
     public boolean hasInstance_JAVA_CLASSLOADER(int id) {
-        return 0 < id && id < this.classLoaders.size();
+        return 0 < id && id < this.objectDictionary.maxClassLoaders();
     }
     
     /**
@@ -2648,7 +2027,7 @@ public final class State implements Cloneable {
      */
     public ReferenceConcrete referenceToInstance_JAVA_CLASSLOADER(int id) {
         if (hasInstance_JAVA_CLASSLOADER(id)) {
-            return this.classLoaders.get(id);
+            return this.objectDictionary.getClassLoader(id);
         } else {
             return null;
         }
@@ -2671,8 +2050,8 @@ public final class State implements Cloneable {
         if (!this.standardClassLoadersNotReady) {
             return; //nothing to do
         }
-        if (this.classLoaders.size() <= CLASSLOADER_APP) {
-            throw new InvalidInputException("Invoked jbse.mem.state.setStandardClassLoadersReady with true parameter, but the standard class loaders were not created yet.");
+        if (this.objectDictionary.maxClassLoaders() <= CLASSLOADER_APP) {
+            throw new InvalidInputException("Invoked " + getClass().getName() + ".setStandardClassLoadersReady with true parameter, but the standard class loaders were not created yet.");
         }
         this.standardClassLoadersNotReady = false;
     }
@@ -2718,7 +2097,7 @@ public final class State implements Cloneable {
      *         {@link #setReferenceToInstance_JAVA_METHODTYPE(ClassFile[], ReferenceConcrete)}.
      */
     public boolean hasInstance_JAVA_METHODTYPE(ClassFile[] descriptorResolved) {
-        return this.methodTypes.containsKey(Arrays.asList(descriptorResolved));
+        return this.objectDictionary.hasMethodType(descriptorResolved);
     }
     
     /**
@@ -2734,7 +2113,7 @@ public final class State implements Cloneable {
      *         or {@code null} if there is not.
      */
     public ReferenceConcrete referenceToInstance_JAVA_METHODTYPE(ClassFile[] descriptorResolved) {
-        return this.methodTypes.get(Arrays.asList(descriptorResolved));
+        return this.objectDictionary.getMethodType(descriptorResolved);
     }
     
     /**
@@ -2744,18 +2123,18 @@ public final class State implements Cloneable {
      * @param descriptorResolved a {@link ClassFile}{@code []} representing a resolved 
      *        method (the {@link ClassFile} for the return value 
      *        comes last) or field descriptor.
-     * @param ref a {@link ReferenceConcrete}. It should refer an {@link Instance}
-     *        of {@code java.lang.invoke.MethodType} 
-     *        in this state's {@link Heap} that is semantically equivalent to
+     * @param referenceMethodType a {@link ReferenceConcrete}. It should refer 
+     *        an {@link Instance} of {@code java.lang.invoke.MethodType} in 
+     *        this state's {@link Heap} that is semantically equivalent to
      *        {@code descriptorResolved}, but this is not checked.
      * @throws FrozenStateException if the state is frozen.
      */
-    public void setReferenceToInstance_JAVA_METHODTYPE(ClassFile[] descriptorResolved, ReferenceConcrete ref) 
+    public void setReferenceToInstance_JAVA_METHODTYPE(ClassFile[] descriptorResolved, ReferenceConcrete referenceMethodType) 
     throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        this.methodTypes.put(Collections.unmodifiableList(Arrays.asList(descriptorResolved)), ref);
+        this.objectDictionary.putMethodType(descriptorResolved, referenceMethodType);
     }
 
     /**
@@ -2776,8 +2155,9 @@ public final class State implements Cloneable {
      *         {@link #setReferenceToInstance_JAVA_METHODHANDLE(int, ClassFile, ClassFile[], String, ReferenceConcrete)}.
      * @throws InvalidInputException if a parameter is invalid (null).
      */
-    public boolean hasInstance_JAVA_METHODHANDLE(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name) throws InvalidInputException {
-        return this.methodHandles.containsKey(new MHKey(refKind, container, descriptorResolved, name));
+    public boolean hasInstance_JAVA_METHODHANDLE(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name) 
+    throws InvalidInputException {
+        return this.objectDictionary.hasMethodHandle(refKind, container, descriptorResolved, name);
     }
     
     /**
@@ -2800,7 +2180,7 @@ public final class State implements Cloneable {
      * @throws InvalidInputException if a parameter is invalid (null).
      */
     public ReferenceConcrete referenceToInstance_JAVA_METHODHANDLE(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name) throws InvalidInputException {
-        return this.methodHandles.get(new MHKey(refKind, container, descriptorResolved, name));
+        return this.objectDictionary.getMethodHandle(refKind, container, descriptorResolved, name);
     }
     
     /**
@@ -2815,18 +2195,18 @@ public final class State implements Cloneable {
      *        method (the {@link ClassFile} for the return value 
      *        comes last) or field descriptor. It must not be {@code null}.
      * @param name a {@link String}, the name of the method or field.  It must not be {@code null}.
-     * @param ref a {@link ReferenceConcrete}. It should refer an {@link Instance}
+     * @param referenceMethodHandle a {@link ReferenceConcrete}. It should refer an {@link Instance}
      *        of {@code java.lang.invoke.MethodHandle} 
      *        in this state's {@link Heap} that is semantically equivalent to
      *        the key {@code (refKind, container, descriptorResolved, name)}, but this is not checked.
      * @throws InvalidInputException if a parameter is invalid (null).
      */
-    public void setReferenceToInstance_JAVA_METHODHANDLE(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name, ReferenceConcrete ref) 
+    public void setReferenceToInstance_JAVA_METHODHANDLE(int refKind, ClassFile container, ClassFile[] descriptorResolved, String name, ReferenceConcrete referenceMethodHandle) 
     throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        this.methodHandles.put(new MHKey(refKind, container, descriptorResolved, name), ref);
+        this.objectDictionary.putMethodHandle(refKind, container, descriptorResolved, name, referenceMethodHandle);
     }
 
     /**
@@ -3560,20 +2940,26 @@ public final class State implements Cloneable {
      * Assumes a predicate over primitive values (numeric assumption).
      * Its effect is adding a clause to the path condition.
      * 
-     * @param p the primitive clause which must be added to the state's 
-     *          path condition. It must be {@code p != null && 
-     *          (p instanceof }{@link Expression} {@code || p instanceof }{@link Simplex}
-     *          {@code ) && p.}{@link Value#getType() getType()} {@code  == }{@link Type#BOOLEAN BOOLEAN}.
-     * @throws NullPointerException if {@code p == null}.
-     * @throws InvalidInputException if {@code (!( p instanceof }{@link Expression} {@code ) && !( p instanceof }{@link Simplex}
-     *          {@code )) || p.}{@link Value#getType() getType()} {@code  != }{@link Type#BOOLEAN BOOLEAN}.
+     * @param condition the primitive clause which must be added to the state's 
+     *        path condition. It must be {@code condition != null && 
+     *        (condition instanceof }{@link Expression} {@code || condition instanceof }{@link Simplex}
+     *        {@code ) && condition.}{@link Value#getType() getType} {@code () == }{@link Type#BOOLEAN BOOLEAN}.
+     * @throws InvalidInputException if this state if frozen or {@code condition == null || (!( condition instanceof }{@link Expression} {@code ) && !( condition instanceof }{@link Simplex}
+     *         {@code )) || condition.}{@link Value#getType() getType} {@code () != }{@link Type#BOOLEAN BOOLEAN}.
+	 * @throws ContradictionException if {@code condition.}{@link Primitive#surelyFalse() surelyFalse}{@code ()}.
      */
-    public void assume(Primitive p) throws InvalidInputException {
+    public void assume(Primitive condition) throws InvalidInputException, ContradictionException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
+        if (condition == null) {
+            throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assume with a null p.");
+        }
+		if (condition.getType() != Type.BOOLEAN || (! (condition instanceof Simplex) && ! (condition instanceof Expression))) {
+			throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assume with Primitive value " + condition.toString() + ".");
+		}
     	possiblyReset();
-        this.pathCondition.addClauseAssume(p);
+        this.pathCondition.addClauseAssume(condition);
         ++this.nPushedClauses;
     }
 
@@ -3588,33 +2974,26 @@ public final class State implements Cloneable {
      * @param classFile a {@code ClassFile}, the class of the fresh 
      *        object to which {@code referenceSymbolic} is expanded. 
      *        It must not be {@code null}.
-     * @throws InvalidInputException if 
+     * @throws InvalidInputException if this state is frozen of
      *         {@code calc == null || referenceSymbolic == null || classFile == null}.
-     * @throws FrozenStateException if the state is frozen.
-     * @throws ContradictionException if {@code referenceSymbolic} is already 
-     *         resolved.
-     * @throws InvalidTypeException if {@code classFile} is invalid. 
+     * @throws ContradictionException if {@link #resolved(ReferenceSymbolic) resolved}{@code (referenceSymbolic)}.
      * @throws HeapMemoryExhaustedException if the heap is full.
      * @throws CannotAssumeSymbolicObjectException if {@code classFile} is
      *         a class that cannot be assumed to be symbolic
      *         (currently {@code java.lang.Class} and {@code java.lang.ClassLoader}).
      */
     public void assumeExpands(Calculator calc, ReferenceSymbolic referenceSymbolic, ClassFile classFile) 
-    throws InvalidInputException, InvalidTypeException, ContradictionException, HeapMemoryExhaustedException, 
-    CannotAssumeSymbolicObjectException, FrozenStateException {
+    throws InvalidInputException, ContradictionException, HeapMemoryExhaustedException, 
+    CannotAssumeSymbolicObjectException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
         if (calc == null || referenceSymbolic == null || classFile == null) {
             throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeExpands with a null calc or referenceSymbolic or classFile.");
         }
-        if (resolved(referenceSymbolic)) {
-            throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".assumeExpands with an already resolved referenceSymbolic.");
-        }
-        
-    	possiblyReset();
         final long objectPosition = createObjectSymbolic(calc, classFile, referenceSymbolic);
         final HeapObjekt object = this.heap.getObject(objectPosition);
+    	possiblyReset();
         this.pathCondition.addClauseAssumeExpands(referenceSymbolic, objectPosition, object);
         ++this.nPushedClauses;
     }
@@ -3632,11 +3011,10 @@ public final class State implements Cloneable {
      *        the heap to which {@code referenceSymbolic} is expanded. Note that
      *        this method does <em>not</em> check that no other symbolic reference
      *        exists that expands to the object at {@code freshObjectPosition}!
-     * @throws InvalidInputException if either {@code referenceSymbolic} is {@code null}, 
-     *         or no symbolic object is stored at {@code freshObjectPosition}, or the 
-     *         state is frozen.
-     * @throws ContradictionException if {@code referenceSymbolic} is already 
-     *         resolved. 
+     * @throws InvalidInputException if this state is frozen or {@code referenceSymbolic == null}, 
+     *         or no symbolic object is stored at {@code freshObjectPosition}.
+     * @throws ContradictionException if {@link #resolved(ReferenceSymbolic) resolved}{@code (referenceSymbolic)}
+     *         to a different heap position.
      */
     public void assumeExpandsAlreadyPresent(ReferenceSymbolic referenceSymbolic, long freshObjectPosition) 
     throws InvalidInputException, ContradictionException {
@@ -3646,9 +3024,6 @@ public final class State implements Cloneable {
         if (referenceSymbolic == null) {
             throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeExpandsAlreadyPresent with a null referenceSymbolic.");
         }
-        if (resolved(referenceSymbolic)) {
-            throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".assumeExpandsAlreadyPresent with an already resolved referenceSymbolic.");
-        }
         final HeapObjekt freshObject = this.heap.getObject(freshObjectPosition);
         if (freshObject == null) {
             throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeExpandsAlreadyPresent with a freshObjectPosition where no object is stored.");
@@ -3656,10 +3031,32 @@ public final class State implements Cloneable {
         if (!freshObject.isSymbolic()) {
             throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeExpandsAlreadyPresent with a freshObjectPosition where a concrete object is stored.");
         }
-        
     	possiblyReset();
         this.pathCondition.addClauseAssumeExpands(referenceSymbolic, freshObjectPosition, freshObject);
         ++this.nPushedClauses;
+    }
+
+    /**
+     * Gets a symbolic object as it was initially in this state.
+     * 
+     * @param origin a {@link ReferenceSymbolic}.
+     * @return the symbolic {@link HeapObjekt} whose origin is {@code origin} 
+     *         in the state it was at its epoch (equivalently, at the
+     *         moment of its assumption), or 
+     *         {@code null} if {@code origin} does not refer to 
+     *         anything (e.g., is {@link Null}, or is an unresolved 
+     *         symbolic reference, or is resolved to null).
+     * @throws FrozenStateException if the state is frozen.
+     */
+    private HeapObjekt getObjectInitial(ReferenceSymbolic origin) throws FrozenStateException {
+    	HeapObjekt[] retVal = new HeapObjekt[1];
+    	forAllInitialObjects(getPathCondition(), (object, heapPosition) -> {
+            final ReferenceSymbolic originObject = object.getOrigin();
+            if (originObject.equals(origin)) {
+            	retVal[0] = object;
+            }
+    	});
+    	return retVal[0];
     }
 
     /**
@@ -3673,10 +3070,9 @@ public final class State implements Cloneable {
      * @param aliasOrigin the origin of the symbolic {@link Objekt} to which 
      *        {@code referenceSymbolic} is resolved. It must be resolved by expansion
      *        to a heap object.
-     * @throws InvalidInputException if either {@code referenceSymbolic} is {@code null}, 
-     *         or no symbolic object is stored at {@code aliasObjectPosition}, or the 
-     *         state is frozen.
-     * @throws ContradictionException if {@code referenceSymbolic} is already resolved.
+     * @throws InvalidInputException if this state is frozen, or {@code referenceSymbolic == null || aliasOrigin == null}, 
+     *         or {@code aliasOrigin} is not the origin of an initial symbolic object.
+     * @throws ContradictionException if {@link #resolved(ReferenceSymbolic) resolved}{@code (referenceSymbolic)}.
      */
     public void assumeAliases(ReferenceSymbolic referenceSymbolic, ReferenceSymbolic aliasOrigin) 
     throws InvalidInputException, ContradictionException {
@@ -3686,14 +3082,10 @@ public final class State implements Cloneable {
         if (referenceSymbolic == null) {
             throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeAliases with a null referenceSymbolic.");
         }
-        if (resolved(referenceSymbolic)) {
-            throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".assumeAliases with an already resolved referenceSymbolic.");
-        }
         final HeapObjekt aliasObject = getObjectInitial(aliasOrigin);
         if (aliasObject == null) {
-            throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeAliases with an aliasOrigin that does not refer to any initial object.");
+            throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeAliases with an aliasOrigin that is not the origin of an initial symbolic object.");
         }
-        
     	possiblyReset();
         this.pathCondition.addClauseAssumeAliases(referenceSymbolic, getResolution(aliasOrigin), aliasObject.clone());
         ++this.nPushedClauses;
@@ -3707,9 +3099,9 @@ public final class State implements Cloneable {
      * @param referenceSymbolic the {@link ReferenceSymbolic} which is resolved. It 
      *        must be {@code referenceSymbolic != null} and {@code referenceSymbolic} 
      *        must not be already resolved.
-     * @throws InvalidInputException if either {@code referenceSymbolic} is {@code null}, 
-     *         or the state is frozen.
-     * @throws ContradictionException if {@code referenceSymbolic} is already resolved.
+     * @throws InvalidInputException if this state is frozen or {@code referenceSymbolic == null}. 
+     * @throws ContradictionException if {@link #resolved(ReferenceSymbolic) resolved}{@code (referenceSymbolic)}
+     *         to some (not null) heap position.
      */
     public void assumeNull(ReferenceSymbolic referenceSymbolic) 
     throws InvalidInputException, ContradictionException {
@@ -3719,10 +3111,6 @@ public final class State implements Cloneable {
         if (referenceSymbolic == null) {
             throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeNull with a null referenceSymbolic.");
         }
-        if (resolved(referenceSymbolic)) {
-            throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".assumeNull with an already resolved referenceSymbolic.");
-        }
-        
     	possiblyReset();
         this.pathCondition.addClauseAssumeNull(referenceSymbolic);
         ++this.nPushedClauses;
@@ -3737,8 +3125,8 @@ public final class State implements Cloneable {
      *        It must be {@code classFile != null}.
      * @param klass the symbolic or concrete {@link Klass} for {@code classFile}. 
      *        It must not be {@code null}. 
-     * @throws InvalidInputException if {@code classFile == null}, or
-     *         {@code klass == null}, or the state is frozen.
+     * @throws InvalidInputException if this state is frozen or 
+     *         {@code classFile == null !! klass == null}.
      */
     public void assumeClassInitialized(ClassFile classFile, Klass klass) 
     throws InvalidInputException {
@@ -3748,7 +3136,6 @@ public final class State implements Cloneable {
         if (classFile == null || klass == null) {
             throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeClassInitialized with a null classFile or klass parameter.");
         }
-        
     	possiblyReset();
         this.pathCondition.addClauseAssumeClassInitialized(classFile, klass);
         ++this.nPushedClauses;
@@ -3761,18 +3148,16 @@ public final class State implements Cloneable {
      * @param classFile the {@link ClassFile} for the class that
      *        is assumed to be not initialized. 
      *        It must be {@code classFile != null}.
-     * @throws InvalidInputException if {@code classFile == null}, or
-     *         the state is frozen.
+     * @throws InvalidInputException if this state is frozen or 
+     *         {@code classFile == null}.
      */
-    public void assumeClassNotInitialized(ClassFile classFile) 
-    throws InvalidInputException {
+    public void assumeClassNotInitialized(ClassFile classFile) throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
         if (classFile == null) {
             throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeClassNotInitialized with a null classFile.");
         }
-        
     	possiblyReset();
         this.pathCondition.addClauseAssumeClassNotInitialized(classFile);
         ++this.nPushedClauses;
@@ -3839,7 +3224,7 @@ public final class State implements Cloneable {
     	}
         this.wereResetLastPathConditionClauses = true;
     }
-
+    
     /**
      * Sets the {@link State} stuck because of a return
      * from the topmost method,
@@ -4486,60 +3871,10 @@ public final class State implements Cloneable {
      * Getter for garbage collection.
      * 
      * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
-     *         of all the references to string literals.
+     *         of all the references in the object dictionary.
      */
-    Collection<ReferenceConcrete> getStringLiterals() {
-        return this.stringLiterals.values();
-    }
-    
-    /**
-     * Getter for garbage collection.
-     * 
-     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
-     *         of all the references to {@link Instance_JAVA_CLASS} (non primitive).
-     */
-    Collection<ReferenceConcrete> getClasses() {
-        return this.classes.values();
-    }
-    
-    /**
-     * Getter for garbage collection.
-     * 
-     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
-     *         of all the references to {@link Instance_JAVA_CLASS} (primitive).
-     */
-    Collection<ReferenceConcrete> getClassesPrimitive() {
-        return this.classesPrimitive.values();
-    }
-    
-    /**
-     * Getter for garbage collection.
-     * 
-     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
-     *         of all the references to {@link Instance} of {@link java.lang.ClassLoader}.
-     */
-    Collection<ReferenceConcrete> getClassLoaders() {
-        return this.classLoaders;
-    }
-    
-    /**
-     * Getter for garbage collection.
-     * 
-     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
-     *         of all the references to {@link Instance} of {@link java.lang.invoke.MethodType}.
-     */
-    Collection<ReferenceConcrete> getMethodTypes() {
-        return this.methodTypes.values();
-    }
-    
-    /**
-     * Getter for garbage collection.
-     * 
-     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
-     *         of all the references to {@link Instance} of {@link java.lang.invoke.MethodHandle}.
-     */
-    Collection<ReferenceConcrete> getMethodHandles() {
-        return this.methodHandles.values();
+    Collection<ReferenceConcrete> getObjectsInDictionary() {
+        return this.objectDictionary.getReferences();
     }
     
     private State deepCopyHeapAndStaticAreaExcluded() {
@@ -4550,138 +3885,15 @@ public final class State implements Cloneable {
             throw new InternalError(e);
         }
         
-        //stringLiterals
-        o.stringLiterals = new HashMap<>(o.stringLiterals);
-
-        //classes
-        o.classes = new HashMap<>(o.classes);
+        //objectDictionary
+        o.objectDictionary = o.objectDictionary.clone();
         
-        //classLoaders
-        o.classLoaders = new ArrayList<>(o.classLoaders);
-
-        //classesPrimitive
-        o.classesPrimitive = new HashMap<>(o.classesPrimitive);
+        //filesMapper
+        o.filesMapper = o.filesMapper.clone();
         
-        //methodTypes
-        o.methodTypes = new HashMap<>(o.methodTypes);
+        //memoryAddressesMapper
+        o.memoryAddressesMapper = o.memoryAddressesMapper.clone();
         
-        //methodHandles
-        o.methodHandles = new HashMap<>(o.methodHandles);
-        
-        //files
-        try {
-            o.files = new HashMap<>();
-            for (Map.Entry<Long, Object> entry : this.files.entrySet()) {
-                if (entry.getValue() instanceof FileInputStream) {
-                    final FileInputStream fisClone;
-                    if (entry.getKey() == this.inFileId) {
-                        fisClone = (FileInputStream) entry.getValue();
-                    } else {
-                        final FileInputStream fisThis = (FileInputStream) entry.getValue();
-                        final String path = (String) FIS_PATH.get(fisThis);
-                        fisClone = new FileInputStream(path);
-                        fisClone.skip(fisThis.getChannel().position());
-                    }
-                    o.files.put(entry.getKey(), fisClone);
-                } else if (entry.getValue() instanceof FileOutputStream) {
-                    final FileOutputStream fosClone;
-                    if (entry.getKey() == this.outFileId ||  entry.getKey() == this.errFileId) {
-                        fosClone = (FileOutputStream) entry.getValue();
-                    } else {
-                        final FileOutputStream fosThis = (FileOutputStream) entry.getValue();
-                        final String path = (String) FOS_PATH.get(fosThis);
-                        fosClone = new FileOutputStream(path);
-                    }
-                    o.files.put(entry.getKey(), fosClone);
-                } else { //entry.getValue() instanceof RandomAccessFileWrapper
-                    final RandomAccessFileWrapper rafWrapperThis = (RandomAccessFileWrapper) entry.getValue();
-                    final String path = (String) RAF_PATH.get(rafWrapperThis.raf);
-                    final RandomAccessFile rafClone = new RandomAccessFile(path, rafWrapperThis.modeString);
-                    o.files.put(entry.getKey(), new RandomAccessFileWrapper(rafClone, rafWrapperThis.modeString));
-                }
-            }
-        } catch (IllegalArgumentException | IllegalAccessException | IOException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
-        
-        //allocatedMemory
-        o.allocatedMemory = new HashMap<>();
-        for (Map.Entry<Long, MemoryBlock> entry : this.allocatedMemory.entrySet()) {
-            final long baseLevelAddress = entry.getKey();
-            final long oldMemoryBlockAddress = entry.getValue().address;
-            final long size = entry.getValue().size;
-            final long newMemoryBlockAddress = unsafe().allocateMemory(size);
-            unsafe().copyMemory(oldMemoryBlockAddress, newMemoryBlockAddress, size);
-            o.allocatedMemory.put(baseLevelAddress, new MemoryBlock(newMemoryBlockAddress, size));
-        }
-        
-        //zipFiles
-        o.zipFiles = new HashMap<>();
-        try {
-            final Method methodOpen = java.util.zip.ZipFile.class.getDeclaredMethod("open", String.class, int.class, long.class, boolean.class);
-            methodOpen.setAccessible(true);
-            for (Map.Entry<Long, ZipFile> entry : this.zipFiles.entrySet()) {
-                final ZipFile zf = entry.getValue();
-                final String name = zf.name;
-                final int mode = zf.mode;
-                final long lastModified = zf.lastModified;
-                final boolean usemmap = zf.usemmap;
-                final long jzfileNew = (long) methodOpen.invoke(null, name, mode, lastModified, usemmap);
-                final ZipFile zfNew = new ZipFile(jzfileNew, name, mode, lastModified, usemmap);
-                o.zipFiles.put(entry.getKey(), zfNew);
-            }
-        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | 
-                 NoSuchMethodException | SecurityException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
-        
-        //zipFileEntries
-        o.zipFileEntries = new HashMap<>();
-        try {
-            final Method methodGetEntry = java.util.zip.ZipFile.class.getDeclaredMethod("getEntry", long.class, byte[].class, boolean.class);
-            methodGetEntry.setAccessible(true);
-            for (Map.Entry<Long, ZipFileEntry> entry : this.zipFileEntries.entrySet()) {
-                final ZipFileEntry zfe = entry.getValue();
-                final long _jzfile = zfe.jzfile;
-                final long jzfile = o.zipFiles.get(_jzfile).jzfile;
-                final byte[] name = zfe.name;
-                final long jzentryNew = (long) methodGetEntry.invoke(null, jzfile, name, true);
-                final ZipFileEntry zfeNew = new ZipFileEntry(jzentryNew, _jzfile, name);
-                o.zipFileEntries.put(entry.getKey(), zfeNew);
-            }
-        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | 
-                 IllegalArgumentException | InvocationTargetException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
-        
-        //inflaters
-        o.inflaters = new HashMap<>();
-        try {
-            final Method methodInit = java.util.zip.Inflater.class.getDeclaredMethod("init", boolean.class);
-            methodInit.setAccessible(true);
-            final Method methodSetDictionary = java.util.zip.Inflater.class.getDeclaredMethod("setDictionary", long.class, byte[].class, int.class, int.class);
-            methodSetDictionary.setAccessible(true);
-            for (Map.Entry<Long, Inflater> entry : this.inflaters.entrySet()) {
-                final Inflater inf = entry.getValue();
-                final long addressNew = (long) methodInit.invoke(null, inf.nowrap);
-                final Inflater infNew;
-                if (inf.dictionary == null) {
-                    infNew = new Inflater(addressNew, inf.nowrap);
-                } else {
-                    methodSetDictionary.invoke(null, addressNew, inf.dictionary, 0, inf.dictionary.length);
-                    infNew = new Inflater(addressNew, inf.nowrap, inf.dictionary, 0, inf.dictionary.length);
-                }
-                o.inflaters.put(entry.getKey(), infNew);
-            }
-        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | 
-                 IllegalArgumentException | InvocationTargetException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
-
         //perfCounters
         o.perfCounters = new HashSet<>(o.perfCounters);
 
@@ -4696,18 +3908,9 @@ public final class State implements Cloneable {
 
         //exc and val are Values, so they are immutable
         
-        //methodAdapters
-        o.methodAdapters = new HashMap<>(o.methodAdapters);
+        //adapterMethodLinker
+        o.adapterMethodLinker = o.adapterMethodLinker.clone();
         
-        //methodAppendices
-        o.methodAppendices = new HashMap<>(o.methodAppendices);
-        
-        //callSiteAdapters
-        o.callSiteAdapters = new HashMap<>(o.callSiteAdapters);
-        
-        //callSiteAppendices
-        o.callSiteAppendices = new HashMap<>(o.callSiteAppendices);
-
         //symbolFactory
         o.symbolFactory = o.symbolFactory.clone();
         
@@ -4728,34 +3931,6 @@ public final class State implements Cloneable {
         return o;
     }
     
-    @Override
-    protected void finalize() {
-        //closes all files except stdin/out/err
-        for (Map.Entry<Long, Object> fileEntry : this.files.entrySet()) {
-            final long fileId = fileEntry.getKey();
-            if (fileId == this.inFileId || fileId == this.outFileId || fileId == this.errFileId) {
-                continue;
-            }
-            final Object file = fileEntry.getValue();
-            try {
-                if (file instanceof FileInputStream) {
-                    ((FileInputStream) file).close();
-                } else if (file instanceof FileOutputStream) {
-                    ((FileOutputStream) file).close();
-                } else { //file instanceof RandomAccessFileWrapper
-                    ((RandomAccessFileWrapper) file).raf.close();
-                }
-            } catch (IOException e) {
-                //go on with the next file
-            }
-        }
-        
-        //deallocates all memory blocks
-        for (MemoryBlock memoryBlock : this.allocatedMemory.values()) {
-        	unsafe().freeMemory(memoryBlock.address);
-        }
-    }
-
     @Override
     public String toString() {
         String tmp = "[ID:\"" + this.historyPoint.toString() + "\", ";

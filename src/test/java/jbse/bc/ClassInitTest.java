@@ -22,7 +22,7 @@ import org.junit.Test;
 
 import jbse.algo.ExecutionContext;
 import jbse.algo.InterruptException;
-import jbse.algo.Util;
+import jbse.algo.UtilClassInitialization;
 import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
@@ -46,7 +46,10 @@ import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.rewr.CalculatorRewriting;
-import jbse.rewr.RewriterOperationOnSimplex;
+import jbse.rewr.RewriterNegationElimination;
+import jbse.rewr.RewriterExpressionOrConversionOnSimplex;
+import jbse.rewr.RewriterFunctionApplicationOnSimplex;
+import jbse.rewr.RewriterZeroUnit;
 import jbse.rules.ClassInitRulesRepo;
 import jbse.rules.TriggerRulesRepo;
 import jbse.tree.DecisionAlternativeComparators;
@@ -61,7 +64,10 @@ public class ClassInitTest {
         userPaths.add(Paths.get("src/test/resources/jbse/bc/testdata"));
         final Classpath cp = new Classpath(Paths.get("build/classes/java/main"), Paths.get(System.getProperty("java.home", "")), Collections.emptyList(), userPaths);
         final CalculatorRewriting calc = new CalculatorRewriting();
-        calc.addRewriter(new RewriterOperationOnSimplex());
+        calc.addRewriter(new RewriterExpressionOrConversionOnSimplex()); //indispensable
+        calc.addRewriter(new RewriterFunctionApplicationOnSimplex()); //indispensable
+		calc.addRewriter(new RewriterZeroUnit()); //indispensable
+		calc.addRewriter(new RewriterNegationElimination()); //indispensable?
         final DecisionProcedureAlgorithms dec = new DecisionProcedureAlgorithms(new DecisionProcedureClassInit(new DecisionProcedureAlwSat(calc), new ClassInitRulesRepo()));
         this.ctx = new ExecutionContext(null, true, 20, 20, true, cp, ClassFileFactoryJavassist.class, Collections.emptyMap(), Collections.emptyMap(), calc, new DecisionAlternativeComparators(), new Signature("hier/A", "()V", "a"), dec, null, null, new TriggerRulesRepo(), new ArrayList<String>());
         this.state = this.ctx.createStateVirginPreInitial();
@@ -76,7 +82,7 @@ public class ClassInitTest {
         final ClassFile cf_A = this.state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, "hier/A", true);
         this.state.pushFrameSymbolic(cf_A, this.ctx.rootMethodSignature); //or initialization will fail
         try {
-            Util.ensureClassInitialized(this.state, this.ctx, cf_A);
+            UtilClassInitialization.ensureClassInitialized(this.state, this.ctx, cf_A);
             assertTrue(false); //should not arrive here
         } catch (InterruptException e) {
             //that's right, go on

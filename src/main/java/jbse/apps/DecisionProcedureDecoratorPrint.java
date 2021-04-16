@@ -15,6 +15,7 @@ import jbse.dec.DecisionProcedureDecorator;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Clause;
 import jbse.mem.Objekt;
+import jbse.mem.exc.ContradictionException;
 import jbse.val.Expression;
 import jbse.val.ReferenceSymbolic;
 
@@ -45,7 +46,7 @@ public final class DecisionProcedureDecoratorPrint extends DecisionProcedureDeco
 
     @Override
     public void pushAssumption(Clause c) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         super.pushAssumption(c);
         IO.println(this.out, ":: Pushed: " + formatClause(c) + ".");
     }
@@ -59,7 +60,7 @@ public final class DecisionProcedureDecoratorPrint extends DecisionProcedureDeco
     
     @Override
     public void addAssumptions(Iterable<Clause> assumptionsToAdd) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         super.addAssumptions(assumptionsToAdd);
         IO.print(this.out, ":: Add: ");
         IO.println(this.out, formatClauses(assumptionsToAdd));
@@ -68,7 +69,7 @@ public final class DecisionProcedureDecoratorPrint extends DecisionProcedureDeco
     
     @Override
     public void addAssumptions(Clause... assumptionsToAdd) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         super.addAssumptions(assumptionsToAdd);
         IO.print(this.out, ":: Add: ");
         IO.println(this.out, formatClauses(Arrays.asList(assumptionsToAdd)));
@@ -77,7 +78,7 @@ public final class DecisionProcedureDecoratorPrint extends DecisionProcedureDeco
 
     @Override
     public void setAssumptions(Collection<Clause> newAssumptions) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         super.setAssumptions(newAssumptions);
         IO.print(this.out, ":: Set: ");
         IO.println(this.out, formatClauses(newAssumptions));

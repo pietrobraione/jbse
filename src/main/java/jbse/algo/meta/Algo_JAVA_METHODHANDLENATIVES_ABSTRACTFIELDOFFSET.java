@@ -1,12 +1,12 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.IS_FIELD;
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.throwNew;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.throwNew;
 import static jbse.algo.Util.valueString;
 import static jbse.algo.meta.Util.FAIL_JBSE;
 import static jbse.algo.meta.Util.getInstance;
 import static jbse.algo.meta.Util.INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION;
+import static jbse.bc.Modifiers.IS_FIELD;
 import static jbse.bc.Signatures.INTERNAL_ERROR;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.common.Type.LONG;

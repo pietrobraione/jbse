@@ -1,11 +1,11 @@
 package jbse.algo;
 
-import static jbse.algo.Util.continueWith;
-import static jbse.algo.Util.ensureClassInitialized;
-import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.UtilClassInitialization.ensureClassInitialized;
+import static jbse.algo.UtilControlFlow.continueWith;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.throwNew;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.algo.Util.invokeClassLoaderLoadClass;
-import static jbse.algo.Util.throwNew;
-import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.offsetInvoke;
 import static jbse.bc.Opcodes.OP_INVOKEHANDLE;
 import static jbse.bc.Signatures.ABSTRACT_METHOD_ERROR;

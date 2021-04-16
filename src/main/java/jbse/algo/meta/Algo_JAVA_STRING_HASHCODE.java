@@ -1,8 +1,8 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.continueWithBaseLevelImpl;
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.throwVerifyError;
+import static jbse.algo.UtilControlFlow.continueWithBaseLevelImpl;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.bc.Signatures.JAVA_STRING_VALUE;
 
 import java.util.function.Supplier;

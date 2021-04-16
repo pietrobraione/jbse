@@ -16,6 +16,7 @@ import jbse.mem.ClauseAssumeClassNotInitialized;
 import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.ClauseAssumeNull;
 import jbse.mem.Objekt;
+import jbse.mem.exc.ContradictionException;
 import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolic;
@@ -72,8 +73,9 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
      * Resynchs the external decision procedure with this.bs.
      * 
      * @throws DecisionException
+     * @throws ContradictionException 
      */
-    private void resynch() throws DecisionException {
+    private void resynch() throws DecisionException, ContradictionException {
         try {
             this.extIf.clear();
             final Iterable<Clause> i = () -> this.clauses.descendingIterator();
@@ -98,7 +100,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 
     @Override
     protected final void pushAssumptionLocal(Clause cSimpl) 
-    throws DecisionException {
+    throws DecisionException, ContradictionException {
         this.clauses.push(cSimpl);
         if (this.fast) {
             this.notInSynch = true;
@@ -235,6 +237,8 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
             }
         } catch (ExternalProtocolInterfaceException | IOException e) {
             throw new DecisionException(e);
+        } catch (ContradictionException e) {
+        	return false;
         }
     }
 
@@ -255,6 +259,8 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
             }
         } catch (ExternalProtocolInterfaceException | IOException e) {
             throw new DecisionException(e);
+        } catch (ContradictionException e) {
+        	return false;
         }
     }
 
@@ -275,6 +281,8 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
             }
         } catch (ExternalProtocolInterfaceException | IOException e) {
             throw new DecisionException(e);
+        } catch (ContradictionException e) {
+        	return false;
         }
     }
 
@@ -295,6 +303,8 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
             }
         } catch (ExternalProtocolInterfaceException | IOException e) {
             throw new DecisionException(e);
+        } catch (ContradictionException e) {
+        	return false;
         }
     }
 

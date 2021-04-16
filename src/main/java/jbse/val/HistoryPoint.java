@@ -179,8 +179,7 @@ public final class HistoryPoint {
         	if (other.branchIdentifier != null) {
         		return false;
         	}
-        }
-        if (!this.branchIdentifier.equals(other.branchIdentifier)) {
+        } else if (!this.branchIdentifier.equals(other.branchIdentifier)) {
             return false;
         }
         if (this.sequenceNumber != other.sequenceNumber) {

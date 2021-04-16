@@ -12,7 +12,7 @@ import jbse.val.exc.NoResultException;
 /**
  * Rewrites {@code sqrt(X * X * Y)} to {@code abs(X) * sqrt(Y)}
  * and {@code sqrt(X * X +- 2 * X * Y + Y * Y)} to {@code abs(X +- Y)}.
- * Requires {@link RewriterOperationOnSimplex}.
+ * Requires {@link RewriterExpressionOrConversionOnSimplex}.
  * 
  * @author Pietro Braione
  */

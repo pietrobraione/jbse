@@ -1,6 +1,6 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.continueWith;
+import static jbse.algo.UtilControlFlow.continueWith;
 
 import java.util.function.Supplier;
 

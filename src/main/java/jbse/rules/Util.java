@@ -1,10 +1,10 @@
 package jbse.rules;
 
+import static jbse.mem.Util.forAllInitialObjects;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import jbse.mem.Clause;
-import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
@@ -119,19 +119,17 @@ public final class Util {
 	 * @throws FrozenStateException if {@code state} is frozen.
 	 */
 	public static ReferenceSymbolic getTriggerMethodParameterObject(TriggerRule r, ReferenceSymbolic originTarget, State state) throws FrozenStateException {
-        final Iterable<Clause> pathCondition = state.getPathCondition(); //TODO the decision procedure already stores the path condition: eliminate dependence on state
-        for (Clause c : pathCondition) {
-            if (c instanceof ClauseAssumeExpands) {
-                //gets the object and its position in the heap
-                final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
-                final Objekt object = cExp.getObjekt();
-                final ReferenceSymbolic originObject = object.getOrigin();
-                
-    			if (r.isTriggerMethodParameterObject(originTarget, originObject)){
-    				return originObject;
-    			}
-            }
+		ReferenceSymbolic[] maybeRetVal = new ReferenceSymbolic[1]; 
+        forAllInitialObjects(state.getPathCondition(), (object, heapPosition) -> { //TODO the decision procedure already stores the path condition: eliminate dependence on state
+        	final ReferenceSymbolic originObject = object.getOrigin();
+        	if (r.isTriggerMethodParameterObject(originTarget, originObject)){
+        		maybeRetVal[0] = originObject;
+        	}
+        });
+        if (maybeRetVal[0] != null) {
+        	return maybeRetVal[0];
         }
+        
         //in the case r is a TriggerRuleNull, it is possible that the
         //rule parameter is originTarget, which does not point to any
         //object, so we must check this possible situation
@@ -141,6 +139,10 @@ public final class Util {
 		return null;
 	}
 
-	//do not instantiate it!
-	private Util() { }
+	/** 
+	 * Do not instantiate me! 
+	 */
+	private Util() { 
+		//nothing to do
+	}
 }

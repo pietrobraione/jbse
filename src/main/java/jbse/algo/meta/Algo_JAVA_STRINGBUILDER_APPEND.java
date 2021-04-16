@@ -1,10 +1,10 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.continueWithBaseLevelImpl;
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
-import static jbse.algo.Util.throwNew;
-import static jbse.algo.Util.throwVerifyError;
+import static jbse.algo.UtilControlFlow.continueWithBaseLevelImpl;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.failExecution;
+import static jbse.algo.UtilControlFlow.throwNew;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.bc.Signatures.JAVA_STRINGBUILDER_APPEND_STRING;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;

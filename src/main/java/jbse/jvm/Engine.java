@@ -269,7 +269,7 @@ public final class Engine implements AutoCloseable {
      *         Runtime Environment classes is missing from the bootstrap classpath, 
      *         or is ill-formed.
      * @throws ContradictionException iff the step causes a violation of some assumption; 
-     *         in this case after the step it is 
+     *         In this case after the step it is 
      *         {@link #canStep() canStep}{@code () == false}.
      * @throws DecisionException iff the decision procedure fails for any reason.
      * @throws EngineStuckException when the method is invoked from a state where 
@@ -468,9 +468,12 @@ public final class Engine implements AutoCloseable {
      *         before the method is invoked.
      * @throws DecisionBacktrackException iff the decision procedure fails for 
      *         any reason. 
+     * @throws ContradictionException iff the backtracked state has a contradictory
+     *         path condition; In this case after the backtrack it is 
+     *         {@link #canStep() canStep}{@code () == false}.
      */
     public BranchPoint backtrack() 
-    throws CannotBacktrackException, DecisionBacktrackException {
+    throws CannotBacktrackException, DecisionBacktrackException, ContradictionException {
         //TODO dubious correctness of this implementation
         if (!canBacktrack()) {
             throw new CannotBacktrackException();
@@ -494,6 +497,9 @@ public final class Engine implements AutoCloseable {
             }
         } catch (DecisionException e) {
             throw new DecisionBacktrackException(e);
+        } catch (ContradictionException e) {
+        	stopCurrentPath();
+        	throw e;
         } catch (InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);

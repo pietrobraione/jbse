@@ -1,6 +1,6 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.failExecution;
+import static jbse.algo.UtilControlFlow.failExecution;
 import static jbse.algo.Util.valueString;
 
 import java.util.function.Supplier;

@@ -1,11 +1,11 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.ensureClassInitialized;
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
-import static jbse.algo.Util.fillExceptionBacktrace;
-import static jbse.algo.Util.throwNew;
-import static jbse.algo.Util.throwVerifyError;
+import static jbse.algo.UtilClassInitialization.ensureClassInitialized;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.failExecution;
+import static jbse.algo.UtilControlFlow.fillExceptionBacktrace;
+import static jbse.algo.UtilControlFlow.throwNew;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_THROWABLE;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;

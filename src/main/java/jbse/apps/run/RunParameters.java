@@ -366,8 +366,8 @@ public final class RunParameters implements Cloneable {
     /** Should show output on console? */
     private boolean showOnConsole = true;
 
-    /** The name of the output file. */
-    private String outFileName = null;
+    /** The path of the output file. */
+    private Path outFilePath = null;
 
     /** The text mode. */
     private TextMode textMode = TextMode.PLATFORM;
@@ -1962,7 +1962,7 @@ public final class RunParameters implements Cloneable {
      * Sets whether the output should be shown on 
      * console (stdout, stderr). Note that if the 
      * output is not shown on the console and no
-     * output file is specified (see {@link #setOutputFileName}
+     * output file is specified (see {@link #setOutputFilePath}
      * and {@link #setOutputFileNone}) no output
      * of the symbolic execution will be emitted.
      * 
@@ -1985,38 +1985,54 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
-     * Sets the name of the output file.
+     * Sets the path of the output file.
      * 
-     * @param s A {@link String} representing the pathname of a 
-     *          file where the console output (stdout and stderr) will 
-     *          be copied.
-     * @throws NullPointerException if {@code s == null}.
+     * @param outFilePath the {@link Path} of a 
+     *          file where the console output 
+     *          (stdout and stderr) will be copied.
+     * @throws NullPointerException if {@code outFilePath == null}.
      */
-    public void setOutputFileName(String s) {
-        if (s == null) {
+    public void setOutputFilePath(Path outFilePath) {
+        if (outFilePath == null) {
             throw new NullPointerException();
         }
-        this.outFileName = s; 
+        this.outFilePath = outFilePath; 
+    }
+
+    /**
+     * Sets the path of the output file.
+     * 
+     * @param outFilePath A {@link String} representing the path of a 
+     *        file where the console output (stdout and stderr) will 
+     *        be copied.
+     * @throws NullPointerException if {@code outFilePath == null}.
+     */
+    public void setOutputFilePath(String outFilePath) {
+        if (outFilePath == null) {
+            throw new NullPointerException();
+        }
+        this.outFilePath = Paths.get(outFilePath); 
     }
 
     /**
      * Instructs not to copy the console output to file, cancelling
-     * any previous invocation of the {@link #setOutputFileName}
+     * any previous invocation of the {@link #setOutputFilePath}
      * method. This is the default behaviour. 
      */
     public void setOutputFileNone() { 
-        this.outFileName = null; 
+        this.outFilePath = null; 
     }
 
     /**
-     * Returns the name of the output file
+     * Returns the path of the output file.
      * 
-     * @return a {@link String} representing the pathname of a 
-     *          file where the console output (stdout and stderr) will 
-     *          be copied, or {@code null} if none was previously specified.
+     * @return the {@link Path} of the file where the 
+     *         console output (stdout and stderr) will 
+     *         be copied, or {@code null} if none was 
+     *         previously specified.
      */
-    public String getOutputFileName() {
-        return this.outFileName;
+    public Path getOutputFilePath() {
+        return this.outFilePath;
     }
 
     /**

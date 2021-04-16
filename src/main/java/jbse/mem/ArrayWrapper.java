@@ -94,7 +94,7 @@ final class ArrayWrapper extends HeapObjektWrapper<ArrayImpl> implements Array {
     }
 
     @Override
-    public Iterator<? extends AccessOutcomeIn> entries() {
+    public Collection<? extends AccessOutcomeIn> entries() {
         possiblyCloneDelegate();
         return getDelegate().entries();
     }

@@ -13,8 +13,12 @@ import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.ClauseAssume;
+import jbse.mem.exc.ContradictionException;
 import jbse.rewr.CalculatorRewriting;
-import jbse.rewr.RewriterOperationOnSimplex;
+import jbse.rewr.RewriterNegationElimination;
+import jbse.rewr.RewriterExpressionOrConversionOnSimplex;
+import jbse.rewr.RewriterFunctionApplicationOnSimplex;
+import jbse.rewr.RewriterZeroUnit;
 import jbse.tree.DecisionAlternative_XCMPY_Eq;
 import jbse.tree.DecisionAlternative_XCMPY_Gt;
 import jbse.tree.DecisionAlternative_XCMPY_Lt;
@@ -36,13 +40,24 @@ import org.junit.Test;
 public class DecisionProcedureTest {
 	private static final String SWITCH_CHAR = System.getProperty("os.name").toLowerCase().contains("windows") ? "/" : "-";
     private static final ArrayList<String> Z3_COMMAND_LINE = new ArrayList<>();
-    
+    private static final ArrayList<String> CVC4_COMMAND_LINE = new ArrayList<>();
+
+    //BEGIN TO PATCH
+    private static final ArrayList<String> COMMAND_LINE = Z3_COMMAND_LINE;
+    private static final String SMT_SOLVER_PATH = "/Users/denaro/Desktop/RTools/Z3/z3-4.3.2.d548c51a984e-x64-osx-10.8.5/bin/z3";
+    //END TO PATCH
+
     static {
-        Z3_COMMAND_LINE.add("/Users/denaro/Desktop/RTools/Z3/z3-4.3.2.d548c51a984e-x64-osx-10.8.5/bin/z3");
-    	//Z3_COMMAND_LINE.add("/opt/local/bin/z3");
+    	Z3_COMMAND_LINE.add(SMT_SOLVER_PATH);
     	Z3_COMMAND_LINE.add(SWITCH_CHAR + "smt2");
     	Z3_COMMAND_LINE.add(SWITCH_CHAR + "in");
     	Z3_COMMAND_LINE.add(SWITCH_CHAR + "t:10");
+    	CVC4_COMMAND_LINE.add(SMT_SOLVER_PATH);
+    	CVC4_COMMAND_LINE.add("--lang=smt2");
+    	CVC4_COMMAND_LINE.add("--output-lang=smt2");
+    	CVC4_COMMAND_LINE.add("--no-interactive");
+    	CVC4_COMMAND_LINE.add("--incremental");
+    	CVC4_COMMAND_LINE.add("--tlimit-per=10000");
     }
     
     CalculatorRewriting calc;
@@ -52,12 +67,15 @@ public class DecisionProcedureTest {
     @Before
     public void setUp() throws DecisionException, InvalidInputException {
         this.calc = new CalculatorRewriting();
-        this.calc.addRewriter(new RewriterOperationOnSimplex());
+        this.calc.addRewriter(new RewriterExpressionOrConversionOnSimplex());
+        this.calc.addRewriter(new RewriterFunctionApplicationOnSimplex());
+        this.calc.addRewriter(new RewriterZeroUnit());
+        this.calc.addRewriter(new RewriterNegationElimination());
         this.cmp = new DecisionAlternativeComparators();
         this.dec = 
         new DecisionProcedureAlgorithms(
           new DecisionProcedureSMTLIB2_AUFNIRA(
-            new DecisionProcedureAlwSat(this.calc), Z3_COMMAND_LINE));
+            new DecisionProcedureAlwSat(this.calc), COMMAND_LINE));
     }
 
     @Test
@@ -114,7 +132,7 @@ public class DecisionProcedureTest {
 
     @Test
     public void testSimplifyComparison2() 
-    throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+    throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, ContradictionException {
         // A >= 0 |- 2 * A ? A
         Term A = this.calc.valTerm(Type.INT, "A");
         Expression Agezero = (Expression) this.calc.push(A).ge(this.calc.valInt(0)).pop();

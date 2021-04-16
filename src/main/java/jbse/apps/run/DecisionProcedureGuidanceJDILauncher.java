@@ -25,13 +25,21 @@ public class DecisionProcedureGuidanceJDILauncher {
      * @throws InvocationTargetException if method {@code args[1]} throws an
      *         exception.
      */
-    public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, 
-    SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, 
-    InvocationTargetException {
-        final Class<?> clazz = Class.forName(args[0]);
-        final Method method = clazz.getDeclaredMethod(args[1]);
-        method.setAccessible(true);
-        Object o = clazz.newInstance();
-        method.invoke(o);
+    public static void main(String[] args) 
+    throws ClassNotFoundException, NoSuchMethodException, SecurityException, 
+    InstantiationException, IllegalAccessException, InvocationTargetException {
+    	final Class<?> clazz = Class.forName(args[0]);
+    	final Method method = clazz.getDeclaredMethod(args[1]);
+    	method.setAccessible(true);
+    	Object o = clazz.newInstance();
+	    try {
+	        method.invoke(o);
+    	} catch (InvocationTargetException e) {
+    		//this instruction serves the purpose of
+    		//allowing a breakpoint to be put in this
+    		//catch block, to detect whether the invoked
+    		//method throws an exception
+    		throw e;
+    	}
     }
 }

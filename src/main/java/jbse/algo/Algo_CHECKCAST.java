@@ -1,8 +1,8 @@
 package jbse.algo;
 
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
-import static jbse.algo.Util.throwNew;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.failExecution;
+import static jbse.algo.UtilControlFlow.throwNew;
 import static jbse.bc.Signatures.CLASS_CAST_EXCEPTION;
 
 import jbse.mem.exc.ThreadStackEmptyException;

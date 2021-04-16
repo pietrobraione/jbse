@@ -4,6 +4,7 @@ import static jbse.apps.Util.formatPrimitive;
 import static jbse.mem.Frame.UNKNOWN_PC;
 import static jbse.mem.Frame.UNKNOWN_SOURCE_ROW;
 
+import jbse.apps.disasm.Disassembler;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.SnippetFrameNoWrap;
 import jbse.mem.State;
@@ -35,7 +36,7 @@ public final class StateFormatterPath implements Formatter {
     /** Here the result of {@link StateFormatterPath#formatState(State)}. */
     private String output;
 
-    private BytecodeFormatter bcf = new BytecodeFormatter();
+    private Disassembler bcf = new Disassembler();
 
     public void formatState(State s) {
         this.output = s.getBranchIdentifier() + "[" + s.getSequenceNumber() + "]" + FIELD_SEP + 

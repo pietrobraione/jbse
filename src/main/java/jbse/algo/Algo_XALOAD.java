@@ -1,11 +1,11 @@
 package jbse.algo;
 
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.failExecution;
+import static jbse.algo.UtilControlFlow.throwNew;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.algo.Util.getFromArray;
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.storeInArray;
-import static jbse.algo.Util.throwNew;
-import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XALOADSTORE_OFFSET;
 import static jbse.bc.Signatures.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
@@ -272,7 +272,7 @@ StrategyUpdate_XALOAD> {
 
             @Override
             public void refineResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved)
-            throws DecisionException, InvalidInputException {
+            throws DecisionException, ContradictionException, InvalidInputException {
                 //augments the path condition
             	final Expression accessExpression = altResolved.getArrayAccessExpressionSimplified();
             	if (accessExpression != null) {
@@ -290,7 +290,7 @@ StrategyUpdate_XALOAD> {
 
             @Override
             public void refineOut(State state, DecisionAlternative_XALOAD_Out altOut) 
-            throws InvalidInputException {
+            throws ContradictionException, InvalidInputException {
                 //augments the path condition
                 try {
                 	final Expression accessExpression = altOut.getArrayAccessExpressionSimplified();

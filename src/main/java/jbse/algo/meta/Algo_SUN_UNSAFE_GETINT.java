@@ -13,6 +13,8 @@ import jbse.val.Simplex;
 
 /**
  * Meta-level implementation of {@link sun.misc.Unsafe#getInt(long)}.
+ * 
+ * @author Pietro Braione
  */
 public final class Algo_SUN_UNSAFE_GETINT extends Algo_INVOKEMETA_Nonbranching {
     private int value; //set by cookMore

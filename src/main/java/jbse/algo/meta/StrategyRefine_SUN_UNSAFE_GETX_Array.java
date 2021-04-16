@@ -1,6 +1,6 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.failExecution;
+import static jbse.algo.UtilControlFlow.failExecution;
 
 import jbse.algo.StrategyRefine;
 import jbse.common.exc.InvalidInputException;
@@ -23,13 +23,12 @@ import jbse.val.exc.InvalidTypeException;
  * 
  * @author Pietro Braione
  */
-//TODO refactor together with StrategyRefine_SUN_UNSAFE_GETOBJECTVOLATILE_Array
 abstract class StrategyRefine_SUN_UNSAFE_GETX_Array implements StrategyRefine<DecisionAlternative_XALOAD>{
     abstract public void refineResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
-    throws DecisionException, InvalidInputException;
+    throws DecisionException, InvalidInputException, ContradictionException;
 
     abstract public void refineOut(State s, DecisionAlternative_XALOAD_Out dao) 
-    throws InvalidInputException;
+    throws InvalidInputException, ContradictionException;
 
     public final void refine(final State s, DecisionAlternative_XALOAD r)
     throws DecisionException, ContradictionException, InvalidTypeException, InvalidInputException {
@@ -59,13 +58,13 @@ abstract class StrategyRefine_SUN_UNSAFE_GETX_Array implements StrategyRefine<De
     
                 @Override
                 public void visitDecisionAlternative_XALOAD_Resolved(DecisionAlternative_XALOAD_Resolved dav)
-                throws DecisionException, InvalidInputException {
+                throws DecisionException, ContradictionException, InvalidInputException {
                     StrategyRefine_SUN_UNSAFE_GETX_Array.this.refineResolved(s, dav);
                 }
     
                 @Override
                 public void visitDecisionAlternative_XALOAD_Out(DecisionAlternative_XALOAD_Out dao) 
-                throws InvalidInputException {
+                throws ContradictionException, InvalidInputException {
                     StrategyRefine_SUN_UNSAFE_GETX_Array.this.refineOut(s, dao);
                 }
             };

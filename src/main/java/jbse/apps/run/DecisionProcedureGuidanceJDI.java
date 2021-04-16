@@ -1,6 +1,6 @@
 package jbse.apps.run;
 
-import static jbse.algo.Util.failExecution;
+import static jbse.algo.UtilControlFlow.failExecution;
 import static jbse.apps.run.JAVA_MAP_Utils.classImplementsJavaUtilMap;
 import static jbse.apps.run.JAVA_MAP_Utils.isInitialMapField;
 import static jbse.apps.run.JAVA_MAP_Utils.isSymbolicApplyOnInitialMap;
@@ -74,7 +74,6 @@ import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.MethodExitRequest;
 
-import jbse.algo.ExecutionContext;
 import jbse.bc.ClassFile;
 import jbse.bc.Offsets;
 import jbse.bc.Signature;
@@ -122,7 +121,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 	 *         is to blame).
 	 * @throws InvalidInputException if {@code component == null}.
 	 */
-	public DecisionProcedureGuidanceJDI(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, ExecutionContext ctx) 
+	public DecisionProcedureGuidanceJDI(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature) 
 	throws GuidanceException, InvalidInputException {
 		this(component, calc, runnerParameters, stopSignature, 1);
 	}
@@ -294,14 +293,14 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		private VirtualMachine createVM() 
 		throws GuidanceException {
 			try {
-				final Iterable<Path> classPath = this.runnerParameters.getClasspath().classPath();
+				final Iterable<Path> classPath = this.runnerParameters.getClasspath().userClassPath();
 				final ArrayList<String> listClassPath = new ArrayList<>();
 				classPath.forEach(p -> listClassPath.add(p.toString()));
 				final String stringClassPath = String.join(File.pathSeparator, listClassPath.toArray(new String[0]));
 				final String mainClass = DecisionProcedureGuidanceJDILauncher.class.getName();
 				final String targetClass = binaryClassName(this.runnerParameters.getMethodSignature().getClassName());
 				final String startMethodName = this.runnerParameters.getMethodSignature().getName();
-				return launchTarget("-classpath \"" + stringClassPath + "\" " + mainClass + " " + targetClass + " " + startMethodName);
+				return launchTarget("-classpath \"" + stringClassPath + File.pathSeparator + this.runnerParameters.getClasspath().jbseLibPath() + "\" " + mainClass + " " + targetClass + " " + startMethodName);
 			} catch (IOException e) {
 				throw new GuidanceException(e);
 			}
@@ -473,10 +472,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		}
 
 		@Override
-		public String typeOfObject(ReferenceSymbolic origin) throws GuidanceException {
+		public String typeOfObject(ReferenceSymbolic origin) throws GuidanceException, ImpureMethodException {
 			final ObjectReference object;
 			try {
-				object = (ObjectReference) this.getValue(origin);
+				object = (ObjectReference) getValue(origin);
 			} catch (IndexOutOfBoundsException e) {
 				if (!origin.asOriginString().equals(e.getMessage())) {
 					System.out.println("[JDI] WARNING: In DecisionProcedureGuidanceJDI.typeOfObject: " + origin.asOriginString() + " leads to invalid throw reference: " + e + 
@@ -501,13 +500,13 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		}
 
 		@Override
-		public boolean isNull(ReferenceSymbolic origin) throws GuidanceException {
+		public boolean isNull(ReferenceSymbolic origin) throws GuidanceException, ImpureMethodException {
 			final ObjectReference object = (ObjectReference) getValue(origin);
 			return (object == null);
 		}
 
 		@Override
-		public boolean areAlias(ReferenceSymbolic first, ReferenceSymbolic second) throws GuidanceException {
+		public boolean areAlias(ReferenceSymbolic first, ReferenceSymbolic second) throws GuidanceException, ImpureMethodException {
 			final ObjectReference objectFirst = (ObjectReference) getValue(first);
 			final ObjectReference objectSecond = (ObjectReference) getValue(second);
 			return ((objectFirst == null && objectSecond == null) || 
@@ -515,7 +514,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		}
 
 		@Override
-		public Object getValue(Symbolic origin) throws GuidanceException {
+		public Object getValue(Symbolic origin) throws GuidanceException, ImpureMethodException {
 			this.valueDependsOnSymbolicApply = false;
 			final com.sun.jdi.Value val = (com.sun.jdi.Value) getJDIValue(origin);
 			if (val instanceof IntegerValue) {
@@ -536,8 +535,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 				return this.calc.valShort(((ShortValue) val).shortValue());
 			} else if (val instanceof ObjectReference) {
 				return val;
-			} else { //val instanceof VoidValue || val == null
+			} else if (val == null) {
 				return null;
+			} else {  //val instanceof VoidValue
+				throw new GuidanceException("Unexpected JDI VoidValue returned from the concrete evaluation of symbolic value " + origin.asOriginString());
 			}
 		}
 
@@ -549,8 +550,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		 * @return either a {@link com.sun.jdi.Value}, or a {@link com.sun.jdi.ReferenceType}, or
 		 *         a {@link com.sun.jdi.ObjectReference}.
 		 * @throws GuidanceException
+		 * @throws ImpureMethodException 
 		 */
-		protected Object getJDIValue(Symbolic origin) throws GuidanceException {
+		protected Object getJDIValue(Symbolic origin) throws GuidanceException, ImpureMethodException {
 			try {
 				if (origin instanceof SymbolicLocalVariable) {
 					return getJDIValueLocalVariable(((SymbolicLocalVariable) origin).getVariableName());
@@ -634,7 +636,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			}
 		}
 
-		private SymbolicApplyJVMJDI startSymbolicApplyVm(SymbolicApply symbolicApply) throws GuidanceException {
+		private SymbolicApplyJVMJDI startSymbolicApplyVm(SymbolicApply symbolicApply) throws GuidanceException, ImpureMethodException {
 			/* TODO: Add a strategy to limit the maximum number of SymbolicApplyJVMJDI that we might allocate 
 			 * to execute uninterpreted functions.
 			 * At the moment, we start a new SymbolicApplyJVMJDI for each symbolicApply, and we keep alive all 
@@ -895,9 +897,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		@Override
 		protected boolean handleBreakpointEvents(Event event, int numberOfHits) throws GuidanceException {
 			if (this.postInitial && this.targetMethodExitedBreakpoint.equals(event.request())) {
-				try { //Did we exited from target method? Should not happen 
+				try { //Did we exit from target method? Should not happen 
 					if (numFramesFromRootFrameConcrete() < 0) {
-						throw new UnexpectedInternalException("Exited from target method, while looking for method " + symbolicApplyOperator + " - " + hitCallCtxs);
+						throw new UnexpectedInternalException("Exited from target method, while looking for method " + this.symbolicApplyOperator + " - " + this.hitCallCtxs);
 					}
 				} catch (IncompatibleThreadStateException e) {
 					throw new UnexpectedInternalException(e);
@@ -935,7 +937,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			return atBreakpoint;
 		}
 		
-		protected void eval_INVOKEX() throws GuidanceException {
+		protected void eval_INVOKEX() throws GuidanceException, ImpureMethodException {
 			//steps and decides
 			stepIntoSymbolicApplyMethod();
 			this.symbolicApplyRetValue = stepUpToMethodExit();
@@ -954,10 +956,12 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			return new Signature(parts[0], parts[1], parts[2]);
 		}
 
-		private Value stepUpToMethodExit() throws GuidanceException {
+		private Value stepUpToMethodExit() throws GuidanceException, ImpureMethodException {
 			final int currFrames;
+			final Method currMethod;
 			try {
 				currFrames = getCurrentThread().frameCount();
+				currMethod = getCurrentThread().frame(0).location().method();
 			} catch (IncompatibleThreadStateException e) {
 				throw new GuidanceException(e);
 			}
@@ -966,12 +970,26 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			final MethodExitRequest mexr = mgr.createMethodExitRequest();
 			mexr.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
 			mexr.enable();
+			final ReferenceType classType = this.vm.classesByName("jbse.apps.run.DecisionProcedureGuidanceJDILauncher").get(0);
+			final Method method = classType.methodsByName("main").get(0);
+			final ArrayList<BreakpointRequest> bkprs = new ArrayList<>();
+			try {
+				for (Location l : method.allLineLocations()) {
+					final BreakpointRequest bkpr = mgr.createBreakpointRequest(l);
+					bkpr.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+					bkpr.enable();
+					bkprs.add(bkpr);
+				}
+			} catch (AbsentInformationException e) {
+				throw new GuidanceException(e);
+			}
 
 			this.vm.resume();
 			final EventQueue queue = this.vm.eventQueue();
 
 			MethodExitEvent mthdExitEvent = null;
 			boolean exitFound = false;
+			eventLoop:
 			while (!exitFound) {
 				try {
 					final EventSet eventSet = queue.remove();
@@ -981,10 +999,20 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
 						if (event instanceof MethodExitEvent) {
 							mthdExitEvent = (MethodExitEvent) event;
-							if (mthdExitEvent.thread().frameCount() == currFrames) { 
+							final int methodExitFrameCount = mthdExitEvent.thread().frameCount();
+							if (methodExitFrameCount < currFrames) {
+								//somehow we exited from the method to a caller frame;
+								//this may be caused by an exception that is catched,
+								//and for which JDI was not able to detect a catch point
+								break eventLoop; 
+							} else if (methodExitFrameCount == currFrames && mthdExitEvent.location().method().equals(currMethod)) { 
 								exitFound = true;
 								this.currentExecutionPointEvent = event;
 							}
+						} else if (event instanceof BreakpointRequest) {
+							//we hit the catch block of the InvocationTargetException
+							//of the JDI launcher: the method threw an uncaught exception
+							break eventLoop;
 						}
 					}
 					if (!exitFound) {
@@ -998,18 +1026,23 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 				}
 			}
 
+			for (BreakpointRequest bkpr : bkprs) {
+				bkpr.disable();
+			}
 			mexr.disable();
+			if (!exitFound) {
+				throw new ImpureMethodException();
+			}
 			return mthdExitEvent.returnValue();
 		}
-		
-	}	
+	}
 	
 	private static class InitialMapSymbolicApplyJVMJDI extends SymbolicApplyJVMJDI {
 		private final ObjectReference initialMapRef;
 		private Value valueAtKey;
 
 		public InitialMapSymbolicApplyJVMJDI(Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits, String symbolicApplyOperator, List<String> hitCallCtxs, SymbolicMemberField initialMapOrigin) 
-		throws GuidanceException {
+		throws GuidanceException, ImpureMethodException {
 			super(calc, runnerParameters, stopSignature, numberOfHits, symbolicApplyOperator, hitCallCtxs);
 			this.initialMapRef = (ObjectReference) getJDIValue(initialMapOrigin);
 		}

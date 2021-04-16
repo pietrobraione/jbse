@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -17,10 +18,14 @@ import jbse.dec.exc.DecisionException;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
 import jbse.mem.Objekt;
+import jbse.mem.exc.ContradictionException;
 import jbse.rewr.CalculatorRewriting;
-import jbse.rewr.RewriterOperationOnSimplex;
+import jbse.rewr.RewriterNegationElimination;
+import jbse.rewr.RewriterExpressionOrConversionOnSimplex;
+import jbse.rewr.RewriterFunctionApplicationOnSimplex;
 import jbse.rewr.RewriterPolynomials;
 import jbse.rewr.RewriterTrigNormalize;
+import jbse.rewr.RewriterZeroUnit;
 import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.HistoryPoint;
@@ -86,13 +91,16 @@ public class DecisionProcedureSignAnalysisTest {
 	public void setUp() throws InvalidClassFileFactoryClassException, IOException, InvalidInputException {
 		this.hist = HistoryPoint.unknown();
         this.calc = new CalculatorRewriting();
-        this.calc.addRewriter(new RewriterOperationOnSimplex());
+        this.calc.addRewriter(new RewriterExpressionOrConversionOnSimplex());
+        this.calc.addRewriter(new RewriterFunctionApplicationOnSimplex());
+        this.calc.addRewriter(new RewriterZeroUnit());
+        this.calc.addRewriter(new RewriterNegationElimination());
 		this.dec = new DecisionProcedureSignAnalysis(new DecisionProcedureNoDecision(this.calc));
 	}
 	
 	@Test
 	public void simpleTest1() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		//A > 0 |-/- A <= 0
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		this.dec.pushAssumption(new ClauseAssume((Expression) this.calc.push(A).gt(this.calc.valInt(0)).pop()));
@@ -101,7 +109,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test
 	public void simpleTest2() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		//0 < A |-/- A <= 0 
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		this.dec.pushAssumption(new ClauseAssume((Expression) this.calc.pushInt(0).lt(A).pop()));
@@ -110,7 +118,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test(expected=NoDecisionException.class)
 	public void simpleTest3() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		//A > 0, B <= 0 |-?- A * B >= 0
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");
@@ -121,7 +129,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test
 	public void simpleTest4() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		//A > 0, B <= 0 |-/- A * B > 0
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");
@@ -132,7 +140,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test(expected=NoDecisionException.class)
 	public void simpleTest5() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		//A > B |-?- A > 0
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");
@@ -142,7 +150,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test(expected=NoDecisionException.class)
 	public void simpleTest6() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		//A > B |-?- A <= 0
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");
@@ -152,7 +160,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test
 	public void simpleTest7() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		// A : INT, A > 0 |-/- A < 1
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		this.dec.pushAssumption(new ClauseAssume((Expression) this.calc.push(A).gt(this.calc.valInt(0)).pop()));
@@ -161,7 +169,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test(expected=NoDecisionException.class)
 	public void simpleTest8() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		// A : FLOAT, A > 0 |-?- A < 1
 		final Term A = this.calc.valTerm(Type.FLOAT, "A");
 		this.dec.pushAssumption(new ClauseAssume((Expression) this.calc.push(A).gt(this.calc.valFloat(0.0f)).pop()));
@@ -170,7 +178,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test
 	public void simpleTest9() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		// A > 0, B > 0 |- A * B >= 0
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Term B = this.calc.valTerm(Type.DOUBLE, "B");
@@ -181,7 +189,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test(expected=NoDecisionException.class)
 	public void simpleTest10() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		// A >= 0, B <= 0 |-?- A * B == 0
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");
@@ -192,7 +200,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test
 	public void mulTest1() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		// A : INT, B : INT, A > 0, B <= 0 |-/- A * B > 0
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");
@@ -203,7 +211,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test(expected=NoDecisionException.class)
 	public void mulTest2() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		// A : INT, B : INT, A > 0, B <= 0 |-?- A * B > -1
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");
@@ -214,7 +222,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test
 	public void mulTest3() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		// A : INT, B : INT, A > 0, B < 0 |-/- A * B > -1
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");
@@ -225,7 +233,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test(expected=NoDecisionException.class)
 	public void mulTest4() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		// A : INT, B : DOUBLE, A > 0, B < 0 |-?- A * B > -1
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.DOUBLE, "B");
@@ -236,7 +244,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test(expected=NoDecisionException.class)
 	public void addTest1() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		// A >= 0, B >= 0 |-?- A + B <= 0
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Term B = this.calc.valTerm(Type.DOUBLE, "B");
@@ -247,7 +255,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test
 	public void addTest2() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		// A > 0, B >= 0 |-/- A + B <= 0
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");
@@ -258,7 +266,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test(expected=NoDecisionException.class)
 	public void addTest3() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		// A >= 0, B >= 0 |-?- A - B <= 0
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");
@@ -269,7 +277,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test(expected=NoDecisionException.class)
 	public void addTest4() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		// A >= 0, B >= 0 |-?- A - B > 0
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");
@@ -280,7 +288,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test
 	public void addTest5() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		// A > 0, B <= 0 |-/- A - B <= 0
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");
@@ -291,7 +299,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test
 	public void negTest1() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		// A > 0 |-/- -A >= 0
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		this.dec.pushAssumption(new ClauseAssume((Expression) this.calc.push(A).gt(this.calc.valInt(0)).pop()));
@@ -300,7 +308,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test
 	public void negTest2() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		// A > 0, B < 0 |-/- -A * B <= 0
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");
@@ -311,7 +319,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test
 	public void complexAssumptionTest1() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		// A * B > 0 |-/- A * B <= 0
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");
@@ -321,7 +329,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test
 	public void complexAssumptionTest2() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		// A * B >= 0, A >= 0, B <= 0 |-/- A * B != 0
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");
@@ -333,7 +341,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test
 	public void complexAssumptionTest3() 
-	throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
+	throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException, NoSuchElementException, ContradictionException {
 		// A > 0, B > 0, A * B + -1 * sqrt(C * C)) > 0 |-/- (A * B + -1 * sqrt(C * C)) / (-1 * A) > 0
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Term B = this.calc.valTerm(Type.DOUBLE, "B");
@@ -347,7 +355,7 @@ public class DecisionProcedureSignAnalysisTest {
 	
 	@Test(expected=NoDecisionException.class)
 	public void divAssumptionTest1() 
-	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException, NoSuchElementException, ContradictionException {
 		//A / B < C |-?- A / B = C (it can only check exp rel_op number)
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");
@@ -391,7 +399,7 @@ public class DecisionProcedureSignAnalysisTest {
 
 	@Test
 	public void trigTest5() 
-	throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
+	throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException, NoSuchElementException, ContradictionException {
 		//A < 0 |-/- atan(A) >= 0
 		this.calc.addRewriter(new RewriterTrigNormalize());
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
@@ -425,7 +433,7 @@ public class DecisionProcedureSignAnalysisTest {
     
 	@Test
 	public void funTest1() 
-	throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
+	throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException, NoSuchElementException, ContradictionException {
 		this.calc.addRewriter(new RewriterPolynomials()); //necessary to normalize ~x to -1.0 * x
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Term B = this.calc.valTerm(Type.DOUBLE, "B");

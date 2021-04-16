@@ -1,8 +1,8 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
-import static jbse.algo.Util.throwVerifyError;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.failExecution;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
 
 import java.util.function.Supplier;
 
@@ -35,7 +35,7 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  */
 public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_Nonbranching {
-    private final String what;  //set by constructor
+    protected final String what;  //set by constructor
     private Objekt objectToSet; //set by cookMore
     private int fieldOffset; //set by cookMore
     private Value toWrite; //set by cookMore

@@ -1,4 +1,4 @@
-package jbse.dec;
+package jbse.tree;
 
 import jbse.bc.ClassFile;
 import jbse.val.ReferenceSymbolic;
@@ -16,7 +16,7 @@ import jbse.val.ReferenceSymbolic;
  * @param <DN> The class for the decision alternative for
  *             expansions to null.
  */
-interface DecisionAlternativeReferenceFactory<DA, DE, DN> {
+public interface DecisionAlternativeReferenceFactory<DA, DE, DN> {
     /**
      * Factory method for a {@code DA}.
      * 

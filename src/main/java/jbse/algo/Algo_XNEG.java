@@ -1,6 +1,6 @@
 package jbse.algo;
 
-import static jbse.algo.Util.throwVerifyError;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.bc.Offsets.MATH_LOGICAL_OP_OFFSET;
 
 import java.util.function.Supplier;

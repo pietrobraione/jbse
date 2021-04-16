@@ -1,17 +1,17 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
-import static jbse.algo.Util.getMemberNameFlagsMethod;
-import static jbse.algo.Util.JVM_RECOGNIZED_FIELD_MODIFIERS;
-import static jbse.algo.Util.IS_FIELD;
-import static jbse.algo.Util.REFERENCE_KIND_SHIFT;
-import static jbse.algo.Util.REF_getField;
-import static jbse.algo.Util.REF_getStatic;
-import static jbse.algo.Util.throwNew;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.failExecution;
+import static jbse.algo.UtilControlFlow.throwNew;
 import static jbse.algo.meta.Util.FAIL_JBSE;
 import static jbse.algo.meta.Util.getInstance;
 import static jbse.algo.meta.Util.INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION;
+import static jbse.bc.Modifiers.getMemberNameFlagsMethod;
+import static jbse.bc.Modifiers.JVM_RECOGNIZED_FIELD_MODIFIERS;
+import static jbse.bc.Modifiers.IS_FIELD;
+import static jbse.bc.Modifiers.REFERENCE_KIND_SHIFT;
+import static jbse.bc.Modifiers.REF_getField;
+import static jbse.bc.Modifiers.REF_getStatic;
 import static jbse.bc.Signatures.INTERNAL_ERROR;
 import static jbse.bc.Signatures.JAVA_CONSTRUCTOR;
 import static jbse.bc.Signatures.JAVA_CONSTRUCTOR_CLAZZ;

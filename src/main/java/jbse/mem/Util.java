@@ -4,6 +4,8 @@ import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isReference;
 
 import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import jbse.val.KlassPseudoReference;
 import jbse.val.Null;
@@ -190,6 +192,27 @@ public class Util {
 		isResolvedSymbolicReference(l, v);
 	}
 	
+    /**
+     * Iterates an action on all the initial objects
+     * stored in the expansion clauses in this path
+     * condition.
+     * 
+     * @param clauses a {@link List}{@code <}{@link Clause}{@code >}. 
+     * @param action a {@link Consumer}{@code <}{@link HeapObjekt}{@code >}
+     *        that is invoked for each initial object. It receives in input
+     *        the object and its heap position.
+     */
+    public static void forAllInitialObjects(List<Clause> clauses, BiConsumer<HeapObjekt, Long> action) {
+        for (Clause c : clauses) {
+            if (c instanceof ClauseAssumeExpands) {
+                final ClauseAssumeExpands cExpands = (ClauseAssumeExpands) c;
+                final HeapObjekt object = cExpands.getObjekt();
+                final Long heapPosition = cExpands.getHeapPosition();
+                action.accept(object, heapPosition);
+            }
+        }
+    }
+
 	/**
 	 * Do not instantiate it!
 	 */

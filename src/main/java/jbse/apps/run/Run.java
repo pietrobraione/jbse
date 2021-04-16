@@ -64,7 +64,10 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.meta.annotations.ConcretizationCheck;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.RewriterCalculatorRewriting;
-import jbse.rewr.RewriterOperationOnSimplex;
+import jbse.rewr.RewriterNegationElimination;
+import jbse.rewr.RewriterExpressionOrConversionOnSimplex;
+import jbse.rewr.RewriterFunctionApplicationOnSimplex;
+import jbse.rewr.RewriterZeroUnit;
 import jbse.tree.StateTree.BranchPoint;
 import jbse.val.PrimitiveSymbolic;
 import jbse.val.ReferenceSymbolic;
@@ -762,11 +765,11 @@ public final class Run {
         }
 
         // tries to open the dump file
-        if (this.parameters.getOutputFileName() == null) {
+        if (this.parameters.getOutputFilePath() == null) {
             this.err[1] = null;
         } else {
             try {
-                final File f = new File(this.parameters.getOutputFileName());
+                final File f = this.parameters.getOutputFilePath().toFile();
                 this.err[1] = new PrintStream(f);
             } catch (FileNotFoundException | SecurityException e) {
                 err(ERROR_DUMP_FILE_OPEN);
@@ -853,7 +856,10 @@ public final class Run {
         final CalculatorRewriting calc;
         try {
             calc = new CalculatorRewriting();
-            calc.addRewriter(new RewriterOperationOnSimplex()); //indispensable
+            calc.addRewriter(new RewriterExpressionOrConversionOnSimplex()); //indispensable
+            calc.addRewriter(new RewriterFunctionApplicationOnSimplex()); //indispensable
+    		calc.addRewriter(new RewriterZeroUnit()); //indispensable
+    		calc.addRewriter(new RewriterNegationElimination()); //indispensable?
             for (final Class<? extends RewriterCalculatorRewriting> rewriterClass : this.parameters.getRewriters()) {
                 if (rewriterClass == null) { 
                     //no rewriter

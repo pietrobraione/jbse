@@ -1,8 +1,8 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
-import static jbse.algo.Util.throwVerifyError;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.failExecution;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.algo.Util.valueString;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Signatures.JAVA_CLASS;
@@ -282,7 +282,7 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
             final ClassFile currentArrayMemberClass = currentArray.getType().getMemberClass();
             if (!currentArrayMemberClass.isPrimitiveOrVoid()) {
                 final String currentArrayMemberType = currentArrayMemberClass.getInternalTypeName();
-                for (Iterator<? extends AccessOutcomeIn> it = currentArray.entries(); it.hasNext(); ) {
+                for (Iterator<? extends AccessOutcomeIn> it = currentArray.entries().iterator(); it.hasNext(); ) {
                     final AccessOutcomeIn entry = it.next();
                     if (entry instanceof AccessOutcomeInValue) {
                         final AccessOutcomeInValue entryCast = (AccessOutcomeInValue) entry;

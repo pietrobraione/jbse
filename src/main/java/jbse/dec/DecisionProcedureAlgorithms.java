@@ -10,6 +10,7 @@ import static jbse.common.Type.splitClassGenericSignatureTypeParameters;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.TYPEVAR;
 import static jbse.common.Type.typeParameterIdentifier;
+import static jbse.mem.Util.forAllInitialObjects;
 import static jbse.mem.Util.isResolved;
 
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.function.Supplier;
 
 import jbse.algo.InterruptException;
@@ -46,7 +48,6 @@ import jbse.dec.SolverEquationGenericTypes.Var;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.Clause;
-import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
@@ -58,6 +59,9 @@ import jbse.tree.DecisionAlternative_XALOAD_Resolved;
 import jbse.tree.DecisionAlternative_XASTORE;
 import jbse.tree.DecisionAlternative_XCMPY;
 import jbse.tree.DecisionAlternative_XCMPY.Values;
+import jbse.tree.DecisionAlternativeReferenceFactory;
+import jbse.tree.DecisionAlternativeReferenceFactory_XALOAD;
+import jbse.tree.DecisionAlternativeReferenceFactory_XLOAD_GETX;
 import jbse.tree.DecisionAlternative_IFX;
 import jbse.tree.DecisionAlternative_IFX_False;
 import jbse.tree.DecisionAlternative_IFX_True;
@@ -912,9 +916,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *        where the method will put all the 
      *        {@link DecisionAlternative_XALOAD}s representing all the 
      *        satisfiable outcomes of the operation. It must not be {@code null}.
-     * @param nonExpandedRefs a {@link List}{@code <}{@link ReferenceSymbolic}{@code >} 
+     * @param partiallyResolvedReferences a {@link List}{@code <}{@link ReferenceSymbolic}{@code >} 
      *        that this method will populate with the {@link ReferenceSymbolic}s that 
-     *        were not expanded. It must not be {@code null}.
+     *        were partially resolved. It must not be {@code null}.
      * @return an {@link Outcome}.
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
@@ -963,14 +967,14 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         initialization of backdoor expansions.
      */
     //TODO should be final?
-    public Outcome resolve_XALOAD(List<ArrayAccessInfo> arrayAccessInfos, SortedSet<DecisionAlternative_XALOAD> result, List<ReferenceSymbolic> nonExpandedRefs)
+    public Outcome resolve_XALOAD(List<ArrayAccessInfo> arrayAccessInfos, SortedSet<DecisionAlternative_XALOAD> result, List<ReferenceSymbolic> partiallyResolvedReferences)
     throws InvalidInputException, DecisionException, ClassFileNotFoundException, 
     ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, 
     WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, ClasspathException, HeapMemoryExhaustedException, InterruptException, ContradictionException {
-        if (arrayAccessInfos == null || result == null || nonExpandedRefs == null) {
+        if (arrayAccessInfos == null || result == null || partiallyResolvedReferences == null) {
             throw new InvalidInputException("resolve_XALOAD invoked with a null parameter.");
         }
-        boolean someReferenceNotExpanded = false;
+        boolean partialReferenceResolution = false;
         boolean shouldRefine = false;
         boolean branchingDecision = false;
         for (ArrayAccessInfo arrayAccessInfo : arrayAccessInfos) {
@@ -978,18 +982,20 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
             final boolean accessOutOfBounds = (arrayAccessInfo.readValue == null);
             final boolean valToLoadResolved = accessOutOfBounds || isResolved(getAssumptions(), arrayAccessInfo.readValue);
             final Outcome o;
+            final TreeSet<DecisionAlternative_XALOAD> localResult = new TreeSet<>(result.comparator());
             if (valToLoadResolved && accessConcrete) {
-                o = resolve_XALOAD_ResolvedConcrete(arrayAccessInfo, result);
+                o = resolve_XALOAD_ResolvedConcrete(arrayAccessInfo, localResult);
             } else if (valToLoadResolved && !accessConcrete) {
-                o = resolve_XALOAD_ResolvedNonconcrete(arrayAccessInfo, result);
+                o = resolve_XALOAD_ResolvedNonconcrete(arrayAccessInfo, localResult);
             } else { //(!valToLoadResolved)
-                o = resolve_XALOAD_Unresolved(this.currentStateSupplier.get().getClassHierarchy(), arrayAccessInfo, result);
+                o = resolve_XALOAD_Unresolved(this.currentStateSupplier.get().getClassHierarchy(), arrayAccessInfo, localResult);
             }
+            result.addAll(localResult);
             
-            //if the current resolution did not expand a reference, then records it
-            someReferenceNotExpanded = someReferenceNotExpanded || o.partialReferenceResolution();
+            //if the current resolution was partial, then records it
+            partialReferenceResolution = partialReferenceResolution || o.partialReferenceResolution();
             if (o.partialReferenceResolution()) {
-                nonExpandedRefs.add((ReferenceSymbolic) arrayAccessInfo.readValue);
+                partiallyResolvedReferences.add((ReferenceSymbolic) arrayAccessInfo.readValue);
             }
 
             //if at least one read requires refinement, then it should be refined
@@ -1008,7 +1014,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
         //be 1. Note that branchingDecision must be invariant
         //on the used decision procedure, so we cannot make it dependent
         //on result.size().
-        return Outcome.val(shouldRefine, someReferenceNotExpanded, branchingDecision);
+        return Outcome.val(shouldRefine, partialReferenceResolution, branchingDecision);
     }
 
     /**
@@ -1531,28 +1537,20 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 
         final TreeMap<Long, Objekt> retVal = new TreeMap<>();
 
-        //TODO extract this code and share with State.getObjectInitial and jbse.rule.Util.getTriggerMethodParameterObject
         //scans the path condition for compatible objects
         final List<Clause> pathCondition = getAssumptions();
-        for (Clause c : pathCondition) {
-            if (c instanceof ClauseAssumeExpands) {
-                //gets the object and its position in the heap
-                final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
-                final Long i = cExp.getHeapPosition();
-                final Objekt o = cExp.getObjekt();
-
-                //if it is type and epoch compatible, adds the object
-                //to the result
-                try {
-                    if (isAliasCompatible(o, ref, refClass)) {
-                        retVal.put(i, o);
-                    }
-                } catch (InvalidInputException e) {
-                    //this should never happen (checked before)
-                    throw new UnexpectedInternalException(e);
+        forAllInitialObjects(pathCondition, (object, heapPosition) -> {
+            //if it is type and epoch compatible, adds the object
+            //to the result
+            try {
+                if (isAliasCompatible(object, ref, refClass)) {
+                    retVal.put(heapPosition, object);
                 }
+            } catch (InvalidInputException e) {
+                //this should never happen (checked before)
+                throw new UnexpectedInternalException(e);
             }
-        }
+        });
         return retVal;
     }
 

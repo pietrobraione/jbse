@@ -1,8 +1,8 @@
 package jbse.algo;
 
-import static jbse.algo.Util.continueWith;
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.throwVerifyError;
+import static jbse.algo.UtilControlFlow.continueWith;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.bc.Offsets.XCMPY_OFFSET;
 import static jbse.bc.Opcodes.OP_IFEQ;
 import static jbse.bc.Opcodes.OP_IFGE;

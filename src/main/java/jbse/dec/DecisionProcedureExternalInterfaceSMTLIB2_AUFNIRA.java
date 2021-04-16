@@ -404,7 +404,7 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
     public void pushAssumption(boolean value) 
     throws ExternalProtocolInterfaceException, IOException {
         if (!this.hasCurrentClause) {
-            throw new ExternalProtocolInterfaceException("attempted to push assumption with no current clause");
+            throw new ExternalProtocolInterfaceException("Attempted to push assumption with no current clause");
         }
         this.hasCurrentClause = false;
         
@@ -462,11 +462,11 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
                 final String answer = read();
                 if (answer == null) {
                     this.working = false;
-                    throw new IOException("failed read of solver answer. Query: " + query + ", failed at character " + i);
+                    throw new IOException("Failed read of solver answer. Query: " + query + ", failed at character " + i);
                 }
                 if (!answer.equals(SUCCESS)) {
                     this.working = false;
-                    throw new ExternalProtocolInterfaceException("unexpected solver answer. Message: " + answer);
+                    throw new ExternalProtocolInterfaceException("Unexpected solver answer. Message: " + answer + ". Query: " + query + ", failed at character " + i);
                 }
             }
         }
@@ -482,7 +482,7 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
         }
         if (answer == null) {
             this.working = false;
-            throw new IOException("failed read of solver output, premature end of stream reached, process alive: " + this.solver.isAlive() + ", exit value: " + this.solver.exitValue());
+            throw new IOException("Failed read of solver output, premature end of stream reached, process alive: " + this.solver.isAlive() + ", exit value: " + this.solver.exitValue());
         }
 
         //System.err.println("<---SMTLIB2: " + answer); //TODO log differently!
@@ -494,7 +494,7 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
         final String answer = read();
         if (!answer.equals(SAT) && !answer.equals(UNSAT) && !answer.equals(UNKNOWN)) {
             this.working = false;
-            throw new ExternalProtocolInterfaceException("unrecognized answer from solver when checking satisfiability. Message: " + answer);
+            throw new ExternalProtocolInterfaceException("Unrecognized answer from solver when checking satisfiability. Message: " + answer);
         }
         return answer.equals(SAT); //conservatively returns false if answer is unknown
     }
@@ -684,7 +684,7 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
 
         @Override
         public void visitAny(Any x) throws ExternalProtocolInterfaceException {
-            throw new ExternalProtocolInterfaceException("values of type Any should not reach the SMT solver");         
+            throw new ExternalProtocolInterfaceException("Values of type Any should not reach the SMT solver");         
         }
 
         @Override
@@ -722,16 +722,16 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
                     this.clauseStack.push(clause);
                 }
             } else {
-                throw new UnexpectedInternalException("error while parsing expression (expected a boolean expression but it is not): " + e.toString());
+                throw new UnexpectedInternalException("Error while parsing expression (expected a boolean expression but it is not): " + e.toString());
             }
         }
 
         @Override
         public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) throws Exception {
             if (x.getType() == Type.BOOLEAN && !this.isBooleanExpression) {
-                throw new UnexpectedInternalException("error while parsing expression (expected a boolean expression but it is not): " + x.toString());
+                throw new UnexpectedInternalException("Error while parsing expression (expected a boolean expression but it is not): " + x.toString());
             } else if (x.getType() != Type.BOOLEAN && this.isBooleanExpression) {
-                throw new UnexpectedInternalException("error while parsing expression (expected a numeric expression but it is not): " + x.toString());
+                throw new UnexpectedInternalException("Error while parsing expression (expected a numeric expression but it is not): " + x.toString());
             }
             boolean allArgsPrimitive = true;
             for (Value v : x.getArgs()) {

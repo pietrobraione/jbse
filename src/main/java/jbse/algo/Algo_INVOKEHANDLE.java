@@ -1,15 +1,15 @@
 package jbse.algo;
 
-import static jbse.algo.Util.continueWith;
-import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
-import static jbse.algo.Util.getDescriptorFromMemberName;
+import static jbse.algo.UtilControlFlow.continueWith;
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.failExecution;
+import static jbse.algo.UtilControlFlow.throwNew;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
+import static jbse.algo.UtilJavaLangInvokeObjects.getDescriptorFromMemberName;
+import static jbse.algo.UtilLinking.ensureMethodLinked;
 import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.isSignaturePolymorphicMethodIntrinsic;
 import static jbse.algo.Util.isSignaturePolymorphicMethodStatic;
-import static jbse.algo.Util.ensureMethodLinked;
-import static jbse.algo.Util.throwNew;
-import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Offsets.offsetInvoke;

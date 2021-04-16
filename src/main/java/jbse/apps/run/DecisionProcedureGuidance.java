@@ -1,6 +1,6 @@
 package jbse.apps.run;
 
-import static jbse.algo.Util.ensureClassInitialized;
+import static jbse.algo.UtilClassInitialization.ensureClassInitialized;
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 
 import java.util.Collection;
@@ -57,11 +57,13 @@ import jbse.val.PrimitiveSymbolicAtomic;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
+import jbse.val.PrimitiveSymbolic;
 import jbse.val.PrimitiveVisitor;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
 import jbse.val.Symbolic;
+import jbse.val.SymbolicApply;
 import jbse.val.Term;
 import jbse.val.WideningConversion;
 import jbse.val.exc.InvalidOperandException;
@@ -113,12 +115,16 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
     @Override
     public final void pushAssumption(Clause c) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         super.pushAssumption(c);
         if (this.guiding) {
             if (c instanceof ClauseAssumeExpands) {
                 final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
-                markAsSeen(cExp.getReference());
+                try {
+                	markAsSeen(cExp.getReference());
+				} catch (ImpureMethodException e) {
+					throw new ContradictionException("Expansion clause for symbolic reference " + cExp.getReference().asOriginString() + " violates the assumption that the reference is a pure function application");
+				}
             }
         }
     }
@@ -133,13 +139,17 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     
     @Override
     public final void addAssumptions(Iterable<Clause> assumptionsToAdd) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         super.addAssumptions(assumptionsToAdd);
         if (this.guiding) {
             for (Clause c : assumptionsToAdd) {
                 if (c instanceof ClauseAssumeExpands) {
                     final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
-                    markAsSeen(cExp.getReference());
+                    try {
+						markAsSeen(cExp.getReference());
+					} catch (ImpureMethodException e) {
+						throw new ContradictionException("Expansion clause for symbolic reference " + cExp.getReference().asOriginString() + " violates the assumption that the reference is a pure function application");
+					}
                 }
             }
         }
@@ -147,13 +157,17 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     
     @Override
     public final void addAssumptions(Clause... assumptionsToAdd) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         super.addAssumptions(assumptionsToAdd);
         if (this.guiding) {
             for (Clause c : assumptionsToAdd) {
                 if (c instanceof ClauseAssumeExpands) {
                     final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
-                    markAsSeen(cExp.getReference());
+                    try {
+                    	markAsSeen(cExp.getReference());
+					} catch (ImpureMethodException e) {
+						throw new ContradictionException("Expansion clause for symbolic reference " + cExp.getReference().asOriginString() + " violates the assumption that the reference is a pure function application");
+					}
                 }
             }
         }
@@ -161,14 +175,18 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     
     @Override
     public final void setAssumptions(Collection<Clause> newAssumptions) 
-    throws InvalidInputException, DecisionException {
+    throws InvalidInputException, DecisionException, ContradictionException {
         super.setAssumptions(newAssumptions);
         if (this.guiding) {
             clearSeen();
             for (Clause c : newAssumptions) {
                 if (c instanceof ClauseAssumeExpands) {
                     final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
-                    markAsSeen(cExp.getReference());
+                    try {
+                    	markAsSeen(cExp.getReference());
+					} catch (ImpureMethodException e) {
+						throw new ContradictionException("Expansion clause for symbolic reference " + cExp.getReference().asOriginString() + " violates the assumption that the reference is a pure function application");
+					}
                 }
             }
         }
@@ -182,9 +200,13 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             final Iterator<DecisionAlternative_IFX> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_IFX da = it.next();
-                final Primitive valueInConcreteState = this.jvm.eval_IFX(da, condition);
-                if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-                    it.remove();
+                try {
+                	final Primitive valueInConcreteState = this.jvm.eval_IFX(da, condition);
+                	if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+                		it.remove();
+                	}
+                } catch (ImpureMethodException e) {
+                	it.remove();
                 }
             }
         }
@@ -199,9 +221,13 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             final Iterator<DecisionAlternative_XCMPY> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_XCMPY da = it.next();
-                final Primitive valueInConcreteState = this.jvm.eval_XCMPY(da, val1, val2);
-                if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-                    it.remove();
+                try {
+                	final Primitive valueInConcreteState = this.jvm.eval_XCMPY(da, val1, val2);
+                	if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+                		it.remove();
+                	}
+                } catch (ImpureMethodException e) {
+                	it.remove();
                 }
             }
         }
@@ -216,9 +242,13 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             final Iterator<DecisionAlternative_XSWITCH> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_XSWITCH da = it.next();
-                final Primitive valueInConcreteState = this.jvm.eval_XSWITCH(da, selector, tab);
-                if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-                    it.remove();
+                try {
+                	final Primitive valueInConcreteState = this.jvm.eval_XSWITCH(da, selector, tab);
+                	if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+                		it.remove();
+                	}
+                } catch (ImpureMethodException e) {
+                	it.remove();
                 }
             }
         }
@@ -233,9 +263,13 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             final Iterator<DecisionAlternative_XNEWARRAY> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_XNEWARRAY da = it.next();
-                final Primitive valueInConcreteState = this.jvm.eval_XNEWARRAY(da, countsNonNegative);
-                if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-                    it.remove();
+                try {
+                	final Primitive valueInConcreteState = this.jvm.eval_XNEWARRAY(da, countsNonNegative);
+                	if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+                		it.remove();
+                	}
+                } catch (ImpureMethodException e) {
+                	it.remove();
                 }
             }
         }
@@ -250,9 +284,13 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             final Iterator<DecisionAlternative_XASTORE> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_XASTORE da = it.next();
-                final Primitive valueInConcreteState = this.jvm.eval_XASTORE(da, inRange);
-                if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-                    it.remove();
+                try {
+                	final Primitive valueInConcreteState = this.jvm.eval_XASTORE(da, inRange);
+                	if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+                		it.remove();
+                	}
+                } catch (ImpureMethodException e) {
+                	it.remove();
                 }
             }
         }
@@ -272,7 +310,11 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             final Iterator<DecisionAlternative_XLOAD_GETX> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_XYLOAD_GETX_Unresolved dar = (DecisionAlternative_XYLOAD_GETX_Unresolved) it.next();
-                filter(currentState, refToLoad, dar, it);
+                try {
+					filter(currentState, refToLoad, dar, it);
+				} catch (ImpureMethodException e) {
+					it.remove();
+				}
             }
         }
         return retVal;
@@ -286,9 +328,13 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_XALOAD da = it.next();
-                final Primitive valueInConcreteState = this.jvm.eval_XALOAD(da);
-                if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-                    it.remove();
+                try {
+                	final Primitive valueInConcreteState = this.jvm.eval_XALOAD(da);
+                	if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+                		it.remove();
+                	}
+                } catch (ImpureMethodException e) {
+                	it.remove();
                 }
             }
         }
@@ -309,11 +355,15 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_XALOAD_Unresolved dar = (DecisionAlternative_XALOAD_Unresolved) it.next();
-                final Primitive valueInConcreteState = this.jvm.eval_XALOAD(dar);
-                if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-                    it.remove();
-                } else {
-                    filter(currentState, readReference, dar, it);
+                try {
+                	final Primitive valueInConcreteState = this.jvm.eval_XALOAD(dar);
+                	if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+                		it.remove();
+                	} else {
+                		filter(currentState, readReference, dar, it);
+                	}
+                } catch (ImpureMethodException e) {
+                	it.remove();
                 }
             }
         }
@@ -321,7 +371,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     private void updateExpansionBackdoor(State state, ReferenceSymbolic refToLoad) 
-    throws GuidanceException, ClasspathException, HeapMemoryExhaustedException, 
+    throws DecisionException, ClasspathException, HeapMemoryExhaustedException, 
     InterruptException, ContradictionException {
     	try {
     		final String refType = mostPreciseResolutionClassName(this.currentStateSupplier.get().getClassHierarchy(), refToLoad);
@@ -331,7 +381,9 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 				final ClassFile cf = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, objType, true);
     			ensureClassInitialized(state, this.ctx, cf);
     		}
-    	} catch (DecisionException | ClassFileNotFoundException | ClassFileIllFormedException | 
+    	} catch (ImpureMethodException e) {
+    		throw new ContradictionException("Symbolic reference " + refToLoad.asOriginString() + " violates the assumption that the reference is returned by a pure function application");
+    	} catch (ClassFileNotFoundException | ClassFileIllFormedException | 
     	ClassFileNotAccessibleException | IncompatibleClassFileException | 
     	BadClassFileVersionException | WrongClassNameException e) {
     		throw new GuidanceException(e);
@@ -342,7 +394,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     private void filter(State state, ReferenceSymbolic readReference, DecisionAlternative_XYLOAD_GETX_Unresolved dar, Iterator<?> it) 
-    throws GuidanceException {
+    throws GuidanceException, ImpureMethodException {
         if (dar instanceof DecisionAlternative_XYLOAD_GETX_Null && !this.jvm.isNull(readReference)) {
             it.remove();
         } else if (dar instanceof DecisionAlternative_XYLOAD_GETX_Aliases) {
@@ -366,11 +418,11 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         }
     }
 
-    private boolean alreadySeen(ReferenceSymbolic m) throws GuidanceException {
+    private boolean alreadySeen(ReferenceSymbolic m) throws GuidanceException, ImpureMethodException {
         return this.seen.contains(this.jvm.getValue(m));
     }
 
-    private void markAsSeen(ReferenceSymbolic m) throws GuidanceException {
+    private void markAsSeen(ReferenceSymbolic m) throws GuidanceException, ImpureMethodException {
         this.seen.add(this.jvm.getValue(m));
     }
     
@@ -418,8 +470,10 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
          *         by {@code origin}, or {@code null} if {@code origin}
          *         points to {@code null}.
          * @throws GuidanceException if {@code origin} does not refer to an object.
+         * @throws ImpureMethodException if {@code origin} is a 
+         *         {@link ReferenceSymbolicApply}, but the corresponding method is impure. 
          */
-        public abstract String typeOfObject(ReferenceSymbolic origin) throws GuidanceException;
+        public abstract String typeOfObject(ReferenceSymbolic origin) throws GuidanceException, ImpureMethodException;
 
         /**
          * Returns whether a {@link ReferenceSymbolic} points to {@code null} in the reached 
@@ -428,8 +482,10 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
          * @param origin a {@link ReferenceSymbolic}.
          * @return {@code true} iff {@code origin} points to {@code null}.
          * @throws GuidanceException if {@code origin} does not refer to an object.
+         * @throws ImpureMethodException if {@code origin} is a 
+         *         {@link ReferenceSymbolicApply}, but the corresponding method is impure. 
          */
-        public abstract boolean isNull(ReferenceSymbolic origin) throws GuidanceException;
+        public abstract boolean isNull(ReferenceSymbolic origin) throws GuidanceException, ImpureMethodException;
 
         /**
          * Returns whether two different {@link ReferenceSymbolic}s refer to the same object
@@ -441,8 +497,10 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
          *         object, or both refer to {@code null}.
          * @throws GuidanceException if {@code first} or {@code second} does not refer 
          *         to an object.
+         * @throws ImpureMethodException if {@code first} or {@code second} is a 
+         *         {@link ReferenceSymbolicApply}, but the corresponding method is impure.
          */
-        public abstract boolean areAlias(ReferenceSymbolic first, ReferenceSymbolic second) throws GuidanceException;
+        public abstract boolean areAlias(ReferenceSymbolic first, ReferenceSymbolic second) throws GuidanceException, ImpureMethodException;
 
         /**
          * Returns the concrete value in the reached concrete state 
@@ -455,11 +513,13 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
          *         if {@link #areAlias(ReferenceSymbolic, ReferenceSymbolic) areAlias}{@code (first, second)}, 
          *         then {@link #getValue(Symbolic) getValue}{@code (first).}{@link Object#equals(Object) equals}{@code (}{@link #getValue(Symbolic) getValue}{@code (second))}.
          * @throws GuidanceException if {@code origin} does not refer to an object.
+         * @throws ImpureMethodException if {@code origin} is a {@link SymbolicApply}, but the corresponding
+         *         method is impure.
          */
-        public abstract Object getValue(Symbolic origin) throws GuidanceException;
+        public abstract Object getValue(Symbolic origin) throws GuidanceException, ImpureMethodException;
 
 
-        public Primitive eval_IFX(DecisionAlternative_IFX da, Primitive condition) throws GuidanceException {
+        private Primitive eval_IFX(DecisionAlternative_IFX da, Primitive condition) throws GuidanceException, ImpureMethodException {
             try {
                 final Primitive conditionNot = this.calc.push(condition).not().pop();
                 final Primitive conditionToCheck  = (da.value() ? condition : conditionNot);
@@ -470,7 +530,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             }
         }
 
-        public Primitive eval_XCMPY(DecisionAlternative_XCMPY da, Primitive val1, Primitive val2) throws GuidanceException {
+        private Primitive eval_XCMPY(DecisionAlternative_XCMPY da, Primitive val1, Primitive val2) throws GuidanceException, ImpureMethodException {
             try{
                 final Primitive comparisonGT = this.calc.push(val1).gt(val2).pop();
                 final Primitive comparisonEQ = this.calc.push(val1).eq(val2).pop();
@@ -486,7 +546,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             }
         }
 
-        public Primitive eval_XSWITCH(DecisionAlternative_XSWITCH da, Primitive selector, SwitchTable tab) throws GuidanceException {
+        private Primitive eval_XSWITCH(DecisionAlternative_XSWITCH da, Primitive selector, SwitchTable tab) throws GuidanceException, ImpureMethodException {
             try {
                 final Primitive conditionToCheck = (da.isDefault() ?
                                                     tab.getDefaultClause(this.calc, selector) :
@@ -498,7 +558,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             }
         }
 
-        public Primitive eval_XNEWARRAY(DecisionAlternative_XNEWARRAY da, Primitive countsNonNegative) throws GuidanceException {
+        private Primitive eval_XNEWARRAY(DecisionAlternative_XNEWARRAY da, Primitive countsNonNegative) throws GuidanceException, ImpureMethodException {
             try {
                 final Primitive conditionToCheck = (da.ok() ? countsNonNegative : this.calc.push(countsNonNegative).not().pop());
                 return eval(conditionToCheck);
@@ -508,7 +568,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             }
         }
 
-        public Primitive eval_XASTORE(DecisionAlternative_XASTORE da, Primitive inRange) throws GuidanceException {
+        private Primitive eval_XASTORE(DecisionAlternative_XASTORE da, Primitive inRange) throws GuidanceException, ImpureMethodException {
             try {
                 final Primitive conditionToCheck = (da.isInRange() ? inRange : this.calc.push(inRange).not().pop());
                 return eval(conditionToCheck);
@@ -518,7 +578,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             }
         }
 
-        public Primitive eval_XALOAD(DecisionAlternative_XALOAD da) throws GuidanceException {
+        private Primitive eval_XALOAD(DecisionAlternative_XALOAD da) throws GuidanceException, ImpureMethodException {
             final Expression conditionToCheck = da.getArrayAccessExpressionSimplified();
             return (conditionToCheck == null ? this.calc.valBoolean(true) : eval(conditionToCheck));
         }
@@ -531,13 +591,16 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
          *         value of {@code toEval} in the reached concrete state
          *         (if {@code toEval instanceof }{@link Simplex} then
          *         the method will return {@code toEval}).
-         * @throws GuidanceException
+         * @throws GuidanceException if {@code toEval} is a {@link PrimitiveSymbolic} but
+         *         does not refer to an object.
+         * @throws ImpureMethodException if {@code toEval} is a {@link PrimitiveSymbolicApply}, 
+         *         but the corresponding method is impure.
          */
-        protected final Primitive eval(Primitive toEval) throws GuidanceException {
+        protected final Primitive eval(Primitive toEval) throws GuidanceException, ImpureMethodException {
             final Evaluator evaluator = new Evaluator(this.calc, this);
             try {
                 toEval.accept(evaluator);
-            } catch (RuntimeException | GuidanceException e) {
+            } catch (RuntimeException | GuidanceException | ImpureMethodException e) {
                 //do not stop them
                 throw e;
             } catch (Exception e) {
@@ -590,7 +653,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             }
 
             @Override
-            public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) throws Exception {
+            public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) throws GuidanceException, ImpureMethodException {
                 final Object funValue = this.jvm.getValue(x);
                 if (funValue instanceof Primitive) {
                     this.value = (Primitive) funValue;
@@ -601,7 +664,13 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
             @Override
             public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) throws GuidanceException {
-                final Object fieldValue = this.jvm.getValue(s);
+                final Object fieldValue;
+				try {
+					fieldValue = this.jvm.getValue(s);
+				} catch (ImpureMethodException e) {
+					//this should never happen
+					throw new UnexpectedInternalException(e);
+				}
                 if (fieldValue instanceof Primitive) {
                     this.value = (Primitive) fieldValue;
                 } else {

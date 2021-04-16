@@ -14,6 +14,7 @@ import java.util.TreeSet;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
+import jbse.apps.disasm.Disassembler;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
@@ -115,7 +116,7 @@ public final class StateFormatterText implements Formatter {
             try {
                 sb.append("Method signature: "); sb.append(state.getCurrentMethodSignature()); sb.append(lineSep);
                 sb.append("Program counter: "); sb.append(state.getCurrentProgramCounter()); sb.append(lineSep);
-                final BytecodeFormatter bfmt = new BytecodeFormatter();
+                final Disassembler bfmt = new Disassembler();
                 sb.append("Next bytecode: "); sb.append(bfmt.format(state)); sb.append(lineSep); 
                 sb.append("Source line: "); sourceLine(state.getCurrentFrame(), sb, srcPath); sb.append(lineSep);
             } catch (ThreadStackEmptyException e) {
@@ -750,7 +751,7 @@ public final class StateFormatterText implements Formatter {
         sb.append(indentCurrent); sb.append("Program counter after return: "); 
         sb.append((f.getReturnProgramCounter() == Frame.UNKNOWN_PC) ? "<UNKNOWN>" : f.getReturnProgramCounter()); sb.append(lineSep);
         final ClassHierarchy hier = s.getClassHierarchy();
-        final BytecodeFormatter bfmt = new BytecodeFormatter();
+        final Disassembler bfmt = new Disassembler();
         sb.append(indentCurrent); sb.append("Next bytecode: "); sb.append(bfmt.format(f, hier)); sb.append(lineSep); 
         sb.append(indentCurrent); sb.append("Source line: "); sourceLine(f, sb, srcPath); sb.append(lineSep);
         sb.append(indentCurrent); sb.append("Operand Stack: {"); sb.append(lineSep); formatOperandStack(s, sb, f, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append(indentCurrent); sb.append("}"); sb.append(lineSep);
