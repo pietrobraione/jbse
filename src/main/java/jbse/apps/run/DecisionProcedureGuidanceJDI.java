@@ -244,8 +244,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		}
 		
 		/**
-		 * StreamRedirectThread is a thread which copies it's input to
-		 * it's output and terminates when it completes.
+		 * StreamRedirectThread is a thread which copies its input to
+		 * its output and terminates when it completes.
 		 *
 		 * @author Robert Field
 		 */
@@ -281,8 +281,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 					    this.out.write(cbuf, 0, count);
 					}
 					this.out.flush();
-				} catch(IOException exc) {
-					System.err.println("Child I/O Transfer - " + exc);
+				} catch (IOException exc) {
+					//do nothing
 				}
 			}
 
@@ -290,7 +290,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 				try {
 				    this.out.flush();
 				} catch (IOException exc) {
-					System.err.println("Child I/O Transfer - " + exc);
+					//do nothing
 				}
 			}
 		}
