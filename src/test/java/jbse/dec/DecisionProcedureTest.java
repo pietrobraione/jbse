@@ -44,7 +44,7 @@ public class DecisionProcedureTest {
 
     //BEGIN TO PATCH
     private static final ArrayList<String> COMMAND_LINE = Z3_COMMAND_LINE;
-    private static final String SMT_SOLVER_PATH = "/Users/denaro/Desktop/RTools/Z3/z3-4.3.2.d548c51a984e-x64-osx-10.8.5/bin/z3";
+    private static final String SMT_SOLVER_PATH = "/opt/local/bin/z3";//"/Users/denaro/Desktop/RTools/Z3/z3-4.3.2.d548c51a984e-x64-osx-10.8.5/bin/z3";
     //END TO PATCH
 
     static {
@@ -351,6 +351,7 @@ public class DecisionProcedureTest {
     @Test
     public void testOther3() 
     throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
+    	//true |- A / 2 < 2
         Simplex two = this.calc.valInt(2);
         Term A = this.calc.valTerm(Type.INT, "A");
 
