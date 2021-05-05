@@ -666,6 +666,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			}
 			final String op = symbolicApply.getOperator();
 			String opWithContext = SymbolicApplyJVMJDI.formatContextualSymbolicApplyOperatorOccurrence(op, this.currentStateSupplier.get());
+			if (opWithContext == null) {
+				throw new GuidanceException("Cannot handle methods called within the code of a map-model, since JDI cannot see calls that do not occurr in the actual bytecode of program");
+			}
             storeNewSymbolicApplyOperatorContextualOccurrence(op, opWithContext);
 			final List<String> hitCallCtxs = this.symbolicApplyOperatorOccurrences.get(op);
 
@@ -875,6 +878,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			}
 		}
 		
+		// NB: This method return null if the call stack indicate a call nested within hash map models,
+		// because these calls do not match actual call in the concrete execution observed with JDI.
 		public static String formatContextualSymbolicApplyOperatorOccurrence(String symbolicApplyOperator, State state) {
             String callCtxString = "";
             try {
@@ -892,7 +897,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 	            //this should never happen
 	            failExecution(e);
 			}
-            callCtxString += SymbolicApplyJVMJDI.callContextSeparator + symbolicApplyOperator;
+            if (symbolicApplyOperator != null) {
+            	callCtxString += SymbolicApplyJVMJDI.callContextSeparator + symbolicApplyOperator;
+            }
             return callCtxString;
 		}
 
@@ -1072,17 +1079,16 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 	}
 
 	public void notifyExecutionOfMapModelMethod(Signature currentMethodSignature, State state) {
-		String methodWithContext = SymbolicApplyJVMJDI.formatContextualSymbolicApplyOperatorOccurrence("", state);
-		if (methodWithContext != null) {
-			methodWithContext = methodWithContext.substring(0, methodWithContext.lastIndexOf(SymbolicApplyJVMJDI.callContextSeparator));
-			((JVMJDI) this.jvm).storeNewSymbolicApplyOperatorContextualOccurrence(currentMethodSignature.toString(), methodWithContext);
+		final String jbseMethodWithCtx = SymbolicApplyJVMJDI.formatContextualSymbolicApplyOperatorOccurrence(null, state);
+		if (jbseMethodWithCtx != null) {
+			((JVMJDI) this.jvm).storeNewSymbolicApplyOperatorContextualOccurrence(currentMethodSignature.toString(), jbseMethodWithCtx);
 			((JVMJDI) this.jvm).currentHashMapModelMethod = currentMethodSignature.toString();
 			//consistency check
-			String lastInCtx = methodWithContext.substring(methodWithContext.lastIndexOf(SymbolicApplyJVMJDI.callContextSeparator) + SymbolicApplyJVMJDI.callContextSeparator.length());
-			if (!currentMethodSignature.toString().equals(lastInCtx)) {
-				throw new UnexpectedInternalException("We expect that the currently executing method is the last in the context string, but CURRENT=" + currentMethodSignature + " while LAST=" + lastInCtx + " and CONTEXT=" + methodWithContext);
+			final String lastCall = jbseMethodWithCtx.substring(jbseMethodWithCtx.lastIndexOf(SymbolicApplyJVMJDI.callContextSeparator) + SymbolicApplyJVMJDI.callContextSeparator.length());
+			if (!currentMethodSignature.toString().equals(lastCall)) {
+				throw new UnexpectedInternalException("We expect that the notified method is the last that jbse is executing, but CURRENT=" + currentMethodSignature + " while LAST=" + lastCall + " withing the CONTEXT=" + jbseMethodWithCtx);
 			}
-		}
+		} //else: it is an invocation nested in a chain of JAVA_MAP methods. We ignore it.
 	}
 }
 
