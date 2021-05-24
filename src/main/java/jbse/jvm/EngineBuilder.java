@@ -96,10 +96,10 @@ public class EngineBuilder {
 	
 	        //sets the meta-level directives
 	        setOverrides(ctx, parameters);
-	
-	        final VariableObserverManager vom = new VariableObserverManager(parameters.getMethodSignature().getClassName());
-	
+	        setUninterpreted(ctx, parameters);
+		
 	        //sets the observers
+	        final VariableObserverManager vom = new VariableObserverManager(parameters.getMethodSignature().getClassName());
 	        setObservers(vom, parameters);
 	
 	        //creates the engine
@@ -123,6 +123,9 @@ public class EngineBuilder {
                 // TODO manage the situation
             }
         }
+    }
+    
+    private static void setUninterpreted(ExecutionContext ctx, EngineParameters parameters) {
         for (String[] rule : parameters.getUninterpreted()) {
             ctx.addUninterpreted(new Signature(rule[0], rule[1], rule[2]));
         }
