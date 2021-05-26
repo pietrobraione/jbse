@@ -667,7 +667,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			final String op = symbolicApply.getOperator();
 			String opWithContext = SymbolicApplyJVMJDI.formatContextualSymbolicApplyOperatorOccurrence(op, this.currentStateSupplier.get());
 			if (opWithContext == null) {
-				throw new GuidanceException("Cannot handle methods called within the code of a map-model, since JDI cannot see calls that do not occurr in the actual bytecode of program");
+				throw new UninterpretedNoContextException();
 			}
             storeNewSymbolicApplyOperatorContextualOccurrence(op, opWithContext);
 			final List<String> hitCallCtxs = this.symbolicApplyOperatorOccurrences.get(op);
