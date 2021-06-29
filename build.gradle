@@ -47,11 +47,19 @@ sourceSets {
     }
 }
 
+
+task copyToLib(type: Copy) {
+    into "${buildDir}/libs"
+    from configurations.compileClasspath
+}
+
 shadowJar {
     classifier = 'shaded'
     exclude 'tools.jar'
     relocate 'javassist', 'jbse.javassist'
 }
+
+build.dependsOn(copyToLib)
 
 build.dependsOn 'shadowJar'
 
