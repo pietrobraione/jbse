@@ -14,7 +14,7 @@ Right now JBSE can be installed only by building it from source. Formal releases
 
 ## Building JBSE
 
-JBSE is built with Gradle version 6.7.1, that is included in the repository. First, ensure that all the dependencies are present, including Z3 (see section "Dependencies"). Then, clone the JBSE git repository. If you work from the command line, this means running `git clone`. Next, you may need to patch a test class as explained in the section "Patching the tests". Finally, run the build Gradle task, e.g. by invoking `gradlew build` from the command line.
+JBSE is built with Gradle version 7.1.1, that is included in the repository. First, ensure that all the dependencies are present, including Z3 (see section "Dependencies"). Then, clone the JBSE git repository. If you work from the command line, this means running `git clone`. Next, you may need to patch a test class as explained in the section "Patching the tests". Finally, run the build Gradle task, e.g. by invoking `gradlew build` from the command line.
 
 ### Dependencies
 
@@ -36,7 +36,7 @@ Once cloned the git repository and ensured the dependencies, you might need to f
 
 ### Working under Eclipse
 
-If you want to build and modify JBSE by using (as we do) Eclipse 2020-12 for Java Developers, you are lucky: All the Eclipse plugins that are necessary to import and build JBSE are already present in the distribution. The only caveat is that, since starting from version 2020-09 Eclipse requires at least Java 11 to run, your development machine will need to have both a Java 11 (to run Eclipse) and a Java 8 setup (to build JBSE). Gradle will automatically select the right version of the JDK when building JBSE. If you use a different flavor, or an earlier version, of Eclipse you might need to install the egit and the Buildship plugins, both available from the Eclipse Marketplace. After that, to import JBSE under Eclipse follow these steps:
+If you want to build and modify JBSE by using (as we do) Eclipse 2021-06 for Java Developers, you are lucky: All the Eclipse plugins that are necessary to import and build JBSE are already present in the distribution. The only caveat is that, since starting from version 2020-09 Eclipse requires at least Java 11 to run, your development machine will need to have both a Java 11 (to run Eclipse) and a Java 8 setup (to build JBSE). Gradle will automatically select the right version of the JDK when building JBSE. If you use a different flavor, or an earlier version, of Eclipse you might need to install the egit and the Buildship plugins, both available from the Eclipse Marketplace. After that, to import JBSE under Eclipse follow these steps:
 
 * To avoid conflicts we advise to import JBSE under an empty workspace.
 * JBSE uses the reserved `sun.misc.Unsafe` class, a thing that Eclipse forbids by default. To avoid Eclipse complaining about that you must modify the workspace preferences as follows: From the main menu choose Eclipse > Preferences... under macOS, or Window > Preferences... under Windows and Linux. On the left panel select Java > Compiler > Errors/Warnings, then on the right panel open the option group "Deprecated and restricted API", and for the option "Forbidden reference (access rules)" select the value "Warning" or "Info" or "Ignore".
