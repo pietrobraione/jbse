@@ -948,12 +948,12 @@ public final class RunnerParameters implements Cloneable {
     @SuppressWarnings("unchecked")
     public Map<String, Integer> getHeapScope() {
         final Map<String, Integer> retVal = (Map<String, Integer>) this.heapScopeStatic.clone();
-        final State initialState = getStartingState();
-        if (initialState != null) {
+        final State startingState = getStartingState();
+        if (startingState != null) {
             for (Map.Entry<String, Function<State, Integer>> entry : this.heapScopeComputed.entrySet()) {
                 final String className = entry.getKey();
                 final Function<State, Integer> heapScopeCalculator = entry.getValue();
-                retVal.put(className, heapScopeCalculator.apply(initialState));
+                retVal.put(className, heapScopeCalculator.apply(startingState));
             }
         }
         return retVal;
