@@ -2,6 +2,7 @@ package jbse.apps.run;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 public class DecisionProcedureGuidanceJDILauncher {
     /**
@@ -32,14 +33,18 @@ public class DecisionProcedureGuidanceJDILauncher {
     	final Method method = clazz.getDeclaredMethod(args[1]);
     	method.setAccessible(true);
     	Object o = clazz.newInstance();
-	    try {
-	        method.invoke(o);
-    	} catch (InvocationTargetException e) {
-    		//this instruction serves the purpose of
-    		//allowing a breakpoint to be put in this
-    		//catch block, to detect whether the invoked
-    		//method throws an exception
-    		throw e;
-    	}
+		try {
+			if(Modifier.isStatic(method.getModifiers())) {
+				method.invoke(null);
+			} else {
+				method.invoke(o);
+			}
+		} catch (InvocationTargetException e) {
+			//this instruction serves the purpose of
+			//allowing a breakpoint to be put in this
+			//catch block, to detect whether the invoked
+			//method throws an exception
+			throw e;
+		}
     }
 }
