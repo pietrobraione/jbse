@@ -158,6 +158,11 @@ public abstract class ObjektImpl implements Objekt {
             return Collections.unmodifiableCollection(this.fieldSignatures.subList(this.numOfStaticFields, this.fieldSignatures.size()));
         }
     }
+
+    @Override
+    public final Collection<Signature> getAllStoredFieldSignatures() {
+        return Collections.unmodifiableCollection(this.fieldSignatures);
+    }
     
     private int ofstToPos(int ofst) {
         return this.fieldSignatures.size() - 1 - ofst;

@@ -86,6 +86,14 @@ public interface Objekt extends Cloneable {
     Collection<Signature> getStoredFieldSignatures();
 
     /**
+     * Returns all the {@link Signature}s this {@link Objekt} stores.
+     *
+     * @return an immutable
+     *         {@link Collection}{@code <}{@link Signature}{@code >}.
+     */
+    Collection<Signature> getAllStoredFieldSignatures();
+
+    /**
      * Checks whether an object has an offset.
      * 
      * @param ofst an {@code int}.

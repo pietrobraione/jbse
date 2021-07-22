@@ -95,6 +95,11 @@ abstract class ObjektWrapper<T extends ObjektImpl> implements Objekt {
 	}
 
 	@Override
+	public final Collection<Signature> getAllStoredFieldSignatures() {
+		return getDelegate().getAllStoredFieldSignatures();
+	}
+
+	@Override
 	public final boolean hasOffset(int slot) {
 		return getDelegate().hasOffset(slot);
 	}
