@@ -12,10 +12,7 @@ import jbse.mem.State;
 import jbse.mem.Variable;
 import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
-import jbse.val.Primitive;
-import jbse.val.Reference;
-import jbse.val.ReferenceSymbolic;
-import jbse.val.Value;
+import jbse.val.*;
 
 /**
  * {@link Algo_INVOKEMETA} implementing the effect of 
@@ -91,6 +88,8 @@ public final class Algo_INVOKEMETA_Uninterpreted extends Algo_INVOKEMETA_Nonbran
 		} else {
 			for (Variable var : obj.fields().values()) {
 				final Value val = var.getValue();
+				if (val instanceof Null)
+					return true;
 				if (val instanceof Primitive && val.isSymbolic()) {
 					return false;
 				} else if (val instanceof Reference && !isSimple(state, (Reference) val)) {
