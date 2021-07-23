@@ -128,7 +128,7 @@ public final class State implements Cloneable {
     private boolean branchingDecision = false;
 
     /** The depth of the state, i.e., the number of branch points over it. */
-    private int depth = 0; //zero for pre-initial virgin state
+    private int depth = -1; //minus one for pre-initial virgin state
 
     /** The count of the state, i.e., the number of states from the previous branch point. */
     private int count = 0;
@@ -724,8 +724,23 @@ public final class State implements Cloneable {
     	}
         this.phase = Phase.INITIAL;
         setInitialHistoryPoint();
+        resetDepth();
+        resetCount();
     }
     
+    /**
+     * Sets the state's depth to {@code 0}, the value of 
+     * the state depth for the initial state.
+     * 
+     * @throws FrozenStateException if the state is frozen. 
+     */
+    private void resetDepth() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        this.depth = 0;
+    }
+
     /**
      * Sets this state to its post-initizialization
      * phase.
@@ -3395,23 +3410,13 @@ public final class State implements Cloneable {
      * Gets the state's depth in the symbolic execution tree; the depth 
      * is the number of branches above the state.
      * 
-     * @return the depth of the state as an {@code int} value
-     *         ({@code 0} for the topmost state).
+     * @return the depth of the state as an {@code int} value; pre-initial
+     *         states have depth {@code -1}, the initial state has depth
+     *         {@code 0}, and all the post-initial states have depth
+     *         according to the number of branches above.  
      */
     public int getDepth() {
         return this.depth;
-    }
-
-    /**
-     * Sets the state's depth to {@code 1}.
-     * 
-     * @throws FrozenStateException if the state is frozen. 
-     */
-    public void resetDepth() throws FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        this.depth = 1;
     }
 
     /**

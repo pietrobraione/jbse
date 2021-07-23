@@ -226,8 +226,6 @@ public class StateTree {
     	    if (hasStates()) {
     	        throw new InvalidInputException("Invoked " + StateTree.class.getName() + ".addStateInitial() on a nonempty tree.");
     	    }
-    	    s.resetDepth();
-    	    s.resetCount();
     	    addBranchPoint();
     	    add(s);
     	} else { //(phase == Phase.PRE_INITIAL || phase == Phase.POST_INITIAL)
