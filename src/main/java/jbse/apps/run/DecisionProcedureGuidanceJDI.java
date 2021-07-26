@@ -737,11 +737,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			} else {
 				//the field is not static (note that it can be declared in the superclass)
 				final com.sun.jdi.ObjectReference oReference = ((com.sun.jdi.ObjectReference) o);
-				final String fieldDeclaringClass = binaryClassName(origin.getFieldClass());
 				final List<Field> fields = oReference.referenceType().allFields();
 				Field fld = null;
 				for (Field _fld : fields) {
-					if (_fld.declaringType().name().equals(fieldDeclaringClass) && _fld.name().equals(fieldName)) {
+					if (_fld.name().equals(fieldName)) {
 						fld = _fld;
 						break;
 					}
