@@ -189,7 +189,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		private final Signature stopSignature;
 		private final int numberOfHits;
 		
-		// Handling of uninterpreted functions
+		//Handling of uninterpreted functions
 		private Map<SymbolicApply, SymbolicApplyJVMJDI> symbolicApplyCache = new HashMap<>();
 		private Map<String, List<String>> symbolicApplyOperatorOccurrences = new HashMap<>();
 		private String currentHashMapModelMethod;
@@ -1080,6 +1080,40 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			} catch (InvalidTypeException | ClassNotLoadedException | IncompatibleThreadStateException | InvocationException e) {
 				throw new GuidanceException("Failed to call method on the concrete HashMap that corresponds to a symbolic HashMap:" + e);
 			}
+		}
+		
+		@Override
+		protected Object getJDIValue(Symbolic origin) throws GuidanceException, ImpureMethodException {
+			//TODO
+			
+			/*if (origin instanceof ReferenceSymbolicMemberMapValue) {
+				final ReferenceSymbolicMemberMapValue refSymbolicMemberMapValue = (ReferenceSymbolicMemberMapValue) origin;
+				final SymbolicApply javaMapContainsKeySymbolicApply;
+				try {
+					javaMapContainsKeySymbolicApply = (SymbolicApply) this.calc.applyFunctionPrimitive(BOOLEAN, refSymbolicMemberMapValue.getHistoryPoint(), 
+					                                                                                   JAVA_MAP_CONTAINSKEY.toString(), refSymbolicMemberMapValue.getContainer(), refSymbolicMemberMapValue.getKey()).pop();
+				} catch (NoSuchElementException | jbse.val.exc.InvalidTypeException | InvalidInputException e) {
+					throw new UnexpectedInternalException(e);
+				}
+				if (!this.symbolicApplyCache.containsKey(javaMapContainsKeySymbolicApply)) {
+					throw new GuidanceException(ERROR_BAD_PATH + origin.asOriginString() + " : Fails because containsKey was not evaluated before evaluating this GET symbol");
+					//TODO this doesn't work because this.currentHashMapModelMethod is not set, and this.symbolicApplyOperatorOccurrences is empty
+					//final SymbolicApplyJVMJDI symbolicApplyVm = startSymbolicApplyVm(javaMapContainsKeySymbolicApply);
+					//this.symbolicApplyCache.put(javaMapContainsKeySymbolicApply, symbolicApplyVm);
+				} 
+				final SymbolicApplyJVMJDI symbolicApplyVm = this.symbolicApplyCache.get(javaMapContainsKeySymbolicApply); 
+				if (!(symbolicApplyVm instanceof InitialMapSymbolicApplyJVMJDI)) {
+					throw new GuidanceException(ERROR_BAD_PATH + origin.asOriginString() + " : Fails because containsKey was evaluated as an ordinary abstract-interpreted call, rather than as a JAVA_MAP function");
+				} 
+				final InitialMapSymbolicApplyJVMJDI initialMapSymbolicApplyVm = (InitialMapSymbolicApplyJVMJDI) symbolicApplyVm;
+				final Value val = initialMapSymbolicApplyVm.getValueAtKey();
+				if (val != null) {
+					this.getJDIValueJVMJDIContext = initialMapSymbolicApplyVm;
+				}
+				return val;
+			} else {*/
+				return super.getJDIValue(origin);
+			/*}*/
 		}
 		
 		public Value getValueAtKey() {
