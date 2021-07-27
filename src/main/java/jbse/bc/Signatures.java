@@ -22,6 +22,7 @@ import static jbse.common.Type.VOID;
  */
 public final class Signatures {
     //classes and interfaces
+    public static final String JAVA_ABSTRACTMAP              = "java/util/AbstractMap";
     public static final String JAVA_ABSTRACTPIPELINE         = "java/util/stream/AbstractPipeline";
     public static final String JAVA_ACCESSCONTROLCONTEXT     = "java/security/AccessControlContext";
     public static final String JAVA_ACCESSCONTROLLER         = "java/security/AccessController";
@@ -58,6 +59,7 @@ public final class Signatures {
     public static final String JAVA_COLORMODEL               = "java/awt/image/ColorModel";
     public static final String JAVA_COMPARABLE               = "java/lang/Comparable";
     public static final String JAVA_CONCURRENTHASHMAP        = "java/util/concurrent/ConcurrentHashMap";
+    public static final String JAVA_CONCURRENTMAP            = "java/util/concurrent/ConcurrentMap";
     public static final String JAVA_CONSTRUCTOR              = "java/lang/reflect/Constructor";
     public static final String JAVA_CRC32                    = "java/util/zip/CRC32";
     public static final String JAVA_DEFLATER                 = "java/util/zip/Deflater";
