@@ -363,12 +363,29 @@ public final class Run {
         }
 
         @Override
+        public boolean atStepPre() {
+            final State currentState = Run.this.engine.getCurrentState();
+            
+            try {
+            	if (Run.this.guidance != null) {
+            		Run.this.guidance.preStep(currentState);
+            	}
+            } catch (GuidanceException e) {
+            	Run.this.err(ERROR_UNEXPECTED);
+            	Run.this.err(e);
+            	return true;
+            }
+            
+            return super.atStepPre();
+        }
+        
+        @Override
         public boolean atStepPost() {
             final State currentState = Run.this.engine.getCurrentState();
             
             try {
             	if (Run.this.guidance != null) {
-            		Run.this.guidance.step(currentState);
+            		Run.this.guidance.postStep(currentState);
             	}
             } catch (GuidanceException e) {
             	Run.this.err(ERROR_UNEXPECTED);

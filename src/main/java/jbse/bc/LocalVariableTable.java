@@ -49,7 +49,7 @@ public class LocalVariableTable implements Iterable<LocalVariableTable.Row> {
      */
     public LocalVariableTable(int slots) {
         this.slots = slots;
-        this.entries = new HashMap<Integer, Set<Row>>();
+        this.entries = new HashMap<>();
     }
 
     /**
@@ -113,7 +113,7 @@ public class LocalVariableTable implements Iterable<LocalVariableTable.Row> {
      *         such row exists.
      */
     public Row row(int slot, int curPC) {
-        for (Row r : this.rows(slot)) {
+        for (Row r : rows(slot)) {
             if (r.start <= curPC && curPC < r.start + r.length) {
                 return r;
             }

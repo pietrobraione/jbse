@@ -151,7 +151,7 @@ public final class MethodFrame extends Frame implements Cloneable {
     public MethodFrame clone() {
         final MethodFrame o = (MethodFrame) super.clone();
         o.localVariables = o.localVariables.clone();
-        o.operandStack = o.operandStack.clone();
+        o.operandStack = new OperandStack(o.operandStack);
         return o;
     }
 

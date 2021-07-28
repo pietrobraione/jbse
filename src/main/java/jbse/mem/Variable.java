@@ -7,7 +7,7 @@ import jbse.val.Value;
  * Class representing a variable into the memory. It gathers the name, 
  * the declaration type and the runtime value of the variable. 
  */
-public class Variable implements Cloneable {
+public final class Variable implements Cloneable {
     /** Type of the variable. */
     private final String type;
 

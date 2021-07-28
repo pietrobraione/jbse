@@ -838,8 +838,8 @@ public abstract class ClassFile implements Comparable<ClassFile> {
         int i = 0;
         short slot = 0;
         if (!isStatic) {
-            lvt.addRow(slot, REFERENCE + this.getClassName() + TYPEEND, 
-                         "this", 0, this.getCodeLength(methodSignature));
+            lvt.addRow(slot, REFERENCE + getClassName() + TYPEEND, 
+                         "this", 0, getCodeLength(methodSignature));
             ++i; ++slot;
         }
         for (String descriptor : parDescList) {

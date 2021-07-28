@@ -823,7 +823,12 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		}
 
 		@Override
-		public void step(State jbseState) throws GuidanceException {
+		protected void preStep(State preSymbolicState) throws GuidanceException {
+			// Nothing to do: This version of JVMJDI remains stuck at the initial state of the method under analysis
+		}
+		
+		@Override
+		protected void postStep(State postSymbolicState) throws GuidanceException {
 			// Nothing to do: This version of JVMJDI remains stuck at the initial state of the method under analysis
 		}
 

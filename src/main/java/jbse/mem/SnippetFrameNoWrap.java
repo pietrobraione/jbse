@@ -147,7 +147,7 @@ public final class SnippetFrameNoWrap extends Frame implements Cloneable {
     @Override
     public SnippetFrameNoWrap clone() {
         final SnippetFrameNoWrap o = (SnippetFrameNoWrap) super.clone();
-        o.operandStack = o.operandStack.clone();
+        o.operandStack = new OperandStack(o.operandStack);
         return o;
     }
 

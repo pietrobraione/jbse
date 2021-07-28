@@ -717,7 +717,9 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             }
         }
 
-        protected abstract void step(State state) throws GuidanceException;
+        protected abstract void preStep(State preSymbolicState) throws GuidanceException;
+
+        protected abstract void postStep(State postSymbolicState) throws GuidanceException;
 
         protected abstract Signature getCurrentMethodSignature() throws ThreadStackEmptyException;
 
@@ -726,9 +728,15 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         protected void close() { }
     }
 
-    public final void step(State state) throws GuidanceException {
-        if (state.phase() == Phase.POST_INITIAL && this.guiding) {
-            this.jvm.step(state);
+    public final void preStep(State preSymbolicState) throws GuidanceException {
+        if ((preSymbolicState.phase() == Phase.INITIAL || preSymbolicState.phase() == Phase.POST_INITIAL) && this.guiding) {
+            this.jvm.preStep(preSymbolicState);
+        }
+    }
+
+    public final void postStep(State postSymbolicState) throws GuidanceException {
+        if (postSymbolicState.phase() == Phase.POST_INITIAL && this.guiding) {
+            this.jvm.postStep(postSymbolicState);
         }
     }
 

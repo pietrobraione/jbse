@@ -139,7 +139,13 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
         private static final String ERROR_UNEXPECTED_OBJECT = "Met an unexpected object from the heap (neither an instance nor an array)";
         private static final String ERROR_DEFAULT_VALUE_DETECTED = "Met an unexpected value of class DefaultValue";
         
+        /** The {@link Engine} used to perform concrete (guiding) execution. */
         private final Engine engine;
+        
+        /** 
+         * The {@link ClassFile} for {@code java.util.HashMap}, in the
+         * concrete {@link Engine}.
+         */
         private final ClassFile cfJAVA_HASHMAP;
         
         /**
@@ -157,7 +163,10 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
         /**
          * Caches all the symbols to values conversions.
          */
-        private final HashMap<Symbolic, Value> symbolValueConversionCache = new HashMap<>(); 
+        private final HashMap<Symbolic, Value> symbolValueConversionCache = new HashMap<>();
+        
+        /** The symbolic state before the current execution step. */
+        private State preSymbolicState = null;
         
         private Exception catastrophicFailure = null; //used only by runners actions to report errors
         private boolean failedConcrete = false;       //used only by runners actions to report errors
@@ -253,6 +262,8 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
             this.engine = runner.getEngine();
             final State initialState = this.engine.getCurrentState().clone();
             this.statesConcrete.put(initialState.getHistoryPoint().startingInitial(), initialState);
+            //the corresponding symbolic state is saved at the first invocation
+            //of preStep
 
 			final ClassHierarchy hier = initialState.getClassHierarchy();
 			try {
@@ -263,12 +274,6 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
                 //this should never happen
                 throw new UnexpectedInternalException(e);
 			}
-
-            /*try {
-                engine.close();
-            } catch (DecisionException e) {
-                throw new UnexpectedInternalException(e);
-            }*/
         }
         
         @Override
@@ -300,10 +305,26 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
         		return this.symbolValueConversionCache.get(origin);
         	}
         	
-			final State stateConcrete = this.statesConcrete.get(origin.historyPoint());
-			if (stateConcrete == null) {
+        	final State stateConcrete;
+        	if (this.statesConcrete.containsKey(origin.historyPoint())) {
+        		stateConcrete = this.statesConcrete.get(origin.historyPoint());
+        	} else if (origin.historyPoint().equals(this.preSymbolicState.getHistoryPoint())) {
+    			//it might be the case that origin's history point is that of the pre symbolic state 
+            	//(the one currently under execution): This happens when an invoke* bytecode returns 
+            	//a ReferenceSymbolicApply because, this being a symbolic reference on top of the stack, 
+            	//it must be resolved immediately during the bytecode execution itself.
+            	//In such case we need to realign the concrete execution and register the 
+            	//obtained concrete state.
+        		//Note that this case must be the second one due to a crazy initialization race
+        		//of symbolic states during symbolic execution.
+        		returnEngineFromMethod(this.preSymbolicState.getStackSize());
+        		this.statesConcrete.put(origin.historyPoint(), this.engine.getCurrentState());
+        		this.statesSymbolic.put(origin.historyPoint(), this.preSymbolicState);
+        		stateConcrete = this.statesConcrete.get(origin.historyPoint());
+        	} else {
 				throw new GuidanceException(ERROR_BAD_HISTORY_POINT + origin.historyPoint().toString());
 			}
+        	
         	try {
         		if (origin instanceof SymbolicLocalVariable) {
         			final SymbolicLocalVariable al = (SymbolicLocalVariable) origin;
@@ -488,8 +509,7 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
         				throw new GuidanceException(ERROR_BAD_PATH);
         			}
         		} else if (origin instanceof SymbolicApply) {
-                	//the value is on top of the stack 
-        			//TODO is it true? I am in doubt for the case where the returned value is a ReferenceSymbolicApply
+                	//the value is on top of the stack
         			final Value retVal = stateConcrete.topOperand();
         			this.symbolValueConversionCache.put(origin, retVal); //caches
 					return retVal;
@@ -808,40 +828,80 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
 			}
         }
         
-        //member variables used only by the step method
+        private void returnEngineFromMethod(int symbolicStateStackSizeTarget) throws GuidanceException {
+        	try {
+        		while (this.engine.getCurrentState().getStackSize() != (symbolicStateStackSizeTarget + this.stackSizeOffset)) {
+        			this.engine.step();
+        		}
+			} catch (EngineStuckException | ThreadStackEmptyException e) {
+				throw new GuidanceException(ERROR_GUIDANCE_MISALIGNMENT);
+			} catch (CannotManageStateException | NonexistingObservedVariablesException |
+			         ClasspathException | ContradictionException | DecisionException |
+			         FailureException e) {
+				throw new GuidanceException(e);
+        	}
+        }
 
-        private int stackSizeOffset = -1;
-        private boolean aligned = true;
+        private int preConcreteStateStackSize;             //used only by the *step methods
+        private int preConcreteStateCurrentProgramCounter; //used only by the *step methods
+        private int stackSizeOffset = -1;                  //used only by the *step methods
+        private boolean aligned = true;                    //used only by the *step methods
         
         @Override
-        protected void step(State postSymbolicState) throws GuidanceException {
+        protected void preStep(State preSymbolicState) throws GuidanceException {
+        	//invariant: the engine's current state (preConcreteState) has same 
+        	//stack size (minus offset) and same program counter as preSymbolicState 
+        	//(this.aligned == true), or preSymbolicState has bigger stack size minus offset 
+        	//(this.aligned == false)
+        	try {
+        		this.preSymbolicState = preSymbolicState;
+        		final State preConcreteState = this.engine.getCurrentState();
+        		this.preConcreteStateStackSize = preConcreteState.getStackSize();
+        		this.preConcreteStateCurrentProgramCounter = preConcreteState.getCurrentProgramCounter();
+            	
+            	//the guiding (concrete) execution might start with a 
+            	//deeper stack than the guided (symbolic), because it 
+            	//also executes the driver method(s): saves the offset
+            	if (this.stackSizeOffset == -1) {
+            		this.stackSizeOffset = this.preConcreteStateStackSize - 1;
+            		//note that here we are at the start of symbolic execution;
+            		//we save the initial symbolic state, a thing that we could not
+            		//do in the constructor
+            		this.statesSymbolic.put(preSymbolicState.getHistoryPoint().startingInitial(), preSymbolicState);            	}
+            	
+        		//steps if aligned
+            	if (this.aligned) {
+    				this.engine.step();
+            	} //else does nothing, it must wait for the symbolic execution to realign
+            	
+            	//saves the history point of the current symbolic state
+			} catch (ThreadStackEmptyException | EngineStuckException e) {
+				throw new GuidanceException(ERROR_GUIDANCE_MISALIGNMENT);
+			} catch (CannotManageStateException | NonexistingObservedVariablesException |
+			ClasspathException | ContradictionException | DecisionException |
+			FailureException e) {
+				throw new GuidanceException(e);
+			}
+        }
+        
+        @Override
+        protected void postStep(State postSymbolicState) throws GuidanceException {
         	//invariant: after a step the engine's current state (postConcreteState) has same 
         	//stack size (minus offset) and same program counter as postSymbolicState 
         	//(alignment), or postSymbolicState has bigger stack size minus offset 
         	//(the symbolic execution is executing a trigger)
         	try {
-        		final int postSymbolicStateStackSize = postSymbolicState.getStackSize();
-            	final int postSymbolicStateCurrentProgramCounter = postSymbolicState.getCurrentProgramCounter();
-        		final State preConcreteState = this.engine.getCurrentState();
-            	final int preConcreteStateStackSize = preConcreteState.getStackSize();
-            	final int preConcreteStateCurrentProgramCounter = preConcreteState.getCurrentProgramCounter();
-            	
-            	//the guiding (concrete) execution might start with a 
-            	//deeper stack, because it executes the driver method(s)
-            	if (this.stackSizeOffset == -1) {
-            		this.stackSizeOffset = preConcreteStateStackSize - 1;
-            	}
+        		final int postSymbolicStateStackSize = postSymbolicState.getStackSize(); //can be zero upon uncaught exception or end of execution
+            	final int postSymbolicStateCurrentProgramCounter = (postSymbolicStateStackSize == 0 ? -1 : postSymbolicState.getCurrentProgramCounter());
             	
             	if (this.aligned) {
-            		//step
-    				this.engine.step();
-            		final State postConcreteState = this.engine.getCurrentState();
+            		final State postConcreteState = this.engine.getCurrentState(); //can be zero upon uncaught exception
                 	final int postConcreteStateStackSize = postConcreteState.getStackSize();
-                	final int postConcreteStateCurrentProgramCounter = postConcreteState.getCurrentProgramCounter();
+                	final int postConcreteStateCurrentProgramCounter = (postConcreteStateStackSize == 0 ? -1 : postConcreteState.getCurrentProgramCounter());
                 	
                 	//checks whether they are still aligned
                 	if (postConcreteStateStackSize == (postSymbolicStateStackSize + this.stackSizeOffset) &&
-                	postConcreteStateCurrentProgramCounter == postSymbolicStateCurrentProgramCounter) {
+                	(postSymbolicStateStackSize == 0 || postConcreteStateCurrentProgramCounter == postSymbolicStateCurrentProgramCounter)) {
                 		//aligned: nothing to do
                 	} else if (postConcreteStateStackSize > (postSymbolicStateStackSize + this.stackSizeOffset) &&
                 	postConcreteStateCurrentProgramCounter == 0) {
@@ -859,6 +919,10 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
                 			postSymbolicStateTOS = postSymbolicState.topOperand();
                 		} catch (InvalidNumberOfOperandsException e) {
                 			postSymbolicStateTOS = null;
+                		} catch (ThreadStackEmptyException e) {
+                			//it is possible that postSymbolicState is stuck
+                			//with a return value
+                			postSymbolicStateTOS = postSymbolicState.getStuckReturn();
                 		}
                 		
             			//if the guided execution skipped a method call execution and
@@ -870,14 +934,12 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
                 		postConcreteStateCurrentMethodSignature.toString().equals(((SymbolicApply) postSymbolicStateTOS).getOperator()));
                 		
                 		//realigns
-                		while (this.engine.getCurrentState().getStackSize() != (postSymbolicStateStackSize + this.stackSizeOffset)) {
-                			this.engine.step();
-                		}
+                		returnEngineFromMethod(postSymbolicStateStackSize);
                 		
                 		//saves the concrete (guiding) state
                 		if (saveRealignedConcreteState) {
-                			this.statesConcrete.put(postSymbolicState.getHistoryPoint(), this.engine.getCurrentState().clone());
-                			this.statesSymbolic.put(postSymbolicState.getHistoryPoint(), postSymbolicState.clone());
+                			this.statesConcrete.put(((SymbolicApply) postSymbolicStateTOS).historyPoint(), this.engine.getCurrentState().clone());
+                			this.statesSymbolic.put(((SymbolicApply) postSymbolicStateTOS).historyPoint(), postSymbolicState.clone());
                 		}
                 	} else if (postConcreteStateStackSize < (postSymbolicStateStackSize + this.stackSizeOffset) &&
                 	postSymbolicStateCurrentProgramCounter == 0) {
@@ -891,18 +953,12 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
             		//misaligned: we need to check whether the 
             		//last step of the guided procedure realigned 
             		//with the guiding one
-            		if (preConcreteStateStackSize == (postSymbolicStateStackSize + this.stackSizeOffset) &&
-                	preConcreteStateCurrentProgramCounter == postSymbolicStateCurrentProgramCounter) {
+            		if (this.preConcreteStateStackSize == (postSymbolicStateStackSize + this.stackSizeOffset) &&
+                	this.preConcreteStateCurrentProgramCounter == postSymbolicStateCurrentProgramCounter) {
             			this.aligned = true;
             		}
             	}            	
-			} catch (EngineStuckException | ThreadStackEmptyException e) {
-				throw new GuidanceException(ERROR_GUIDANCE_MISALIGNMENT);
-			} catch (CannotManageStateException | NonexistingObservedVariablesException |
-			         ClasspathException | ContradictionException | DecisionException |
-			         FailureException e) {
-				throw new GuidanceException(e);
-			} catch (FrozenStateException e) {
+			} catch (ThreadStackEmptyException | FrozenStateException e) {
 				//this should never happen
 				throw new UnexpectedInternalException(e);
 			}
@@ -916,6 +972,15 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
         @Override
         protected int getCurrentProgramCounter() throws ThreadStackEmptyException {
             return this.engine.getCurrentState().getCurrentProgramCounter();
+        }
+
+        @Override
+        public void close() {
+        	try {
+        		this.engine.close();
+        	} catch (DecisionException e) {
+        		throw new UnexpectedInternalException(e);
+        	}
         }
     }
 }

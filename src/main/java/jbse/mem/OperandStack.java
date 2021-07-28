@@ -11,16 +11,19 @@ import jbse.val.Value;
  * Class that represent the JVM's operand stack.
  */
 //TODO manage stack maps and possibly raise unexpected internal error
-final class OperandStack implements Cloneable {
+final class OperandStack {
     /** Not final because of clone(). */
-    private ArrayDeque<Value> valueStack;
+    private final ArrayDeque<Value> valueStack;
     
     /**
-     * Constructor of empty operand stack.
-     * 
+     * Default constructor.
      */
     OperandStack() {
         this.valueStack = new ArrayDeque<Value>();
+    }
+    
+    OperandStack(OperandStack other) {
+    	this.valueStack = new ArrayDeque<>(other.valueStack);
     }
     
     /**
@@ -103,10 +106,21 @@ final class OperandStack implements Cloneable {
         return retVal;
     }
     
+    /**
+     * Removes all the values in this operand stack.
+     */
     void clear() {
     	this.valueStack.clear();
     }
     
+    /**
+     * Returns an unmodifiable view of the values in this
+     * operand stack.
+     * 
+     * @return an unmodifiable {@link Collection}{@code <}{@link Value}{@code >}.
+     *         The collection iterates from the top to the bottom of the operand
+     *         stack.
+     */
     Collection<Value> values() {
     	return Collections.unmodifiableCollection(this.valueStack);
     }
@@ -128,18 +142,6 @@ final class OperandStack implements Cloneable {
         }
         buf.append("}");
         return buf.toString();
-    }
-    
-    @Override
-    public OperandStack clone() {
-        final OperandStack o;
-        try {
-            o = (OperandStack) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new InternalError(e);
-        }        
-        o.valueStack = new ArrayDeque<Value>(this.valueStack);
-        return o;
     }
 }
 
