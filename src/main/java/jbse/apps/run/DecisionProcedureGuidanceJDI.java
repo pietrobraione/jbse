@@ -51,6 +51,7 @@ import com.sun.jdi.Location;
 import com.sun.jdi.LongValue;
 import com.sun.jdi.Method;
 import com.sun.jdi.ObjectReference;
+import com.sun.jdi.PrimitiveValue;
 import com.sun.jdi.ReferenceType;
 import com.sun.jdi.ShortValue;
 import com.sun.jdi.StackFrame;
@@ -196,7 +197,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		private final int numberOfHits;
 		
 		//Handling of uninterpreted functions
-		protected LinkedHashMap<SymbolicApply, ISymbolicApplyJVMJDIContext> symbolicApplyCache = new LinkedHashMap<>(); // LinkedHashMap to maintain the entries in order of insertion
+		protected LinkedHashMap<List<String>, ISymbolicApplyJVMJDIContext> symbolicApplyCache = new LinkedHashMap<>(); // LinkedHashMap to maintain the entries in order of insertion
 		private Map<String, List<String>> symbolicApplyOperatorOccurrences = new HashMap<>();
 		private String currentHashMapModelMethod;
 		
@@ -642,6 +643,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 					// TODO: it seems like this assumption may not hold, and this invalidates our computation of the context of the invocation of this uninterpreted function. 
 					//       As a solution, we should modify JBSE such that each SymbolicApply has the context information as an immutable attribute.
 					final SymbolicApply symbolicApply = (SymbolicApply) origin;
+					final String op = symbolicApply.getOperator();
+					String opWithContext = SymbolicApplyJVMJDI.formatContextualSymbolicApplyOperatorOccurrence(op, this.currentStateSupplier.get());
+					if (opWithContext == null) {
+						throw new UninterpretedNoContextException();
+					}
 					if (!this.symbolicApplyCache.containsKey(symbolicApply)) {
 						startSymbolicApplyVm(symbolicApply);
 					} 
@@ -685,7 +691,6 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 					throw new UninterpretedNoContextException();
 				}
 				storeNewSymbolicApplyOperatorContextualOccurrence(op, opWithContext);
-				this.symbolicApplyOperatorOccurrences.get(op);
 				hitCallCtxs = this.symbolicApplyOperatorOccurrences.get(op);
 				symbolicApplyVm = new SymbolicApplyJVMJDI(this.calc, this.runnerParameters, this.stopSignature, this.numberOfHits, op, hitCallCtxs);
 				symbolicApplyVm.eval_INVOKEX();
@@ -695,7 +700,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 					symbolicApplyVm.close(); 
 				}
 			}
-			this.symbolicApplyCache.put(symbolicApply, symbolicApplyVm);
+			this.symbolicApplyCache.put(hitCallCtxs, symbolicApplyVm);
 
 		}
 		
@@ -1095,7 +1100,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		private final ObjectReference initialMapRef;
 		private Value valueAtKey;
 
-		public InitialMapSymbolicApplyJVMJDI(Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits, String symbolicApplyOperator, List<String> hitCallCtxs, SymbolicMemberField initialMapOrigin, LinkedHashMap<SymbolicApply, ISymbolicApplyJVMJDIContext> symbolicApplyCache, Supplier<State> currentStateSupplier) 
+		public InitialMapSymbolicApplyJVMJDI(Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits, String symbolicApplyOperator, List<String> hitCallCtxs, SymbolicMemberField initialMapOrigin, LinkedHashMap<List<String>, ISymbolicApplyJVMJDIContext> symbolicApplyCache, Supplier<State> currentStateSupplier) 
 		throws GuidanceException, ImpureMethodException {
 			super(calc, runnerParameters, stopSignature, numberOfHits, symbolicApplyOperator, hitCallCtxs);
 			setCurrentStateSupplier(currentStateSupplier);
@@ -1104,17 +1109,17 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			this.initialMapRef = (ObjectReference) getJDIValue(initialMapOrigin);
 		}
 		
-		private void populateLocalSymbolicApplyCache(LinkedHashMap<SymbolicApply, ISymbolicApplyJVMJDIContext> symbolicApplyCache) throws GuidanceException, ImpureMethodException {
+		private void populateLocalSymbolicApplyCache(LinkedHashMap<List<String>, ISymbolicApplyJVMJDIContext> symbolicApplyCache) throws GuidanceException, ImpureMethodException {
 			// TODO: Add a strategy to recompute only those SymbolicApplyJVMJDI needed for serving getJDIValue(initialMapOrigin)
 
 			// backup state info that will be temporarily replaced, to be restored at the end
 			String savedSymbolicApplyOperator = this.symbolicApplyOperator;
 			List<String> savedHitCallCtxs = this.hitCallCtxs;
 
-			for (SymbolicApply symbolicApply: symbolicApplyCache.keySet()) {
+			for (List<String> callCtx: symbolicApplyCache.keySet()) {
 				//recall the entries are in order of insertion, which corresponds to the order in which the symbolicApplys were met in the symbolic trace
-				ISymbolicApplyJVMJDIContext symbolicApplyVm = symbolicApplyCache.get(symbolicApply);
-				this.symbolicApplyOperator = symbolicApply.getOperator();
+				ISymbolicApplyJVMJDIContext symbolicApplyVm = symbolicApplyCache.get(callCtx);
+				this.symbolicApplyOperator = symbolicApplyVm.getSymbolicApplyOperator();
 				this.hitCallCtxs = symbolicApplyVm.getHitCallCtxs();
 				final ThreadReference currentThread = this.getCurrentThread();
 				if (symbolicApplyVm instanceof IInitialMapSymbolicApplyJVMJDIContext) {
@@ -1124,7 +1129,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 					final Value currentValueAtKey = this.getValueAtKey(); 
 					// We clone currentValueAtKey since the state of the object may change lately, while we advance this JVMJDI further on
 					final Value currentValueAtKeyClone = JVMJDI.cloneObject((ObjectReference) currentValueAtKey, this);
-					this.symbolicApplyCache.put(symbolicApply, new IInitialMapSymbolicApplyJVMJDIContext() {
+					this.symbolicApplyCache.put(this.hitCallCtxs, new IInitialMapSymbolicApplyJVMJDIContext() {
 						@Override
 						public String getSymbolicApplyOperator() {
 							return symbolicApplyOperator;
@@ -1150,7 +1155,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 							// nothing to do, because this JVMJDIContext does not include an independent VM
 						}
 					});
-				} else if (symbolicApply instanceof PrimitiveSymbolicApply) { //TODO: extend this behavior to Strings
+				} else if (symbolicApplyVm.getRetValue() instanceof PrimitiveValue) { //TODO: extend this behavior to Strings
 					// clearly we cannot retrieve the initalMap out of any non-Map primitive return value,
 					// thus here we do not need to recompute this SymbolicApply
 					continue; 
@@ -1161,7 +1166,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 					final Value currentRetValue = this.getRetValue();
 					// We clone currentRetValue since the state of the object may change lately, while we advance this JVMJDI further on
 					final Value currentRetValueClone = JVMJDI.cloneObject((ObjectReference) currentRetValue, this);
-					this.symbolicApplyCache.put(symbolicApply, new ISymbolicApplyJVMJDIContext() {
+					this.symbolicApplyCache.put(this.hitCallCtxs, new ISymbolicApplyJVMJDIContext() {
 						@Override
 						public String getSymbolicApplyOperator() {
 							return symbolicApplyOperator;
