@@ -38,21 +38,21 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class DecisionProcedureTest {
-	private static final String SWITCH_CHAR = System.getProperty("os.name").toLowerCase().contains("windows") ? "/" : "-";
+    private static final String SWITCH_CHAR = System.getProperty("os.name").toLowerCase().contains("windows") ? "/" : "-";
     private static final ArrayList<String> Z3_COMMAND_LINE = new ArrayList<>();
     private static final ArrayList<String> CVC4_COMMAND_LINE = new ArrayList<>();
 
     //BEGIN TO PATCH
     private static final ArrayList<String> COMMAND_LINE = Z3_COMMAND_LINE;
     
-	//Settings for Docker
-    //private static final String SMT_SOLVER_PATH = "/usr/bin/z3";
+    //Settings for Docker
+    private static final String SMT_SOLVER_PATH = "/usr/bin/z3";
 
-	//Pietro's local settings
+    //Pietro's local settings
     //private static final String SMT_SOLVER_PATH = "/opt/local/bin/z3";
 
-	//Giovanni's local settings
-    private static final String SMT_SOLVER_PATH = "/Users/denaro/Desktop/RTools/Z3/z3-4.3.2.d548c51a984e-x64-osx-10.8.5/bin/z3";
+    //Giovanni's local settings
+    //private static final String SMT_SOLVER_PATH = "/Users/denaro/Desktop/RTools/Z3/z3-4.3.2.d548c51a984e-x64-osx-10.8.5/bin/z3";
     //END TO PATCH
 
     static {
