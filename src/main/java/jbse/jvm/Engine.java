@@ -1,15 +1,6 @@
 package jbse.jvm;
 
-import static jbse.bc.Opcodes.OP_ARETURN;
-import static jbse.bc.Opcodes.OP_ATHROW;
-import static jbse.bc.Opcodes.OP_DRETURN;
-import static jbse.bc.Opcodes.OP_FRETURN;
-import static jbse.bc.Opcodes.OP_INVOKEINTERFACE;
-import static jbse.bc.Opcodes.OP_INVOKESPECIAL;
-import static jbse.bc.Opcodes.OP_INVOKESTATIC;
-import static jbse.bc.Opcodes.OP_INVOKEVIRTUAL;
-import static jbse.bc.Opcodes.OP_IRETURN;
-import static jbse.bc.Opcodes.OP_RETURN;
+import static jbse.bc.Opcodes.isBytecodeFrameChanger;
 
 import java.util.Collection;
 import java.util.List;
@@ -580,16 +571,7 @@ public final class Engine implements AutoCloseable {
         }
         try {
         	final byte currentInstruction = this.currentState.getInstruction(); 
-        	return (currentInstruction == OP_INVOKEVIRTUAL ||
-        			currentInstruction == OP_INVOKESPECIAL ||
-        			currentInstruction == OP_INVOKESTATIC ||
-        			currentInstruction == OP_INVOKEINTERFACE ||
-        			currentInstruction == OP_IRETURN ||
-        			currentInstruction == OP_FRETURN ||
-        			currentInstruction == OP_DRETURN ||
-        			currentInstruction == OP_ARETURN ||
-        			currentInstruction == OP_RETURN ||
-        			currentInstruction == OP_ATHROW);
+        	return isBytecodeFrameChanger(currentInstruction);
 		} catch (FrozenStateException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);

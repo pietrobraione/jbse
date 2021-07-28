@@ -110,7 +110,7 @@ StrategyUpdate<DecisionAlternative_IFX>> {
     		try {
     			final Snippet snippet;
     			if (alt.value()) {
-    				final ReferenceSymbolic value = state.createSymbolMemberMapValueKeyCurrentHistoryPoint(this.map.getOrigin(), this.keyReference);
+    				final ReferenceSymbolic value = state.createSymbolMemberMapValueKeyHistoryPointCurrent(this.map.getOrigin(), this.keyReference);
     				state.pushOperand(this.thisReference);
     				state.pushOperand(this.keyReference);
     				state.pushOperand(value);

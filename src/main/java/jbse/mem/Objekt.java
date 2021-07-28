@@ -148,6 +148,19 @@ public interface Objekt extends Cloneable {
      * Sets the value of a field. Throws a runtime exception 
      * in the case the field does not exist or is immutable.
      * 
+     * @param fieldName the name of the field.
+     * @param fieldClass the name of the class 
+     * where the field is declared.
+     * @param item the new {@link Value} that must be assigned to
+     *        the field.
+     */
+    //TODO throw a exception in the case a field does not exist or is immutable
+    void setFieldValue(String fieldName, String fieldClass, Value item);
+    
+    /**
+     * Sets the value of a field. Throws a runtime exception 
+     * in the case the field does not exist or is immutable.
+     * 
      * @param ofst an {@code int} signifying an offset number
      *        of a field (as returned by {@code sun.misc.Unsafe} methods).
      * @param item the new {@link Value} that must be assigned to

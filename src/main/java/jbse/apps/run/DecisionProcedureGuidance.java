@@ -436,8 +436,18 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         this.jvm.close();
     }
 
+    /**
+     * The Java Virtual Machine that performs the guided concrete
+     * execution, and answers queries by inspecting the concrete
+     * state.  
+     * 
+     * @author Pietro Braione
+     */
     public static abstract class JVM {
         protected final Calculator calc;
+        protected final RunnerParameters runnerParameters;
+        protected final Signature stopSignature; 
+        protected final int numberOfHits;
 
         /**
          * Constructor. The subclass constructor must launch
@@ -460,6 +470,9 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                 throw new GuidanceException("Invalid number of hits " + numberOfHits + ".");
             }
             this.calc = calc;
+            this.runnerParameters = runnerParameters;
+            this.stopSignature = stopSignature;
+            this.numberOfHits = numberOfHits;
         }
 
         /**

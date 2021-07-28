@@ -24,6 +24,8 @@ import jbse.tree.DecisionAlternative_IFX;
 import jbse.val.Calculator;
 import jbse.val.Primitive;
 import jbse.val.ReferenceSymbolic;
+import jbse.val.ReferenceSymbolicMemberMapKey;
+import jbse.val.ReferenceSymbolicMemberMapValue;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
@@ -105,8 +107,9 @@ StrategyUpdate<DecisionAlternative_IFX>> {
     		try {
     			final Snippet snippet;
     			if (alt.value()) {
-        			final ReferenceSymbolic key = state.createSymbolMemberMapKey(this.map.getOrigin());
-        			final ReferenceSymbolic value = state.createSymbolMemberMapValueKeyInitialHistoryPoint(this.map.getOrigin(), key);
+        			final ReferenceSymbolicMemberMapKey key = state.createSymbolMemberMapKeyHistoryPointContainer(this.map.getOrigin(), null);
+        			final ReferenceSymbolicMemberMapValue value = state.createSymbolMemberMapValueKeyHistoryPointContainer(this.map.getOrigin(), key);
+        			key.setAssociatedValue(value);
     				state.pushOperand(this.thisReference);
     				state.pushOperand(key);
     				state.pushOperand(value);

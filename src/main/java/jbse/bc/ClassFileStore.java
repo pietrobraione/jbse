@@ -182,6 +182,27 @@ final class ClassFileStore implements Cloneable {
         }
     }
     
+    /**
+     * Returns the initiating loader of a classfile. Useful for
+     * inverse lookups.
+     * 
+     * @param classFile a {@link ClassFile}.
+     * @return an {@code int}, the initiating loader of {@code classFile}, 
+     *         or {@code -1} if {@code classFile} is not found (also when
+     *         {@code classFile == null}, or is anonymous, or is primitive). 
+     */
+    int getInitiatingLoader(ClassFile classFile) {
+    	int retVal = -1;
+    	for (int i = 0; i < this.loadedClassCache.size(); ++i) {
+    		final HashMap<String, ClassFile> classFiles = this.loadedClassCache.get(i);
+    		if (classFile.equals(classFiles.get(classFile.getClassName()))) {
+    			retVal = i;
+    			break;
+    		}
+    	}
+    	return retVal;
+    }
+    
     @Override
     protected ClassFileStore clone() {
         final ClassFileStore o;

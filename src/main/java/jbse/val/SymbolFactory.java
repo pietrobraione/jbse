@@ -172,7 +172,7 @@ public final class SymbolFactory implements Cloneable {
      * @return a {@link PrimitiveSymbolic}.
      * @throws NullPointerException if {@code container == null}.
      */
-    public PrimitiveSymbolic createSymbolMemberArrayLength(ReferenceSymbolic container) {
+    public PrimitiveSymbolicMemberArrayLength createSymbolMemberArrayLength(ReferenceSymbolic container) {
         try {
             final PrimitiveSymbolicMemberArrayLength retVal = new PrimitiveSymbolicMemberArrayLength(container, getNextIdPrimitiveSymbolic());
             return retVal;
@@ -184,55 +184,29 @@ public final class SymbolFactory implements Cloneable {
 
     /**
      * A Factory Method for creating symbolic values. The symbol
-     * has as origin the key slot of an entry in a map not associated
-     * to any value.  
-     * 
-     * @param container a {@link ReferenceSymbolic}, the container object
-     *        the symbol originates from. It must refer a map.
-     * @return a {@link ReferenceSymbolic}.
-     * @throws InvalidInputException if {@code container == null}.
-     */
-    public ReferenceSymbolic createSymbolMemberMapKey(ReferenceSymbolic container) throws InvalidInputException {
-		if (container == null) {
-			throw new InvalidInputException("Invoked createSymbolMemberMapKey with null container parameter.");
-		}
-    	try {
-    		final int nextIdReferenceSymbolic = getNextIdReferenceSymbolic();
-    		final String keyOriginSpecifier = "KEY[" + nextIdReferenceSymbolic + "]";
-    		final ReferenceSymbolic retVal = new ReferenceSymbolicMemberMapKey(container, keyOriginSpecifier, nextIdReferenceSymbolic);
-    		return retVal;
-    	} catch (InvalidInputException | InvalidTypeException e) {
-    		//this should never happen
-    		throw new UnexpectedInternalException(e);
-    	}
-    }
-
-    /**
-     * A Factory Method for creating symbolic values. The symbol
      * has as origin the key slot of an entry in a map associated
      * to a given value.  
      * 
      * @param container a {@link ReferenceSymbolic}, the container object
-     *        the symbol originates from. It must refer a map.
+     *        the symbol originates from. It must refer an initial map.
      * @param value a {@link Reference}, the value of the entry in the 
-     *        container this symbol originates from. It can be null, in
-     *        which case the returned reference will not store information
-     *        in its origin of the value it is associated with.
-     * @param historyPoint the {@link HistoryPoint} to disambiguate
-     *        the state of {@code value}.
-     * @return a {@link ReferenceSymbolic}.
-     * @throws InvalidInputException if {@code container == null || value == null || historyPoint == null}.
+     *        container this symbol originates from. It can be {@code null}, 
+     *        in such case it can be set later with the 
+     *        {@link ReferenceSymbolicMemberMapKey#setAssociatedValue(Reference) setAssociatedValue}
+     *        method.
+     * @param valueHistoryPoint the {@link HistoryPoint} of {@code value} 
+     *        (to identify its state). If {@code null}, the history point
+     *        is assumed to be that of {@code container}.
+     * @return a {@link ReferenceSymbolicMemberMapKey}.
+     * @throws InvalidInputException if {@code container == null}.
      */
-    public ReferenceSymbolic createSymbolMemberMapKey(ReferenceSymbolic container, Reference value, HistoryPoint historyPoint) 
+    public ReferenceSymbolicMemberMapKey createSymbolMemberMapKey(ReferenceSymbolic container, Reference value, HistoryPoint valueHistoryPoint) 
     throws InvalidInputException {
-		if (container == null || value == null || historyPoint == null) {
-			throw new InvalidInputException("Invoked createSymbolMemberMapKey with null container, value or historyPoint parameter.");
-		}
     	try {
-    		final int nextIdReferenceSymbolic = getNextIdReferenceSymbolic();
-    		final String keyOriginSpecifier = "KEY-OF[" + (value.isSymbolic() ? ((Symbolic) value).asOriginString() : value.toString()) + "@" + historyPoint.toString() + ", " + nextIdReferenceSymbolic + "]";
-    		final ReferenceSymbolic retVal = new ReferenceSymbolicMemberMapKey(container, keyOriginSpecifier, nextIdReferenceSymbolic);
+    		final ReferenceSymbolicMemberMapKey retVal = new ReferenceSymbolicMemberMapKey(container, value, valueHistoryPoint, getNextIdReferenceSymbolic());
     		return retVal;
+    	} catch (NullPointerException e) {
+    		throw new InvalidInputException("Invoked SymbolFactory.createSymbolMemberMapKey with null container parameter");
     	} catch (InvalidInputException | InvalidTypeException e) {
     		//this should never happen
     		throw new UnexpectedInternalException(e);
@@ -245,18 +219,23 @@ public final class SymbolFactory implements Cloneable {
      * to a given key.  
      * 
      * @param container a {@link ReferenceSymbolic}, the container object
-     *        the symbol originates from. It must refer a map.
+     *        the symbol originates from. It must refer an initial map.
      * @param key a {@link Reference}, the key of the entry in the 
-     *        container this symbol originates from.
-     * @param historyPoint the {@link HistoryPoint} to disambiguate
-     *        the state of {@code key}.
-     * @return a {@link ReferenceSymbolic}.
+     *        container map this symbol originates from. It must not be {@code null}.
+     * @param keyHistoryPoint the {@link HistoryPoint} of {@code key} (to identify its 
+     *        state). If {@code null}, the history point
+     *        is assumed to be that of {@code container}.
+     * @return a {@link ReferenceSymbolicMemberMapValue}.
+     * @throws InvalidInputException if {@code container == null || key == null}.
      */
-    public ReferenceSymbolic createSymbolMemberMapValue(ReferenceSymbolic container, Reference key, HistoryPoint historyPoint) {
+    public ReferenceSymbolicMemberMapValue createSymbolMemberMapValue(ReferenceSymbolic container, Reference key, HistoryPoint keyHistoryPoint) 
+    throws InvalidInputException {
     	try {
-    		final ReferenceSymbolic retVal = new ReferenceSymbolicMemberMapValue(container, key, historyPoint, getNextIdReferenceSymbolic());
+    		final ReferenceSymbolicMemberMapValue retVal = new ReferenceSymbolicMemberMapValue(container, key, keyHistoryPoint, getNextIdReferenceSymbolic());
     		return retVal;
-    	} catch (InvalidInputException | InvalidTypeException e) {
+    	} catch (NullPointerException e) {
+    		throw new InvalidInputException("Invoked SymbolFactory.createSymbolMemberMapValue with null container parameter");
+    	} catch (InvalidTypeException e) {
     		//this should never happen
     		throw new UnexpectedInternalException(e);
     	}

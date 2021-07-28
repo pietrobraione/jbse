@@ -181,7 +181,7 @@ implements Map<K, V> {
 
 	@Override
 	public boolean isEmpty() {
-		return (size() == 0);
+		return (this.size == 0);
 	}
 	
 	@SuppressWarnings("unchecked")

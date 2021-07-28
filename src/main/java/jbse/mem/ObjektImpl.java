@@ -208,6 +208,15 @@ public abstract class ObjektImpl implements Objekt {
     }
 
     @Override
+    public final void setFieldValue(String fieldName, String fieldClass, Value item) {
+        for (Signature sig: this.fieldSignatures) { //not very efficient but we don't care
+            if (sig.getName().equals(fieldName) && sig.getClassName().equals(fieldClass)) {
+            	setFieldValue(sig, item);
+            }
+        }
+    }
+
+    @Override
     public final void setFieldValue(int ofst, Value item) {
         setFieldValue(this.fieldSignatures.get(ofstToPos(ofst)), item);
     }

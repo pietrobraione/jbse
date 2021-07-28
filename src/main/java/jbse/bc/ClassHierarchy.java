@@ -193,7 +193,7 @@ public final class ClassHierarchy implements Cloneable {
      *         value.
      * @throws ClassFileIllFormedException if {@code bytecode} is ill-formed.
      */
-    public ClassFile createClassFileClassDummy(int definingClassLoader, String className, byte[] bytecode) 
+    private ClassFile createClassFileClassDummy(int definingClassLoader, String className, byte[] bytecode) 
     throws InvalidInputException, ClassFileIllFormedException {
         final ClassFile retval =
             this.f.newClassFileClass(definingClassLoader, className, bytecode, null, null);
@@ -213,7 +213,7 @@ public final class ClassHierarchy implements Cloneable {
      * @throws InvalidInputException if any of the parameters has an invalid
      *         value.
      */
-    public ClassFile createClassFileClass(ClassFile classFile, ClassFile superClass, ClassFile[] superInterfaces) 
+    private ClassFile createClassFileClass(ClassFile classFile, ClassFile superClass, ClassFile[] superInterfaces) 
     throws InvalidInputException {
         if (classFile == null) {
             throw new InvalidInputException("Invoked " + getClass().getName() + ".createClassFileClass() with a classFile parameter that has value null.");
@@ -245,7 +245,7 @@ public final class ClassHierarchy implements Cloneable {
      * @return a {@link ClassFile}.
      * @throws InvalidInputException
      */
-    public ClassFile createClassFileArray(String className, ClassFile memberClass) 
+    private ClassFile createClassFileArray(String className, ClassFile memberClass) 
     throws InvalidInputException {
         //Note that initialization put all the following 
         //standard classes in the loaded class cache
@@ -320,6 +320,19 @@ public final class ClassHierarchy implements Cloneable {
     }
     
     /**
+     * Returns the initiating loader of a classfile. Useful for
+     * inverse lookups.
+     * 
+     * @param classFile a {@link ClassFile}.
+     * @return an {@code int}, the initiating loader of {@code classFile}, 
+     *         or {@code -1} if {@code classFile} is not found (also when
+     *         {@code classFile == null}, or is anonymous, or is primitive). 
+     */
+    public int getInitiatingLoader(ClassFile classFile) {
+    	return this.cfs.getInitiatingLoader(classFile);
+    }
+    
+    /**
      * Creates a dummy {@link ClassFile} for an anonymous (in the sense of
      * {@link sun.misc.Unsafe#defineAnonymousClass}) class.
      * 
@@ -330,7 +343,7 @@ public final class ClassHierarchy implements Cloneable {
      * @throws ClassFileIllFormedException if {@code bytecode} is ill-formed.
      * @throws InvalidInputException if {@code bytecode == null}.
      */
-    public ClassFile createClassFileAnonymousDummy(ClassFile hostClass, byte[] bytecode) 
+    private ClassFile createClassFileAnonymousDummy(ClassFile hostClass, byte[] bytecode) 
     throws ClassFileIllFormedException, InvalidInputException {
         final ClassFile retval =
             this.f.newClassFileAnonymous(hostClass, bytecode, null, null, null);
@@ -359,7 +372,7 @@ public final class ClassHierarchy implements Cloneable {
      * @throws InvalidInputException  if any of the parameters has an invalid
      *         value.
      */
-    public ClassFile createClassFileAnonymous(ClassFile classFile, ClassFile superClass, ClassFile[] superInterfaces, Object[] cpPatches) 
+    private ClassFile createClassFileAnonymous(ClassFile classFile, ClassFile superClass, ClassFile[] superInterfaces, Object[] cpPatches) 
     throws InvalidInputException {
         if (classFile == null) {
             throw new InvalidInputException("Invoked " + getClass().getName() + ".addClassFileAnonymous() with a classFile parameter that has value null.");

@@ -138,7 +138,7 @@ implements ConcurrentMap<K, V>, Serializable {
 
 	@Override
 	public boolean isEmpty() {
-		return (size() == 0);
+		return (this.size == 0);
 	}
 	
 	@SuppressWarnings("unchecked")

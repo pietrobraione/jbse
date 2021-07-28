@@ -604,8 +604,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 					final ReferenceSymbolicMemberMapValue refSymbolicMemberMapValue = (ReferenceSymbolicMemberMapValue) origin;
 					final SymbolicApply javaMapContainsKeySymbolicApply;
 					try {
-						javaMapContainsKeySymbolicApply = (SymbolicApply) this.calc.applyFunctionPrimitive(BOOLEAN, refSymbolicMemberMapValue.getHistoryPoint(), 
-						JAVA_MAP_CONTAINSKEY.toString(), refSymbolicMemberMapValue.getContainer(), refSymbolicMemberMapValue.getKey()).pop();
+						javaMapContainsKeySymbolicApply = (SymbolicApply) this.calc.applyFunctionPrimitive(BOOLEAN, refSymbolicMemberMapValue.keyHistoryPoint(), 
+						JAVA_MAP_CONTAINSKEY.toString(), refSymbolicMemberMapValue.getContainer(), refSymbolicMemberMapValue.getAssociatedKey()).pop();
 					} catch (NoSuchElementException | jbse.val.exc.InvalidTypeException | InvalidInputException e) {
 						throw new UnexpectedInternalException(e);
 					}

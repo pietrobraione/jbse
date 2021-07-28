@@ -121,6 +121,12 @@ abstract class ObjektWrapper<T extends ObjektImpl> implements Objekt {
 	}
 
 	@Override
+    public final void setFieldValue(String fieldName, String fieldClass, Value item) {
+		possiblyCloneDelegate();
+		getDelegate().setFieldValue(fieldName, fieldClass, item);
+	}
+
+	@Override
 	public final void setFieldValue(int slot, Value item) {
 		possiblyCloneDelegate();
 		getDelegate().setFieldValue(slot, item);
