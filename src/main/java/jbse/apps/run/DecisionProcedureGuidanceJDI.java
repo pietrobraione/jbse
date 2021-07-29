@@ -1102,16 +1102,15 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 	}
 	
 	private static class InitialMapSymbolicApplyJVMJDI extends SymbolicApplyJVMJDI implements IInitialMapSymbolicApplyJVMJDIContext {
-		private final ObjectReference initialMapRef;
+		private SymbolicMemberField initialMapOrigin;
 		private Value valueAtKey;
 
 		public InitialMapSymbolicApplyJVMJDI(Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits, String symbolicApplyOperator, List<String> hitCallCtxs, SymbolicMemberField initialMapOrigin, LinkedHashMap<SymbolicApply, ISymbolicApplyJVMJDIContext> symbolicApplyCache, Supplier<State> currentStateSupplier) 
 		throws GuidanceException, ImpureMethodException {
 			super(calc, runnerParameters, stopSignature, numberOfHits, symbolicApplyOperator, hitCallCtxs);
 			setCurrentStateSupplier(currentStateSupplier);
-			this.getJDIValueJVMJDIContext = this; //needed to call getJDIValue below
 			populateLocalSymbolicApplyCache(symbolicApplyCache); //needed to call getJDIValue below
-			this.initialMapRef = (ObjectReference) getJDIValue(initialMapOrigin);
+			this.initialMapOrigin = initialMapOrigin;
 		}
 		
 		private void populateLocalSymbolicApplyCache(LinkedHashMap<SymbolicApply, ISymbolicApplyJVMJDIContext> symbolicApplyCache) throws GuidanceException, ImpureMethodException {
@@ -1127,8 +1126,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 				this.symbolicApplyOperator = symbolicApplyVm.getSymbolicApplyOperator();
 				this.hitCallCtxs = symbolicApplyVm.getHitCallCtxs();
 				final ThreadReference currentThread = this.getCurrentThread();
-				if (symbolicApplyVm instanceof IInitialMapSymbolicApplyJVMJDIContext) {
+				if (symbolicApplyVm instanceof InitialMapSymbolicApplyJVMJDI) {
 					// Advance this JDIJVM to recompute the result of containsKey and GET for a Map object 
+					this.initialMapOrigin = ((InitialMapSymbolicApplyJVMJDI) symbolicApplyVm).initialMapOrigin;
 					eval_INVOKEX();
 					final Value currentRetValue = this.getRetValue(); //it is a primitive (a boolean), no need to clone it
 					final Value currentValueAtKey = this.getValueAtKey(); 
@@ -1201,13 +1201,16 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		}
 
 		@Override
-		protected void eval_INVOKEX() throws GuidanceException {
+		protected void eval_INVOKEX() throws GuidanceException, ImpureMethodException {
+			this.getJDIValueJVMJDIContext = this; //needed to call getJDIValue below
+			ObjectReference initialMapRef;
+			initialMapRef = (ObjectReference) getJDIValue(initialMapOrigin);
 			stepIntoSymbolicApplyMethod();
 			try {
 				final ThreadReference currentThread = getCurrentThread();
 				final ObjectReference keyRef = (ObjectReference) currentThread.frame(0).getArgumentValues().get(0);
-				this.symbolicApplyRetValue = this.initialMapRef.invokeMethod(currentThread, this.initialMapRef.referenceType().methodsByName("containsKey").get(0), Collections.singletonList(keyRef), ObjectReference.INVOKE_SINGLE_THREADED);
-				this.valueAtKey = this.initialMapRef.invokeMethod(currentThread, this.initialMapRef.referenceType().methodsByName("get").get(0), Collections.singletonList(keyRef), ObjectReference.INVOKE_SINGLE_THREADED);
+				this.symbolicApplyRetValue = initialMapRef.invokeMethod(currentThread, initialMapRef.referenceType().methodsByName("containsKey").get(0), Collections.singletonList(keyRef), ObjectReference.INVOKE_SINGLE_THREADED);
+				this.valueAtKey = initialMapRef.invokeMethod(currentThread, initialMapRef.referenceType().methodsByName("get").get(0), Collections.singletonList(keyRef), ObjectReference.INVOKE_SINGLE_THREADED);
 			} catch (InvalidTypeException | ClassNotLoadedException | IncompatibleThreadStateException | InvocationException e) {
 				throw new GuidanceException("Failed to call method on the concrete HashMap that corresponds to a symbolic HashMap:" + e);
 			}
