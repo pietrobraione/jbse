@@ -55,6 +55,7 @@ import com.sun.jdi.PrimitiveValue;
 import com.sun.jdi.ReferenceType;
 import com.sun.jdi.ShortValue;
 import com.sun.jdi.StackFrame;
+import com.sun.jdi.StringReference;
 import com.sun.jdi.ThreadReference;
 import com.sun.jdi.VMDisconnectedException;
 import com.sun.jdi.Value;
@@ -76,7 +77,6 @@ import com.sun.jdi.request.ClassPrepareRequest;
 import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.MethodExitRequest;
-import com.sun.tools.javac.util.Pair;
 
 import jbse.bc.ClassFile;
 import jbse.bc.Offsets;
@@ -92,7 +92,6 @@ import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Calculator;
 import jbse.val.KlassPseudoReference;
-import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.PrimitiveSymbolicHashCode;
 import jbse.val.PrimitiveSymbolicMemberArrayLength;
 import jbse.val.ReferenceSymbolic;
@@ -600,6 +599,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 					} catch (IndexOutOfBoundsException e) {
 						throw new IndexOutOfBoundsException(((SymbolicMemberArray) origin).asOriginString());
 					}
+				//TODO else if (origin instanceof ReferenceSymbolicMemberMapKey)
 				} else if (origin instanceof ReferenceSymbolicMemberMapValue) {
 					final ReferenceSymbolicMemberMapValue refSymbolicMemberMapValue = (ReferenceSymbolicMemberMapValue) origin;
 					final SymbolicApply javaMapContainsKeySymbolicApply;
@@ -611,15 +611,12 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 					}
 					if (!this.symbolicApplyCache.containsKey(javaMapContainsKeySymbolicApply)) {
 						throw new GuidanceException(ERROR_BAD_PATH + origin.asOriginString() + " : Fails because containsKey was not evaluated before evaluating this GET symbol");
-						//TODO this doesn't work because this.currentHashMapModelMethod is not set, and this.symbolicApplyOperatorOccurrences is empty
-						//final SymbolicApplyJVMJDI symbolicApplyVm = startSymbolicApplyVm(javaMapContainsKeySymbolicApply);
-						//this.symbolicApplyCache.put(javaMapContainsKeySymbolicApply, symbolicApplyVm);
 					} 
 					final ISymbolicApplyJVMJDIContext symbolicApplyVm = this.symbolicApplyCache.get(javaMapContainsKeySymbolicApply); 
-					if (!(symbolicApplyVm instanceof InitialMapSymbolicApplyJVMJDI)) {
+					if (!(symbolicApplyVm instanceof IInitialMapSymbolicApplyJVMJDIContext)) {
 						throw new GuidanceException(ERROR_BAD_PATH + origin.asOriginString() + " : Fails because containsKey was evaluated as an ordinary abstract-interpreted call, rather than as a JAVA_MAP function");
 					} 
-					final InitialMapSymbolicApplyJVMJDI initialMapSymbolicApplyVm = (InitialMapSymbolicApplyJVMJDI) symbolicApplyVm;
+					final IInitialMapSymbolicApplyJVMJDIContext initialMapSymbolicApplyVm = (IInitialMapSymbolicApplyJVMJDIContext) symbolicApplyVm;
 					final Value val = initialMapSymbolicApplyVm.getValueAtKey();
 					if (val != null) {
 						this.getJDIValueJVMJDIContext = initialMapSymbolicApplyVm;
@@ -643,11 +640,6 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 					// TODO: it seems like this assumption may not hold, and this invalidates our computation of the context of the invocation of this uninterpreted function. 
 					//       As a solution, we should modify JBSE such that each SymbolicApply has the context information as an immutable attribute.
 					final SymbolicApply symbolicApply = (SymbolicApply) origin;
-					final String op = symbolicApply.getOperator();
-					String opWithContext = SymbolicApplyJVMJDI.formatContextualSymbolicApplyOperatorOccurrence(op, this.currentStateSupplier.get());
-					if (opWithContext == null) {
-						throw new UninterpretedNoContextException();
-					}
 					if (!this.symbolicApplyCache.containsKey(symbolicApply)) {
 						startSymbolicApplyVm(symbolicApply);
 					} 
@@ -694,9 +686,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 				hitCallCtxs = this.symbolicApplyOperatorOccurrences.get(op);
 				symbolicApplyVm = new SymbolicApplyJVMJDI(this.calc, this.runnerParameters, this.stopSignature, this.numberOfHits, op, hitCallCtxs);
 				symbolicApplyVm.eval_INVOKEX();
-
+				
 				//If the return value is a primitive, we do not need this vm any further
-				if (symbolicApply instanceof PrimitiveSymbolicApply) { //TODO: extend this behavior to Strings
+				if (symbolicApplyVm.getRetValue() instanceof PrimitiveValue ||
+				symbolicApplyVm.getRetValue() instanceof StringReference) {
 					symbolicApplyVm.close(); 
 				}
 			}
@@ -1160,7 +1153,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 							// nothing to do, because this JVMJDIContext does not include an independent VM
 						}
 					});
-				} else if (symbolicApplyVm.getRetValue() instanceof PrimitiveValue) { //TODO: extend this behavior to Strings
+				} else if (symbolicApplyVm.getRetValue() instanceof PrimitiveValue ||
+				symbolicApplyVm.getRetValue() instanceof StringReference) {
 					// clearly we cannot retrieve the initalMap out of any non-Map primitive return value,
 					// thus here we do not need to recompute this SymbolicApply
 					continue; 
@@ -1203,8 +1197,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		@Override
 		protected void eval_INVOKEX() throws GuidanceException, ImpureMethodException {
 			this.getJDIValueJVMJDIContext = this; //needed to call getJDIValue below
-			ObjectReference initialMapRef;
-			initialMapRef = (ObjectReference) getJDIValue(initialMapOrigin);
+			final ObjectReference initialMapRef = (ObjectReference) getJDIValue(this.initialMapOrigin);
 			stepIntoSymbolicApplyMethod();
 			try {
 				final ThreadReference currentThread = getCurrentThread();
