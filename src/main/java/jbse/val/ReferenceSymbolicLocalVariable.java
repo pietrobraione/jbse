@@ -63,7 +63,7 @@ public final class ReferenceSymbolicLocalVariable extends ReferenceSymbolicAtomi
     }
     
     @Override
-    public ReferenceSymbolic root() {
+    public ReferenceSymbolicLocalVariable root() {
     	return this;
     }
     

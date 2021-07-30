@@ -44,6 +44,11 @@ public final class PrimitiveSymbolicMemberArray extends PrimitiveSymbolicMember 
     }
 
     @Override
+    public final void accept(PrimitiveVisitor v) throws Exception {
+        v.visitPrimitiveSymbolicMemberArray(this);
+    }
+
+    @Override
     public Primitive getIndex() {
         return this.index;
     }

@@ -310,7 +310,9 @@ public interface Array extends HeapObjekt {
      * by which the array is accessed may be in range (i.e., that 
      * {@code this.}{@link #inRange(Calculator, Primitive) inRange(calc, index)} is 
      * satisfiable) and updates the theory accordingly by adding a 
-     * new entry. All the entries already present are unaffected.
+     * new entry. All the entries already present are unaffected, 
+     * so keep care to constrain them before using this method, 
+     * or you might obtain a mutually contradictory set of entries.
      * 
      * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param index the position of the array element to set, a {@code Primitive}

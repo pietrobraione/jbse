@@ -22,6 +22,11 @@ import jbse.val.Any;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.PrimitiveSymbolicAtomic;
+import jbse.val.PrimitiveSymbolicHashCode;
+import jbse.val.PrimitiveSymbolicLocalVariable;
+import jbse.val.PrimitiveSymbolicMemberArray;
+import jbse.val.PrimitiveSymbolicMemberArrayLength;
+import jbse.val.PrimitiveSymbolicMemberField;
 import jbse.val.NarrowingConversion;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveVisitor;
@@ -216,7 +221,11 @@ public class Util {
         @Override public void visitExpression(Expression e) { this.retVal = formatExpression(e); }
         @Override public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) { this.retVal = formatFunctionApplication(x); }
         @Override public void visitNarrowingConversion(NarrowingConversion x) { this.retVal = formatNarrowingConversion(x); }
-        @Override public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) { this.retVal = formatPrimitiveSymbolicAtomic(s); }
+		@Override public void visitPrimitiveSymbolicHashCode(PrimitiveSymbolicHashCode s) { this.retVal = formatPrimitiveSymbolicAtomic(s); }
+		@Override public void visitPrimitiveSymbolicLocalVariable(PrimitiveSymbolicLocalVariable s) { this.retVal = formatPrimitiveSymbolicAtomic(s); }
+		@Override public void visitPrimitiveSymbolicMemberArray(PrimitiveSymbolicMemberArray s) { this.retVal = formatPrimitiveSymbolicAtomic(s); }
+		@Override public void visitPrimitiveSymbolicMemberArrayLength(PrimitiveSymbolicMemberArrayLength s) { this.retVal = formatPrimitiveSymbolicAtomic(s); }
+		@Override public void visitPrimitiveSymbolicMemberField(PrimitiveSymbolicMemberField s) { this.retVal = formatPrimitiveSymbolicAtomic(s); }
         @Override public void visitSimplex(Simplex x) { this.retVal = formatSimplex(x); }
         @Override public void visitTerm(Term x) { this.retVal = formatTerm(x); }
         @Override public void visitWideningConversion(WideningConversion x) { this.retVal = formatWideningConversion(x); }

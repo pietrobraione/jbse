@@ -4,7 +4,11 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.Any;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
-import jbse.val.PrimitiveSymbolicAtomic;
+import jbse.val.PrimitiveSymbolicHashCode;
+import jbse.val.PrimitiveSymbolicLocalVariable;
+import jbse.val.PrimitiveSymbolicMemberArray;
+import jbse.val.PrimitiveSymbolicMemberArrayLength;
+import jbse.val.PrimitiveSymbolicMemberField;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
@@ -141,13 +145,25 @@ public class RewriterAbsSum extends RewriterCalculatorRewriting {
 		public void visitNarrowingConversion(NarrowingConversion x) { }
 
 		@Override
-		public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) { }
-
-		@Override
 		public void visitSimplex(Simplex x) throws Exception { }
 
 		@Override
 		public void visitTerm(Term x) throws Exception { }
+
+		@Override
+		public void visitPrimitiveSymbolicHashCode(PrimitiveSymbolicHashCode x) { }
+
+		@Override
+		public void visitPrimitiveSymbolicLocalVariable(PrimitiveSymbolicLocalVariable x) { }
+
+		@Override
+		public void visitPrimitiveSymbolicMemberArray(PrimitiveSymbolicMemberArray x) { }
+
+		@Override
+		public void visitPrimitiveSymbolicMemberArrayLength(PrimitiveSymbolicMemberArrayLength x) { }
+
+		@Override
+		public void visitPrimitiveSymbolicMemberField(PrimitiveSymbolicMemberField x) { }
 	}
 
 	private void processAbs(boolean absNegated, Primitive absArg, boolean otherNegated, Primitive subOther, Operator operator) 

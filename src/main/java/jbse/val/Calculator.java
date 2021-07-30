@@ -1334,7 +1334,27 @@ public abstract class Calculator {
 		}
 
 		@Override
-		public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) {
+		public void visitPrimitiveSymbolicHashCode(PrimitiveSymbolicHashCode s) {
+			this.result = s; //nothing to do
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicLocalVariable(PrimitiveSymbolicLocalVariable s) {
+			this.result = s; //nothing to do
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicMemberArray(PrimitiveSymbolicMemberArray s) {
+			this.result = s; //nothing to do
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicMemberArrayLength(PrimitiveSymbolicMemberArrayLength s) {
+			this.result = s; //nothing to do
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicMemberField(PrimitiveSymbolicMemberField s) {
 			this.result = s; //nothing to do
 		}
 

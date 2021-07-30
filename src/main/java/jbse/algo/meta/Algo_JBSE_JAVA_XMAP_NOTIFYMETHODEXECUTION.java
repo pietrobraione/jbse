@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
+import jbse.apps.run.DecisionProcedureGuidanceJBSE;
 import jbse.apps.run.DecisionProcedureGuidanceJDI;
 import jbse.bc.Signature;
 import jbse.common.exc.ClasspathException;
@@ -51,6 +52,9 @@ public final class Algo_JBSE_JAVA_XMAP_NOTIFYMETHODEXECUTION extends Algo_INVOKE
             if (this.ctx.decisionProcedure instanceof DecisionProcedureGuidanceJDI) {
                 final DecisionProcedureGuidanceJDI dpJDI = (DecisionProcedureGuidanceJDI) this.ctx.decisionProcedure;
                 dpJDI.notifyExecutionOfMapModelMethod(sig, state);
+            } else if (this.ctx.decisionProcedure instanceof DecisionProcedureGuidanceJBSE) {
+                final DecisionProcedureGuidanceJBSE dpJBSE = (DecisionProcedureGuidanceJBSE) this.ctx.decisionProcedure;
+                dpJBSE.notifyExecutionOfMapModelMethod();
             }
         } catch (ThreadStackEmptyException | InvalidSlotException | ClassCastException e) {
             //this should never happen

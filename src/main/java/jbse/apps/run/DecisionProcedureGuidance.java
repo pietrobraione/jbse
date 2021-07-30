@@ -54,6 +54,11 @@ import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.PrimitiveSymbolicAtomic;
+import jbse.val.PrimitiveSymbolicHashCode;
+import jbse.val.PrimitiveSymbolicLocalVariable;
+import jbse.val.PrimitiveSymbolicMemberArray;
+import jbse.val.PrimitiveSymbolicMemberArrayLength;
+import jbse.val.PrimitiveSymbolicMemberField;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
@@ -675,8 +680,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                 }
             }
 
-            @Override
-            public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) throws GuidanceException {
+            private void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) throws GuidanceException {
                 final Object fieldValue;
 				try {
 					fieldValue = this.jvm.getValue(s);
@@ -690,6 +694,31 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                     this.value = null;
                 }
             }
+
+			@Override
+			public void visitPrimitiveSymbolicHashCode(PrimitiveSymbolicHashCode x) throws GuidanceException {
+				visitPrimitiveSymbolicAtomic(x);
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicLocalVariable(PrimitiveSymbolicLocalVariable x) throws GuidanceException {
+				visitPrimitiveSymbolicAtomic(x);
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicMemberArray(PrimitiveSymbolicMemberArray x) throws GuidanceException {
+				visitPrimitiveSymbolicAtomic(x);
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicMemberArrayLength(PrimitiveSymbolicMemberArrayLength x) throws GuidanceException {
+				visitPrimitiveSymbolicAtomic(x);
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicMemberField(PrimitiveSymbolicMemberField x) throws GuidanceException {
+				visitPrimitiveSymbolicAtomic(x);
+			}
 
             @Override
             public void visitSimplex(Simplex x) {

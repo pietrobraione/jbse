@@ -1359,6 +1359,48 @@ public final class State implements Cloneable {
     }
 
     /**
+     * Creates a new {@link Array} of a given class at a given position 
+     * in the heap of the state.
+     * This operation is unsafe: it does not check that the indicated heap 
+     * position is free, nor that the operation will not disrupt other data structures
+     * as the path condition, the string literals...
+     * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param initValue a {@link Value} for initializing the array; if {@code initValue == null}
+     *        the default value for the array member type is used for initialization.
+     * @param length a {@link Primitive}, the number of elements in the array.
+     * @param arrayClass a {@link ClassFile}, the class of the array object.
+     * @param position a {@code long}, the heap position where the new object
+     *        must be put.
+     * @throws InvalidInputException if {@code calc == null || arrayClass == null || length == null}, or 
+     *         if {@code arrayClass} is invalid.
+     * @throws HeapMemoryExhaustedException if the heap is full.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public void createArrayAt(Calculator calc, Value initValue, Primitive length, ClassFile arrayClass, long position) 
+    throws InvalidInputException, HeapMemoryExhaustedException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        if (calc == null || arrayClass == null || length == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".createArray with null Calculator calc or ClassFile arrayClass or Primitive length parameter.");
+        }
+        if (!arrayClass.isArray()) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".createArray with ClassFile arrayClass parameter that is not an array class type.");
+        }
+        final ArrayImpl a;
+		try {
+			a = new ArrayImpl(calc, false, false, initValue, length, arrayClass, null, this.historyPoint, false, this.maxSimpleArrayLength);
+		} catch (InvalidTypeException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
+		this.heap.set(position, a);
+        final ReferenceConcrete r = new ReferenceConcrete(position);
+        initIdentityHashCodeConcrete(calc, a, r);
+    }
+
+    /**
      * Creates a new {@link Instance} of a given class in the 
      * heap of the state. The {@link Instance}'s fields are initialized 
      * with the default values for each field's type.
@@ -1393,7 +1435,47 @@ public final class State implements Cloneable {
         initIdentityHashCodeConcrete(calc, myObj, retVal);
         return retVal;
     }
-    
+
+    /**
+     * Creates a new {@link Instance} of a given class at a given position 
+     * in the heap of the state. The {@link Instance}'s fields are initialized 
+     * with the default values for each field's type.
+     * It cannot create instances of the {@code java.lang.Class} class.
+     * This operation is unsafe: it does not check that the indicated heap 
+     * position is free, nor that the operation will not disrupt other data structures
+     * as the path condition, the string literals...
+     * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param classFile the {@link ClassFile} for the class of the new object.
+     * @param position a {@code long}, the heap position where the new object
+     *        must be put.
+     * @throws FrozenStateException if the state is frozen.
+     * @throws InvalidInputException if {@code classFile == null} or is 
+     *         invalid, i.e., is the classfile for {@code java.lang.Class}.
+     * @throws HeapMemoryExhaustedException if the heap is full.
+     */
+    public void createInstanceAt(Calculator calc, ClassFile classFile, long position) 
+    throws FrozenStateException, InvalidInputException, HeapMemoryExhaustedException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        if (calc == null || classFile == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".createInstance with null Calculator calc or ClassFile classFile parameter.");
+        }
+        if (JAVA_CLASS.equals(classFile.getClassName())) {
+            //use createInstance_JAVA_CLASS instead
+            throw new InvalidInputException("Cannot use method " + getClass().getName() + ".createInstance to create an instance of java.lang.Class.");
+        }
+        
+        final InstanceImpl myObj = doCreateInstance(calc, classFile);
+        this.heap.set(position, myObj);
+        final ReferenceConcrete r = new ReferenceConcrete(position);
+        if (myObj instanceof Instance_JAVA_CLASSLOADER) {
+            this.objectDictionary.addClassLoader(r);
+        }
+        initIdentityHashCodeConcrete(calc, myObj, r);
+    }
+        
     /**
      * Creates a new {@link Instance} of a given class in the 
      * heap of the state. It differs from {@link #createInstance(String)}
@@ -3616,7 +3698,7 @@ public final class State implements Cloneable {
         //updates the path condition
         this.pathCondition = refiningPathCondition.clone();
     }
-
+    
     /**
      * A Factory Method for creating symbolic values. The symbol
      * has as origin a local variable in the root frame.

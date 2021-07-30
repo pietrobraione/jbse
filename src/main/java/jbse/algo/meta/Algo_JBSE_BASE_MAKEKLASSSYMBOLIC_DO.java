@@ -44,7 +44,11 @@ import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolicApply;
-import jbse.val.PrimitiveSymbolicAtomic;
+import jbse.val.PrimitiveSymbolicHashCode;
+import jbse.val.PrimitiveSymbolicLocalVariable;
+import jbse.val.PrimitiveSymbolicMemberArray;
+import jbse.val.PrimitiveSymbolicMemberArrayLength;
+import jbse.val.PrimitiveSymbolicMemberField;
 import jbse.val.PrimitiveVisitor;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
@@ -411,11 +415,6 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
         }
 
         @Override
-        public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) {
-            throw new UnexpectedInternalException("Found PrimitiveSymbolicAtomic value as a clause of an array entry access condition.");
-        }
-
-        @Override
         public void visitSimplex(Simplex x) {
             //do nothing (this handles the unlikely case where true is a clause of the array access expression)
         }
@@ -433,7 +432,32 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
         @Override
         public void visitWideningConversion(WideningConversion x) {
             throw new UnexpectedInternalException("Found WideningConversion value as a clause of an array entry access condition.");
-        }	
+        }
+
+		@Override
+		public void visitPrimitiveSymbolicHashCode(PrimitiveSymbolicHashCode x) throws Exception {
+            throw new UnexpectedInternalException("Found PrimitiveSymbolicHashCode value as a clause of an array entry access condition.");
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicLocalVariable(PrimitiveSymbolicLocalVariable x) throws Exception {
+            throw new UnexpectedInternalException("Found PrimitiveSymbolicLocalVariable value as a clause of an array entry access condition.");
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicMemberArray(PrimitiveSymbolicMemberArray x) throws Exception {
+            throw new UnexpectedInternalException("Found PrimitiveSymbolicMemberArray value as a clause of an array entry access condition.");
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicMemberArrayLength(PrimitiveSymbolicMemberArrayLength x) throws Exception {
+            throw new UnexpectedInternalException("Found PrimitiveSymbolicMemberArrayLength value as a clause of an array entry access condition.");
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicMemberField(PrimitiveSymbolicMemberField x) throws Exception {
+            throw new UnexpectedInternalException("Found PrimitiveSymbolicMemberField value as a clause of an array entry access condition.");
+		}	
     }
 
     @Override

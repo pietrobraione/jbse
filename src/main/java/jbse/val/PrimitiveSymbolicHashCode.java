@@ -54,6 +54,11 @@ public final class PrimitiveSymbolicHashCode extends PrimitiveSymbolicAtomic {
     }
     
     @Override
+    public final void accept(PrimitiveVisitor v) throws Exception {
+        v.visitPrimitiveSymbolicHashCode(this);
+    }
+
+    @Override
     public Symbolic root() {
     	return (this.container == null ? this : this.container.root());
     }

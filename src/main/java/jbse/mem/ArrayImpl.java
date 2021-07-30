@@ -155,7 +155,11 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
         		throw new InvalidInputException("Attempted array access with null calc or accessIndex.");
         	}
             try {
-				return calc.push(this.accessCondition).replace(ArrayImpl.this.indexFormal, accessIndex).pop();
+            	if (this.accessCondition == null) {
+            		return calc.valBoolean(true);
+            	} else {
+            		return calc.push(this.accessCondition).replace(ArrayImpl.this.indexFormal, accessIndex).pop();
+            	}
 			} catch (InvalidOperandException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);

@@ -43,6 +43,11 @@ import jbse.val.KlassPseudoReference;
 import jbse.val.NarrowingConversion;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.PrimitiveSymbolicAtomic;
+import jbse.val.PrimitiveSymbolicHashCode;
+import jbse.val.PrimitiveSymbolicLocalVariable;
+import jbse.val.PrimitiveSymbolicMemberArray;
+import jbse.val.PrimitiveSymbolicMemberArrayLength;
+import jbse.val.PrimitiveSymbolicMemberField;
 import jbse.val.ReferenceArrayImmaterial;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Primitive;
@@ -367,11 +372,6 @@ public final class StateFormatterText implements Formatter {
     	}
 
     	@Override
-    	public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) {
-    		this.mentionsClass = false;
-    	}
-
-    	@Override
     	public void visitSimplex(Simplex x) {
     		this.mentionsClass = false;
     	}
@@ -488,7 +488,32 @@ public final class StateFormatterText implements Formatter {
     	@Override
     	public void visitDefaultValue(DefaultValue x) {
     		this.mentionsClass = false;
-    	}            	        				  
+    	}
+
+		@Override
+		public void visitPrimitiveSymbolicHashCode(PrimitiveSymbolicHashCode x) {
+    		this.mentionsClass = false;
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicLocalVariable(PrimitiveSymbolicLocalVariable x) {
+    		this.mentionsClass = false;
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicMemberArray(PrimitiveSymbolicMemberArray x) {
+    		this.mentionsClass = false;
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicMemberArrayLength(PrimitiveSymbolicMemberArrayLength x) {
+    		this.mentionsClass = false;
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicMemberField(PrimitiveSymbolicMemberField x) {
+    		this.mentionsClass = false;
+		}            	        				  
     }
 
     private static void formatStaticMethodArea(State state, StringBuilder sb, boolean fullPrint, Set<Long> reachable, boolean breakLines, String indentTxt, String indentCurrent) 

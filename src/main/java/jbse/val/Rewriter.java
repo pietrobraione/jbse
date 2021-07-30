@@ -180,8 +180,16 @@ public class Rewriter implements Cloneable {
 
 		@Override public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) throws NoResultException { Rewriter.this.rewritePrimitiveSymbolicApply(x); }
 
-		@Override public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) throws NoResultException { Rewriter.this.rewritePrimitiveSymbolic(s); }
+		@Override public void visitPrimitiveSymbolicHashCode(PrimitiveSymbolicHashCode s) throws NoResultException { Rewriter.this.rewritePrimitiveSymbolic(s); }
 
+		@Override public void visitPrimitiveSymbolicLocalVariable(PrimitiveSymbolicLocalVariable s) throws NoResultException { Rewriter.this.rewritePrimitiveSymbolic(s); }
+
+		@Override public void visitPrimitiveSymbolicMemberArray(PrimitiveSymbolicMemberArray s) throws NoResultException { Rewriter.this.rewritePrimitiveSymbolic(s); }
+
+		@Override public void visitPrimitiveSymbolicMemberArrayLength(PrimitiveSymbolicMemberArrayLength s) throws NoResultException { Rewriter.this.rewritePrimitiveSymbolic(s); }
+
+		@Override public void visitPrimitiveSymbolicMemberField(PrimitiveSymbolicMemberField s) throws NoResultException { Rewriter.this.rewritePrimitiveSymbolic(s); }
+		
 		@Override public void visitSimplex(Simplex x) throws NoResultException { Rewriter.this.rewriteSimplex(x); }
 
 		@Override public void visitTerm(Term x) throws NoResultException { Rewriter.this.rewriteTerm(x); }

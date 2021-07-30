@@ -23,7 +23,11 @@ import jbse.val.Any;
 import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
-import jbse.val.PrimitiveSymbolicAtomic;
+import jbse.val.PrimitiveSymbolicHashCode;
+import jbse.val.PrimitiveSymbolicLocalVariable;
+import jbse.val.PrimitiveSymbolicMemberArray;
+import jbse.val.PrimitiveSymbolicMemberArrayLength;
+import jbse.val.PrimitiveSymbolicMemberField;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
@@ -878,10 +882,30 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
             }
         }
 
-        @Override
-        public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) {
+		@Override
+		public void visitPrimitiveSymbolicHashCode(PrimitiveSymbolicHashCode s) {
             putSymbol(s);
-        }
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicLocalVariable(PrimitiveSymbolicLocalVariable s) {
+            putSymbol(s);
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicMemberArray(PrimitiveSymbolicMemberArray s) {
+            putSymbol(s);
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicMemberArrayLength(PrimitiveSymbolicMemberArrayLength s) {
+            putSymbol(s);
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicMemberField(PrimitiveSymbolicMemberField s) {
+            putSymbol(s);
+		}
 
         @Override
         public void visitTerm(Term x) {

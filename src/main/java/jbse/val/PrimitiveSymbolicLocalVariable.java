@@ -52,8 +52,13 @@ public final class PrimitiveSymbolicLocalVariable extends PrimitiveSymbolicAtomi
         return this.originString;
     }
 
+    @Override
+    public final void accept(PrimitiveVisitor v) throws Exception {
+        v.visitPrimitiveSymbolicLocalVariable(this);
+    }
+
 	@Override
-	public Symbolic root() {
+	public PrimitiveSymbolicLocalVariable root() {
 		return this;
 	}
 

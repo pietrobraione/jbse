@@ -13,7 +13,11 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.Any;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
-import jbse.val.PrimitiveSymbolicAtomic;
+import jbse.val.PrimitiveSymbolicHashCode;
+import jbse.val.PrimitiveSymbolicLocalVariable;
+import jbse.val.PrimitiveSymbolicMemberArray;
+import jbse.val.PrimitiveSymbolicMemberArrayLength;
+import jbse.val.PrimitiveSymbolicMemberField;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
@@ -329,11 +333,6 @@ class Monomial implements Comparable<Monomial> {
 			}
 
 			@Override
-			public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) {
-				incExponent(s, 1);
-			}
-
-			@Override
 			public void visitSimplex(Simplex x) {
 				try {
 					MonomialBuilder.this.scale = (Simplex) MonomialBuilder.this.calc.push(MonomialBuilder.this.scale).mul(x).pop();
@@ -348,6 +347,31 @@ class Monomial implements Comparable<Monomial> {
 			@Override
 			public void visitTerm(Term x) {
 				incExponent(x, 1);
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicHashCode(PrimitiveSymbolicHashCode s) {
+				incExponent(s, 1);
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicLocalVariable(PrimitiveSymbolicLocalVariable s) {
+				incExponent(s, 1);
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicMemberArray(PrimitiveSymbolicMemberArray s) {
+				incExponent(s, 1);
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicMemberArrayLength(PrimitiveSymbolicMemberArrayLength s) {
+				incExponent(s, 1);
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicMemberField(PrimitiveSymbolicMemberField s) {
+				incExponent(s, 1);
 			}
 		};
 	};

@@ -34,7 +34,11 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Any;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
-import jbse.val.PrimitiveSymbolicAtomic;
+import jbse.val.PrimitiveSymbolicHashCode;
+import jbse.val.PrimitiveSymbolicLocalVariable;
+import jbse.val.PrimitiveSymbolicMemberArray;
+import jbse.val.PrimitiveSymbolicMemberArrayLength;
+import jbse.val.PrimitiveSymbolicMemberField;
 import jbse.val.NarrowingConversion;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolic;
@@ -699,11 +703,31 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 @Override
                 public void visitSimplex(Simplex x) throws Exception { }
 
-                @Override
-                public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) {
-                    symbols.add(s);
-                }
+				@Override
+				public void visitPrimitiveSymbolicHashCode(PrimitiveSymbolicHashCode x) {
+                    symbols.add(x);
+				}
 
+				@Override
+				public void visitPrimitiveSymbolicLocalVariable(PrimitiveSymbolicLocalVariable x) {
+                    symbols.add(x);
+				}
+
+				@Override
+				public void visitPrimitiveSymbolicMemberArray(PrimitiveSymbolicMemberArray x) {
+                    symbols.add(x);
+				}
+
+				@Override
+				public void visitPrimitiveSymbolicMemberArrayLength(PrimitiveSymbolicMemberArrayLength x) {
+                    symbols.add(x);
+				}
+
+				@Override
+				public void visitPrimitiveSymbolicMemberField(PrimitiveSymbolicMemberField x) {
+                    symbols.add(x);
+				}
+ 
                 @Override
                 public void visitNarrowingConversion(NarrowingConversion x) throws Exception {
                     x.getArg().accept(this);
@@ -730,7 +754,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
 
                 @Override
                 public void visitAny(Any x) { }
-            };
+           };
 
             try {
                 e.accept(v);

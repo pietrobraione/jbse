@@ -12,7 +12,11 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.Any;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
-import jbse.val.PrimitiveSymbolicAtomic;
+import jbse.val.PrimitiveSymbolicHashCode;
+import jbse.val.PrimitiveSymbolicLocalVariable;
+import jbse.val.PrimitiveSymbolicMemberArray;
+import jbse.val.PrimitiveSymbolicMemberArrayLength;
+import jbse.val.PrimitiveSymbolicMemberField;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
@@ -296,13 +300,6 @@ class Polynomial {
 			}
 
 			@Override
-			public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s)
-			throws Exception {
-				final Monomial m = Monomial.of(PolynomialBuilder.this.calc, s);
-				addMonomial(m);
-			}
-
-			@Override
 			public void visitSimplex(Simplex x) throws Exception {
 				final Monomial m = Monomial.of(PolynomialBuilder.this.calc, x);
 				addMonomial(m);
@@ -311,6 +308,41 @@ class Polynomial {
 			@Override
 			public void visitTerm(Term x) throws Exception {
 				final Monomial m = Monomial.of(PolynomialBuilder.this.calc, x);
+				addMonomial(m);
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicHashCode(PrimitiveSymbolicHashCode s)
+			throws Exception {
+				final Monomial m = Monomial.of(PolynomialBuilder.this.calc, s);
+				addMonomial(m);
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicLocalVariable(PrimitiveSymbolicLocalVariable s)
+			throws Exception {
+				final Monomial m = Monomial.of(PolynomialBuilder.this.calc, s);
+				addMonomial(m);
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicMemberArray(PrimitiveSymbolicMemberArray s)
+			throws Exception {
+				final Monomial m = Monomial.of(PolynomialBuilder.this.calc, s);
+				addMonomial(m);
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicMemberArrayLength(PrimitiveSymbolicMemberArrayLength s)
+			throws Exception {
+				final Monomial m = Monomial.of(PolynomialBuilder.this.calc, s);
+				addMonomial(m);
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicMemberField(PrimitiveSymbolicMemberField s) 
+			throws Exception {
+				final Monomial m = Monomial.of(PolynomialBuilder.this.calc, s);
 				addMonomial(m);
 			}
 		}

@@ -50,6 +50,11 @@ public final class PrimitiveSymbolicMemberField extends PrimitiveSymbolicMember 
     }
 
     @Override
+    public final void accept(PrimitiveVisitor v) throws Exception {
+        v.visitPrimitiveSymbolicMemberField(this);
+    }
+
+    @Override
     public String getFieldName() {
         return this.fieldName;
     }

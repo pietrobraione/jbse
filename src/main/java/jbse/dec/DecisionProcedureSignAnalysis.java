@@ -10,7 +10,11 @@ import jbse.mem.ClauseAssume;
 import jbse.val.Any;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
-import jbse.val.PrimitiveSymbolicAtomic;
+import jbse.val.PrimitiveSymbolicHashCode;
+import jbse.val.PrimitiveSymbolicLocalVariable;
+import jbse.val.PrimitiveSymbolicMemberArray;
+import jbse.val.PrimitiveSymbolicMemberArrayLength;
+import jbse.val.PrimitiveSymbolicMemberField;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
@@ -816,17 +820,37 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 			}
 
 			@Override
-			public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) { 
-				this.result = SignPredicate.UNK;
-			}
-
-			@Override
 			public void visitSimplex(Simplex x) { 
 				this.result = SignPredicate.UNK;
 			}
 
 			@Override
 			public void visitTerm(Term x) { 
+				this.result = SignPredicate.UNK;
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicHashCode(PrimitiveSymbolicHashCode x) {
+				this.result = SignPredicate.UNK;
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicLocalVariable(PrimitiveSymbolicLocalVariable x) {
+				this.result = SignPredicate.UNK;
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicMemberArray(PrimitiveSymbolicMemberArray x) {
+				this.result = SignPredicate.UNK;
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicMemberArrayLength(PrimitiveSymbolicMemberArrayLength x) {
+				this.result = SignPredicate.UNK;
+			}
+
+			@Override
+			public void visitPrimitiveSymbolicMemberField(PrimitiveSymbolicMemberField x) {
 				this.result = SignPredicate.UNK;
 			}
 		}
@@ -977,11 +1001,6 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 		}
 
 		@Override
-		public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) {
-			this.result = fetch(s);
-		}
-
-		@Override
 		public void visitSimplex(Simplex x) {
 			final SignPredicate sign = signOf(x);
 			this.result = sign;
@@ -990,6 +1009,31 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 		@Override
 		public void visitTerm(Term x) {
 			this.result = fetch(x);
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicHashCode(PrimitiveSymbolicHashCode s) {
+			this.result = fetch(s);
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicLocalVariable(PrimitiveSymbolicLocalVariable s) {
+			this.result = fetch(s);
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicMemberArray(PrimitiveSymbolicMemberArray s) {
+			this.result = fetch(s);
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicMemberArrayLength(PrimitiveSymbolicMemberArrayLength s) {
+			this.result = fetch(s);
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicMemberField(PrimitiveSymbolicMemberField s) {
+			this.result = fetch(s);
 		}
 	}
 

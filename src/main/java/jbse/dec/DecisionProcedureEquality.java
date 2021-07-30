@@ -7,7 +7,11 @@ import jbse.mem.ClauseAssume;
 import jbse.val.Any;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
-import jbse.val.PrimitiveSymbolicAtomic;
+import jbse.val.PrimitiveSymbolicHashCode;
+import jbse.val.PrimitiveSymbolicLocalVariable;
+import jbse.val.PrimitiveSymbolicMemberArray;
+import jbse.val.PrimitiveSymbolicMemberArrayLength;
+import jbse.val.PrimitiveSymbolicMemberField;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
@@ -87,12 +91,6 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 		Primitive first, second;
 
 		@Override
-		public void visitAny(Any x) throws Exception {
-			this.isEquality = false;
-			this.first = this.second = null;
-		}
-
-		@Override
 		public void visitExpression(Expression e) throws Exception {
 			boolean twist = false;
 			final Expression expE;
@@ -112,7 +110,7 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 				this.isEquality = true;
 				this.negated = (operator == Operator.NE);
 				if (twist) {
-					negated = ! negated;
+					this.negated = ! this.negated;
 				}
 
 				final Primitive firstOperand = expE.getFirstOperand();
@@ -200,6 +198,12 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 		}
 
 		@Override
+		public void visitAny(Any x) {
+			this.isEquality = false;
+			this.first = this.second = null;
+		}
+
+		@Override
 		public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) {
 			this.isEquality = false;
 			this.first = this.second = null;
@@ -218,20 +222,43 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 		}
 
 		@Override
-		public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s)
-		throws Exception {
+		public void visitSimplex(Simplex x) {
 			this.isEquality = false;
 			this.first = this.second = null;
 		}
 
 		@Override
-		public void visitSimplex(Simplex x) throws Exception {
+		public void visitTerm(Term x) {
 			this.isEquality = false;
 			this.first = this.second = null;
 		}
 
 		@Override
-		public void visitTerm(Term x) throws Exception {
+		public void visitPrimitiveSymbolicHashCode(PrimitiveSymbolicHashCode x) {
+			this.isEquality = false;
+			this.first = this.second = null;
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicLocalVariable(PrimitiveSymbolicLocalVariable x) {
+			this.isEquality = false;
+			this.first = this.second = null;
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicMemberArray(PrimitiveSymbolicMemberArray x) {
+			this.isEquality = false;
+			this.first = this.second = null;
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicMemberArrayLength(PrimitiveSymbolicMemberArrayLength x) {
+			this.isEquality = false;
+			this.first = this.second = null;
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicMemberField(PrimitiveSymbolicMemberField x) {
 			this.isEquality = false;
 			this.first = this.second = null;
 		}

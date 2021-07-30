@@ -38,6 +38,11 @@ public final class PrimitiveSymbolicMemberArrayLength extends PrimitiveSymbolicM
 		result = prime * result + getContainer().hashCode();
 		this.hashCode = result;
     }
+
+    @Override
+    public final void accept(PrimitiveVisitor v) throws Exception {
+        v.visitPrimitiveSymbolicMemberArrayLength(this);
+    }
     
     @Override
     public String asOriginString() {

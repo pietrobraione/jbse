@@ -59,15 +59,17 @@ final class Heap implements Cloneable {
      *         where {@code item} is stored.
      */
     long addNewSurely(HeapObjektImpl item) {
-        this.objects.put(this.nextIndex, item);
-        long retVal = this.nextIndex;
+        //finds a free index
         while (existsAt(this.nextIndex)) {
             if (this.nextIndex == Long.MAX_VALUE) {
                 throw new UnexpectedInternalException("Heap space exhausted.");
             }
             ++this.nextIndex;
         }
-        return retVal;
+        
+        //puts the object
+        this.objects.put(this.nextIndex, item);
+        return this.nextIndex;
     }
     
     /**
