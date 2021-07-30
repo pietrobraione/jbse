@@ -1380,7 +1380,6 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
                 				//with a return value
                 				postSymbolicStateTOS = postSymbolicState.getStuckReturn();
                 			}
-                			
                 			final Signature postConcreteStateCurrentMethodSignature = postConcreteState.getCurrentMethodSignature();
                 			final boolean saveRealignedStates = 
                 			(postConcreteStateStackSize == (postSymbolicStateStackSize + this.stackSizeOffset) + 1 &&
@@ -1391,7 +1390,7 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
                 			
                 			//checks realignment
                 			if (symbolicAndConcreteAreAligned(postSymbolicState)) {
-                    			//saves the concrete (guiding) state
+                    			//possibly saves the realigned states
                     			if (saveRealignedStates) {
                     				final HistoryPoint historyPoint = getHistoryPointSymbolicApply(postSymbolicStateTOS, postConcreteStateCurrentMethodSignature);
                     				this.statesConcrete.put(historyPoint, this.engine.getCurrentState().clone());
