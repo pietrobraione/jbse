@@ -589,6 +589,7 @@ import jbse.tree.StateTree;
 import jbse.tree.StateTree.BreadthMode;
 import jbse.tree.StateTree.StateIdentificationMode;
 import jbse.val.Calculator;
+import jbse.val.HistoryPoint;
 import jbse.val.SymbolFactory;
 
 /**
@@ -605,17 +606,8 @@ public final class ExecutionContext {
      */
     private final State stateStart;
     
-    /** 
-     * {@code true} iff the bootstrap classloader should also load the classes defined by the
-     * extensions and application classloaders. 
-     */
-    private final boolean bypassStandardLoading;
-    
-    /** The maximum length of an array to be granted simple representation. Used during initialization. */
-    private final int maxSimpleArrayLength;
-    
-    /** The maximum heap size expressed as maximum number of objects. Used during initialization. */
-    private final long maxHeapSize;
+    /** The factory for creating the pre-initial virgin {@link State}. */
+    private final StateVirginPreInitialFactory stateVirginPreInitialFactory;
     
     /**
      * Whether all the classes created during
@@ -624,28 +616,7 @@ public final class ExecutionContext {
      */
     private final boolean makePreInitClassesSymbolic;
 
-    /** The {@link Classpath}. Used during initialization. */
-    private final Classpath classpath;
-    
-    /** 
-     * The class for the symbolic execution's {@link ClassFileFactory} 
-     * (injected dependency). Used during initialization.
-     */
-    private final Class<? extends ClassFileFactory> classFileFactoryClass;
-
-    /** 
-     * Maps class names to the names of the subclasses that may be 
-     * used to expand references. Used during initialization.
-     */
-    private final Map<String, Set<String>> expansionBackdoor;
-    
-    /**
-     * Associates class names to the class names of the corresponding 
-     * model classes that replace them. It is not mutated.
-     */
-    private final HashMap<String, String> modelClassSubstitutions;
-
-    /** The {@link Calculator}. Used during initialization. */
+    /** The {@link Calculator}. */
     private final Calculator calc;
 
     /** The symbolic execution's {@link DecisionAlternativeComparators}. */
@@ -656,9 +627,6 @@ public final class ExecutionContext {
 
     /** The symbolic execution's {@link DecisionProcedureAlgorithms}. */
     public final DecisionProcedureAlgorithms decisionProcedure;
-    
-    /** The {@link SymbolFactory}. */
-    public final SymbolFactory symbolFactory;
 
     /** The symbolic execution's {@link StateTree}. */
     public final StateTree stateTree;
@@ -694,28 +662,31 @@ public final class ExecutionContext {
      *        or {@code null} if no starting state is provided externally. 
      * @param bypassStandardLoading a {@code boolean}, {@code true} iff the bootstrap 
      *        classloader should also load the classed defined by the extensions 
-     *        and application classloaders. Ignored when {@code initialState != null}.
+     *        and application classloaders. Ignored when {@code stateStart != null}.
      * @param maxSimpleArrayLength the maximum length an array may have
-     *        to be granted simple representation. Ignored when {@code initialState != null}.
+     *        to be granted simple representation. Ignored when {@code stateStart != null}.
      * @param maxHeapSize a {@code long}, the maximum size of the
      *        heap expressed as maximum number of objects it can store.
-     *        Ignored when {@code initialState != null}.
+     *        Ignored when {@code stateStart != null}.
      * @param classpath a {@link Classpath} object, containing 
      *        information about the classpath of the symbolic execution.
-     *        Ignored when {@code startingState != null}.
+     *        Ignored when {@code stateStart != null}.
      * @param classFileFactoryClass a {@link Class}{@code <? extends }{@link ClassFileFactory}{@code >}
      *        that will be instantiated by the engine to retrieve classfiles. It must 
      *        provide a parameterless public constructor. Ignored when 
-     *        {@code initialState != null}.
+     *        {@code stateStart != null}.
      * @param expansionBackdoor a 
      *        {@link Map}{@code <}{@link String}{@code , }{@link Set}{@code <}{@link String}{@code >>}
      *        associating class names to sets of names of their subclasses. It 
      *        is used in place of the class hierarchy to perform reference expansion.
-     *        Ignored when {@code initialState != null}.
+     *        Ignored when {@code stateStart != null}.
      * @param modelClassSubstitutions a 
      *        {@link Map}{@code <}{@link String}{@code , }{@link String}{@code >}
      *        associating class names to the class names of the corresponding 
      *        model classes that replace them. 
+     * @param makePreInitClassesSymbolic a {@code boolean}; if {@code true}, the
+     *        classes that are initialized during the pre-initial phase will be
+     *        made symbolic, otherwise they will not. 
      * @param calc a {@link Calculator}. Ignored when {@code initialState != null}.
      * @param comparators a {@link DecisionAlternativeComparators} which
      *        will be used to establish the order of exploration
@@ -737,11 +708,11 @@ public final class ExecutionContext {
                             boolean bypassStandardLoading,
                             int maxSimpleArrayLength,
                             long maxHeapSize,
-                            boolean makePreInitClassesSymbolic,
                             Classpath classpath,
                             Class<? extends ClassFileFactory> classFileFactoryClass,
-                            Map<String, Set<String>> expansionBackdoor, 
-                            Map<String, String> modelClassSubstitutions,
+                            Map<String, Set<String>> expansionBackdoor,
+                            Map<String, String> modelClassSubstitutions, 
+                            boolean makePreInitClassesSymbolic,
                             Calculator calc,
                             DecisionAlternativeComparators comparators,
                             Signature rootMethodSignature,
@@ -751,19 +722,18 @@ public final class ExecutionContext {
                             TriggerRulesRepo rulesTrigger, 
                             List<String> postInitInvariantClassPatterns) {
         this.stateStart = stateStart;
-        this.bypassStandardLoading = bypassStandardLoading;
-        this.maxSimpleArrayLength = maxSimpleArrayLength;
-        this.maxHeapSize = maxHeapSize;
+        this.stateVirginPreInitialFactory = new StateVirginPreInitialFactory(bypassStandardLoading, 
+                                                                             maxSimpleArrayLength, 
+                                                                             maxHeapSize, 
+                                                                             classpath, 
+                                                                             classFileFactoryClass, 
+                                                                             expansionBackdoor, 
+                                                                             modelClassSubstitutions);
         this.makePreInitClassesSymbolic = makePreInitClassesSymbolic;
-        this.classpath = classpath;
-        this.classFileFactoryClass = classFileFactoryClass;
-        this.expansionBackdoor = new HashMap<>(expansionBackdoor);      //safety copy
-        this.modelClassSubstitutions = new HashMap<>(modelClassSubstitutions); //safety copy
         this.calc = calc;
         this.comparators = comparators;
         this.rootMethodSignature = rootMethodSignature;
         this.decisionProcedure = decisionProcedure;
-        this.symbolFactory = new SymbolFactory();
         this.stateTree = new StateTree(stateIdentificationMode, breadthMode);
         this.triggerManager = new TriggerManager(rulesTrigger.clone()); //safety copy
         this.postInitInvariantClassPatterns = new ArrayList<>(postInitInvariantClassPatterns); //safety copy
@@ -1114,11 +1084,67 @@ public final class ExecutionContext {
      */
     public State createStateVirginPreInitial() throws InvalidClassFileFactoryClassException {
         try {
-			return new State(this.bypassStandardLoading, this.stateTree.getPreInitialHistoryPoint(), this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.modelClassSubstitutions, this.symbolFactory);
+			return this.stateVirginPreInitialFactory.make(this.stateTree.getPreInitialHistoryPoint());
 		} catch (InvalidInputException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}
+    }
+    
+    private static final class StateVirginPreInitialFactory {
+        /** 
+         * {@code true} iff the bootstrap classloader should also load the classes defined by the
+         * extensions and application classloaders. 
+         */
+        private final boolean bypassStandardLoading;
+        
+        /** The maximum length of an array to be granted simple representation. Used during initialization. */
+        private final int maxSimpleArrayLength;
+        
+        /** The maximum heap size expressed as maximum number of objects. Used during initialization. */
+        private final long maxHeapSize;
+
+        /** The {@link Classpath}. Used during initialization. */
+        private final Classpath classpath;
+        
+        /** 
+         * The class for the symbolic execution's {@link ClassFileFactory} 
+         * (injected dependency). Used during initialization.
+         */
+        private final Class<? extends ClassFileFactory> classFileFactoryClass;
+
+        /** 
+         * Maps class names to the names of the subclasses that may be 
+         * used to expand references. Used during initialization.
+         */
+        private final Map<String, Set<String>> expansionBackdoor;
+        
+        /**
+         * Associates class names to the class names of the corresponding 
+         * model classes that replace them. It is not mutated.
+         */
+        private final HashMap<String, String> modelClassSubstitutions;
+        
+        StateVirginPreInitialFactory(boolean bypassStandardLoading,
+                                     int maxSimpleArrayLength,
+                                     long maxHeapSize,
+                                     Classpath classpath,
+                                     Class<? extends ClassFileFactory> classFileFactoryClass,
+                                     Map<String, Set<String>> expansionBackdoor,
+                                     Map<String, String> modelClassSubstitutions) {
+        	this.bypassStandardLoading = bypassStandardLoading;
+        	this.maxSimpleArrayLength = maxSimpleArrayLength;
+        	this.maxHeapSize = maxHeapSize;
+        	this.classpath = classpath;
+        	this.classFileFactoryClass = classFileFactoryClass;
+        	this.expansionBackdoor = new HashMap<>(expansionBackdoor); //safety copy
+        	this.modelClassSubstitutions = new HashMap<>(modelClassSubstitutions); //safety copy
+        }
+        
+    	State make(HistoryPoint preInitialHistoryPoint) 
+    	throws InvalidClassFileFactoryClassException, InvalidInputException {
+    		return new State(this.bypassStandardLoading, preInitialHistoryPoint, this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.modelClassSubstitutions, new SymbolFactory());
+    	}
     }
 
     /**

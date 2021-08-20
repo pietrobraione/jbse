@@ -11,7 +11,7 @@ import jbse.val.ReferenceSymbolic;
  * @author Pietro Braione
  *
  */
-public class ClauseAssumeNull extends ClauseAssumeReferenceSymbolic {
+public final class ClauseAssumeNull extends ClauseAssumeReferenceSymbolic {
 	/**
 	 * Constructor.
 	 * 

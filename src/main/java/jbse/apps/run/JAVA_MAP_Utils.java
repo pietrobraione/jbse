@@ -82,14 +82,16 @@ public final class JAVA_MAP_Utils {
 		}				
 	}
 
-	//solo tardis
-	public static boolean assumptionViolated(ClassHierarchy hier, Clause clause) {
+	//only tardis
+	public static boolean mapModelAssumptionViolated(ClassHierarchy hier, Clause clause) {
 		if (clause instanceof ClauseAssumeReferenceSymbolic) {
+			//the initialMap field of a model map must only expand
 			final ReferenceSymbolic ref = ((ClauseAssumeReferenceSymbolic) clause).getReference(); 
 			if (isInitialMapField(hier, ref) && (clause instanceof ClauseAssumeAliases || clause instanceof ClauseAssumeNull)) {
 				return true;
 			} 
 		} else if (clause instanceof ClauseAssume) {
+			//the size of an initialMap must be always be greater or equal to zero
 			final Expression cond = (Expression) ((ClauseAssume) clause).getCondition(); 
 			final Primitive firstOp = cond.getFirstOperand();
 			if (cond.getOperator().equals(Operator.LT) && firstOp instanceof PrimitiveSymbolicMemberField) {
@@ -102,7 +104,7 @@ public final class JAVA_MAP_Utils {
 		return false;
 	}
 
-	//solo sushi-lib
+	//only sushi-lib
 	public static String possiblyAdaptMapModelSymbols(String origin) {
 		final String INITIAL_MAP_FIELD_FULL = "\\.[^\\.]*Map:" + INITIAL_MAP_FIELD_NAME;
 		final String originNoInitialMap;

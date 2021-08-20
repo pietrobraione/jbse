@@ -11,7 +11,7 @@ import jbse.val.ReferenceSymbolic;
  * @author Pietro Braione
  *
  */
-public class ClauseAssumeAliases extends ClauseAssumeReferenceSymbolic {
+public final class ClauseAssumeAliases extends ClauseAssumeReferenceSymbolic {
 	private final long heapPosition;
 	private final HeapObjekt object;
 	

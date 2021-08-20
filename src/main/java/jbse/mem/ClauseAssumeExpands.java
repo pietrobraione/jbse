@@ -11,7 +11,7 @@ import jbse.val.ReferenceSymbolic;
  * @author Pietro Braione
  *
  */
-public class ClauseAssumeExpands extends ClauseAssumeReferenceSymbolic {
+public final class ClauseAssumeExpands extends ClauseAssumeReferenceSymbolic {
 	private final long heapPosition;
 	private final HeapObjekt object;
 	
@@ -58,7 +58,7 @@ public class ClauseAssumeExpands extends ClauseAssumeReferenceSymbolic {
 	@Override
 	public String toString() {
 		final ReferenceSymbolic r = this.getReference();
-		return r.toString() + " == " + "Object[" + this.heapPosition + "] (fresh)";
+		return r.toString() + " == " + "Object[" + this.heapPosition + "] (fresh " + this.object.getType().getClassName() + ")";
 	}
 
 	@Override
@@ -80,11 +80,7 @@ public class ClauseAssumeExpands extends ClauseAssumeReferenceSymbolic {
 			return false;
 		}
 		final ClauseAssumeExpands other = (ClauseAssumeExpands) obj;
-		if (this.object == null) {
-			if (other.object != null) {
-				return false;
-			}
-		} else if (!this.object.getType().equals(other.object.getType())) {
+		if (!this.object.getType().equals(other.object.getType())) {
 			return false;
 		}
 		return true;

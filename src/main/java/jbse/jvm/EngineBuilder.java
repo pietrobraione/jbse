@@ -80,11 +80,11 @@ public class EngineBuilder {
 	                               parameters.getBypassStandardLoading(),
 	                               parameters.getMaxSimpleArrayLength(),
 	                               parameters.getMaxHeapSize(),
-	                               parameters.getMakePreInitClassesSymbolic(),
 	                               parameters.getClasspath(),
-	                               ClassFileFactoryJavassist.class,          //default
-	                               parameters.getExpansionBackdoor(), 
-	                               parameters.getModelClassSubstitutions(),
+	                               ClassFileFactoryJavassist.class,
+	                               parameters.getExpansionBackdoor(),          //default
+	                               parameters.getModelClassSubstitutions(), 
+	                               parameters.getMakePreInitClassesSymbolic(),
 	                               parameters.getCalculator(),
 	                               new DecisionAlternativeComparators(),     //default 
 	                               parameters.getMethodSignature(),

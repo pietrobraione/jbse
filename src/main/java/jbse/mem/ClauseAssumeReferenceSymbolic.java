@@ -38,7 +38,7 @@ public abstract class ClauseAssumeReferenceSymbolic implements Clause {
 	@Override
 	public int hashCode() {
 		int result = 103;
-		result = 53 * result + ((this.referenceSymbolic == null) ? 0 : this.referenceSymbolic.hashCode());
+		result = 53 * result + this.referenceSymbolic.hashCode();
 		return result;
 	}
 
@@ -54,11 +54,7 @@ public abstract class ClauseAssumeReferenceSymbolic implements Clause {
 			return false;
 		}
 		final ClauseAssumeReferenceSymbolic other = (ClauseAssumeReferenceSymbolic) obj;
-		if (this.referenceSymbolic == null) {
-			if (other.referenceSymbolic != null) {
-				return false;
-			}
-		} else if (!this.referenceSymbolic.equals(other.referenceSymbolic)) {
+		if (!this.referenceSymbolic.equals(other.referenceSymbolic)) {
 			return false;
 		}
 		return true;
