@@ -23,7 +23,7 @@ import jbse.val.exc.NoResultException;
  * @author Pietro Braione
  *
  */
-public class RewriterDivisionEqualsZero extends RewriterCalculatorRewriting {
+public final class RewriterDivisionEqualsZero extends RewriterCalculatorRewriting {
 	public RewriterDivisionEqualsZero() { }
 
 	@Override

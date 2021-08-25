@@ -16,7 +16,7 @@ import jbse.val.exc.NoResultException;
  * 
  * @author Pietro Braione
  */
-public class RewriterSqrt extends RewriterCalculatorRewriting {
+public final class RewriterSqrt extends RewriterCalculatorRewriting {
 	public RewriterSqrt() { }
 	
 	@Override

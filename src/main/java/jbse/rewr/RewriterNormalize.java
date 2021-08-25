@@ -10,7 +10,7 @@ import jbse.val.exc.NoResultException;
  * 
  * @author Pietro Braione
  */
-public class RewriterNormalize extends RewriterCalculatorRewriting {
+public final class RewriterNormalize extends RewriterCalculatorRewriting {
 	public RewriterNormalize() { }
 
 	@Override

@@ -11,7 +11,7 @@ import jbse.val.Primitive;
  * @author Pietro Braione
  *
  */
-public class RewriterArcTan extends RewriterCalculatorRewriting {
+public final class RewriterArcTan extends RewriterCalculatorRewriting {
 
 	public RewriterArcTan() { }
 	

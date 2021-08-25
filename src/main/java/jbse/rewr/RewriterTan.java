@@ -17,7 +17,7 @@ import jbse.val.exc.NoResultException;
  * @author Pietro Braione
  *
  */
-public class RewriterTan extends RewriterCalculatorRewriting {
+public final class RewriterTan extends RewriterCalculatorRewriting {
 
 	public RewriterTan() { }
 	

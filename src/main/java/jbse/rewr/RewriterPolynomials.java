@@ -18,7 +18,7 @@ import jbse.val.exc.NoResultException;
  * @author Pietro Braione
  *
  */
-public class RewriterPolynomials extends RewriterCalculatorRewriting {
+public final class RewriterPolynomials extends RewriterCalculatorRewriting {
 	public RewriterPolynomials() { }
 
 	@Override

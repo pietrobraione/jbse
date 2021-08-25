@@ -26,7 +26,7 @@ import jbse.val.exc.NoResultException;
  * 
  * @author Pietro Braione
  */
-public class RewriterAbsSum extends RewriterCalculatorRewriting {
+public final class RewriterAbsSum extends RewriterCalculatorRewriting {
 	public RewriterAbsSum() { }
 
 	@Override

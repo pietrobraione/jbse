@@ -21,7 +21,7 @@ import jbse.val.exc.NoResultException;
  * @author Pietro Braione
  *
  */
-public class RewriterTrigNormalize extends RewriterCalculatorRewriting {
+public final class RewriterTrigNormalize extends RewriterCalculatorRewriting {
 	public RewriterTrigNormalize() { }
 
 	@Override

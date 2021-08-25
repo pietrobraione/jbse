@@ -22,7 +22,7 @@ import jbse.val.exc.NoResultException;
  * @author Pietro Braione
  *
  */
-public class RewriterSinCos extends RewriterCalculatorRewriting {
+public final class RewriterSinCos extends RewriterCalculatorRewriting {
 	public RewriterSinCos() { }
 
 	private List<Monomial> getMonomialsWithSinCos(Polynomial poly) {
