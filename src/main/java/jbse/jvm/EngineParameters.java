@@ -1026,8 +1026,22 @@ public final class EngineParameters implements Cloneable {
         if (className == null || descriptor == null || name == null) {
             throw new NullPointerException();
         }
-        this.startingState = null; 
-        this.methodSignature = new Signature(className, descriptor, name); 
+        setMethodSignature(new Signature(className, descriptor, name));
+    }
+
+    /**
+     * Sets the signature of the method which must be symbolically executed,
+     * and cancels the effect of any previous call to {@link #setStartingState(State)}.
+     *
+     * @param signature the signature of the method to execute symbolically.
+     * @throws NullPointerException if any of the above parameters is {@code null}.
+     */
+    public void setMethodSignature(Signature signature) {
+        if (signature == null) {
+            throw new NullPointerException();
+        }
+        this.startingState = null;
+        this.methodSignature = signature;
     }
 
     /**
