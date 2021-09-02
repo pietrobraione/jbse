@@ -76,7 +76,6 @@ import jbse.val.NarrowingConversion;
 import jbse.val.Null;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolicApply;
-import jbse.val.PrimitiveSymbolicAtomic;
 import jbse.val.PrimitiveSymbolicHashCode;
 import jbse.val.PrimitiveSymbolicLocalVariable;
 import jbse.val.PrimitiveSymbolicMemberArray;

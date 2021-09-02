@@ -296,16 +296,16 @@ final class AdapterMethodLinker implements Cloneable {
     
     @Override
     protected AdapterMethodLinker clone() {
-    	final AdapterMethodLinker o;
+    	final AdapterMethodLinker other;
     	try {
-    		o = (AdapterMethodLinker) super.clone();
+    		other = (AdapterMethodLinker) super.clone();
     	} catch (CloneNotSupportedException e) {
             throw new InternalError(e);
         }
-        o.methodAdapters = new HashMap<>(o.methodAdapters);
-        o.methodAppendices = new HashMap<>(o.methodAppendices);
-        o.callSiteAdapters = new HashMap<>(o.callSiteAdapters);
-        o.callSiteAppendices = new HashMap<>(o.callSiteAppendices);
-    	return o;
+        other.methodAdapters = new HashMap<>(other.methodAdapters);
+        other.methodAppendices = new HashMap<>(other.methodAppendices);
+        other.callSiteAdapters = new HashMap<>(other.callSiteAdapters);
+        other.callSiteAppendices = new HashMap<>(other.callSiteAppendices);
+    	return other;
     }
 }

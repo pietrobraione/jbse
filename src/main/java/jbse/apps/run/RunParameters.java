@@ -1100,6 +1100,17 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
+     * Sets the signature of the method which must be symbolically executed,
+     * and cancels the effect of any previous call to {@link #setStartingState(State)}.
+     *
+     * @param signature the {@link Signature} of the method to execute symbolically.
+     * @throws NullPointerException if {@code signature == null}.
+     */
+    public void setMethodSignature(Signature signature) {
+        this.runnerParameters.setMethodSignature(signature);
+    }
+
+    /**
      * Gets the signature of the method which must be symbolically executed.
      * 
      * @return a {@link Signature}, or {@code null} if no method signature
