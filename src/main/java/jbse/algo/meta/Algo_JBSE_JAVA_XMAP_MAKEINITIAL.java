@@ -21,8 +21,9 @@ import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
 /**
- * Meta-level implementation of {@link jbse.base.JAVA_MAP#makeInitial(Object)} and 
- * {@link jbse.base.JAVA_CONCURRENTMAP#makeInitial(Object)}.
+ * Meta-level implementation of {@link jbse.base.JAVA_MAP#makeInitial(Object)}, 
+ * {@link jbse.base.JAVA_CONCURRENTMAP#makeInitial(Object)} and
+ * {@link jbse.base.JAVA_LINKEDMAP#makeInitial(Object)}.
  *  
  * @author Pietro Braione
  *
@@ -45,12 +46,12 @@ public final class Algo_JBSE_JAVA_XMAP_MAKEINITIAL extends Algo_INVOKEMETA_Nonbr
             this.thisRef = (Reference) this.data.operand(0);
             if (state.isNull(this.thisRef)) {
                 //this should never happen
-                failExecution("The 'this' parameter to jbse.base.JAVA_[CONCURRENT]MAP.makeInitial method is null.");
+                failExecution("The 'this' parameter to jbse.base.JAVA_[CONCURRENT|LINKED]MAP.makeInitial method is null.");
             }
             final Objekt thisObj = state.getObject(this.thisRef);
             if (thisObj == null) {
                 //this should never happen
-                failExecution("The 'this' parameter to jbse.base.JAVA_[CONCURRENT]MAP.makeInitial method is symbolic and unresolved.");
+                failExecution("The 'this' parameter to jbse.base.JAVA_[CONCURRENT|LINKED]MAP.makeInitial method is symbolic and unresolved.");
             }            
         } catch (ClassCastException e) {
             throwVerifyError(state, this.ctx.getCalculator());
