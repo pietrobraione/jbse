@@ -42,7 +42,6 @@ import jbse.val.Expression;
 import jbse.val.KlassPseudoReference;
 import jbse.val.NarrowingConversion;
 import jbse.val.PrimitiveSymbolicApply;
-import jbse.val.PrimitiveSymbolicAtomic;
 import jbse.val.PrimitiveSymbolicHashCode;
 import jbse.val.PrimitiveSymbolicLocalVariable;
 import jbse.val.PrimitiveSymbolicMemberArray;
@@ -53,7 +52,6 @@ import jbse.val.ReferenceConcrete;
 import jbse.val.Primitive;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.ReferenceSymbolicApply;
-import jbse.val.ReferenceSymbolicAtomic;
 import jbse.val.ReferenceSymbolicLocalVariable;
 import jbse.val.ReferenceSymbolicMemberArray;
 import jbse.val.ReferenceSymbolicMemberField;
@@ -61,6 +59,8 @@ import jbse.val.ReferenceSymbolicMemberMapKey;
 import jbse.val.ReferenceSymbolicMemberMapValue;
 import jbse.val.Simplex;
 import jbse.val.Symbolic;
+import jbse.val.SymbolicApply;
+import jbse.val.SymbolicAtomic;
 import jbse.val.Term;
 import jbse.val.Value;
 import jbse.val.ValueVisitor;
@@ -112,7 +112,15 @@ public final class StateFormatterText implements Formatter {
             if (state.getStuckException() != null) {
                 sb.append(", raised exception: "); sb.append(state.getStuckException().toString());
             } else if (state.getStuckReturn() != null) {
-                sb.append(", returned value: "); sb.append(state.getStuckReturn().toString());
+                sb.append(", returned value: ");
+                sb.append(lineSep);
+                sb.append(indentTxt); sb.append(state.getStuckReturn().toString());
+                final StringBuilder where = new StringBuilder();
+                final boolean someText = formatValueForWhereSection(state.getStuckReturn(), where, breakLines, indentTxt, indentCurrent + indentTxt, new HashSet<>());
+                if (someText) {
+                    sb.append(lineSep); sb.append(indentTxt); sb.append("where:"); sb.append(lineSep); sb.append(where);
+                }
+                
             } //else, append nothing
             sb.append(lineSep);
         } else if (state.getStackSize() == 0) {
@@ -152,10 +160,13 @@ public final class StateFormatterText implements Formatter {
                 doneFirstExpression = true;
                 final Primitive cond = ((ClauseAssume) c).getCondition();
                 formatValue(s, expression, cond);
-                final StringBuilder expressionWhereCondition = new StringBuilder();
-                final boolean some = formatValueForPathCondition(cond, expressionWhereCondition, breakLines, indentTxt, indentCurrent, doneSymbols);
-                if (some) {
-                    where.append(doneFirstWhere ? (" &&" + lineSep) : ""); where.append(indentCurrent); where.append(expressionWhereCondition);
+                final StringBuilder whereAssume = new StringBuilder();
+                final boolean someText = formatValueForWhereSection(cond, whereAssume, breakLines, indentTxt, indentCurrent, doneSymbols);
+                if (someText) {
+                    if (doneFirstWhere) {
+                        where.append(" &&"); where.append(lineSep);
+                    }
+                    where.append(whereAssume);
                     doneFirstWhere = true;
                 } //else does nothing
             } else if (c instanceof ClauseAssumeReferenceSymbolic) {
@@ -169,13 +180,13 @@ public final class StateFormatterText implements Formatter {
                     final ReferenceSymbolic tgtOrigin = s.getObject(ref).getOrigin();
                     expression.append("Object["); expression.append(s.getResolution(ref)); expression.append("] ("); expression.append(ref.equals(tgtOrigin) ? "fresh" : ("aliases " + tgtOrigin)); expression.append(")");
                 }
-                final StringBuilder referenceFormatted = new StringBuilder();
-                final boolean someText = formatValueForPathCondition(ref, referenceFormatted, breakLines, indentTxt, indentCurrent, doneSymbols); 
+                final StringBuilder whereAssumeReferenceSymbolic = new StringBuilder();
+                final boolean someText = formatValueForWhereSection(ref, whereAssumeReferenceSymbolic, breakLines, indentTxt, indentCurrent, doneSymbols); 
                 if (someText) {
                     if (doneFirstWhere) {
                         where.append(" &&"); where.append(lineSep);
                     }
-                    where.append(indentCurrent); where.append(referenceFormatted);
+                    where.append(whereAssumeReferenceSymbolic);
                     doneFirstWhere = true;
                 }
             } else if (c instanceof ClauseAssumeClassInitialized) {
@@ -198,88 +209,66 @@ public final class StateFormatterText implements Formatter {
         }
     }
 
-    private static boolean formatExpressionForPathCondition(Expression e, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
-        final Primitive firstOp = e.getFirstOperand();
-        final Primitive secondOp = e.getSecondOperand();
-        boolean someFirstOp = false;
-        if (firstOp != null) {
-            someFirstOp = formatValueForPathCondition(firstOp, sb, breakLines, indentTxt, indentCurrent, done);
-        }
-        final StringBuilder second = new StringBuilder();
-        final boolean someSecondOp = formatValueForPathCondition(secondOp, second, breakLines, indentTxt, indentCurrent, done);
-        if (!someFirstOp || !someSecondOp) {
-            //does nothing
-        } else {
-            final String lineSep = (breakLines ? LINE_SEP : "");
-            sb.append(" &&"); sb.append(lineSep); sb.append(indentCurrent);
-        }
-        sb.append(second);
-        return (someFirstOp || someSecondOp);
-    }
-
-    private static boolean formatValueForPathCondition(Value v, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
+    private static boolean formatValueForWhereSection(Value v, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
         if (v instanceof Expression) {
-            return formatExpressionForPathCondition((Expression) v, sb, breakLines, indentTxt, indentCurrent, done);
-        } else if (v instanceof PrimitiveSymbolicAtomic || v instanceof ReferenceSymbolicAtomic) {
+            return formatExpressionForWhereSection((Expression) v, sb, breakLines, indentTxt, indentCurrent, done);
+        } else if (v instanceof SymbolicAtomic) {
             if (done.contains(v.toString())) {
                 return false;
             } else {
                 done.add(v.toString());
-                sb.append(v.toString()); sb.append(" == "); sb.append(((Symbolic) v).asOriginString());
+                sb.append(indentCurrent); sb.append(v.toString()); sb.append(" == "); sb.append(((Symbolic) v).asOriginString());
                 return true;
             }
-        } else if (v instanceof PrimitiveSymbolicApply) {
-            return formatFunctionApplicationForPathCondition((PrimitiveSymbolicApply) v, sb, breakLines, indentTxt, indentCurrent, done);
-        } else if (v instanceof ReferenceSymbolicApply) {
-            return formatFunctionApplicationForPathCondition((ReferenceSymbolicApply) v, sb, breakLines, indentTxt, indentCurrent, done);
+        } else if (v instanceof SymbolicApply) {
+            return formatSymbolicApplyForWhereSection((SymbolicApply) v, sb, breakLines, indentTxt, indentCurrent, done);
         } else if (v instanceof WideningConversion) {
             final WideningConversion pWiden = (WideningConversion) v;
-            return formatValueForPathCondition(pWiden.getArg(), sb, breakLines, indentTxt, indentCurrent, done);
+            return formatValueForWhereSection(pWiden.getArg(), sb, breakLines, indentTxt, indentCurrent, done);
         } else if (v instanceof NarrowingConversion) {
             final NarrowingConversion pNarrow = (NarrowingConversion) v;
-            return formatValueForPathCondition(pNarrow.getArg(), sb, breakLines, indentTxt, indentCurrent, done);
+            return formatValueForWhereSection(pNarrow.getArg(), sb, breakLines, indentTxt, indentCurrent, done);
         } else { //(v instanceof DefaultValue || v instanceof Any || v instanceof Simplex || v instanceof Term || v instanceof ReferenceConcrete || 
                  // v instanceof ReferenceArrayImmaterial || v instanceof KlassPseudoReference)
             return false;
         }
     }
 
-    private static boolean formatFunctionApplicationForPathCondition(PrimitiveSymbolicApply a, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
+    private static boolean formatExpressionForWhereSection(Expression e, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
+        final Primitive firstOp = e.getFirstOperand();
+        final Primitive secondOp = e.getSecondOperand();
+        final StringBuilder first = new StringBuilder();
+        boolean someFirstOp = false;
+        if (firstOp != null) {
+            someFirstOp = formatValueForWhereSection(firstOp, first, breakLines, indentTxt, indentCurrent, done);
+        }
+        final StringBuilder second = new StringBuilder();
+        final boolean someSecondOp = formatValueForWhereSection(secondOp, second, breakLines, indentTxt, indentCurrent, done);
+        sb.append(first);
+        if (someFirstOp && someSecondOp) {
+            final String lineSep = (breakLines ? LINE_SEP : "");
+            sb.append(" &&"); sb.append(lineSep); 
+        }
+        sb.append(second);
+        return (someFirstOp || someSecondOp);
+    }
+
+    private static boolean formatSymbolicApplyForWhereSection(SymbolicApply a, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
         boolean some = false;
         boolean firstDone = false;
         final String lineSep = (breakLines ? LINE_SEP : "");
         for (Value v : a.getArgs()) {
             final StringBuilder arg = new StringBuilder();
-            final boolean argSome = formatValueForPathCondition(v, arg, breakLines, indentTxt, indentCurrent, done);
+            final boolean argSome = formatValueForWhereSection(v, arg, breakLines, indentTxt, indentCurrent, done);
             some = some || argSome;
             if (argSome) {
             	if (firstDone) {
             		sb.append(" &&"); sb.append(lineSep); sb.append(indentCurrent); 
             	} else {
+            		sb.append(indentCurrent);
             		firstDone = true;
             	}
             	sb.append(arg);
-            }
-        }
-        return some;
-    }
-    
-    private static boolean formatFunctionApplicationForPathCondition(ReferenceSymbolicApply a, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
-        boolean first = true;
-        boolean some = false;
-        final String lineSep = (breakLines ? LINE_SEP : "");
-        for (Value v : a.getArgs()) {
-            final StringBuilder arg = new StringBuilder();
-            final boolean argSome = formatValueForPathCondition(v, arg, breakLines, indentTxt, indentCurrent, done);
-            some = some || argSome;
-            if (argSome) {
-                //does nothing
-            } else { 
-                if (!first) {
-                    sb.append(" &&"); sb.append(lineSep); sb.append(indentCurrent);
-                }
-                sb.append(arg);
-                first = false;
             }
         }
         return some;
