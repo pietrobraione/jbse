@@ -5,7 +5,6 @@ import static jbse.common.Type.INT;
 import static jbse.common.Type.NULLREF;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.getArrayMemberType;
-import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 
 import java.util.ArrayList;
@@ -16,7 +15,6 @@ import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 
 import jbse.bc.ClassFile;
-import jbse.bc.Signature;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Array.AccessOutcome;
@@ -56,8 +54,8 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
      */
     private final boolean isInitial;
 
-    /** The signature of the length field. */
-    private final Signature lengthSignature;
+    /** The array length. */
+    private final Primitive length;
 
     /** An {@link Expression} stating that {@code indexFormal} is in range. */
     private final Expression indexInRange;
@@ -352,54 +350,85 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     }
 
     /**
-     * Constructor.
+     * Constructor (concrete arrays).
      * 
      * @param calc a {@link Calculator}. It must not be {@code null}. It will
      *        only be used during object construction and will not be stored
      *        in this {@link ObjektImpl}.
-     * @param symbolic a {@code boolean}, whether this object is symbolic
-     *        (i.e., not explicitly created during symbolic execution by
-     *        a {@code new*} bytecode, but rather assumed).     
-     * @param initSymbolic {@code true} iff the array must be initialized 
-     *        with symbolic values. Possible only if {@code symbolic == true}.
      * @param initValue a {@link Value} for initializing the array (ignored
      *        whenever {@code initSymbolic == true}); if {@code initValue == null}
      *        the default value for the array member type is used for initialization.
      * @param length a {@link Primitive}, the number of elements in the array.
      * @param classFile a {@code classFile}, the class of 
      *        this {@link Instance}; It must be {@code classFile.}{@link ClassFile#isReference() isArray}{@code () == true}.
+     * @param epoch the creation {@link HistoryPoint} of the {@link ArrayImpl}.
+     * @param maxSimpleArrayLength an {@code int}, the maximum length an array may have
+     *        to be granted simple representation.
+     * @throws InvalidTypeException iff {@code classFile} is invalid (null or not an array class). 
+     * @throws InvalidInputException never.
+     */
+    public ArrayImpl(Calculator calc, Value initValue, Primitive length, ClassFile classFile, HistoryPoint epoch, int maxSimpleArrayLength) 
+    throws InvalidTypeException, InvalidInputException {
+    	this(calc, false, initValue, length, classFile, null, epoch, maxSimpleArrayLength);
+    }
+    
+    /**
+     * Constructor (symbolic initial arrays).
+     * 
+     * @param calc a {@link Calculator}. It must not be {@code null}. It will
+     *        only be used during object construction and will not be stored
+     *        in this {@link ObjektImpl}.
+     * @param length a {@link Primitive}, the number of elements in the array.
+     * @param classFile a {@code classFile}, the class of 
+     *        this {@link Instance}; It must be {@code classFile.}{@link ClassFile#isReference() isArray}{@code () == true}.
      * @param origin the {@link ReferenceSymbolic} providing origin of 
      *        the {@code Array}, if symbolic, or {@code null}, if concrete.
      * @param epoch the creation {@link HistoryPoint} of the {@link ArrayImpl}.
-     * @param isInitial {@code true} iff this array is not an array of the 
-     *        current state, but a copy of an (immutable) symbolic array in
-     *        the initial state.
      * @param maxSimpleArrayLength an {@code int}, the maximum length an array may have
      *        to be granted simple representation.
-     * @throws InvalidInputException iff {@code (initSymbolic && !symbolic) || (isInitial && !symbolic)}. 
-     * @throws InvalidTypeException iff {@code classFile} is invalid. 
+     * @throws InvalidTypeException iff {@code classFile} is invalid (null or not an array class). 
+     * @throws InvalidInputException never.
      */
-    public ArrayImpl(Calculator calc, boolean symbolic, boolean initSymbolic, Value initValue, Primitive length, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, boolean isInitial, int maxSimpleArrayLength) 
+    public ArrayImpl(Calculator calc, Primitive length, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, int maxSimpleArrayLength) 
+    throws InvalidTypeException, InvalidInputException {
+    	this(calc, true, null, length, classFile, origin, epoch, maxSimpleArrayLength);
+	}
+    /**
+     * Private constructor (concrete or symbolic initial arrays).
+     * 
+     * @param calc a {@link Calculator}. It must not be {@code null}. It will
+     *        only be used during object construction and will not be stored
+     *        in this {@link ObjektImpl}.
+     * @param isSymbolicInitial {@code true} iff this array is not an array of the 
+     *        current state, but a copy of an (immutable) symbolic array in
+     *        the initial state.
+     * @param initValue a {@link Value} for initializing the array (ignored
+     *        whenever {@code isSymbolicInitial == true}); if {@code initValue == null}
+     *        the default value for the array member type is used for initialization.
+     * @param length a {@link Primitive}, the number of elements in the array.
+     * @param classFile a {@code classFile}, the class of 
+     *        this {@link Instance}; It must be {@code classFile.}{@link ClassFile#isReference() isArray}{@code () == true}.
+     * @param origin the {@link ReferenceSymbolic} providing origin of 
+     *        the {@code Array} (ignored whenever {@code isSymbolicInitial == false}).
+     * @param maxSimpleArrayLength an {@code int}, the maximum length an array may have
+     *        to be granted simple representation.
+     * @throws InvalidInputException iff {@code calc == null || classFile == null}. 
+     * @throws InvalidTypeException iff {@code classFile} is invalid (not an array class). 
+     */
+    private ArrayImpl(Calculator calc, boolean isSymbolicInitial, Value initValue, Primitive length, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, int maxSimpleArrayLength) 
     throws InvalidInputException, InvalidTypeException {
-        super(calc, symbolic, classFile, origin, epoch, false, 0, new Signature(classFile.getClassName(), "" + INT, "length"));
-        if (initSymbolic && !symbolic) {
-        	throw new InvalidInputException("Attempted creation of a concrete array with symbolic initialization.");
-        }
-        if (isInitial && !symbolic) {
-        	throw new InvalidInputException("Attempted creation of an initial concrete array.");
-        }
+        super(calc, isSymbolicInitial, classFile, origin, epoch, false, 0);
         if (classFile == null || !classFile.isArray()) {
             throw new InvalidTypeException("Attempted creation of an array with type " + classFile.getClassName());
         }
-        this.isInitial = isInitial;
-        this.lengthSignature = new Signature(classFile.getClassName(), "" + INT, "length");
+        this.isInitial = isSymbolicInitial;
         try {
             this.indexFormal = calc.valTerm(INT, INDEX_ID + System.identityHashCode(this) + "}");
         } catch (InvalidTypeException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-        setFieldValue(this.lengthSignature, length);
+        this.length = length;
         try {
             final Expression indexGreaterEqualZero = (Expression) calc.push(this.indexFormal).ge(calc.valInt(0)).pop();
             final Expression indexLessThanLength = (Expression) calc.push(this.indexFormal).lt(length).pop();
@@ -408,33 +437,36 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-        setEntriesInit(calc, initSymbolic, initValue, maxSimpleArrayLength);
+        setEntriesInit(calc, isSymbolicInitial, initValue, maxSimpleArrayLength);
     }
 
     /**
-     * Constructor.
+     * Constructor (symbolic noninitial arrays).
      * 
      * @param calc a {@link Calculator}. It must not be {@code null}. It will
      *        only be used during object construction and will not be stored
      *        in this {@link ObjektImpl}.
-     * @param referenceToOtherArray a {@link Reference} to an initial {@link ArrayImpl} 
-     *        that will back this array.
-     * @param otherArray the {@link ArrayImpl} that backs this array.
-     * @throws InvalidInputException if {@code referenceToOtherArray == null}.
-     * @throws NullPointerException if {@code otherArray == null}.
+     * @param referenceToBackingArray a {@link Reference} to {@code backingArray}.
+     *        It must not be {@code null}.
+     * @param backingArray the {@link ArrayImpl} that backs this array. It must
+     *         not be {@code null} and must be initial.
+     * @throws InvalidInputException if  {@code calc == null || referenceToBackingArray == null} or 
+     *         {@code !backingArray.}{@link #isInitial() isInitial}{@code ()}.
+     * @throws NullPointerException if {@code backingArray == null}.
      */
-    public ArrayImpl(Calculator calc, Reference referenceToOtherArray, ArrayImpl otherArray) throws InvalidInputException {
-        super(calc, otherArray.isSymbolic(), otherArray.classFile, otherArray.getOrigin(), otherArray.historyPoint(), false, 0, new Signature(otherArray.classFile.getClassName(), "" + INT, "length"));
-        //TODO assert other is an initial symbolic array
+    public ArrayImpl(Calculator calc, Reference referenceToBackingArray, ArrayImpl backingArray) throws InvalidInputException {
+        super(calc, true, backingArray.classFile, backingArray.getOrigin(), backingArray.historyPoint(), false, 0);
+        if (!backingArray.isInitial) {
+        	throw new InvalidInputException("Invoked ArrayImpl constructor for symbolic arrays with a backing array parameter that is not initial.");
+        }
         this.isInitial = false;
-        this.lengthSignature = new Signature(this.classFile.getClassName(), "" + INT, "length");
         try {
             this.indexFormal = calc.valTerm(INT, INDEX_ID + System.identityHashCode(this) + "}");
         } catch (InvalidTypeException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-        this.fields.get(this.lengthSignature).setValue(otherArray.getLength());
+        this.length = backingArray.getLength();
         try {
             final Expression indexGreaterEqualZero = (Expression) calc.push(this.indexFormal).ge(calc.valInt(0)).pop();
             final Expression indexLessThanLength = (Expression) calc.push(this.indexFormal).lt(getLength()).pop();
@@ -443,8 +475,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-        this.entries = new ArrayList<>();
-        this.entries.add(new AccessOutcomeInInitialArrayImpl(calc, this.indexInRange, referenceToOtherArray));
+        setEntriesBackingArray(calc, referenceToBackingArray);
     }
 
     private void setEntriesInit(Calculator calc, boolean initSymbolic, Value initValue, int maxSimpleArrayLength) {
@@ -490,10 +521,19 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     ArrayWrapper makeWrapper(Heap destinationHeap, long destinationPosition) {
     	return new ArrayWrapper(destinationHeap, destinationPosition, this);
     }
+    
+    @Override
+    public void setEntriesBackingArray(Calculator calc, Reference referenceToBackingArray) throws InvalidInputException {
+    	if (calc == null || referenceToBackingArray == null) {
+    		throw new InvalidInputException("Attempted to invoke Array.setEntriesBackingArray with a null parameter.");
+    	}
+        this.entries = new ArrayList<>();
+        this.entries.add(new AccessOutcomeInInitialArrayImpl(calc, this.indexInRange, referenceToBackingArray));
+    }
 
     @Override
     public Primitive getLength() {
-        return (Primitive) getFieldValue(this.lengthSignature);
+        return this.length;
     }
     
     @Override
@@ -618,8 +658,9 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     private void checkSetValue(Value newValue) throws InvalidTypeException {
     	if (newValue == null) {
     		return; //in some cases means unknown value, so we accept it
+    		//TODO shall we accept it only when the array is initial?
     	}
-		final ClassFile arrayMemberClass = ArrayImpl.this.getType().getMemberClass();
+		final ClassFile arrayMemberClass = getType().getMemberClass();
 		if (arrayMemberClass.isPrimitiveOrVoid() && newValue.getType() != toPrimitiveOrVoidInternalName(arrayMemberClass.getClassName())) {
 			throw new InvalidTypeException("Attempted to set an array with member type " + arrayMemberClass.getClassName() + " with a value with type " + newValue.getType() + ".");
 		}
@@ -763,19 +804,19 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     }
     
     @Override
-    public void cloneEntries(Array src, Calculator calc) throws InvalidInputException, InvalidTypeException {
-    	if (src == null || calc == null) {
-    		throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".cloneEntries with null Array src or Calculator calc parameter.");
+    public void cloneEntries(Array other, Calculator calc) throws InvalidInputException, InvalidTypeException {
+    	if (other == null || calc == null || !getLength().equals(other.getLength())) {
+    		throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".cloneEntries with null Array other or Calculator calc parameter, or with other.length() different from this.length().");
     	}
     	final ArrayImpl otherImpl;
-    	if (src instanceof ArrayImpl) {
-    		otherImpl = (ArrayImpl) src;
+    	if (other instanceof ArrayImpl) {
+    		otherImpl = (ArrayImpl) other;
     	} else {
-    		otherImpl = ((ArrayWrapper) src).getDelegate();
+    		otherImpl = ((ArrayWrapper) other).getDelegate();
     	}
 
     	if (!this.classFile.equals(otherImpl.classFile)) {
-    		throw new InvalidTypeException("tried to clone entries of a " + otherImpl.classFile + " array into a " + this.classFile + " array");
+    		throw new InvalidTypeException("Attempted to invoke " + getClass().getName() + ".cloneEntries of a " + otherImpl.classFile + " array into a " + this.classFile + " array");
     	}
     	this.entries.clear();
     	for (AccessOutcomeInImpl entry : otherImpl.entries) {
@@ -788,6 +829,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     		}
     		this.entries.add(entryClone);
     	}
+    	this.simpleRep = otherImpl.simpleRep;
     }
 
     /** An iterator that terminates instantaneously. */
@@ -810,8 +852,8 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     	} else {
     		srcImpl = ((ArrayWrapper) src).getDelegate();
     	}
-    	final String srcTypeComponent = getArrayMemberType(src.getType().getClassName());
-    	final String destTypeComponent = getArrayMemberType(getType().getClassName());
+    	final ClassFile srcMemberClass = src.getType().getMemberClass();
+    	final ClassFile destMemberClass = getType().getMemberClass();
     	try {
     		if (this.simpleRep && srcImpl.simpleRep && 
     				srcPos instanceof Simplex && destPos instanceof Simplex && 
@@ -827,7 +869,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     				final AccessOutcomeInImpl destEntry;
     				if (srcEntry instanceof AccessOutcomeInValue) {
     					final Value srcValue = ((AccessOutcomeInValue) srcEntry).getValue();
-    					if (!isPrimitive(srcTypeComponent) && !isPrimitive(destTypeComponent) && checkOk != null) { 
+    					if (!srcMemberClass.isPrimitiveOrVoid() && !destMemberClass.isPrimitiveOrVoid() && checkOk != null) { 
     						checkOk.accept((Reference) srcValue);
     					}
     					destEntry = new AccessOutcomeInValueImpl((Expression) calc.push(this.indexFormal).eq(calc.valInt(destPosInt + ofst)).pop(), srcValue);
@@ -862,7 +904,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     				final AccessOutcomeInImpl destEntry;
     				if (srcEntry instanceof AccessOutcomeInValue) {
     					final Value srcValue = ((AccessOutcomeInValue) srcEntry).getValue();
-    					if (!isPrimitive(srcTypeComponent) && !isPrimitive(destTypeComponent) && checkOk != null) { 
+    					if (!srcMemberClass.isPrimitiveOrVoid() && destMemberClass.isPrimitiveOrVoid() && checkOk != null) { 
     						checkOk.accept((Reference) srcValue);
     					}
     					destEntry = new AccessOutcomeInValueImpl(accessCondition, srcValue);

@@ -676,11 +676,15 @@ public final class EngineParameters implements Cloneable {
      * must be used.
      * 
      * @return a {@link TriggerRulesRepo}. It
-     *         is a safety copy of the one stored
-     *         in this {@link EngineParameters} object.
+     *         is not the one stored in this 
+     *         {@link EngineParameters} object,
+     *         so it can be independently modified.
      */
     public TriggerRulesRepo getTriggerRulesRepo() {
         final TriggerRulesRepo retVal = this.triggerRulesRepo.clone();
+        if (this.useHashMapModel) {
+        	retVal.addMapModelsRules();
+        }
         return retVal;
     }
 
@@ -690,6 +694,7 @@ public final class EngineParameters implements Cloneable {
      * 
      * @return a {@link TriggerRulesRepo}.
      */
+    @Deprecated
     public TriggerRulesRepo getTriggerRulesRepoRaw() {
     	return this.triggerRulesRepo;
     }

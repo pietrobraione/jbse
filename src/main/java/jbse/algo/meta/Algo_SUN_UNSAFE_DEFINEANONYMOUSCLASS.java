@@ -170,7 +170,7 @@ public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_
                 if (state.isNull(_r)) {
                     retVal[i] = null;
                 } else {
-                    final HeapObjekt _o = (HeapObjekt) state.getObject(_r);
+                    final HeapObjekt _o = state.getObject(_r);
                     if (JAVA_DOUBLE.equals(_o.getType().getClassName())) {
                     	retVal[i] = (Double) ((Simplex) (_o.getFieldValue(JAVA_DOUBLE_VALUE))).getActualValue();
                     } else if (JAVA_FLOAT.equals(_o.getType().getClassName())) {

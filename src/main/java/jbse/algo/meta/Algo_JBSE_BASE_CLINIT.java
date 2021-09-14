@@ -316,7 +316,8 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
         };
     }
 
-    private static void safeSetStringValue(State state, Klass k, Signature field, String property) {
+    private static void safeSetStringValue(State state, Klass k, Signature field, String property) 
+    throws InvalidInputException {
         if (property != null) {
             final ReferenceConcrete refPropertyValue = state.referenceToStringLiteral(property);
             if (refPropertyValue == null) {

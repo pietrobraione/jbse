@@ -9,7 +9,9 @@ import java.util.Map;
 
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.bc.exc.FieldNotFoundException;
 import jbse.common.exc.InvalidInputException;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.Calculator;
 import jbse.val.HistoryPoint;
 import jbse.val.Primitive;
@@ -21,7 +23,7 @@ import jbse.val.Value;
  */
 public abstract class ObjektImpl implements Objekt {
     /** ClassFile for this object's class. Immutable. */
-    protected final ClassFile classFile;
+    protected final ClassFile classFile; //TODO why protected?
 
     /** Whether this object is symbolic. */
     private boolean symbolic;
@@ -30,7 +32,7 @@ public abstract class ObjektImpl implements Objekt {
      * The origin of the object in the case it is created by 
      * lazy initialization. Immutable.
      */
-    private ReferenceSymbolic origin;
+    private ReferenceSymbolic origin; //TODO it is not final because we had to add a makeSymbolic method. See notes to it.
 
     /** The creation {@link HistoryPoint} of this {@link ObjektImpl}. Immutable. */
     private final HistoryPoint epoch;
@@ -78,7 +80,8 @@ public abstract class ObjektImpl implements Objekt {
      * @param symbolic a {@code boolean}, whether this object is symbolic
      *        (i.e., not explicitly created during symbolic execution by
      *        a {@code new*} bytecode, but rather assumed).
-     * @param type a {@link ClassFile}, the class of this object.
+     * @param classFile a {@link ClassFile}, the class of this object.
+     *        It must not be {@code null}.
      * @param origin the {@link ReferenceSymbolic} providing origin of 
      *        the {@code Objekt}, if symbolic, or {@code null}, if concrete.
      * @param epoch the creation {@link HistoryPoint} of this object.
@@ -88,9 +91,13 @@ public abstract class ObjektImpl implements Objekt {
      * @param numOfStaticFields an {@code int}, the number of static fields.
      * @param fieldSignatures varargs of field {@link Signature}s, all the
      *        fields this object knows.
+     * @throws InvalidInputException if {@code calc == null || classFile == null || fieldSignatures == null}.
      */
-    protected ObjektImpl(Calculator calc, boolean symbolic, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, boolean staticFields, int numOfStaticFields, Signature... fieldSignatures) {
-    	//TODO (null-)check parameters, throw exceptions
+    protected ObjektImpl(Calculator calc, boolean symbolic, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, boolean staticFields, int numOfStaticFields, Signature... fieldSignatures) 
+    throws InvalidInputException {
+    	if (calc == null || classFile == null || fieldSignatures == null) {
+    		throw new InvalidInputException("Attempted to create an ObjektImpl with a null Calculator, ClassFile or field signatures parameter.");
+    	}
         this.symbolic = symbolic;
         this.fields = new HashMap<>();
         this.staticFields = staticFields;
@@ -100,7 +107,25 @@ public abstract class ObjektImpl implements Objekt {
         for (Signature fieldSignature : this.fieldSignatures) {
             if ((staticFields && curSlot < numOfStaticFields) ||
                 (!staticFields && curSlot >= numOfStaticFields)) {
-                this.fields.put(fieldSignature, new Variable(calc, fieldSignature.getDescriptor(), fieldSignature.getName()));
+            	String fieldGenericSignatureType = null;
+            	boolean found = false;
+            	for (ClassFile cf : classFile.superclasses()) {
+            		if (cf.hasFieldDeclaration(fieldSignature)) {
+            			found = true;
+            			try {
+							fieldGenericSignatureType = cf.getFieldGenericSignatureType(fieldSignature);
+						} catch (FieldNotFoundException e) {
+							//this should never happen
+		            		throw new UnexpectedInternalException(e);
+						}
+            			break;
+            		}
+            	}
+            	if (!found) {
+            		//this should never happen
+            		throw new UnexpectedInternalException("Generic signature type information for field " + fieldSignature.toString() + " not found in class " + classFile.getClassName() + " and superclasses.");
+            	}
+            	this.fields.put(fieldSignature, new Variable(calc, fieldSignature.getDescriptor(), fieldGenericSignatureType, fieldSignature.getName()));
             }
             ++curSlot;
         }
@@ -203,12 +228,12 @@ public abstract class ObjektImpl implements Objekt {
     }
 
     @Override
-    public final void setFieldValue(Signature field, Value item) {
+    public final void setFieldValue(Signature field, Value item) throws InvalidInputException {
         this.fields.get(field).setValue(item);
     }
 
     @Override
-    public final void setFieldValue(String fieldName, String fieldClass, Value item) {
+    public final void setFieldValue(String fieldName, String fieldClass, Value item) throws InvalidInputException {
         for (Signature sig: this.fieldSignatures) { //not very efficient but we don't care
             if (sig.getName().equals(fieldName) && sig.getClassName().equals(fieldClass)) {
             	setFieldValue(sig, item);
@@ -217,7 +242,7 @@ public abstract class ObjektImpl implements Objekt {
     }
 
     @Override
-    public final void setFieldValue(int ofst, Value item) {
+    public final void setFieldValue(int ofst, Value item) throws InvalidInputException {
         setFieldValue(this.fieldSignatures.get(ofstToPos(ofst)), item);
     }
 

@@ -118,6 +118,12 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 			this.originString = buf.toString();
 		}
 	}
+	
+	@Override
+	public String getGenericSignatureType() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 	@Override
 	public String getOperator() {

@@ -83,12 +83,13 @@ public final class Algo_JAVA_OBJECT_CLONE extends Algo_INVOKEMETA_Nonbranching {
                 final Objekt thisObj = state.getObject(thisRef);
                 final Reference cloneRef;
                 if (this.classFile.isArray()) {
+                	final Array thisArray = (Array) thisObj;
                     //creates the clone
-                    cloneRef = state.createArray(calc, null, ((Array) thisObj).getLength(), this.classFile);
+                    cloneRef = state.createArray(calc, null, thisArray.getLength(), this.classFile);
                     final Array cloneObj = (Array) state.getObject(cloneRef);
 
                     //populates the clone
-                    cloneObj.cloneEntries((Array) thisObj, calc);
+                    cloneObj.cloneEntries(thisArray, calc);
                 } else {
                     //creates the clone
                     cloneRef = state.createInstance(calc, this.classFile);

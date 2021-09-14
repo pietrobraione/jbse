@@ -44,6 +44,15 @@ public abstract class ReferenceSymbolic extends Reference implements Symbolic {
     	return this.staticType;
     }
     
+    /**
+     * Gets the generic signature type of the reference.
+     * 
+     * @return a {@link String}. Its type erasure must be 
+     *         equal to {@link #getStaticType()}, so it is
+     *         {@code null} if the latter is {@code null}.
+     */
+    public abstract String getGenericSignatureType();
+    
     @Override
     public abstract ReferenceSymbolic root();
 

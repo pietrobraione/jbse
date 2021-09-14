@@ -131,7 +131,7 @@ public interface Array extends HeapObjekt {
      * 
      * @author Pietro Braione
      */
-    public interface AccessOutcomeInValue extends AccessOutcomeIn {
+    public interface AccessOutcomeInValue extends AccessOutcomeIn, Slot {
         /**
          * Gets the value obtained by accessing the array.
          * 
@@ -140,17 +140,19 @@ public interface Array extends HeapObjekt {
          *        a reference to another array not yet available in the state's heap),
          *        or {@code null} if the value is unknown.
          */
+    	@Override
         Value getValue();
         
         /**
          * Sets the value obtained by accessing the array.
          * 
-         * @param newValue a {@link Value} of the array member type,
+         * @param value a {@link Value} of the array member type,
          *        or {@code null} if the value is unknown.
-         * @throws InvalidTypeException if {@code newValue} does not
+         * @throws InvalidTypeException if {@code value} does not
          *         agree with the array's type.
          */
-        void setValue(Value newValue) throws InvalidTypeException;
+    	@Override
+        void setValue(Value value) throws InvalidTypeException;
     }
 
     /**
@@ -210,6 +212,17 @@ public interface Array extends HeapObjekt {
         }
         return retVal;
     }
+    
+    /**
+     * Resets the entries of the array so it refers
+     * only to the entries of its backing initial array.
+     * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param referenceToBackingArray a {@link Reference} to the
+     *        backing initial array. It must not be {@code null}.
+     * @throws InvalidInputException if {@code calc == null || referenceToBackingArray == null}.
+     */
+    void setEntriesBackingArray(Calculator calc, Reference referenceToBackingArray) throws InvalidInputException;
 
     /**
      * Returns the length of the array.
@@ -363,9 +376,11 @@ public interface Array extends HeapObjekt {
      * completely replacing the current entries. This method
      * is used to implement {@link java.lang.Object#clone()}.
      * 
-     * @param src the source {@link Array}.
+     * @param src the source {@link Array}. It must have same
+     *        length as this array.
      * @param calc a {@link Calculator}.
-     * @throws InvalidInputException if {@code src == null || calc == null}.
+     * @throws InvalidInputException if {@code src == null || calc == null},
+     *         or {!this.}{@link #getLength() getLength}{@code ().equals(other.}{@link #getLength() getLength}{@code ())}.
      * @throws InvalidTypeException if {@code other} has different type from {@code this}.
      */
     void cloneEntries(Array src, Calculator calc) throws InvalidInputException, InvalidTypeException;

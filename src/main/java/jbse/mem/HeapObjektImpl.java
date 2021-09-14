@@ -2,6 +2,7 @@ package jbse.mem;
 
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.common.exc.InvalidInputException;
 import jbse.val.Calculator;
 import jbse.val.HistoryPoint;
 import jbse.val.ReferenceSymbolic;
@@ -19,7 +20,8 @@ public abstract class HeapObjektImpl extends ObjektImpl implements HeapObjekt {
      * @param symbolic a {@code boolean}, whether this object is symbolic
      *        (i.e., not explicitly created during symbolic execution by
      *        a {@code new*} bytecode, but rather assumed).
-     * @param type a {@link ClassFile}, the class of this object.
+     * @param classFile a {@link ClassFile}, the class of this object.
+     *        It must not be {@code null}.
      * @param origin the {@link ReferenceSymbolic} providing origin of 
      *        the {@code Objekt}, if symbolic, or {@code null}, if concrete.
      * @param epoch the creation {@link HistoryPoint} of this object.
@@ -28,9 +30,11 @@ public abstract class HeapObjektImpl extends ObjektImpl implements HeapObjekt {
      *        the object (nonstatic) fields.
      * @param numOfStaticFields an {@code int}, the number of static fields.
      * @param fieldSignatures varargs of field {@link Signature}s, all the
-     *        fields this object knows.
+     *        fields this object knows.  It must not be {@code null}.
+     * @throws InvalidInputException if {@code calc == null || classFile == null || fieldSignatures == null}.
      */
-    protected HeapObjektImpl(Calculator calc, boolean symbolic, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, boolean staticFields, int numOfStaticFields, Signature... fieldSignatures) {
+    protected HeapObjektImpl(Calculator calc, boolean symbolic, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, boolean staticFields, int numOfStaticFields, Signature... fieldSignatures) 
+    throws InvalidInputException {
     	super(calc, symbolic, classFile, origin, epoch, staticFields, numOfStaticFields, fieldSignatures);
     }
     

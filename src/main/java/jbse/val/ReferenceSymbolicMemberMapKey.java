@@ -135,6 +135,9 @@ public final class ReferenceSymbolicMemberMapKey extends ReferenceSymbolicMember
 		if (!getContainer().equals(other.getContainer())) {
 			return false;
 		}
+		if (this.id != other.id) {
+			return false;
+		}
 		if (this.value == null) {
 			if (other.value != null) {
 				return false;
@@ -143,9 +146,6 @@ public final class ReferenceSymbolicMemberMapKey extends ReferenceSymbolicMember
 			return false;
 		}
 		if (!this.valueHistoryPoint.equals(other.valueHistoryPoint)) {
-			return false;
-		}
-		if (this.id != other.id) {
 			return false;
 		}
 		return true;

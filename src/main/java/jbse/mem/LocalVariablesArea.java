@@ -1,17 +1,8 @@
 package jbse.mem;
 
-import static jbse.bc.Signatures.JAVA_CLONEABLE;
-import static jbse.bc.Signatures.JAVA_OBJECT;
-import static jbse.bc.Signatures.JAVA_SERIALIZABLE;
-import static jbse.common.Type.ARRAYOF;
-import static jbse.common.Type.INT;
 import static jbse.common.Type.isCat_1;
-import static jbse.common.Type.isPrimitiveIntegral;
-import static jbse.common.Type.KNOWN;
-import static jbse.common.Type.NULLREF;
-import static jbse.common.Type.REFERENCE;
-import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.UNKNOWN;
+import static jbse.mem.Slot.slotMayReceiveValueWeak;
 
 import java.util.Map;
 import java.util.Set;
@@ -30,18 +21,21 @@ class LocalVariablesArea implements Cloneable {
     /** The local variable table for the method. */
     private final LocalVariableTable lvt;
 
+    /** The local variable type table for the method. */
+    private final LocalVariableTable lvtt;
+
     /** Values in the memory area, accessible by slot. */
     private TreeMap<Integer, Value> values = new TreeMap<>();
 
     /**
      * Constructor.
      * 
-     * @param lvt a {@link LocalVariableTable}.
+     * @param lvt a {@link LocalVariableTable}, the local variable table.
+     * @param lvt a {@link LocalVariableTable}, the local variable type table.
      */
-    LocalVariablesArea(LocalVariableTable lvt) {
+    LocalVariablesArea(LocalVariableTable lvt, LocalVariableTable lvtt) {
         this.lvt = lvt;
-        //initializes all the local variables by using args
-        //until exhaustion, then DefaultValue
+        this.lvtt = lvtt;
     }
 
     /**
@@ -49,15 +43,14 @@ class LocalVariablesArea implements Cloneable {
      * of {@link Value}s.
      * 
      * @param args a {@link Value}{@code []}; The 
-     * local variables are initialized in sequence 
-     * with these values. 
-     * If there are less values in {@code args} than 
-     * local variables in this object, 
-     * the remaining variables are initialized to 
-     * {@link DefaultValue}.
-     * @throws InvalidSlotException  when there are 
-     * too many {@code arg}s or some of their types are 
-     * incompatible with their respective slots types.
+     *        local variables are initialized in sequence 
+     *        with these values. If there are less values 
+     *        in {@code args} than local variables in this 
+     *        object, the remaining variables are initialized 
+     *        to {@link DefaultValue}s.
+     * @throws InvalidSlotException when there are 
+     *         too many {@code arg}s or some of their types are 
+     *         incompatible with their respective slots types.
      */
     void setArgs(Value[] args) throws InvalidSlotException {
         int nargs = (args == null ? 0 : args.length);
@@ -89,7 +82,7 @@ class LocalVariablesArea implements Cloneable {
         }
 
         final Row r = this.lvt.row(slot, currentProgramCounter);
-        if (!slotMayReceive(r, val)) {
+        if (!localVariableMayReceiveValue(r, val)) {
             throw new InvalidSlotException("Slot number " + slot + " has wrong type.");
         }
 
@@ -101,41 +94,12 @@ class LocalVariablesArea implements Cloneable {
         this.values.put(slot, val);
     }
     
-    private static final String REFERENCE_JAVA_OBJECT       = "" + REFERENCE + JAVA_OBJECT + TYPEEND;
-    private static final String REFERENCE_JAVA_CLONEABLE    = "" + REFERENCE + JAVA_CLONEABLE + TYPEEND;
-    private static final String REFERENCE_JAVA_SERIALIZABLE = "" + REFERENCE + JAVA_SERIALIZABLE + TYPEEND;
-
-    private boolean slotMayReceive(Row r, Value val) {
-        final boolean retVal;
+    private static boolean localVariableMayReceiveValue(Row r, Value val) {
         if (r == null) {
-        	retVal = true;
+        	return true;
         } else {
-        	final char slotType = r.descriptor.charAt(0);
-        	final char valueType = val.getType();        	
-        	final boolean slotTypeIsObjectCloneableOrSerializable = 
-        	(r.descriptor.equals(REFERENCE_JAVA_OBJECT) ||
-        	r.descriptor.equals(REFERENCE_JAVA_CLONEABLE) ||
-        	r.descriptor.equals(REFERENCE_JAVA_SERIALIZABLE));
-        	if (slotType == UNKNOWN || valueType == KNOWN || slotType == valueType) {
-        		//trivial compatibility or identity between slot type and value type
-        		retVal = true;
-        	} else if (isPrimitiveIntegral(slotType) && isCat_1(slotType) && valueType == INT) {
-        		//compatibility between integral types
-        		retVal = true;
-        	} else if ((slotType == REFERENCE || slotType == ARRAYOF) && (valueType == REFERENCE || valueType == NULLREF)) {
-        		//the slot may receive a reference, and the value is a reference;
-        		//note that references to arrays may have type REFERENCE!!!!
-        		retVal = true;
-        	} else if (slotTypeIsObjectCloneableOrSerializable && valueType == ARRAYOF) {
-        		//the slot may receive a java.lang.Object, java.lang.Cloneable, or java.lang.Serializable,
-        		//and the value is an array
-        		retVal = true;
-        	} else {
-        		retVal = false;
-        	}
+        	return slotMayReceiveValueWeak(r.descriptor, val.getType());
         }
-        
-        return retVal;
     }
 
     /**
@@ -200,25 +164,25 @@ class LocalVariablesArea implements Cloneable {
     }
 
     /**
-     * Builds a (read-only) local variable.
+     * Builds a local variable.
      * 
      * @param slot the number of the slot.
      * @param currentProgramCounter the current program counter.
-     * @return a {@link Variable} at position.
-     * @throws InvalidSlotException if {@code slot}
-     * is invalid.
+     * @return a {@link Variable} at position {@code slot}.
+     * @throws InvalidSlotException if {@code slot} is invalid.
      */
     Variable buildLocalVariable(int slot, int currentProgramCounter) throws InvalidSlotException {
         //gets the value
         final Value val = get(slot);
 
         //finds static information
-        final LocalVariableTable.Row r = this.lvt.row(slot, currentProgramCounter);
+        final LocalVariableTable.Row lvtRow = this.lvt.row(slot, currentProgramCounter);
+        final LocalVariableTable.Row lvttRow = this.lvtt.row(slot, currentProgramCounter);
         final Variable retVal;
-        if (r == null) {
-            retVal = new Variable("" + UNKNOWN, "__LOCAL[" + slot + "]", val);
+        if (lvtRow == null) {
+            retVal = new Variable("" + UNKNOWN, null, "__LOCAL[" + slot + "]", val);
         } else {
-            retVal = new Variable(r.descriptor, r.name, val);
+            retVal = new Variable(lvtRow.descriptor, (lvttRow == null ? null : lvttRow.descriptor), lvtRow.name, val);
         }
         return retVal;
     }

@@ -41,6 +41,13 @@ final class ArrayWrapper extends HeapObjektWrapper<ArrayImpl> implements Array {
         possiblyCloneDelegate();
         getDelegate().makeSymbolic(origin);
     }
+    
+    @Override
+    public void setEntriesBackingArray(Calculator calc, Reference referenceToBackingArray)
+    throws InvalidInputException {
+        possiblyCloneDelegate();
+        getDelegate().setEntriesBackingArray(calc, referenceToBackingArray);
+    }
 
     @Override
     public Primitive getLength() {

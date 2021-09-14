@@ -47,7 +47,7 @@ public final class MethodFrame extends Frame implements Cloneable {
         super(classMethodImpl, classMethodImpl.getMethodCodeBySignature(methodSignature));
         this.methodSignature = methodSignature;
         this.lnt = classMethodImpl.getLineNumberTable(methodSignature);
-        this.localVariables = new LocalVariablesArea(classMethodImpl.getLocalVariableTable(methodSignature));
+        this.localVariables = new LocalVariablesArea(classMethodImpl.getLocalVariableTable(methodSignature), classMethodImpl.getLocalVariableTypeTable(methodSignature));
         this.operandStack = new OperandStack();
     }
 

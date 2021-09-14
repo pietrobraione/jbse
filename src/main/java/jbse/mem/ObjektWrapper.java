@@ -76,7 +76,7 @@ abstract class ObjektWrapper<T extends ObjektImpl> implements Objekt {
 		return getDelegate().isSymbolic();
 	}
 
-	public abstract void makeSymbolic(ReferenceSymbolic origin) throws InvalidInputException;
+	// makeSymbolic is still abstract
 
 	@Override
 	public final void setIdentityHashCode(Primitive identityHashCode) {
@@ -115,19 +115,19 @@ abstract class ObjektWrapper<T extends ObjektImpl> implements Objekt {
 	}
 
 	@Override
-	public final void setFieldValue(Signature field, Value item) {
+	public final void setFieldValue(Signature field, Value item) throws InvalidInputException {
 		possiblyCloneDelegate();
 		getDelegate().setFieldValue(field, item);
 	}
 
 	@Override
-    public final void setFieldValue(String fieldName, String fieldClass, Value item) {
+    public final void setFieldValue(String fieldName, String fieldClass, Value item) throws InvalidInputException {
 		possiblyCloneDelegate();
 		getDelegate().setFieldValue(fieldName, fieldClass, item);
 	}
 
 	@Override
-	public final void setFieldValue(int slot, Value item) {
+	public final void setFieldValue(int slot, Value item) throws InvalidInputException {
 		possiblyCloneDelegate();
 		getDelegate().setFieldValue(slot, item);
 	}

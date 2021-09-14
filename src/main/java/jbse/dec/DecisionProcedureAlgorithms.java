@@ -1,10 +1,12 @@
 package jbse.dec;
 
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
+import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.className;
 import static jbse.common.Type.eraseGenericParameters;
+import static jbse.common.Type.getDeclaredNumberOfDimensions;
+import static jbse.common.Type.isArray;
 import static jbse.common.Type.isTypeParameter;
-import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.splitClassGenericSignatureTypeParameters;
 import static jbse.common.Type.TYPEEND;
@@ -48,6 +50,7 @@ import jbse.dec.SolverEquationGenericTypes.Var;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.Clause;
+import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
@@ -77,16 +80,13 @@ import jbse.val.Any;
 import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.HistoryPoint;
-import jbse.val.KlassPseudoReference;
 import jbse.val.Operator;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.ReferenceSymbolicApply;
-import jbse.val.ReferenceSymbolicAtomic;
 import jbse.val.ReferenceSymbolicMember;
 import jbse.val.ReferenceSymbolicMemberArray;
-import jbse.val.ReferenceSymbolicMemberMapValue;
 import jbse.val.Simplex;
 import jbse.val.Term;
 import jbse.val.Value;
@@ -1258,6 +1258,11 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
         try {
             refToResolveClass = hier.loadCreateClass(CLASSLOADER_APP, mostPreciseResolutionClassName(hier, refToResolve), true);  
             //TODO instead of rethrowing exceptions (class file not found, ill-formed or unaccessible) just set refToResolveTypeIsSatInitialized to false??
+            
+            //it is also necessary to load the class of the static type of the
+            //reference to resolve, because in case the most precise resolution
+            //class differs from it, it is possible that this is never loaded
+            hier.loadCreateClass(CLASSLOADER_APP, className(refToResolve.getStaticType()), true);
         } catch (PleaseLoadClassException e) {
             //this should never happen since we bypassed standard loading
             throw new UnexpectedInternalException(e);
@@ -1311,153 +1316,301 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
         return partialReferenceResolution;
     }
     
+    /**
+     * Determines the most precise resolution class of a symbolic reference, 
+     * based on the information of the generic signatures of variables/fields/classes.
+     * 
+     * @param hier a {@link ClassHierarchy}. It must not be {@code null}.
+     * @param refToResolve the {@link ReferenceSymbolic} to resolve. It must not be {@code null}.
+     * @return a {@link String}, the most precise resolution class name for {@code refToResolve}.
+     * @throws InvalidInputException if {@code hier == null || refToResolve == null}.
+     * @throws ClassFileNotFoundException if {@code hier} fails to load the erasure of the signature type
+     *         of {@code refToResolve} or of its containers, and throws {@link ClassFileNotFoundException}.
+     * @throws ClassFileIllFormedException if {@code hier} fails to load the erasure of the signature type
+     *         of {@code refToResolve} or of its containers, and throws {@link ClassFileIllFormedException}.
+     * @throws ClassFileNotAccessibleException if {@code hier} fails to load the erasure of the signature type
+     *         of {@code refToResolve} or of its containers, and throws {@link ClassFileNotAccessibleException}.
+     * @throws IncompatibleClassFileException if {@code hier} fails to load the erasure of the signature type
+     *         of {@code refToResolve} or of its containers, and throws {@link IncompatibleClassFileException}.
+     * @throws BadClassFileVersionException if {@code hier} fails to load the erasure of the signature type
+     *         of {@code refToResolve} or of its containers, and throws {@link BadClassFileVersionException}.
+     * @throws RenameUnsupportedException if {@code hier} fails to load the erasure of the signature type
+     *         of {@code refToResolve} or of its containers, and throws {@link RenameUnsupportedException}.
+     * @throws WrongClassNameException if {@code hier} fails to load the erasure of the signature type
+     *         of {@code refToResolve} or of its containers, and throws {@link WrongClassNameException}.
+     * @throws DecisionException if this decision procedure fails.
+     */
     protected final String mostPreciseResolutionClassName(ClassHierarchy hier, ReferenceSymbolic refToResolve) 
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, 
-    IncompatibleClassFileException, PleaseLoadClassException, BadClassFileVersionException, RenameUnsupportedException, 
-    WrongClassNameException {
-    	final String staticClassName = className(refToResolve.getStaticType());
-    	final String mostPreciseResolutionClassName;
-    	if (refToResolve instanceof ReferenceSymbolicAtomic) {
-    		final ReferenceSymbolicAtomic refToResolveAtomic = (ReferenceSymbolicAtomic) refToResolve;
-    		final String genericSignatureType = refToResolveAtomic.getGenericSignatureType();
-    		if (staticClassName.equals(className(eraseGenericParameters(genericSignatureType)))) {
-    			//the generic type does not convey any additional information
-        		mostPreciseResolutionClassName = staticClassName;
-    		} else if (isTypeParameter(genericSignatureType)) {
-    			mostPreciseResolutionClassName = solveTypeInformation(hier, refToResolveAtomic, staticClassName, typeParameterIdentifier(genericSignatureType));
-    		} else {
-    			//this should not happen, but in any case there is no
-    			//relevant information that can be exploited
-        		mostPreciseResolutionClassName = staticClassName;
-    		}
-    	} else {
-    		//the reference symbolic is the result of an uninterpreted function
-    		//application: no interesting information here
-    		//TODO really?
-    		mostPreciseResolutionClassName = staticClassName;
-    	}
-    	return mostPreciseResolutionClassName;
-    }
-    
-    private String solveTypeInformation(ClassHierarchy hier, ReferenceSymbolic refToResolve, String staticClassName, String typeParameter) 
-    throws ClassFileIllFormedException, InvalidInputException, ClassFileNotFoundException, ClassFileNotAccessibleException, IncompatibleClassFileException, 
-    PleaseLoadClassException, BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException {
-    	final SolverEquationGenericTypes solver = new SolverEquationGenericTypes();
-    	ReferenceSymbolic ref = refToResolve;
-    	while (ref instanceof ReferenceSymbolicMember) {
-        	//gets the container reference, where the type parameter is 
-        	//instantiated, and its class, where the type parameter is declared
-        	final ReferenceSymbolicMember refMember = (ReferenceSymbolicMember) ref;
-    		final ReferenceSymbolic containerRef;
-    		{
-    			final ReferenceSymbolic containerRefPre = refMember.getContainer();
-    			if (containerRefPre instanceof KlassPseudoReference) {
-    				break;
-    			} else if (containerRefPre instanceof ReferenceSymbolicMemberArray || containerRefPre instanceof ReferenceSymbolicMemberMapValue) {
-    				containerRef = ((ReferenceSymbolicMember) containerRefPre).getContainer();
-    			} else {
-    				containerRef = containerRefPre;
-    			}
-    		}
-        	final ClassFile containerRefClass;
-    		try {
-    			containerRefClass = hier.loadCreateClass(CLASSLOADER_APP, className(containerRef.getStaticType()), true);
-    		} catch (InvalidInputException | ClassFileNotFoundException | 
-    				ClassFileIllFormedException | ClassFileNotAccessibleException | IncompatibleClassFileException | 
-    				PleaseLoadClassException | BadClassFileVersionException | WrongClassNameException e) {
-    			//this should never happen
-    			throw new UnexpectedInternalException(e);
-    		}
-    		
-    		//finds the generic parameter declarations across
-    		//the (possible) nesting of classes
-    		ClassFile declClass = containerRefClass;
-    		final LinkedList<String> containerTypeInstantiationsList = new LinkedList<>();
-    		while (true) {
-    			final String classSignatureType = declClass.getGenericSignatureType();
-        		final String classTypeParameters;
-    			if (classSignatureType == null) {
-    				classTypeParameters = "";
-    			} else {
-    				classTypeParameters = splitClassGenericSignatureTypeParameters(classSignatureType);
-    			}
-    			containerTypeInstantiationsList.addFirst(REFERENCE + declClass.getClassName() + classTypeParameters + TYPEEND);
-    			final String next = declClass.classContainer();
-    			if (next == null) {
-    				break;
-    			}
-    			declClass = hier.loadCreateClass(CLASSLOADER_APP, next, true);
-    		}
-    		
-    		//analyzes the container reference to determine the 
-    		//instantiation of the generic parameter
-    		final String containerSignatureType;
-    		if (containerRef instanceof ReferenceSymbolicAtomic) {
-    			final ReferenceSymbolicAtomic containerAtomic = (ReferenceSymbolicAtomic) containerRef;
-    			containerSignatureType = containerAtomic.getGenericSignatureType();
-    		} else {
-    			break; //nothing else to do
-    		}
-    		final String[] containerSignatureTypes = containerSignatureType.split("\\.");
-    		for (int i = 1; i < containerSignatureTypes.length; ++i) {
-        	    	containerSignatureTypes[i - 1] = containerSignatureTypes[i - 1] + TYPEEND;
-        	    	final int start = splitClassGenericSignatureTypeParameters(containerSignatureTypes[i - 1]).length();
-        	    	final String s = containerSignatureTypes[i - 1].substring(start);
-        	    	final int end = s.indexOf('<');
-        	    	containerSignatureTypes[i] = (end == -1 ? s : s.substring(0, end)) + "$" + containerSignatureTypes[i];
-    		}
-    		
-    		//adds the equations
-    		for (int k = 0; k < containerSignatureTypes.length; ++k) {
-    			solver.addEquation(textToApply(containerRef.asOriginString(), containerTypeInstantiationsList.get(k)), textToTerm((containerRef instanceof ReferenceSymbolicMember ? ((ReferenceSymbolicMember) containerRef).getContainer().asOriginString() : ""), containerSignatureTypes[k]));
-    		}
-    		
-    		ref = containerRef;
+    IncompatibleClassFileException, BadClassFileVersionException, RenameUnsupportedException, 
+    WrongClassNameException, DecisionException {
+    	if (hier == null || refToResolve == null) {
+    		throw new InvalidInputException("DecisionProcedureAlgorithm.mostPreciseResolutionClassName: Invoked with a null parameter.");
     	}
     	
-    	solver.solve();
-    	if (solver.hasSolution()) {
-    		final String solution = solver.getVariableValue(new Var((refToResolve instanceof ReferenceSymbolicMember ? ((ReferenceSymbolicMember) refToResolve).getContainer().asOriginString() : "") + "?" + typeParameter));
-    		return (solution == null ? staticClassName : solution); //solution == null when no equations, i.e., when refToResolve is not a ReferenceSymbolicMember
-    	} else {
-    		return staticClassName;
+    	try {
+    		final String staticClassName = className(refToResolve.getStaticType());
+    		final String mostPreciseResolutionClassName;
+    		final String genericSignatureType = refToResolve.getGenericSignatureType();
+    		if (staticClassName.equals(className(eraseGenericParameters(genericSignatureType)))) {
+    			//the generic type does not convey any additional information than the
+    			//static type
+    			mostPreciseResolutionClassName = staticClassName;
+    		} else {
+    			//determines the minimal generic (nonarray) container containing 
+    			//refToResolve
+    			ReferenceSymbolic refToResolveContainer = refToResolve;
+    			while (refToResolveContainer instanceof ReferenceSymbolicMemberArray) {
+    				refToResolveContainer = ((ReferenceSymbolicMemberArray) refToResolveContainer).getContainer();
+    			}
+    			if (refToResolveContainer instanceof ReferenceSymbolicMember) {
+    				refToResolveContainer = ((ReferenceSymbolicMember) refToResolveContainer).getContainer();
+
+    				//determines the generic type parameter unknown
+    				final int uplevel = (isArray(genericSignatureType) ? getDeclaredNumberOfDimensions(genericSignatureType) : 0);
+    				final String typeParameterUnknown = typeParameterIdentifier(genericSignatureType.substring(uplevel));
+
+    				//solves
+    				final String solution = solveTypeInformation(hier, refToResolveContainer, typeParameterUnknown);
+
+    				//finally, determines the true result
+    				if (solution == null) {
+    					mostPreciseResolutionClassName = staticClassName;
+    				} else if (isArray(genericSignatureType)) {
+    					final StringBuilder sb = new StringBuilder();
+    					for (int i = 1; i <= uplevel; ++i) {
+    						sb.append(ARRAYOF);
+    					}
+    					sb.append(REFERENCE);
+    					sb.append(solution);
+    					sb.append(TYPEEND);
+    					mostPreciseResolutionClassName = sb.toString();
+    				} else {
+    					mostPreciseResolutionClassName = solution;
+    				}
+    			} else {
+    				//refToResolve is not contained in a generic container
+    				mostPreciseResolutionClassName = staticClassName;
+    			}
+    		}
+    		return mostPreciseResolutionClassName;
+    	} catch (InvalidInputException e) {
+    		//this should never happen
+    		throw new UnexpectedInternalException(e);
     	}
     }
     
-	private static final Var[] EMPTY_VAR_ARRAY = new Var[0];
-    
-	private static Apply textToApply(String prefix, String text) {
-	    final int langleIndex = text.indexOf('<');
-	    final String functor = (langleIndex == -1 ? text.substring(1, text.length() - 1) : text.substring(1, langleIndex));
-	    final String[] preVars = (langleIndex == -1 ? new String[0] : text.substring(langleIndex + 1).split(":"));
-            final ArrayList<Var> vars = new ArrayList<>();
-	    for (int k = 0; k < preVars.length - 1; ++k) {
-	        vars.add(new Var(prefix + "?" + (k == 0 ? preVars[k] : preVars[k].substring(preVars[k].indexOf(';') + 1))));
-	    }
+    /**
+     * Solves the type information for a generic type variable.
+     * 
+     * @param hier a {@link ClassHierarchy}. It must not be {@code null}.
+     * @param refToResolveContainer a {@link ReferenceSymbolic}, the 
+     *        container of the reference to resolve. It must not be {@code null}.
+     * @param typeParameterUnknown a {@link String}, the name of the type
+     *        parameter for which we want to obtain the type information.
+     * @return a {@link String}, the type of {@code typeParameterUnknown}
+     *         obtained by solving the generic type equations derived by
+     *         walking the container hierarchy spanned by {@code refToResolveContainer}.
+     * @throws InvalidInputException if {@code hier == null || refToResolveContainer == null || typeParameterUnknown == null}.
+     * @throws ClassFileNotFoundException if {@code hier} fails to load the erasure of the signature type
+     *         of {@code refToResolveContainer} or of its containers, and throws {@link ClassFileNotFoundException}.
+     * @throws ClassFileIllFormedException if {@code hier} fails to load the erasure of the signature type
+     *         of {@code refToResolveContainer} or of its containers, and throws {@link ClassFileIllFormedException}.
+     * @throws ClassFileNotAccessibleException if {@code hier} fails to load the erasure of the signature type
+     *         of {@code refToResolveContainer} or of its containers, and throws {@link ClassFileNotAccessibleException}.
+     * @throws IncompatibleClassFileException if {@code hier} fails to load the erasure of the signature type
+     *         of {@code refToResolveContainer} or of its containers, and throws {@link IncompatibleClassFileException}.
+     * @throws BadClassFileVersionException if {@code hier} fails to load the erasure of the signature type
+     *         of {@code refToResolveContainer} or of its containers, and throws {@link BadClassFileVersionException}.
+     * @throws RenameUnsupportedException if {@code hier} fails to load the erasure of the signature type
+     *         of {@code refToResolveContainer} or of its containers, and throws {@link RenameUnsupportedException}.
+     * @throws WrongClassNameException if {@code hier} fails to load the erasure of the signature type
+     *         of {@code refToResolveContainer} or of its containers, and throws {@link WrongClassNameException}.
+     * @throws DecisionException if this decision procedure fails.
+     */
+    private String solveTypeInformation(ClassHierarchy hier, ReferenceSymbolic refToResolveContainer, String typeParameterUnknown) 
+    throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, 
+    IncompatibleClassFileException, BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, DecisionException {
+    	if (hier == null || refToResolveContainer == null || typeParameterUnknown == null) {
+    		throw new InvalidInputException("DecisionProcedureAlgorithm.solveTypeInformation: Invoked with a null parameter.");
+    	}
+    	
+    	try {
+    		//creates the solver
+    		final SolverEquationGenericTypes solver = new SolverEquationGenericTypes();
 
-	    return new Apply(functor, vars.toArray(EMPTY_VAR_ARRAY));
-	}
+    		//adds to the solver all the equations by walking the container 
+    		//structure of the reference to resolve, starting from the outermost 
+    		//container up to the innermost one. Every equation is formed 
+    		//as follows: The symbolic reference's generic type signature 
+    		//is equal to the generic type signature of the class of the 
+    		//object it refers to. References to arrays, that are not 
+    		//generic, are skipped.
+    		final List<ReferenceSymbolic> refToResolveContainers = getContainerHierarchy(refToResolveContainer);
+    		for (ReferenceSymbolic ref : refToResolveContainers) {
+    			//gets the generic type signature of ref 
+    			final String refGenericTypeSignature = ref.getGenericSignatureType();
+    			if (refGenericTypeSignature == null || isArray(refGenericTypeSignature)) {
+    				//in both cases no equation must be generated; Note that
+    				//the first case happens when ref is a KlassPseudoRef (topmost)
+    				continue;
+    			}
+
+    			//builds the left-hand side(s) of the equation:
+    			//first, splits refGenericTypeSignature...
+    			final String[] refGenericTypeSignatures = splitReferenceTypeSignature(refGenericTypeSignature);
+
+    			//...then, builds a term for each produced 
+    			//type signature 
+    			final TypeTerm[] lhs = new TypeTerm[refGenericTypeSignatures.length];
+    			{
+    				final String prefix = lhsPrefix(ref);
+    				for (int i = 0; i < lhs.length; ++i) {
+    					lhs[i] = referenceTypeSignatureToTypeTerm(prefix, refGenericTypeSignatures[i]);
+    				}
+    			}
+
+    			//builds the right-hand side(s) of the equation:
+    			//first, finds the type instantiations for all 
+    			//the left-hand side generic type signatures...
+    			final String[] refTypeInstantiations = findTypeInstantiations(hier, ref, getAssumptions()); 
+
+    			//...then, builds the terms for them
+    			final TypeTerm[] rhs = new TypeTerm[refTypeInstantiations.length];
+    			{
+    				final String prefix = ref.asOriginString();
+    				for (int i = 0; i < rhs.length; ++i) {
+    					rhs[i] = typeInstantiationToApply(prefix, refTypeInstantiations[i]);
+    				}
+    			}
+
+    			//adds the equations
+    			solver.addEquations(lhs, rhs);
+    		}
+
+    		//solves
+    		solver.solve();
+
+    		//returns the solution, if there is one
+    		if (solver.hasSolution()) {
+    			final Var queryVariable = new Var(refToResolveContainer.asOriginString() + "?" + typeParameterUnknown);
+    			final String solution = solver.getVariableValue(queryVariable);
+    			return solution; 
+    			//NB: solution may be null, typically when the query variable is not present in the equations
+    		} else {
+    			return null;
+    		}
+    	} catch (InvalidInputException e) {
+    		//this should never happen
+    		throw new UnexpectedInternalException(e);
+    	}
+    }
+    
+    /**
+     * Returns the complete container hierarchy of a symbolic reference. 
+     * 
+     * @param refStart a {@link ReferenceSymbolic}. It must not be {@code null}.
+     * @return a {@link List}{@code <}{@link ReferenceSymbolic}{@code >}. 
+     *         The last element is {@code refStart}, the (last - 1) element is
+     *         {@code refStart}'s container, if it exists, and so on up to the
+     *         outermost container, which is at position 0. The result is undefined
+     *         if {@code refStart == null}. 
+     */
+    private static List<ReferenceSymbolic> getContainerHierarchy(ReferenceSymbolic refStart) {
+    	final LinkedList<ReferenceSymbolic> retVal = new LinkedList<>();
+    	ReferenceSymbolic ref = refStart;
+    	retVal.push(ref);
+    	while (ref instanceof ReferenceSymbolicMember) {
+    		ref = ((ReferenceSymbolicMember) ref).getContainer();
+        	retVal.push(ref);
+    	}
+    	return retVal;
+    }
+    
+    /**
+     * Splits a reference type signature, as defined in JVMS v8 section 4.7.9.1,
+     * into a set of reference type signatures, one for each nested class.
+     *  
+     * @param referenceTypeSignature a {@link String}. It must not be {@code null}
+     *        and it must be a reference type signature, either a class type signature
+     *        or a type variable signature.
+     * @return an array of {@link String}s; If {@code referenceTypeSignature} is 
+     *         a class type signature, the array will contain as many class type 
+     *         signatures as the number of {@code ClassTypeSignatureSuffix}es plus one.
+     *         For example, if {@code referenceTypeSignature == "LA$B<...>.C$D$E<...>.F$G<...>;"}, 
+     *         then an array with shape <code>{"LA$B<...>;", "LA$B$C$D$E<...>;", "LA$B$C$D$E$F$G<...>;"}</code> 
+     *         will be returned. If {@code referenceTypeSignature} is a type variable signature,
+     *         an array with {@code referenceTypeSignature} as its only element is returned. 
+     *         The result is undefined if {@code referenceTypeSignature} is null, or is not
+     *         a class type signature or a type variable signature.
+     */
+    private static String[] splitReferenceTypeSignature(String referenceTypeSignature) {
+		final String[] retVal = referenceTypeSignature.split("\\.");
+		for (int i = 1; i < retVal.length; ++i) {
+			retVal[i - 1] = (i == 1 ? "" : REFERENCE) + retVal[i - 1] + TYPEEND;
+			final String s = retVal[i - 1].substring(1);
+			final int end = s.indexOf('<') == -1 ? (s.length() - 1) : s.indexOf('<');
+			retVal[i] = s.substring(0, end) + "$" + retVal[i];
+		}
+		if (retVal.length > 1) {
+			retVal[retVal.length - 1] = REFERENCE + retVal[retVal.length - 1];
+		}
+		return retVal;
+    }
+    
+    /**
+     * Calculates the contextualization prefix for the
+     * variables in the lhs of an equation.
+     * 
+     * @param referenceCurrentContainer a {@link ReferenceSymbolic}, 
+     *        the current container. It must not be {@code null}.
+     * @return a {@link String}. The result is undefined
+     *         if {@code referenceCurrentContainer == null}.
+     */
+    private static String lhsPrefix(ReferenceSymbolic referenceCurrentContainer) {
+		ReferenceSymbolic referenceNonArrayContainer = referenceCurrentContainer;
+		while (referenceNonArrayContainer instanceof ReferenceSymbolicMemberArray) {
+			referenceNonArrayContainer = ((ReferenceSymbolicMemberArray) referenceNonArrayContainer).getContainer();
+		}
+		final String retVal = (referenceNonArrayContainer instanceof ReferenceSymbolicMember ? ((ReferenceSymbolicMember) referenceNonArrayContainer).getContainer().asOriginString() : "");
+		return retVal;
+    }
 
 	private static final TypeTerm[] EMPTY_TYPETERM_ARRAY = new TypeTerm[0];
 	
-	private static TypeTerm textToTerm(String prefix, String text) throws InvalidInputException {
-		if (text.charAt(0) == TYPEVAR) {
-			return new Var(prefix + "?" + text.substring(1, text.length() - 1));
-		} else if (text.equals("*")) {
-			return Some.instance();
-		} else if (text.charAt(0) == REFERENCE || text.charAt(0) == ARRAYOF) {
-			final int langleIndex = text.indexOf('<');
-			final String functor = text.substring(1, (langleIndex == -1 ? (text.length() - 1) : langleIndex));
+	/**
+	 * Converts a reference type signature to a {@link TypeTerm}.
+	 * 
+	 * @param prefix a {@link String} used to disambiguate (contextualize)
+	 *        the type variables. It must not be {@code null}.  
+	 * @param referenceTypeSignature a {@link String}. It must not be {@code null}
+     *        and it must be a reference type signature.
+	 * @return a {@link TypeTerm} corresponding to {@code referenceTypeSignature}, 
+	 *         where the name of all the {@link Var}s occurring are qualified with 
+	 *         the string {@code prefix + "?"}.
+	 * @throws InvalidInputException if {@code prefix == null || referenceTypeSignature == null}, 
+	 *         or if {@code referenceTypeSignature} is not a reference type signature.
+	 */
+	private static TypeTerm referenceTypeSignatureToTypeTerm(String prefix, String referenceTypeSignature) throws InvalidInputException {
+		if (prefix == null || referenceTypeSignature == null) {
+			throw new InvalidInputException("DecisionProcedureAlgorithm.referenceTypeSignatureToTypeTerm: Invoked with a null parameter.");
+		} else if (referenceTypeSignature.charAt(0) == TYPEVAR) {
+			return new Var(prefix + "?" + referenceTypeSignature.substring(1, referenceTypeSignature.length() - 1));
+		} else if (referenceTypeSignature.charAt(0) == REFERENCE || referenceTypeSignature.charAt(0) == ARRAYOF) {
+			final int begin = (referenceTypeSignature.charAt(0) == REFERENCE ? 1 : 0);
+			final int langleIndex = referenceTypeSignature.indexOf('<');
+			final int max = referenceTypeSignature.length() - begin;
+			final String functor = referenceTypeSignature.substring(begin, (langleIndex == -1 ? max : langleIndex));
 			if (langleIndex == -1) {
 				return new Apply(functor);
 			} else {
 				final ArrayList<TypeTerm> args = new ArrayList<>();
 				int i = functor.length() + 2;
 				boolean unknown = false;
-				while (i < text.length()) {
-					final char c = text.charAt(i);
+				while (i < referenceTypeSignature.length()) {
+					final char c = referenceTypeSignature.charAt(i);
 					if (c == '*') {
-						args.add(textToTerm(prefix, text.substring(i, i + 1)));
+						args.add(referenceTypeSignatureToTypeTerm(prefix, referenceTypeSignature.substring(i, i + 1)));
 						++i;
 					} else if (c == '+' || c == '-') {
 						unknown = true;
@@ -1466,8 +1619,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 						final int start = i;
 						do {
 							++i;
-						} while (text.charAt(i) != TYPEEND);
-						args.add(unknown ? Some.instance() : textToTerm(prefix, text.substring(start, i + 1)));
+						} while (referenceTypeSignature.charAt(i) != TYPEEND);
+						args.add(unknown ? Some.instance() : referenceTypeSignatureToTypeTerm(prefix, referenceTypeSignature.substring(start, i + 1)));
 						++i;
 						unknown = false;
 					} else if (c == REFERENCE) {
@@ -1475,45 +1628,162 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 						int level = 1;
 						do {
 							++i;
-							if (text.charAt(i) == '<') {
+							if (referenceTypeSignature.charAt(i) == '<') {
 								++level;
-							} else if (text.charAt(i) == '>') {
+							} else if (referenceTypeSignature.charAt(i) == '>') {
 								--level;
 							}
-						} while (text.charAt(i) != TYPEEND || level != 1);
-						args.add(unknown ? Some.instance() : textToTerm(prefix, text.substring(start, i + 1)));
+						} while (referenceTypeSignature.charAt(i) != TYPEEND || level != 1);
+						args.add(unknown ? Some.instance() : referenceTypeSignatureToTypeTerm(prefix, referenceTypeSignature.substring(start, i + 1)));
 						++i;
 						unknown = false;
 					} else if (c == ARRAYOF) {
 						final int start = i;
 						do {
 							++i;
-						} while (text.charAt(i) == ARRAYOF);
-						if (text.charAt(i) == TYPEVAR || text.charAt(i) == REFERENCE) {
+						} while (referenceTypeSignature.charAt(i) == ARRAYOF);
+						if (referenceTypeSignature.charAt(i) == TYPEVAR || referenceTypeSignature.charAt(i) == REFERENCE) {
 							int level = 1;
 							do {
 								++i;
-								if (text.charAt(i) == '<') {
+								if (referenceTypeSignature.charAt(i) == '<') {
 									++level;
-								} else if (text.charAt(i) == '>') {
+								} else if (referenceTypeSignature.charAt(i) == '>') {
 									--level;
 								}
-							} while (text.charAt(i) != TYPEEND || level != 1);
+							} while (referenceTypeSignature.charAt(i) != TYPEEND || level != 1);
 						}
-						args.add(unknown ? Some.instance() : textToTerm(prefix, text.substring(start, i + 1)));
+						args.add(unknown ? Some.instance() : referenceTypeSignatureToTypeTerm(prefix, referenceTypeSignature.substring(start, i + 1)));
 						++i;
 						unknown = false;
 					} else if (c == '>') {
 						break;
 					} else {
-						throw new InvalidInputException("Cannot parse as a generic type equational term the string: " + text + ".");
+						throw new InvalidInputException("DecisionProcedureAlgorithm.referenceTypeSignatureToTypeTerm: Cannot parse as a generic type equational term the string: " + referenceTypeSignature + ".");
 					}
 				}
 				return new Apply(functor, args.toArray(EMPTY_TYPETERM_ARRAY));
 			}
 		} else {
-			throw new InvalidInputException("Cannot parse as a generic type equational term the string: " + text + ".");
+			throw new InvalidInputException("DecisionProcedureAlgorithm.referenceTypeSignatureToTypeTerm: Cannot parse as a generic type equational term the string: " + referenceTypeSignature + ".");
 		}
+	}
+	
+	/**
+	 * Builds an array of <em>type instantiations</em> for the class pointed
+	 * by a resolved reference.
+	 * 
+	 * @param hier a {@link ClassHierarchy}. It must not be {@code null}.
+	 * @param reference a {@link ReferenceSymbolic}. It must not be {@code null}.
+	 * @param pathCondition a {@link List}{@code <}{@link Clause}{@code >}, 
+	 *        the current path condition. It must not be {@code null}, and
+	 *        {@code reference} must be resolved by expansion in it.
+	 * @return A {@link String}{@code []}. Every element in it is a <em>type
+	 *         instantiation</em>, one for each element in 
+	 *         {@link #splitReferenceTypeSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         A type instantiation is a string formed by the concatenation 
+	 *         of a class name and an optional list of type parameters, as 
+	 *         defined by the nonterminal {@code TypeParameters} in the grammar 
+	 *         defined in JVMS v8 section 4.7.9.1. 
+	 * @throws InvalidInputException if {@code hier == null || reference == null || pathCondition == null}, 
+	 *         or if {@code reference} has not an expands clause in {@code pathCondition}.
+	 * @throws ClassFileNotFoundException if {@code hier} cannot load any class in the type erasures of
+	 *         {@link #splitReferenceTypeSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         and fails with a {@link ClassFileNotFoundException}.
+	 * @throws ClassFileIllFormedException if {@code hier} cannot load any class in the type erasures of
+	 *         {@link #splitReferenceTypeSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         and fails with a {@link ClassFileIllFormedException}.
+	 * @throws ClassFileNotAccessibleException if {@code hier} cannot load any class in the type erasures of
+	 *         {@link #splitReferenceTypeSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         and fails with a {@link ClassFileNotAccessibleException}.
+	 * @throws IncompatibleClassFileException if {@code hier} cannot load any class in the type erasures of
+	 *         {@link #splitReferenceTypeSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         and fails with a {@link IncompatibleClassFileException}.
+	 * @throws BadClassFileVersionException if {@code hier} cannot load any class in the type erasures of
+	 *         {@link #splitReferenceTypeSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         and fails with a {@link BadClassFileVersionException}.
+	 * @throws RenameUnsupportedException if {@code hier} cannot load any class in the type erasures of
+	 *         {@link #splitReferenceTypeSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         and fails with a {@link RenameUnsupportedException}.
+	 * @throws WrongClassNameException if {@code hier} cannot load any class in the type erasures of
+	 *         {@link #splitReferenceTypeSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         and fails with a {@link WrongClassNameException}.
+	 */
+	private static String[] findTypeInstantiations(ClassHierarchy hier, ReferenceSymbolic reference, List<Clause> pathCondition) 
+	throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, 
+	IncompatibleClassFileException, BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException {
+		if (hier == null || reference == null || pathCondition == null) {
+			throw new InvalidInputException("DecisionProcedureAlgorithm.findTypeInstantiations: Invoked with a null parameter.");
+		}
+		final String refGenericTypeSignature = reference.getGenericSignatureType();
+		final String[] refGenericTypeSignatures = splitReferenceTypeSignature(refGenericTypeSignature);
+		final String[] retVal = new String[refGenericTypeSignatures.length];
+		for (int i = 0; i < refGenericTypeSignatures.length; ++i) {
+			final ClassFile curClass;
+			if (isTypeParameter(refGenericTypeSignatures[i])) {
+				//gets the class of the object pointed by ref, where the 
+				//generic parameters are declared; Note that all the references 
+				//in refToResolveContainers are resolved, so this operation 
+				//always succeeds...
+				ClassFile refClass = null;
+				for (Clause c : pathCondition) {
+					if (c instanceof ClauseAssumeExpands && reference.equals(((ClauseAssumeExpands) c).getReference())) {
+						refClass = ((ClauseAssumeExpands) c).getObjekt().getType();
+						break;
+					}
+				}
+				if (refClass == null) {
+					throw new InvalidInputException("DecisionProcedureAlgorithm.findTypeInstantiations: The reference parameter has no expands clause in path condition parameter.");
+				}
+				curClass = refClass;
+			} else { //refGenericTypeSignatures[i] is a class type signature
+				try {
+					curClass = hier.loadCreateClass(CLASSLOADER_APP, className(eraseGenericParameters(refGenericTypeSignatures[i])), true);
+				} catch (PleaseLoadClassException e) {
+					//this should never happen
+					throw new UnexpectedInternalException(e);
+				}
+			}
+			final String curClassSignatureType = curClass.getGenericSignatureType();
+			final String curClassTypeParameters;
+			if (curClassSignatureType == null) {
+				curClassTypeParameters = "";
+			} else {
+				curClassTypeParameters = splitClassGenericSignatureTypeParameters(curClassSignatureType);
+			}
+			retVal[i] = curClass.getClassName() + curClassTypeParameters;
+		}
+		return retVal;
+	}
+    
+	private static final Var[] EMPTY_VAR_ARRAY = new Var[0];
+    
+	/**
+	 * Converts a type instantiation to an {@link Apply} term.
+	 * 
+	 * @param prefix a {@link String} used to disambiguate (contextualize)
+	 *        the type variables. It must not be {@code null}.  
+	 * @param typeInstantiation a {@link String}. It must not be {@code null}
+     *        and it must be a type instantiation (see the Javadoc for 
+     *        {@link #findTypeInstantiations(ClassHierarchy, ReferenceSymbolic, List) findTypeInstantiations}
+     *        for a definition of type instantiation).
+	 * @return an {@link Apply}, whose functor is the class name in {@code typeInstantiation}, 
+	 *         and whose arguments are a list of {@link Var}s, whose names 
+	 *         are the names in the {@code TypeParameters} in {@code typeInstantiation}
+	 *         qualified with the string {@code prefix + "?"}. The result is undefined if
+	 *         {@code prefix == null || classNamePlusTypeVars == null} or 
+	 *         {@code typeInstantiation} is not a type instantiation.
+	 */
+	private static Apply typeInstantiationToApply(String prefix, String typeInstantiation) {
+		final int langleIndex = typeInstantiation.indexOf('<');
+		final String functor = typeInstantiation.substring(0, (langleIndex == -1 ? typeInstantiation.length() : langleIndex));
+		final String[] preVars = (langleIndex == -1 ? new String[0] : typeInstantiation.substring(langleIndex + 1).split(":"));
+		final ArrayList<Var> vars = new ArrayList<>();
+		for (int k = 0; k < preVars.length - 1; ++k) {
+			vars.add(new Var(prefix + "?" + (k == 0 ? preVars[k] : preVars[k].substring(preVars[k].indexOf(';') + 1))));
+		}
+
+		return new Apply(functor, vars.toArray(EMPTY_VAR_ARRAY));
 	}
 
 	/**

@@ -196,7 +196,9 @@ public abstract class Frame implements Cloneable {
      * 
      * @return a {@link SortedMap}{@code <}{@link Integer}{@code ,}{@link Variable}{@code >} 
      *         which associates every slot number in the local variable area to its
-     *         {@link Variable}.
+     *         {@link Variable}. The {@link Variable}s are modifiable, but a
+     *         modification to them has no effect on the local variable area of this
+     *         {@link Frame}.
      */
     public abstract SortedMap<Integer, Variable> localVariables();
 

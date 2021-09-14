@@ -28,8 +28,6 @@ public interface StrategyUpdate<R> {
      * @param state the {@link State} to be updated.
      * @param alt the decision alternative that justifies {@code state}, 
      *        and gives the criterion on which the state shall be updated.
-     * @throws DecisionException possibly raised if the update 
-     *         action must simplify some symbolic array entries.
      * @throws ThreadStackEmptyException raised if the
      *         state has an empty stack during the update action.
      * @throws ClasspathException possibly raised if the classpath 

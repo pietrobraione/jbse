@@ -2,6 +2,7 @@ package jbse.mem;
 
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.common.exc.InvalidInputException;
 import jbse.val.Calculator;
 import jbse.val.HistoryPoint;
 import jbse.val.ReferenceSymbolic;
@@ -29,11 +30,12 @@ public final class InstanceImpl_DEFAULT extends InstanceImpl {
      * @param epoch the creation {@link HistoryPoint} of this {@link InstanceImpl_DEFAULT}. 
      * @param numOfStaticFields an {@code int}, the number of static fields.
      * @param fieldSignatures varargs of field {@link Signature}s, all the
-     *        fields this instance knows.
+     *        fields this instance knows. It must not be {@code null}.
+     * @throws InvalidInputException if {@code calc == null || classFile == null || fieldSignatures == null}.
      * @throws InvalidTypeException iff {@code classFile} is invalid. 
      */
     protected InstanceImpl_DEFAULT(Calculator calc, boolean symbolic, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, int numOfStaticFields, Signature... fieldSignatures) 
-    throws InvalidTypeException {
+    throws InvalidInputException, InvalidTypeException {
         super(calc, symbolic, classFile, origin, epoch, numOfStaticFields, fieldSignatures);
     }
 

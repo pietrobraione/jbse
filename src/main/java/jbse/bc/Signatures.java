@@ -180,7 +180,15 @@ public final class Signatures {
     public static final String JAVA_ZSTREAMREF               = "java/util/zip/ZStreamRef";
     public static final String JBSE_ANALYSIS                 = internalClassName(jbse.meta.Analysis.class.getName());
     public static final String JBSE_BASE                     = internalClassName(jbse.base.Base.class.getName());
-    public static final String JBSE_JAVA_MAP                 = internalClassName(jbse.base.JAVA_MAP.class.getName());
+    public static final String JBSE_JAVA_CONCURRENTMAP_NNODE = "java/util/concurrent/ConcurrentHashMap$NNode";
+    public static final String JBSE_JAVA_CONCURRENTMAP_NNODEEMPTY = "java/util/concurrent/ConcurrentHashMap$NNodeEmpty";
+    public static final String JBSE_JAVA_CONCURRENTMAP_NNODEPAIR  = "java/util/concurrent/ConcurrentHashMap$NNodePair";
+    public static final String JBSE_JAVA_LINKEDMAP_NNODE     = "java/util/LinkedHashMap$NNode";
+    public static final String JBSE_JAVA_LINKEDMAP_NNODEEMPTY = "java/util/LinkedHashMap$NNodeEmpty";
+    public static final String JBSE_JAVA_LINKEDMAP_NNODEPAIR = "java/util/LinkedHashMap$NNodePair";
+    public static final String JBSE_JAVA_MAP_NNODE           = "java/util/HashMap$NNode";
+    public static final String JBSE_JAVA_MAP_NNODEEMPTY      = "java/util/HashMap$NNodeEmpty";
+    public static final String JBSE_JAVA_MAP_NNODEPAIR       = "java/util/HashMap$NNodePair";
     public static final String JDK_FRAME                     = "jdk/internal/org/objectweb/asm/Frame";
     public static final String JDK_TYPE                      = "jdk/internal/org/objectweb/asm/Type";
     public static final String SUN_ASCIICASEINSENSITIVECOMPARATOR = "sun/misc/ASCIICaseInsensitiveComparator";
@@ -275,6 +283,8 @@ public final class Signatures {
             new Signature(JAVA_ACCESSCONTROLLER, "(" + REFERENCE + JAVA_PRIVILEGEDACTION + TYPEEND + REFERENCE + JAVA_ACCESSCONTROLCONTEXT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "doPrivileged");
     public static final Signature JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT =
         new Signature(JAVA_ACCESSCONTROLLER, "()" + REFERENCE + JAVA_ACCESSCONTROLCONTEXT + TYPEEND, "getStackAccessControlContext");
+    public static final Signature JAVA_ARRAYLIST_INIT =
+    	new Signature(JAVA_ARRAYLIST, "()" + VOID, "<init>");
     public static final Signature JAVA_ATOMICLONG_VMSUPPORTSCS8 =
         new Signature(JAVA_ATOMICLONG, "()" + BOOLEAN, "VMSupportsCS8");
     public static final Signature JAVA_BUFFEREDIMAGE_INITIDS =
@@ -809,6 +819,8 @@ public final class Signatures {
         new Signature(JAVA_CONCURRENTHASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOutKey");
     public static final Signature JBSE_JAVA_CONCURRENTMAP_REFINEOUTVALUE = 
 		new Signature(JAVA_CONCURRENTHASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOutValue");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_NNODEEMPTY_INIT =
+		new Signature(JBSE_JAVA_CONCURRENTMAP_NNODEEMPTY, "()" + VOID, "<init>");
     public static final Signature JBSE_JAVA_LINKEDMAP_INITSYMBOLIC = 
 		new Signature(JAVA_LINKEDHASHMAP, "(" + REFERENCE + JAVA_LINKEDHASHMAP + TYPEEND + ")" + VOID, "initSymbolic");
     public static final Signature JBSE_JAVA_LINKEDMAP_MAKEINITIAL = 
@@ -839,6 +851,8 @@ public final class Signatures {
     	new Signature(JAVA_LINKEDHASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOutKey");
     public static final Signature JBSE_JAVA_LINKEDMAP_REFINEOUTVALUE = 
     	new Signature(JAVA_LINKEDHASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOutValue");
+    public static final Signature JBSE_JAVA_LINKEDMAP_NNODEEMPTY_INIT =
+		new Signature(JBSE_JAVA_LINKEDMAP_NNODEEMPTY, "()" + VOID, "<init>");
     public static final Signature JBSE_JAVA_MAP_INITSYMBOLIC = 
     	new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_HASHMAP + TYPEEND + ")" + VOID, "initSymbolic");
     public static final Signature JBSE_JAVA_MAP_MAKEINITIAL = 
@@ -869,6 +883,8 @@ public final class Signatures {
     	new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOutKey");
     public static final Signature JBSE_JAVA_MAP_REFINEOUTVALUE = 
 		new Signature(JAVA_HASHMAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOutValue");
+    public static final Signature JBSE_JAVA_MAP_NNODEEMPTY_INIT =
+		new Signature(JBSE_JAVA_MAP_NNODEEMPTY, "()" + VOID, "<init>");
     public static final Signature SUN_CONSTANTPOOL_GETUTF8AT0 = 
         new Signature(SUN_CONSTANTPOOL, 
                       "(" + REFERENCE + JAVA_OBJECT + TYPEEND + INT + ")" + REFERENCE + JAVA_STRING + TYPEEND, 
@@ -1280,6 +1296,70 @@ public final class Signatures {
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "USER_TIMEZONE");
     public static final Signature JBSE_BASE_USER_VARIANT = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "USER_VARIANT");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_ABSENTKEYS = 
+		new Signature(JAVA_CONCURRENTHASHMAP, "" + REFERENCE + JAVA_ARRAYLIST + TYPEEND, "absentKeys");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_ABSENTVALUES = 
+		new Signature(JAVA_CONCURRENTHASHMAP, "" + REFERENCE + JAVA_ARRAYLIST + TYPEEND, "absentValues");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_INITIALMAP = 
+    	new Signature(JAVA_CONCURRENTHASHMAP, "" + REFERENCE + JAVA_CONCURRENTHASHMAP + TYPEEND, "initialMap");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_ISINITIAL = 
+		new Signature(JAVA_CONCURRENTHASHMAP, "" + BOOLEAN, "isInitial");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_NUMNODES = 
+		new Signature(JAVA_CONCURRENTHASHMAP, "" + INT, "numNodes");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_ROOT = 
+		new Signature(JAVA_CONCURRENTHASHMAP, "" + REFERENCE + JBSE_JAVA_CONCURRENTMAP_NNODE + TYPEEND, "root");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_SIZE = 
+		new Signature(JAVA_CONCURRENTHASHMAP, "" + INT, "size");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_NNODEPAIR_KEY = 
+		new Signature(JBSE_JAVA_CONCURRENTMAP_NNODEPAIR, "" + REFERENCE + JAVA_OBJECT + TYPEEND, "key");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_NNODEPAIR_NEXT = 
+		new Signature(JBSE_JAVA_CONCURRENTMAP_NNODEPAIR, "" + REFERENCE + JBSE_JAVA_CONCURRENTMAP_NNODE + TYPEEND, "next");
+    public static final Signature JBSE_JAVA_CONCURRENTMAP_NNODEPAIR_VALUE = 
+		new Signature(JBSE_JAVA_CONCURRENTMAP_NNODEPAIR, "" + REFERENCE + JAVA_OBJECT + TYPEEND, "value");
+
+    public static final Signature JBSE_JAVA_LINKEDMAP_ABSENTKEYS = 
+		new Signature(JAVA_LINKEDHASHMAP, "" + REFERENCE + JAVA_ARRAYLIST + TYPEEND, "absentKeys");
+    public static final Signature JBSE_JAVA_LINKEDMAP_ABSENTVALUES = 
+		new Signature(JAVA_LINKEDHASHMAP, "" + REFERENCE + JAVA_ARRAYLIST + TYPEEND, "absentValues");
+    public static final Signature JBSE_JAVA_LINKEDMAP_INITIALMAP = 
+    	new Signature(JAVA_LINKEDHASHMAP, "" + REFERENCE + JAVA_LINKEDHASHMAP + TYPEEND, "initialMap");
+    public static final Signature JBSE_JAVA_LINKEDMAP_ISINITIAL = 
+		new Signature(JAVA_LINKEDHASHMAP, "" + BOOLEAN, "isInitial");
+    public static final Signature JBSE_JAVA_LINKEDMAP_NUMNODES = 
+		new Signature(JAVA_LINKEDHASHMAP, "" + INT, "numNodes");
+    public static final Signature JBSE_JAVA_LINKEDMAP_ROOT = 
+		new Signature(JAVA_LINKEDHASHMAP, "" + REFERENCE + JBSE_JAVA_LINKEDMAP_NNODE + TYPEEND, "root");
+    public static final Signature JBSE_JAVA_LINKEDMAP_SIZE = 
+		new Signature(JAVA_LINKEDHASHMAP, "" + INT, "size");
+    public static final Signature JBSE_JAVA_LINKEDMAP_NNODEPAIR_KEY = 
+		new Signature(JBSE_JAVA_LINKEDMAP_NNODEPAIR, "" + REFERENCE + JAVA_OBJECT + TYPEEND, "key");
+    public static final Signature JBSE_JAVA_LINKEDMAP_NNODEPAIR_NEXT = 
+		new Signature(JBSE_JAVA_LINKEDMAP_NNODEPAIR, "" + REFERENCE + JBSE_JAVA_LINKEDMAP_NNODE + TYPEEND, "next");
+    public static final Signature JBSE_JAVA_LINKEDMAP_NNODEPAIR_VALUE = 
+		new Signature(JBSE_JAVA_LINKEDMAP_NNODEPAIR, "" + REFERENCE + JAVA_OBJECT + TYPEEND, "value");
+    
+    
+    
+    public static final Signature JBSE_JAVA_MAP_ABSENTKEYS = 
+		new Signature(JAVA_HASHMAP, "" + REFERENCE + JAVA_ARRAYLIST + TYPEEND, "absentKeys");
+    public static final Signature JBSE_JAVA_MAP_ABSENTVALUES = 
+		new Signature(JAVA_HASHMAP, "" + REFERENCE + JAVA_ARRAYLIST + TYPEEND, "absentValues");
+    public static final Signature JBSE_JAVA_MAP_INITIALMAP = 
+    	new Signature(JAVA_HASHMAP, "" + REFERENCE + JAVA_HASHMAP + TYPEEND, "initialMap");
+    public static final Signature JBSE_JAVA_MAP_ISINITIAL = 
+		new Signature(JAVA_HASHMAP, "" + BOOLEAN, "isInitial");
+    public static final Signature JBSE_JAVA_MAP_NUMNODES = 
+		new Signature(JAVA_HASHMAP, "" + INT, "numNodes");
+    public static final Signature JBSE_JAVA_MAP_ROOT = 
+		new Signature(JAVA_HASHMAP, "" + REFERENCE + JBSE_JAVA_MAP_NNODE + TYPEEND, "root");
+    public static final Signature JBSE_JAVA_MAP_SIZE = 
+		new Signature(JAVA_HASHMAP, "" + INT, "size");
+    public static final Signature JBSE_JAVA_MAP_NNODEPAIR_KEY = 
+		new Signature(JBSE_JAVA_MAP_NNODEPAIR, "" + REFERENCE + JAVA_OBJECT + TYPEEND, "key");
+    public static final Signature JBSE_JAVA_MAP_NNODEPAIR_NEXT = 
+		new Signature(JBSE_JAVA_MAP_NNODEPAIR, "" + REFERENCE + JBSE_JAVA_MAP_NNODE + TYPEEND, "next");
+    public static final Signature JBSE_JAVA_MAP_NNODEPAIR_VALUE = 
+		new Signature(JBSE_JAVA_MAP_NNODEPAIR, "" + REFERENCE + JAVA_OBJECT + TYPEEND, "value");
     public static final Signature SUN_CONSTANTPOOL_CONSTANTPOOLOOP =
         new Signature(SUN_CONSTANTPOOL, "" + REFERENCE + JAVA_OBJECT + TYPEEND, "constantPoolOop");
 

@@ -33,6 +33,11 @@ public final class KlassPseudoReference extends ReferenceSymbolic {
     }
     
     @Override
+    public String getGenericSignatureType() {
+    	return null;
+    }
+    
+    @Override
     public String asOriginString() {
         return "[" + this.classFile.getClassName() + "]";
     }

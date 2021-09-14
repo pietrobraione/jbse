@@ -35,7 +35,7 @@ import jbse.jvm.exc.EngineStuckException;
 import jbse.jvm.exc.FailureException;
 import jbse.jvm.exc.InitializationException;
 import jbse.jvm.exc.NonexistingObservedVariablesException;
-import jbse.mem.Objekt;
+import jbse.mem.HeapObjekt;
 import jbse.mem.State;
 import jbse.mem.exc.CannotRefineException;
 import jbse.mem.exc.ContradictionException;
@@ -80,7 +80,7 @@ public final class InitialHeapChecker {
         	//runs the check methods on all the instances in the heap 
         	for (long heapPos : sIni.getHeap().keySet()) {
         		final Reference objectRef = new ReferenceConcrete(heapPos);
-        		final Objekt obj = sIni.getObject(objectRef);
+        		final HeapObjekt obj = sIni.getObject(objectRef);
         		if (obj.isSymbolic()) {
         			final Signature methodSignature = this.checkMethodTable.findCheckMethod(obj.getType(), sIni);
         			if (methodSignature == null) {

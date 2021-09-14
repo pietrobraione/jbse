@@ -79,7 +79,7 @@ public class ArrayTest {
 	public void arrayConcreteBasicLenghTest() throws InvalidInputException, InvalidTypeException, ClassFileNotFoundException, 
 	ClassFileIllFormedException, ClassFileNotAccessibleException, IncompatibleClassFileException, BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException {
 		final ClassFile cfArray = this.hier.loadCreateClass("[I");
-		final ArrayImpl a = new ArrayImpl(this.calc, false, false, null, this.calc.valInt(0), cfArray, null, this.hp, false, 10);
+		final ArrayImpl a = new ArrayImpl(this.calc, null, this.calc.valInt(0), cfArray, this.hp, 10);
 		final Primitive length = a.getLength();
 		assertThat(length, is(equalTo(this.calc.valInt(0))));
 	}
@@ -89,7 +89,7 @@ public class ArrayTest {
 	ClassFileIllFormedException, ClassFileNotAccessibleException, IncompatibleClassFileException, BadClassFileVersionException, 
 	RenameUnsupportedException, WrongClassNameException, FastArrayAccessNotAllowedException {
 		final ClassFile cfArray = this.hier.loadCreateClass("[I");
-		final ArrayImpl a = new ArrayImpl(this.calc, false, false, null, this.calc.valInt(3), cfArray, null, this.hp, false, 10);
+		final ArrayImpl a = new ArrayImpl(this.calc, null, this.calc.valInt(3), cfArray, this.hp, 10);
 		a.setFast(this.calc.valInt(1), this.calc.valInt(9));
 		final Value zero = ((AccessOutcomeInValue) a.getFast(this.calc, this.calc.valInt(2))).getValue();
 		final Value nine = ((AccessOutcomeInValue) a.getFast(this.calc, this.calc.valInt(1))).getValue();
@@ -104,7 +104,7 @@ public class ArrayTest {
 	ClassFileIllFormedException, ClassFileNotAccessibleException, IncompatibleClassFileException, BadClassFileVersionException, 
 	RenameUnsupportedException, WrongClassNameException, FastArrayAccessNotAllowedException {
 		final ClassFile cfArray = this.hier.loadCreateClass("[I");
-		final ArrayImpl a = new ArrayImpl(this.calc, false, false, null, this.calc.valTerm('I', "A"), cfArray, null, this.hp, false, 10);
+		final ArrayImpl a = new ArrayImpl(this.calc, null, this.calc.valTerm('I', "A"), cfArray, this.hp, 10);
 		final Iterator<? extends AccessOutcome> affected = a.entriesPossiblyAffectedByAccess(this.calc, this.calc.valInt(1), this.calc.valInt(10));
 		int size = 0; 
 		AccessOutcome _outcome = null;
@@ -123,7 +123,7 @@ public class ArrayTest {
 	ClassFileIllFormedException, ClassFileNotAccessibleException, IncompatibleClassFileException, BadClassFileVersionException, 
 	RenameUnsupportedException, WrongClassNameException, FastArrayAccessNotAllowedException, NoSuchElementException, InvalidOperandException {
 		final ClassFile cfArray = this.hier.loadCreateClass("[I");
-		final ArrayImpl a = new ArrayImpl(this.calc, false, false, null, this.calc.valTerm('I', "A"), cfArray, null, this.hp, false, 10);
+		final ArrayImpl a = new ArrayImpl(this.calc, null, this.calc.valTerm('I', "A"), cfArray, this.hp, 10);
 		final Iterator<? extends AccessOutcome> affected = a.entriesPossiblyAffectedByAccess(this.calc, this.calc.valInt(1), this.calc.valInt(10));
 		final AccessOutcomeInValue outcome = (AccessOutcomeInValue) affected.next();
 		outcome.excludeIndexFromAccessCondition(this.calc, this.calc.valInt(1));

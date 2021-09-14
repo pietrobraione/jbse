@@ -17,9 +17,10 @@ import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_VALUE;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.noclass_REGISTERLOADEDCLASS;
+import static jbse.common.Type.binaryClassName;
+import static jbse.common.Type.getArrayMemberType;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
-import static jbse.common.Type.binaryClassName;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -509,10 +510,13 @@ public final class Util {
                     if (e instanceof Array.AccessOutcomeInValue) {
                         val = ((Array.AccessOutcomeInValue) e).getValue();
                         if (val == null) {
+                        	//the value is unknown: put a fresh symbol. This
+                        	//happens when the array is initial, i.e., it is
+                        	//also symbolic, thus it has an origin from which
+                        	//we can get the static typing/signature info
                             try {
-                                final ClassFile memberClass = arrayToProcess.getType().getMemberClass();
-                                final String memberType = memberClass.getInternalTypeName(); 
-                                final String memberGenericSignature = memberClass.getGenericSignatureType();
+                            	final String memberType = getArrayMemberType(arrayToProcess.getOrigin().getStaticType());
+                                final String memberGenericSignature = getArrayMemberType(arrayToProcess.getOrigin().getGenericSignatureType());
                                 val = (Value) state.createSymbolMemberArray(memberType, memberGenericSignature, arrayToProcess.getOrigin(), calc.push(index).add(referringArrayOffset).pop());
                             } catch (InvalidOperandException | InvalidTypeException exc) {
                                 //this should never happen

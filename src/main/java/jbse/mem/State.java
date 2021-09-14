@@ -1348,7 +1348,7 @@ public final class State implements Cloneable {
         }
         final ArrayImpl a;
 		try {
-			a = new ArrayImpl(calc, false, false, initValue, length, arrayClass, null, this.historyPoint, false, this.maxSimpleArrayLength);
+			a = new ArrayImpl(calc, initValue, length, arrayClass, this.historyPoint, this.maxSimpleArrayLength);
 		} catch (InvalidTypeException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
@@ -1390,7 +1390,7 @@ public final class State implements Cloneable {
         }
         final ArrayImpl a;
 		try {
-			a = new ArrayImpl(calc, false, false, initValue, length, arrayClass, null, this.historyPoint, false, this.maxSimpleArrayLength);
+			a = new ArrayImpl(calc, initValue, length, arrayClass, this.historyPoint, this.maxSimpleArrayLength);
 		} catch (InvalidTypeException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
@@ -1601,7 +1601,7 @@ public final class State implements Cloneable {
             myObj.setFieldValue(JAVA_CLASS_CLASSLOADER, this.objectDictionary.getClassLoader(classLoader));
             
             return retVal;
-        } catch (InvalidTypeException e) {
+        } catch (InvalidTypeException | InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e); //TODO do something better?
         }
@@ -1635,7 +1635,7 @@ public final class State implements Cloneable {
         }
         final int numOfStaticFields = classFile.numOfStaticFields();
         final Signature[] fieldsSignatures = classFile.getObjectFields();
-        final KlassImpl k = new KlassImpl(calc, false, createSymbolKlassPseudoReference(this.historyPoint, classFile), this.historyPoint, numOfStaticFields, fieldsSignatures);
+        final KlassImpl k = new KlassImpl(calc, false, classFile, createSymbolKlassPseudoReference(this.historyPoint, classFile), this.historyPoint, numOfStaticFields, fieldsSignatures);
         k.setIdentityHashCode(calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(classFile, k);
     }
@@ -1668,7 +1668,7 @@ public final class State implements Cloneable {
         }
         final int numOfStaticFields = classFile.numOfStaticFields();
         final Signature[] fieldsSignatures = classFile.getObjectFields();
-        final KlassImpl k = new KlassImpl(calc, true, createSymbolKlassPseudoReference(this.lastPreInitialHistoryPoint, classFile), this.lastPreInitialHistoryPoint, numOfStaticFields, fieldsSignatures);
+        final KlassImpl k = new KlassImpl(calc, true, classFile, createSymbolKlassPseudoReference(this.lastPreInitialHistoryPoint, classFile), this.lastPreInitialHistoryPoint, numOfStaticFields, fieldsSignatures);
         try {
         	initWithSymbolicValues(k, classFile);
         } catch (NullPointerException e) {
@@ -1681,15 +1681,15 @@ public final class State implements Cloneable {
     }
 
     /**
-     * Creates a new {@link Objekt} of a given class in the heap of 
-     * the state. The {@link Objekt}'s fields are initialized with symbolic 
+     * Creates a new {@link HeapObjekt} of a given class in the heap of 
+     * the state. The {@link HeapObjekt}'s fields are initialized with symbolic 
      * values.
      *  
      * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param classFile a {@link ClassFile} for either an object or an array class.
      * @param origin a {@link ReferenceSymbolic}, the origin of the object.
      * @return a {@code long}, the position in the heap of the newly 
-     *         created object.
+     *         created {@link HeapObjekt}.
      * @throws InvalidInputException if {@code calc == null || classFile == null || origin == null} 
      *         or if {@code classFile} is invalid.
      * @throws HeapMemoryExhaustedException if the heap is full.
@@ -1698,7 +1698,7 @@ public final class State implements Cloneable {
      *         (currently {@code java.lang.Class} and {@code java.lang.ClassLoader}).
      * @throws FrozenStateException if the state is frozen.
      */
-    private long createObjectSymbolic(Calculator calc, ClassFile classFile, ReferenceSymbolic origin) 
+    public long createObjectSymbolic(Calculator calc, ClassFile classFile, ReferenceSymbolic origin) 
     throws InvalidInputException, HeapMemoryExhaustedException, 
     CannotAssumeSymbolicObjectException, FrozenStateException {
         if (calc == null || classFile == null || origin == null) {
@@ -1707,9 +1707,10 @@ public final class State implements Cloneable {
         final HeapObjektImpl myObj;
         if (classFile.isArray()) {
             try {
-                final ArrayImpl backingArray = newArraySymbolic(calc, classFile, origin, true);
-                final long posBackingArray = this.heap.addNew(backingArray);
+                final Primitive length = (Primitive) createSymbolMemberArrayLength(origin);
+                final long posBackingArray = createArrayInitial(calc, classFile, origin, length);
                 final ReferenceConcrete refToBackingArray = new ReferenceConcrete(posBackingArray);
+                final ArrayImpl backingArray = (ArrayImpl) getObject(refToBackingArray);
                 myObj = new ArrayImpl(calc, refToBackingArray, backingArray);
                 initIdentityHashCodeSymbolic(myObj);
             } catch (InvalidTypeException | NullPointerException | InvalidInputException e) {
@@ -1730,13 +1731,34 @@ public final class State implements Cloneable {
         return pos;
     }
 
-    private ArrayImpl newArraySymbolic(Calculator calc, ClassFile arrayClass, ReferenceSymbolic origin, boolean isInitial) 
-    throws InvalidTypeException, FrozenStateException {
+    /**
+     * Creates a new {@link Array} of a given class in the heap of 
+     * the state. The {@link Array} is set to be symbolic and initial.
+     * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param classFile a {@link ClassFile} for an array class. It must not be {@code null}.
+     * @param origin a {@link ReferenceSymbolic}, the origin of the {@link Array}
+     *        that is backed by the {@link Array} created by this method. 
+     *        It must not be {@code null}.
+     * @param length a {@link Primitive}, the length of the {@link Array}.
+     *        It must not be {@code null}.
+     * @return a {@code long}, the position in the heap of the newly 
+     *         created {@link Array}.
+     * @throws InvalidInputException iff {@code calc == null || arrayClass == null || 
+     *         origin == null || length == null}.  
+     * @throws InvalidTypeException iff {@code classFile} is not an array class.
+     * @throws FrozenStateException iff the state is frozen.
+     * @throws HeapMemoryExhaustedException iff the heap is full.
+     */
+    public long createArrayInitial(Calculator calc, ClassFile arrayClass, ReferenceSymbolic origin, Primitive length) 
+    throws InvalidInputException, InvalidTypeException, FrozenStateException, HeapMemoryExhaustedException {
+    	if (calc == null || arrayClass == null || origin == null || length == null) {
+    		throw new InvalidInputException("Attempted to invoke State.createArrayInitial with a parameter set to null.");
+    	}
         try {
-            final Primitive length = (Primitive) createSymbolMemberArrayLength(origin);
-            final ArrayImpl obj = new ArrayImpl(calc, true, true, null, length, arrayClass, origin, origin.historyPoint(), isInitial, this.maxSimpleArrayLength);
+            final ArrayImpl obj = new ArrayImpl(calc, length, arrayClass, origin, origin.historyPoint(), this.maxSimpleArrayLength);
 			initIdentityHashCodeSymbolic(obj);
-	        return obj;
+	        return this.heap.addNew(obj);
 		} catch (InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);

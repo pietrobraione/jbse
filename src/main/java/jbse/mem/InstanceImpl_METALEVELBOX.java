@@ -17,6 +17,7 @@ import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.RenameUnsupportedException;
+import jbse.common.exc.InvalidInputException;
 import jbse.val.Calculator;
 import jbse.val.HistoryPoint;
 import jbse.val.exc.InvalidTypeException;
@@ -28,7 +29,8 @@ public final class InstanceImpl_METALEVELBOX extends InstanceImpl implements Ins
 	/** The encapsulated object. */
 	private final Object it;
 
-	protected InstanceImpl_METALEVELBOX(Calculator calc, HistoryPoint epoch, Object it) throws InvalidTypeException {
+	protected InstanceImpl_METALEVELBOX(Calculator calc, HistoryPoint epoch, Object it) 
+	throws InvalidTypeException, InvalidInputException {
 		super(calc, false, new ClassFileFoo(), null, epoch, 0);
 		this.it = it;
 	}

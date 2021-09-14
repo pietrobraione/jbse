@@ -22,7 +22,7 @@ public final class InstanceImpl_JAVA_CLASS extends InstanceImpl implements Insta
     private ReferenceConcrete signers;
     
     protected InstanceImpl_JAVA_CLASS(Calculator calc, ClassFile cf_JAVA_CLASS, ReferenceSymbolic origin, HistoryPoint epoch, ClassFile representedClass, int numOfStaticFields, Signature... fieldSignatures) 
-    throws InvalidTypeException {
+    throws InvalidTypeException, InvalidInputException {
         super(calc, false, cf_JAVA_CLASS, origin, epoch, numOfStaticFields, fieldSignatures);
         if (cf_JAVA_CLASS == null || !JAVA_CLASS.equals(cf_JAVA_CLASS.getClassName())) {
             throw new InvalidTypeException("Attempted creation of an instance of java.lang.Class with type " + classFile.getClassName());

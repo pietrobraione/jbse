@@ -50,12 +50,7 @@ public abstract class ReferenceSymbolicAtomic extends ReferenceSymbolic implemen
         this.toString = "{R" + id + "}";
     }
 
-    /**
-     * Gets the generic signature type of the reference.
-     * 
-     * @return a {@link String} (its type erasure must be 
-     * equal to {@link #getStaticType()}).
-     */
+    @Override
     public final String getGenericSignatureType() {
     	return this.genericSignatureType;
     }

@@ -19,9 +19,7 @@ public interface Objekt extends Cloneable {
     /**
      * Returns the class of this {@link Objekt}.
      * 
-     * @return a {@link ClassFile} or {@code null}
-     *         if this object has no class (i.e., it is
-     *         in the static store or is a meta level box).
+     * @return a {@link ClassFile}.
      */
     ClassFile getType();
 
@@ -134,44 +132,43 @@ public interface Objekt extends Cloneable {
     Value getFieldValue(int ofst);
 
     /**
-     * Sets the value of a field. Throws a runtime exception 
-     * in the case the field does not exist or is immutable.
+     * Sets the value of a field of this {@link Objekt}.
      * 
      * @param field the {@link Signature} of the field.
-     * @param item the new {@link Value} that must be assigned to
+     * @param value the new {@link Value} that must be assigned to
      *        the field.
+     * @throws InvalidInputException if {@code value == null}.
      */
-    //TODO throw a exception in the case a field does not exist or is immutable
-    void setFieldValue(Signature field, Value item);
+    //TODO throw a checked exception in the case the field does not exist or is immutable
+    void setFieldValue(Signature field, Value value) throws InvalidInputException;
 
     /**
-     * Sets the value of a field. Throws a runtime exception 
-     * in the case the field does not exist or is immutable.
+     * Sets the value of a field of this {@link Objekt}.
      * 
      * @param fieldName the name of the field.
      * @param fieldClass the name of the class 
-     * where the field is declared.
-     * @param item the new {@link Value} that must be assigned to
+     *        where the field is declared.
+     * @param value the new {@link Value} that must be assigned to
      *        the field.
+     * @throws InvalidInputException if {@code value == null}. 
      */
-    //TODO throw a exception in the case a field does not exist or is immutable
-    void setFieldValue(String fieldName, String fieldClass, Value item);
+    //TODO throw a exception in the case the field does not exist or is immutable
+    void setFieldValue(String fieldName, String fieldClass, Value value) throws InvalidInputException;
     
     /**
-     * Sets the value of a field. Throws a runtime exception 
-     * in the case the field does not exist or is immutable.
+     * Sets the value of a field of this {@link Objekt}.
      * 
      * @param ofst an {@code int} signifying an offset number
      *        of a field (as returned by {@code sun.misc.Unsafe} methods).
      * @param item the new {@link Value} that must be assigned to
      *        the field.
+     * @throws InvalidInputException  if {@code value == null}.
      */
-    //TODO throw exception in the case a field does not exist or is immutable
-    void setFieldValue(int ofst, Value item);
+    //TODO throw exception in the case the field does not exist or is immutable
+    void setFieldValue(int ofst, Value item) throws InvalidInputException;
 
     /**
-     * Returns an immutable view of this 
-     * {@link Objekt}'s fields.
+     * Returns an immutable view of this {@link Objekt}'s fields.
      * 
      * @return an immutable 
      *         {@link Map}{@code <}{@link String}{@code , }{@link Variable}{@code >}

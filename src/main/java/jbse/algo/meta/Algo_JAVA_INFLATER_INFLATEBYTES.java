@@ -251,7 +251,7 @@ public final class Algo_JAVA_INFLATER_INFLATEBYTES extends Algo_INVOKEMETA_Nonbr
         };
     }
     
-    private void updateInflater(State state) {
+    private void updateInflater(State state) throws InvalidInputException {
         try {
             //reads the possibly modified fields of this.inflaterMeta
             final Field offFld = Inflater.class.getDeclaredField(JAVA_INFLATER_OFF.getName());

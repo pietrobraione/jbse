@@ -1222,23 +1222,23 @@ implements ConcurrentMap<K, V>, Serializable {
 		assume(isResolvedByExpansion(tthis));
 		assume(isResolvedByExpansion(tthis.initialMap));
 
-		//initializes this
+		//initializes tthis
 		tthis.isInitial = false;
-		//origin.initialHashCode: doesn't care
+		//tthis.initialHashCode: doesn't care
 		tthis.absentKeys = new ArrayList<>();
-		//this.absentValues: doesn't care
-		//this.initialMap: OK the symbolic value it already has
+		//tthis.absentValues: doesn't care
+		//tthis.initialMap: OK the symbolic value it already has
 		tthis.size = tthis.initialMap.size;
 		tthis.root = new NNodeEmpty();
 		tthis.numNodes = 0;
 
 		tthis.initialMap.makeInitial();
 		tthis.initialMap.isInitial = true;
-		//this.initialMap.initialHashCode: OK the symbolic value it already has
+		//tthis.initialMap.initialHashCode: OK the symbolic value it already has
 		tthis.initialMap.absentKeys = new ArrayList<>();
 		tthis.initialMap.absentValues = new ArrayList<>();
 		tthis.initialMap.initialMap = null;
-		//this.initialMap.size: OK the symbolic value it already has
+		//tthis.initialMap.size: OK the symbolic value it already has
 		assume(tthis.initialMap.size >= 0);
 		tthis.initialMap.root = new NNodeEmpty();
 		tthis.initialMap.numNodes = 0;

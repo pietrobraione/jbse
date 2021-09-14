@@ -16,7 +16,7 @@ public final class InstanceImpl_JAVA_THREAD extends InstanceImpl implements Inst
     private boolean interrupted;
     
     protected InstanceImpl_JAVA_THREAD(Calculator calc, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, int numOfStaticFields, Signature... fieldSignatures) 
-    throws InvalidTypeException {
+    throws InvalidTypeException, InvalidInputException {
         super(calc, false, classFile, origin, epoch, numOfStaticFields, fieldSignatures);
         if (classFile == null) {
             throw new InvalidTypeException("Attempted creation of an instance of a subclass of java.lang.Thread with type null.");

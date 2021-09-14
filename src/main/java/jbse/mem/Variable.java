@@ -1,15 +1,20 @@
 package jbse.mem;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.val.Calculator;
 import jbse.val.Value;
 
 /**
- * Class representing a variable into the memory. It gathers the name, 
- * the declaration type and the runtime value of the variable. 
+ * Class representing a named location into the memory, either a field 
+ * or a local variable. It gathers the name, the declaration type and the 
+ * runtime value stored in the location. 
  */
-public final class Variable implements Cloneable {
+public final class Variable implements Slot, Cloneable {
     /** Type of the variable. */
     private final String type;
+
+    /** Generic signature type of the variable. */
+    private final String genericSignatureType;
 
     /** Name of the variable. */
     private final String name;
@@ -18,69 +23,99 @@ public final class Variable implements Cloneable {
     private Value value;
 
     /**
-     * Constructor setting the variable to its default value.
+     * Constructor setting the variable to the default value for its type.
      * 
-     * @param calc an {@link Calculator}.
-     * @param type the type of the variable.
-     * @param name the name of the variable.
+     * @param calc a {@link Calculator}.
+     * @param type a {@link String}, the type of the values stored in the variable.
+     * @param genericSignatureType a {@link String}, the generic signature type of 
+     *        the values stored in the variable.
+     * @param name a {@link String}, the name of the variable.
      */
-    Variable(Calculator calc, String type, String name) {
-    	this(calc, type, name, null);
+    Variable(Calculator calc, String type, String genericSignatureType, String name) {
+    	this(calc, type, genericSignatureType, name, null);
     }
 
     /**
-     * Constructor setting the variable to a prescribed value.
+     * Constructor setting the variable to an initial value.
      * 
-     * @param type the type of the variable.
-     * @param name the name of variable.
+     * @param type a {@link String}, the type of the values stored in the variable.
+     * @param genericSignatureType a {@link String}, the generic signature type of 
+     *        the values stored in the variable.
+     * @param name a {@link String}, the name of the variable.
      * @param value the initial {@link Value} of the variable.
      */
-    Variable(String type, String name, Value value) {
-        this.value = value;
-        this.type = type;
-        this.name = name;
+    Variable(String type, String genericSignatureType, String name, Value value) {
+    	this(null, type, genericSignatureType, name, value);
     }
     
     /**
-     * Constructor setting the variable to the default value.
+     * Private constructor.
      * 
-     * @param type type of variable
-     * @param name name of variable
-     * @param value value of variable
+     * @param calc a {@link Calculator}.
+     * @param type a {@link String}, the type of the values stored in the variable.
+     * @param genericSignatureType a {@link String}, the generic signature type of 
+     *        the values stored in the variable.
+     * @param name a {@link String}, the name of the variable.
+     * @param value the initial {@link Value} of the variable, or {@code null}
+     *        if the variable must be initialized with the default value for its
+     *        {@code type}.
      */
-    private Variable(Calculator calc, String type, String name, Value value) {
-        this.value = (value == null ? calc.valDefault(type.charAt(0)) : value);
+    private Variable(Calculator calc, String type, String genericSignatureType, String name, Value value) {
         this.type = type;
+        this.genericSignatureType = genericSignatureType;
         this.name = name;
+        this.value = (value == null ? calc.valDefault(type.charAt(0)) : value);
     }
     
     /**
-     * Returns the value of variable
+     * Returns the value of this variable.
+	 * 
+	 * @return a {@link Value}.
      */
+    @Override
     public Value getValue() {
         return this.value;
     }
 
     /**
-     * Set the value of variable
+     * Sets the value of this variable.
+     * 
+	 * @throws InvalidInputException if {@code value == null}.
      */
-    public void setValue(Value value) {
-        //TODO check type of value
+    @Override
+    public void setValue(Value value) throws InvalidInputException {
+    	if (value == null) {
+    		throw new InvalidInputException("Attempted to invoke Variable.setValue(Value) with Value parameter set to null.");
+    	}
+        //TODO check type
     	this.value = value;
     }
 
     /**
-     * Returns the name of variable
+     * Returns the name of variable.
+     * 
+     * @return a {@link String}.
      */
     public String getName() {
         return this.name;
     }
 
     /**
-     * Returns the type of variable
+     * Returns the type of this variable.
+     * 
+     * @return a {@link String}.
      */
     public String getType() {
         return this.type;
+    }
+
+    /**
+     * Returns the generic signature type of tis variable.
+     * 
+     * @return a {@link String}.
+     */
+    public String getGenericSignatureType() {
+        return this.genericSignatureType;
     }
 
     @Override
