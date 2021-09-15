@@ -9,6 +9,7 @@ import static jbse.algo.UtilControlFlow.throwNew;
 import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.algo.Util.findClassFile;
 import static jbse.algo.Util.valueString;
+import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.Offsets.offsetInvoke;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
@@ -36,11 +37,14 @@ import jbse.algo.exc.CannotAccessImplementationReflectively;
 import jbse.algo.exc.CannotInvokeNativeException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.ClassFile;
+import jbse.bc.ClassHierarchy;
 import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.PleaseLoadClassException;
 import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.Type;
@@ -161,9 +165,13 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
                     if (isPrimitive(returnType)) {
                         this.valToLoad = this.ctx.getCalculator().applyFunctionPrimitive(returnType.charAt(0), state.getHistoryPoint(), this.methodSignatureImplementation.toString(), args).pop();
                     } else {
-                        this.valToLoad = new ReferenceSymbolicApply(returnType, state.getHistoryPoint(), this.methodSignatureImplementation.toString(), args);
+                    	final ClassHierarchy hier = state.getClassHierarchy();
+                    	final ClassFile methodImplementationClass = hier.loadCreateClass(CLASSLOADER_APP, this.methodSignatureImplementation.getClassName(), true);
+                        this.valToLoad = new ReferenceSymbolicApply(returnType, methodImplementationClass.getMethodGenericSignatureType(this.methodSignatureImplementation), state.getHistoryPoint(), this.methodSignatureImplementation.toString(), args);
                     }
-                } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
+                } catch (InvalidOperandException | InvalidTypeException | InvalidInputException | ClassFileNotFoundException | 
+                ClassFileIllFormedException | ClassFileNotAccessibleException | IncompatibleClassFileException | PleaseLoadClassException | 
+                BadClassFileVersionException | WrongClassNameException | MethodNotFoundException e) {
                     //this should never happen
                     failExecution(e);
                 }

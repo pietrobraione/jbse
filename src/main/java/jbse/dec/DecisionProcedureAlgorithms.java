@@ -9,6 +9,8 @@ import static jbse.common.Type.isArray;
 import static jbse.common.Type.isTypeParameter;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.splitClassGenericSignatureTypeParameters;
+import static jbse.common.Type.splitParametersGenericSignatures;
+import static jbse.common.Type.splitReturnValueDescriptor;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.TYPEVAR;
 import static jbse.common.Type.typeParameterIdentifier;
@@ -1352,7 +1354,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
     		final String staticClassName = className(refToResolve.getStaticType());
     		final String mostPreciseResolutionClassName;
     		final String genericSignatureType = refToResolve.getGenericSignatureType();
-    		if (staticClassName.equals(className(eraseGenericParameters(genericSignatureType)))) {
+    		if (staticClassName.equals(className(splitReturnValueDescriptor(eraseGenericParameters(genericSignatureType))))) {
     			//the generic type does not convey any additional information than the
     			//static type
     			mostPreciseResolutionClassName = staticClassName;
@@ -1458,7 +1460,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 
     			//builds the left-hand side(s) of the equation:
     			//first, splits refGenericTypeSignature...
-    			final String[] refGenericTypeSignatures = splitReferenceTypeSignature(refGenericTypeSignature);
+    			final String[] refGenericTypeSignatures = splitSignature(refGenericTypeSignature);
 
     			//...then, builds a term for each produced 
     			//type signature 
@@ -1486,6 +1488,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 
     			//adds the equations
     			solver.addEquations(lhs, rhs);
+    			
+    			//TODO if refGenericTypeSignature is a method signature, and the method has generic parameters, it is necessary also to scan the arguments for additional constraints 
     		}
 
     		//solves
@@ -1496,7 +1500,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
     			final Var queryVariable = new Var(refToResolveContainer.asOriginString() + "?" + typeParameterUnknown);
     			final String solution = solver.getVariableValue(queryVariable);
     			return solution; 
-    			//NB: solution may be null, typically when the query variable is not present in the equations
+    			//NB: solution may be null, typically when the query variable is not present in the equations, or when there are no or infinite solutions
     		} else {
     			return null;
     		}
@@ -1528,24 +1532,42 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
     }
     
     /**
-     * Splits a reference type signature, as defined in JVMS v8 section 4.7.9.1,
-     * into a set of reference type signatures, one for each nested class.
+     * Splits a reference type signature or method signature into a set of reference 
+     * type signatures that can be converted to {@link TypeTerm}s.
      *  
-     * @param referenceTypeSignature a {@link String}. It must not be {@code null}
-     *        and it must be a reference type signature, either a class type signature
-     *        or a type variable signature.
-     * @return an array of {@link String}s; If {@code referenceTypeSignature} is 
+     * @param signature a {@link String}. It must not be {@code null}
+     *        and it must be a reference type signature or
+     *        a method signature for a method returning a reference. The definitions 
+     *        of class type signature, type variable signature and method signature 
+     *        are given in the grammar reported in the JVMS v8 section 4.7.9.1, 
+     *        nonterminal symbols {@code ReferenceTypeSignature}, {@code ClassTypeSignature}, 
+     *        {@code TypeVariableSignature}, {@code ArrayTypeSignature}, and {@code MethodSignature}.  
+     * @return an array of {@link String}s. If {@code signature} is 
      *         a class type signature, the array will contain as many class type 
      *         signatures as the number of {@code ClassTypeSignatureSuffix}es plus one.
-     *         For example, if {@code referenceTypeSignature == "LA$B<...>.C$D$E<...>.F$G<...>;"}, 
+     *         For example, if {@code signature == "LA$B<...>.C$D$E<...>.F$G<...>;"}, 
      *         then an array with shape <code>{"LA$B<...>;", "LA$B$C$D$E<...>;", "LA$B$C$D$E$F$G<...>;"}</code> 
-     *         will be returned. If {@code referenceTypeSignature} is a type variable signature,
-     *         an array with {@code referenceTypeSignature} as its only element is returned. 
+     *         will be returned. If {@code signature} is a type variable signature,
+     *         an array with {@code signature} as its only element is returned. 
+     *         If {@code signature} is an array type signature, an array with {@code signature} 
+     *         as its only element is returned. 
+     *         If {@code signature} is a method signature for a method returning a reference, 
+     *         the signature for its return value (that is a reference type signature) will
+     *         be processed as in the previous cases and the result returned. 
      *         The result is undefined if {@code referenceTypeSignature} is null, or is not
      *         a class type signature or a type variable signature.
      */
-    private static String[] splitReferenceTypeSignature(String referenceTypeSignature) {
-		final String[] retVal = referenceTypeSignature.split("\\.");
+    private static String[] splitSignature(String signature) {
+    	//this code assumes that signature is a method signature: 
+    	//In this case extracts into returnValueSignature the signature
+    	//of the return value of the method declaration; If signature
+    	//is not a method signature, it will be returnValueSignature == signature.
+    	final int rightParensIndex = signature.indexOf(')');
+    	final int throwsIndex = signature.indexOf('^');
+    	final String returnValueSignature = signature.substring(rightParensIndex + 1, (throwsIndex == -1 ? signature.length() : throwsIndex));
+    	
+    	//splits
+		final String[] retVal = returnValueSignature.split("\\.");
 		for (int i = 1; i < retVal.length; ++i) {
 			retVal[i - 1] = (i == 1 ? "" : REFERENCE) + retVal[i - 1] + TYPEEND;
 			final String s = retVal[i - 1].substring(1);
@@ -1680,7 +1702,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *        {@code reference} must be resolved by expansion in it.
 	 * @return A {@link String}{@code []}. Every element in it is a <em>type
 	 *         instantiation</em>, one for each element in 
-	 *         {@link #splitReferenceTypeSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         {@link #splitSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
 	 *         A type instantiation is a string formed by the concatenation 
 	 *         of a class name and an optional list of type parameters, as 
 	 *         defined by the nonterminal {@code TypeParameters} in the grammar 
@@ -1688,25 +1710,25 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws InvalidInputException if {@code hier == null || reference == null || pathCondition == null}, 
 	 *         or if {@code reference} has not an expands clause in {@code pathCondition}.
 	 * @throws ClassFileNotFoundException if {@code hier} cannot load any class in the type erasures of
-	 *         {@link #splitReferenceTypeSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         {@link #splitSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
 	 *         and fails with a {@link ClassFileNotFoundException}.
 	 * @throws ClassFileIllFormedException if {@code hier} cannot load any class in the type erasures of
-	 *         {@link #splitReferenceTypeSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         {@link #splitSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
 	 *         and fails with a {@link ClassFileIllFormedException}.
 	 * @throws ClassFileNotAccessibleException if {@code hier} cannot load any class in the type erasures of
-	 *         {@link #splitReferenceTypeSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         {@link #splitSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
 	 *         and fails with a {@link ClassFileNotAccessibleException}.
 	 * @throws IncompatibleClassFileException if {@code hier} cannot load any class in the type erasures of
-	 *         {@link #splitReferenceTypeSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         {@link #splitSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
 	 *         and fails with a {@link IncompatibleClassFileException}.
 	 * @throws BadClassFileVersionException if {@code hier} cannot load any class in the type erasures of
-	 *         {@link #splitReferenceTypeSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         {@link #splitSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
 	 *         and fails with a {@link BadClassFileVersionException}.
 	 * @throws RenameUnsupportedException if {@code hier} cannot load any class in the type erasures of
-	 *         {@link #splitReferenceTypeSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         {@link #splitSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
 	 *         and fails with a {@link RenameUnsupportedException}.
 	 * @throws WrongClassNameException if {@code hier} cannot load any class in the type erasures of
-	 *         {@link #splitReferenceTypeSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         {@link #splitSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
 	 *         and fails with a {@link WrongClassNameException}.
 	 */
 	private static String[] findTypeInstantiations(ClassHierarchy hier, ReferenceSymbolic reference, List<Clause> pathCondition) 
@@ -1716,7 +1738,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			throw new InvalidInputException("DecisionProcedureAlgorithm.findTypeInstantiations: Invoked with a null parameter.");
 		}
 		final String refGenericTypeSignature = reference.getGenericSignatureType();
-		final String[] refGenericTypeSignatures = splitReferenceTypeSignature(refGenericTypeSignature);
+		final String[] refGenericTypeSignatures = splitSignature(refGenericTypeSignature);
 		final String[] retVal = new String[refGenericTypeSignatures.length];
 		for (int i = 0; i < refGenericTypeSignatures.length; ++i) {
 			final ClassFile curClass;

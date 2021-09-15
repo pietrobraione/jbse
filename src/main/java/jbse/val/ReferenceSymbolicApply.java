@@ -22,6 +22,9 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
     /** java.lang.Object.toString */
     public static final String TO_STRING = "toString";
 
+    /** The generic signature type of the reference. */
+    private final String genericSignatureType;
+
     /** The function name. */
     private final String operator;
     
@@ -42,23 +45,26 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 	 * 
      * @param staticType a {@link String}, the static type of the
      *        reference (taken from bytecode).
+     * @param genericSignatureType a {@link String}, the generic signature 
+     *        type of the method declaration (taken from bytecode).
      * @param historyPoint the current {@link HistoryPoint}.
      * @param operator the name of the function.
      * @param args the {@link Value} arguments to which the function is applied.
 	 * @throws InvalidOperandException if any of {@code args} is null. 
+	 * @throws InvalidInputException if {@code staticType == null || genericSignatureType == null || operator == null || args == null || historyPoint == null}.
 	 * @throws InvalidTypeException if {@code staticType} is not an array or instance
 	 *         reference type.
-	 * @throws InvalidInputException if {@code staticType == null || operator == null || args == null || historyPoint == null}.
 	 */
-	public ReferenceSymbolicApply(String staticType, HistoryPoint historyPoint, String operator, Value... args) 
-	throws InvalidOperandException, InvalidTypeException, InvalidInputException {
+	public ReferenceSymbolicApply(String staticType, String genericSignatureType, HistoryPoint historyPoint, String operator, Value... args) 
+	throws InvalidOperandException, InvalidInputException, InvalidTypeException {
 		super(staticType, historyPoint);
-    	if (staticType == null || operator == null || args == null) {
+    	if (staticType == null || genericSignatureType == null || operator == null || args == null) {
             throw new InvalidInputException("Attempted to build a ReferenceSymbolicApply with null static type, operator or args.");
     	}
     	if (!isArray(staticType) && !isReference(staticType)) {
     		throw new InvalidTypeException("Attempted to build a ReferenceSymbolicApply with static type " + staticType + " (neither array nor instance reference type).");
     	}
+    	this.genericSignatureType = genericSignatureType;
 		this.operator = operator;
 		this.args = args.clone();
 		int i = 0;
@@ -121,8 +127,7 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 	
 	@Override
 	public String getGenericSignatureType() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.genericSignatureType;
 	}
 
 	@Override

@@ -794,19 +794,17 @@ public final class Type {
 
     /**
      * Given a descriptor of a method returns a 
-     * {@link String} containing the descriptor of its return value, 
-     * or {@code null} if the input is not the descriptor of a method.
+     * {@link String} containing the descriptor of its return value.
      * 
      * @param methodDescriptor a {@link String}, the descriptor of a method.
-     * @return a {@link String}.
+     * @return a {@link String} obtained from {@code methodDescriptor} by
+     *         stripping whatever is contained from the first character to
+     *         the first {@code ')'}. Note that if {@code methodDescriptor}
+     *         is a field descriptor the method returns {@code methodDescriptor}.
      */
     public static String splitReturnValueDescriptor(String methodDescriptor) {
         final int index = methodDescriptor.lastIndexOf(')') + 1;
-        if (index == 0) {
-            return null;
-        } else {
-            return methodDescriptor.substring(index);
-        }
+        return methodDescriptor.substring(index);
     }
 
     /**

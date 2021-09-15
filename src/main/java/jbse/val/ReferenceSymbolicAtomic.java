@@ -16,9 +16,7 @@ public abstract class ReferenceSymbolicAtomic extends ReferenceSymbolic implemen
     /** The String representation of this object. */
     private final String toString;
 
-    /** 
-     * The generic signature type of the reference. 
-     */
+    /** The generic signature type of the reference. */
     private final String genericSignatureType;
 
     /**
