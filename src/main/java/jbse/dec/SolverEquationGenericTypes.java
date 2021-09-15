@@ -174,7 +174,8 @@ final class SolverEquationGenericTypes {
 	
 	private final ArrayList<Equation> equations = new ArrayList<>();
 	private final HashSet<Var> variables = new HashSet<>();
-	private final ArrayList<Equation> equationsScratch = new ArrayList<>();
+	private final ArrayList<Equation> equationsCurrent = new ArrayList<>();
+	private final ArrayList<Equation> equationsProcessed = new ArrayList<>();
 
 	void addEquation(TypeTerm lhs, TypeTerm rhs) throws InvalidInputException {
 		if (this.solved) {
@@ -208,24 +209,24 @@ final class SolverEquationGenericTypes {
 		}
 	}
 
-	private void addEquationScratch(TypeTerm lhs, TypeTerm rhs) {
+	private void addEquationCurrent(TypeTerm lhs, TypeTerm rhs) {
 		if (this.solved || lhs == null || rhs == null) {
 			throw new UnexpectedInternalException("Invoked SolverEquationGenericTypes.addEquationScratch with wrong parameter.");
 		}
-		this.equationsScratch.add(new Equation(lhs, rhs));
+		this.equationsCurrent.add(new Equation(lhs, rhs));
 	}
 
-	private void addEquationsScratch(TypeTerm[] lhss, TypeTerm[] rhss) {
+	private void addEquationsCurrent(TypeTerm[] lhss, TypeTerm[] rhss) {
 		if (lhss.length != rhss.length) {
 			throw new UnexpectedInternalException("Invoked SolverEquationGenericTypes.addEquationsScratch with lhss and rhss having different lengths.");
 		}
 		for (int i = 0; i < lhss.length; ++i) {
-			addEquationScratch(lhss[i], rhss[i]);
+			addEquationCurrent(lhss[i], rhss[i]);
 		}
 	}
 
 	void solve() {
-		this.equationsScratch.addAll(this.equations);
+		this.equationsCurrent.addAll(this.equations);
 		while (true) {
 			boolean failed = removeFunctors();
 			if (failed) {
@@ -257,7 +258,7 @@ final class SolverEquationGenericTypes {
 		boolean failed = false;
 		ArrayList<Equation> toProcess = new ArrayList<>();
 		
-		for (Equation e : this.equationsScratch) {
+		for (Equation e : this.equationsCurrent) {
 			if (e.left instanceof Apply && e.right instanceof Apply) {
 				final Apply applyLeft = (Apply) e.left;
 				final Apply applyRight = (Apply) e.right;
@@ -271,10 +272,11 @@ final class SolverEquationGenericTypes {
 			}
 		}
 		for (Equation e : toProcess) {
-			this.equationsScratch.remove(e);
+			this.equationsCurrent.remove(e);
+			this.equationsProcessed.add(e);
 			final Apply applyLeft = (Apply) e.left;
 			final Apply applyRight = (Apply) e.right;
-			addEquationsScratch(applyLeft.args, applyRight.args);
+			addEquationsCurrent(applyLeft.args, applyRight.args);
 		}
 		return failed;
 	}
@@ -282,7 +284,7 @@ final class SolverEquationGenericTypes {
 	
 	private boolean incrementSolution() {
 		boolean failed = false;
-		for (Equation e : this.equationsScratch) {
+		for (Equation e : this.equationsCurrent) {
 			final Var variable;
 			final String value;
 			if (e.left instanceof Var && !(e.right instanceof Var)) {
@@ -310,46 +312,46 @@ final class SolverEquationGenericTypes {
 	
 	private boolean generateNewEquations() {
 		final Partition<TypeTerm> partition = new Partition<>();
-		for (Equation e : this.equationsScratch) {
+		for (Equation e : this.equationsCurrent) {
 			partition.union(e.left, e.right);
 		}
 		
 		boolean noProgress = true;
-		for (int i = 0; i < this.equationsScratch.size() - 1; ++i) {
-			for (int k = i + 1; k < this.equationsScratch.size(); ++k) {
-				final Equation ei = this.equationsScratch.get(i);
-				final Equation ek = this.equationsScratch.get(k);
+		for (int i = 0; i < this.equationsCurrent.size() - 1; ++i) {
+			for (int k = i + 1; k < this.equationsCurrent.size(); ++k) {
+				final Equation ei = this.equationsCurrent.get(i);
+				final Equation ek = this.equationsCurrent.get(k);
 				if (partition.find(ei.left).equals(partition.find(ek.left))) {
 					//tries to add equation ei.left = ek.left
 					if (!ei.left.equals(ek.left)) {
 						final Equation eNew = new Equation(ei.left, ek.left);
-						if (!this.equationsScratch.contains(eNew)) {
+						if (!this.equationsCurrent.contains(eNew) && !this.equationsProcessed.contains(eNew)) {
 							noProgress = false;
-							this.equationsScratch.add(eNew);
+							this.equationsCurrent.add(eNew);
 						}
 					}
 					//tries to add equation ei.left = ek.right
 					if (!ei.left.equals(ek.right)) {
 						final Equation eNew = new Equation(ei.left, ek.right);
-						if (!this.equationsScratch.contains(eNew)) {
+						if (!this.equationsCurrent.contains(eNew) && !this.equationsProcessed.contains(eNew)) {
 							noProgress = false;
-							this.equationsScratch.add(eNew);
+							this.equationsCurrent.add(eNew);
 						}
 					}
 					//tries to add equation ei.right = ek.left
 					if (!ei.right.equals(ek.left)) {
 						final Equation eNew = new Equation(ei.right, ek.left);
-						if (!this.equationsScratch.contains(eNew)) {
+						if (!this.equationsCurrent.contains(eNew) && !this.equationsProcessed.contains(eNew)) {
 							noProgress = false;
-							this.equationsScratch.add(eNew);
+							this.equationsCurrent.add(eNew);
 						}
 					}
 					//tries to add equation ei.right = ek.right
 					if (!ei.right.equals(ek.right)) {
 						final Equation eNew = new Equation(ei.right, ek.right);
-						if (!this.equationsScratch.contains(eNew)) {
+						if (!this.equationsCurrent.contains(eNew) && !this.equationsProcessed.contains(eNew)) {
 							noProgress = false;
-							this.equationsScratch.add(eNew);
+							this.equationsCurrent.add(eNew);
 						}
 					}
 				}
@@ -358,56 +360,6 @@ final class SolverEquationGenericTypes {
 		return noProgress;
 	}
 	
-	/*
-			for (Equation e : this.equations) {
-				if (e.left instanceof Var) {
-					if (e.right instanceof Var) {
-						this.partition.union((Var) e.left, (Var) e.right);
-						progress = true;
-					} else {
-						this.solution.put((Var) e.left, eraseGenericParameters(e.right.toString()));
-					}
-				} else {
-					if (e.right instanceof Var) {
-						this.solution.put((Var) e.right, eraseGenericParameters(e.left.toString()));
-					} else {
-						if (e.left instanceof Apply && e.right instanceof Apply) {
-							final Apply applyLeft = (Apply) e.left;
-							final Apply applyRight = (Apply) e.right;
-							if (applyLeft.functor.equals(applyRight.functor) &&
-							applyLeft.arity() == applyRight.arity()) {
-								try {
-									addEquations(applyLeft.args, applyRight.args);
-								} catch (InvalidInputException e1) {
-									//this should never happen
-									throw new UnexpectedInternalException(e1);
-								}
-							} else {
-								this.hasSolution = false;
-								return;
-							}
-						} else {
-							//one is an Apply and another one is Some: 
-							//just discard the equation
-						}
-					}
-				}
-			}
-		} while (progress);
-
-		for (Var v : this.solution.keySet()) {
-			final String res = this.solution.get(v);
-			final Var v2 = this.partition.find(v);
-			final String res2 = this.solution.get(v2);
-			if (!res.equals(res2)) {
-				this.hasSolution = false;
-				return;
-			}
-		}
-
-		this.hasSolution = true;
-	}*/
-
 	boolean hasSolution() {
 		return this.hasSolution;
 	}
