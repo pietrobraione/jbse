@@ -26,7 +26,7 @@ import jbse.rules.TriggerRulesRepo;
  * @author Pietro Braione
  */
 //TODO format and many other settings
-public class SettingsReader {
+public final class SettingsReader {
     private SettingsParser parser;
 
     /**
@@ -54,13 +54,13 @@ public class SettingsReader {
         }
     }
 
-    private void fillRulesClassInit(ClassInitRulesRepo repo) {
+    public void fillRulesClassInit(ClassInitRulesRepo repo) {
         for (String cname : this.parser.notInitializedClasses) {
             repo.addNotInitializedClassPattern(cname);
         }
     }
 
-    private void fillRulesLICS(LICSRulesRepo repo) {
+    public void fillRulesLICS(LICSRulesRepo repo) {
         for (String[] rule : this.parser.expandToLICS) {
             repo.addExpandTo(rule[0], rule[1], rule[2]);
         }
@@ -78,7 +78,7 @@ public class SettingsReader {
         }
     }
 
-    private void fillRulesTrigger(TriggerRulesRepo repo) {
+    public void fillRulesTrigger(TriggerRulesRepo repo) {
         for (String[] rule : this.parser.expandToTrigger) {
             repo.addExpandTo(rule[0], rule[1], rule[2], new Signature(rule[3], rule[4], rule[5]), rule[6]);
         }
@@ -93,7 +93,7 @@ public class SettingsReader {
         }
     }
 
-    private void fillExpansionBackdoor(Map<String, Set<String>> expansionBackdoor) {
+    public void fillExpansionBackdoor(Map<String, Set<String>> expansionBackdoor) {
         for (String[] rule : this.parser.expansionBackdoor) {
             final String toExpand = rule[0];
             final String classAllowed = rule[1];
