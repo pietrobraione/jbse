@@ -1,5 +1,11 @@
 package jbse.apps.run;
 
+import static jbse.bc.Opcodes.OP_INVOKEDYNAMIC;
+import static jbse.bc.Opcodes.OP_INVOKEHANDLE;
+import static jbse.bc.Opcodes.OP_INVOKEINTERFACE;
+import static jbse.bc.Opcodes.OP_INVOKESPECIAL;
+import static jbse.bc.Opcodes.OP_INVOKESTATIC;
+import static jbse.bc.Opcodes.OP_INVOKEVIRTUAL;
 import static jbse.bc.Signatures.JAVA_HASHMAP;
 import static jbse.bc.Signatures.JAVA_LINKEDHASHMAP_CONTAINSVALUE;
 import static jbse.bc.Signatures.JAVA_MAP_CONTAINSKEY;
@@ -191,8 +197,25 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
          */
         private final HashMap<Symbolic, Value> symbolValueConversionCache = new HashMap<>();
         
-        /** The symbolic state before the current execution step. */
+        /** 
+         * The symbolic state before the current execution step. It is not
+         * a clone, so it is updated and becomes the post execution step
+         * after the symbolic engine is stepped. So do not use it in 
+         * #postStep(State)!
+         */
         private State preSymbolicState = null;
+        
+        /** 
+         * Stores if the symbolic state before the current execution step
+         * is at an invoke* bytecode.
+         */
+        private boolean preSymbolicStateAtInvoke;
+        
+        /** 
+         * Stores the stack size of the symbolic state before the current 
+         * execution step.
+         */
+        private long preSymbolicStateStackSize;
         
         private UnexpectedInternalException excUnexpected = null; //used only by runners actions to report errors
         private GuidanceException excGuidance = null;             //used only by runners actions to report errors
@@ -1297,6 +1320,8 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
         	//(this.aligned == false)
         	try {
         		this.preSymbolicState = preSymbolicState;
+        		this.preSymbolicStateAtInvoke = isInvoke(this.preSymbolicState.getCurrentFrame().getInstruction());
+        		this.preSymbolicStateStackSize = this.preSymbolicState.getStackSize();
         		final State preConcreteState = this.engine.getCurrentState();
         		this.preConcreteStateStackSize = preConcreteState.getStackSize();
             	
@@ -1320,7 +1345,7 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
 			} catch (ThreadStackEmptyException | EngineStuckException e) {
 				throw new GuidanceException(ERROR_GUIDANCE_MISALIGNMENT);
 			} catch (CannotManageStateException | NonexistingObservedVariablesException |
-			ClasspathException | ContradictionException | DecisionException |
+			ClasspathException | ContradictionException | DecisionException | FrozenStateException |
 			FailureException e) {
 				throw new GuidanceException(e);
 			}
@@ -1342,7 +1367,9 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
         	//invariant: after a step the engine's current state (postConcreteState) has same 
         	//stack size (minus offset) and same program counter as postSymbolicState 
         	//(alignment), or postSymbolicState has bigger stack size minus offset 
-        	//(the symbolic execution is executing a trigger)
+        	//(the symbolic execution is executing a trigger or a map model method 
+        	//"fast forwarded" by concrete execution). In the latter case postConcreteState 
+        	//is not earlier, possibly later, in the execution history than postSymbolicState.
         	try {
         		final int postSymbolicStateStackSize = postSymbolicState.getStackSize(); //can be zero upon uncaught exception or end of execution
             	
@@ -1421,14 +1448,70 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
                 		}
                 	}
             	} else {
-                	//we were not aligned before the symbolic execution step: checks whether 
-            		//now the two executions became aligned
+                	//we were not aligned before the symbolic execution step:             		
+            		//Also in this situation symbolic execution might have skipped 
+            		//a method call execution and returned a SymbolicApply: We must
+        			//detect the situation and save the pair concrete+symbolic states
+        			//so we can retrieve the concrete value of the SymbolicApply later.
+            		//Since postConcreteState is later in history than postSymbolicState
+            		//it is ok to use postConcreteState as the concrete state corresponding
+            		//to the history point.
+            		if (this.preSymbolicStateAtInvoke && this.preSymbolicStateStackSize == postSymbolicStateStackSize) {
+	        			Value postSymbolicStateTOS;
+	        			try { 
+	        				postSymbolicStateTOS = postSymbolicState.topOperand();
+	        			} catch (InvalidNumberOfOperandsException e) {
+	        				postSymbolicStateTOS = null;
+	        			} catch (ThreadStackEmptyException e) {
+	        				//it is possible that postSymbolicState is stuck
+	        				//with a return value
+	        				postSymbolicStateTOS = postSymbolicState.getStuckReturn();
+	        			}
+	            		if (postSymbolicStateTOS != null && containsSymbolicApply(postSymbolicStateTOS)) {
+            				final HistoryPoint historyPoint = getHistoryPointSymbolicApply(postSymbolicStateTOS);
+            				this.statesConcrete.put(historyPoint, this.engine.getCurrentState().clone());
+            				this.statesSymbolic.put(historyPoint, postSymbolicState.clone());
+	            		}
+            		}
+            		
+            		//finally checks whether now the two executions became aligned
             		this.aligned = symbolicAndConcreteAreAligned(postSymbolicState);
-            	}            	
+            	}
 			} catch (ThreadStackEmptyException | FrozenStateException e) {
 				//this should never happen
 				throw new UnexpectedInternalException(e);
 			}
+        }
+        
+        private static boolean isInvoke(byte code) {
+        	return (code == OP_INVOKEDYNAMIC ||
+        	code == OP_INVOKEHANDLE ||
+        	code == OP_INVOKEINTERFACE ||
+        	code == OP_INVOKESPECIAL ||
+        	code == OP_INVOKESTATIC ||
+        	code == OP_INVOKEVIRTUAL);
+        }
+
+        private boolean containsSymbolicApply(Value value) {
+        	if (value instanceof SymbolicApply) {
+        		return true;
+        	} else if (value instanceof WideningConversion && ((WideningConversion) value).getArg() instanceof SymbolicApply) {
+        		return true;
+        	} else {
+        		return false;
+        	}
+        }
+        
+        private HistoryPoint getHistoryPointSymbolicApply(Value value) {
+        	final HistoryPoint retVal;
+        	if (value instanceof SymbolicApply) {
+        		retVal = ((SymbolicApply) value).historyPoint();
+        	} else if (value instanceof WideningConversion && ((WideningConversion) value).getArg() instanceof SymbolicApply) {
+        		retVal = ((SymbolicApply) ((WideningConversion) value).getArg()).historyPoint();
+        	} else {
+        		retVal = null;
+        	}
+        	return retVal;
         }
         
         private boolean containsSymbolicApply(Value value, Signature methodSignature) {
