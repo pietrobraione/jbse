@@ -49,7 +49,7 @@ public class DecisionProcedureTest {
 	private static final String SMT_SOLVER_PATH = "/usr/bin/z3";
 
 	//Pietro's local settings
-	//private static final String SMT_SOLVER_PATH = "/opt/local/bin/z3";
+	//private static final String SMT_SOLVER_PATH = "/usr/local/bin/z3";
 
 	//Giovanni's local settings
 	//private static final String SMT_SOLVER_PATH = "/Users/denaro/Desktop/RTools/Z3/z3-4.3.2.d548c51a984e-x64-osx-10.8.5/bin/z3";

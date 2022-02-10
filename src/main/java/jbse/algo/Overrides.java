@@ -121,6 +121,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_ZIPFILE_GETENTRYMETHOD                    = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETENTRYMETHOD.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_GETENTRYSIZE                      = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETENTRYSIZE.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_GETENTRYTIME                      = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETENTRYTIME.class.getName());
+    public static final String ALGO_JAVA_ZIPFILE_GETMANIFESTNUM                    = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETMANIFESTNUM.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_GETNEXTENTRY                      = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETNEXTENTRY.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_GETTOTAL                          = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETTOTAL.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_OPEN                              = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_OPEN.class.getName());

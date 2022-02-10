@@ -27,8 +27,8 @@ import jbse.val.Simplex;
  * Meta-level implementation of the methods {@link java.util.zip.ZipFile#getEntryCrc(long)}, 
  * {@link java.util.zip.ZipFile#getEntryCSize(long)}, {@link java.util.zip.ZipFile#getEntryFlag(long)}, 
  * {@link java.util.zip.ZipFile#getEntryMethod(long)}, {@link java.util.zip.ZipFile#getEntrySize(long)}, 
- * {@link java.util.zip.ZipFile#getEntryTime(long)}, {@link java.util.zip.ZipFile#getTotal(long)} and 
- * {@link java.util.zip.ZipFile#startsWithLOC(long)}.
+ * {@link java.util.zip.ZipFile#getEntryTime(long)}, {@link java.util.zip.ZipFile#getTotal(long)}, 
+ * {@link java.util.zip.ZipFile#startsWithLOC(long)} and {@link java.util.zip.ZipFile#getManifestNum(long)}.
  * 
  * @author Pietro Braione
  */

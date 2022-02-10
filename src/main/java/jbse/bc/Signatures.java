@@ -693,6 +693,8 @@ public final class Signatures {
         new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + LONG, "getEntrySize");
     public static final Signature JAVA_ZIPFILE_GETENTRYTIME = 
         new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + LONG, "getEntryTime");
+    public static final Signature JAVA_ZIPFILE_GETMANIFESTNUM = 
+    new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + INT, "getManifestNum");
     public static final Signature JAVA_ZIPFILE_GETNEXTENTRY = 
         new Signature(JAVA_ZIPFILE, "(" + LONG + INT + ")" + LONG, "getNextEntry");
     public static final Signature JAVA_ZIPFILE_GETTOTAL = 
