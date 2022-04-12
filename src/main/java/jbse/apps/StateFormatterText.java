@@ -47,6 +47,7 @@ import jbse.val.PrimitiveSymbolicLocalVariable;
 import jbse.val.PrimitiveSymbolicMemberArray;
 import jbse.val.PrimitiveSymbolicMemberArrayLength;
 import jbse.val.PrimitiveSymbolicMemberField;
+import jbse.val.Reference;
 import jbse.val.ReferenceArrayImmaterial;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Primitive;
@@ -110,7 +111,21 @@ public final class StateFormatterText implements Formatter {
         if (state.isStuck()) {
             sb.append("Leaf state");
             if (state.getStuckException() != null) {
-                sb.append(", raised exception: "); sb.append(state.getStuckException().toString());
+            	Reference stuckEx = state.getStuckException();
+                sb.append(", raised exception: ");
+                sb.append(stuckEx.toString());
+                if(stuckEx instanceof ReferenceConcrete) {
+                	ReferenceConcrete rc = (ReferenceConcrete) stuckEx;
+                	Objekt exRef = state.getHeap().get(rc.getHeapPosition());
+                	ClassFile exType = exRef.getType();
+                	while(exType != null) {
+                		if(exType.getClassName().equals("java/lang/RuntimeException")) {
+                			sb.append(" -- Unchecked: " + exRef.getType().getClassName());
+                			break;
+                		}
+                		exType = exType.getSuperclass();
+                	}
+                }
             } else if (state.getStuckReturn() != null) {
                 sb.append(", returned value: ");
                 sb.append(lineSep);
