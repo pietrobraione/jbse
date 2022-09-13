@@ -26,7 +26,7 @@ JBSE has several dependencies. It must be built using a JDK version 8 - neither 
 The runtime dependencies that are automatically resolved by Gradle and included in the build path are:
 
 * The `tools.jar` library, that is part of every JDK 8 setup (note, *not* of the JRE).
-* [Javassist](http://jboss-javassist.github.io/javassist/), that is used by JBSE for all the bytecode manipulation tasks. JBSE relies on a patched version of Javassist that is included in the `libs` folder and will not work with an upstream Javassist version.
+* [Javassist](http://jboss-javassist.github.io/javassist/), that is used by JBSE for all the bytecode manipulation tasks.
 
 There is an additional runtime dependency that is not handled by Gradle so you will need to fix it manually. JBSE needs to interact at runtime with an SMT solver for pruning infeasible program paths. JBSE works well with [Z3](https://github.com/Z3Prover/z3) and [CVC4](https://cvc4.cs.stanford.edu/), but any SMT solver that is compatible with the SMTLIB v2 standard and supports the AUFNIRA logic should work. Both Z3 and CVC4 are distributed as standalone binaries and can be installed almost everywhere. We strongly advise to use Z3 because it is what we routinely use.
 

@@ -11,7 +11,7 @@ def javaHome = javaToolchains.compilerFor { languageVersion = javaVersion }.get(
 repositories {
     mavenCentral()
     flatDir {
-    	dirs "${javaHome}/lib", 'libs'
+    	dirs "${javaHome}/lib"
     }
 }
 
@@ -22,7 +22,7 @@ java {
 }
 
 dependencies {
-    implementation name: 'javassist' //'org.javassist:javassist:3.26.0-GA'
+    implementation group: 'org.javassist', name:'javassist', version:'3.29.1-GA'
     implementation name: 'tools'
     testImplementation 'junit:junit:4.11'
 }
