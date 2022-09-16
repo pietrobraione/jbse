@@ -32,19 +32,19 @@ public class DecisionProcedureGuidanceJDILauncher {
     	final Class<?> clazz = Class.forName(args[0]);
     	final Method method = clazz.getDeclaredMethod(args[1]);
     	method.setAccessible(true);
-    	Object o = clazz.newInstance();
-		try {
-			if(Modifier.isStatic(method.getModifiers())) {
-				method.invoke(null);
-			} else {
-				method.invoke(o);
-			}
-		} catch (InvocationTargetException e) {
-			//this instruction serves the purpose of
-			//allowing a breakpoint to be put in this
-			//catch block, to detect whether the invoked
-			//method throws an exception
-			throw e;
+	try {
+		if (Modifier.isStatic(method.getModifiers())) {
+			method.invoke(null);
+		} else {
+			final Object o = clazz.newInstance();
+			method.invoke(o);
 		}
+	} catch (InvocationTargetException e) {
+		//this instruction serves the purpose of
+		//allowing a breakpoint to be put in this
+		//catch block, to detect whether the invoked
+		//method throws an exception
+		throw e;
+	}
     }
 }
