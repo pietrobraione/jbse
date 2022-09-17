@@ -927,6 +927,16 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             }
             return callCtxString;
 		}
+		
+		@Override
+		protected void close() {
+			if (this.symbolicApplyRetValue != null && this.symbolicApplyRetValue instanceof ObjectReference) {
+				//populates the caching referenceType field before shutdown
+				//of the JDI JVM, so it can be used later
+				((ObjectReference) this.symbolicApplyRetValue).referenceType();
+			}
+			super.close();
+		}
 
 		@Override
 		public Value getRetValue() {
