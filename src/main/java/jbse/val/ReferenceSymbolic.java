@@ -38,7 +38,8 @@ public abstract class ReferenceSymbolic extends Reference implements Symbolic {
     /**
      * Returns the static type of this reference.
      * 
-     * @return a {@code String}.
+     * @return a {@code String} or {@code null} if 
+     *         this object refers to a {@link Klass}.
      */
     public final String getStaticType() {
     	return this.staticType;
@@ -48,8 +49,10 @@ public abstract class ReferenceSymbolic extends Reference implements Symbolic {
      * Gets the generic signature type of the reference.
      * 
      * @return a {@link String}. Its type erasure must be 
-     *         equal to {@link #getStaticType()}, so it is
-     *         {@code null} if the latter is {@code null}.
+     *         {@link String#equals(Object) equal} to 
+     *         {@link #getStaticType()}. The method returns
+     *         {@code null} iff {@link #getStaticType()} 
+     *         returns {@code null}.
      */
     public abstract String getGenericSignatureType();
     

@@ -46,7 +46,9 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
      * @param staticType a {@link String}, the static type of the
      *        reference (taken from bytecode).
      * @param genericSignatureType a {@link String}, the generic signature 
-     *        type of the method declaration (taken from bytecode).
+     *        type of the method declaration (taken from bytecode). It can 
+     *        be {@code null}, in which case {@code staticType} will be
+     *        used as generic signature type.
      * @param historyPoint the current {@link HistoryPoint}.
      * @param operator the name of the function.
      * @param args the {@link Value} arguments to which the function is applied.
@@ -58,13 +60,13 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 	public ReferenceSymbolicApply(String staticType, String genericSignatureType, HistoryPoint historyPoint, String operator, Value... args) 
 	throws InvalidOperandException, InvalidInputException, InvalidTypeException {
 		super(staticType, historyPoint);
-    	if (staticType == null || genericSignatureType == null || operator == null || args == null) {
+    	if (staticType == null || operator == null || args == null) {
             throw new InvalidInputException("Attempted to build a ReferenceSymbolicApply with null static type, operator or args.");
     	}
     	if (!isArray(staticType) && !isReference(staticType)) {
     		throw new InvalidTypeException("Attempted to build a ReferenceSymbolicApply with static type " + staticType + " (neither array nor instance reference type).");
     	}
-    	this.genericSignatureType = genericSignatureType;
+    	this.genericSignatureType = genericSignatureType == null ? staticType : genericSignatureType;
 		this.operator = operator;
 		this.args = args.clone();
 		int i = 0;
