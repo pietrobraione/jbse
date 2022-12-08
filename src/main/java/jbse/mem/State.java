@@ -36,7 +36,7 @@ import jbse.bc.ClassFileFactory;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Classpath;
 import jbse.bc.ExceptionTable;
-import jbse.bc.ExceptionTableEntry;
+import jbse.bc.ExceptionTable.Entry;
 import jbse.bc.Signature;
 import jbse.bc.Snippet;
 import jbse.bc.SnippetFactory;
@@ -2404,12 +2404,12 @@ public final class State implements Cloneable {
                 }
                 final Signature currentMethodSignature = getCurrentMethodSignature();
                 final ExceptionTable exceptionTable = getCurrentClass().getExceptionTable(currentMethodSignature);
-                final ExceptionTableEntry exceptionTableEntry = exceptionTable.getEntry(excTypes, getCurrentProgramCounter());
+                final Entry exceptionTableEntry = exceptionTable.getEntry(excTypes, getCurrentProgramCounter());
                 if (exceptionTableEntry == null) {
                     popCurrentFrame();
                 } else {
                     clearOperands();
-                    setProgramCounter(exceptionTableEntry.getProgramCounterHandler());
+                    setProgramCounter(exceptionTableEntry.programCounterHandler);
                     pushOperand(exceptionToThrow);
                     return;				
                 }

@@ -1134,7 +1134,7 @@ public class ClassFileJavassist extends ClassFile {
         for (int i = 0; i < et.size(); ++i) {
             final int exType = et.catchType(i);
             final String catchType = (exType == 0 ? Signatures.JAVA_THROWABLE : getClassSignature(exType));
-            final ExceptionTableEntry exEntry = new ExceptionTableEntry(et.startPc(i), et.endPc(i), et.handlerPc(i), catchType);
+            final ExceptionTable.Entry exEntry = new ExceptionTable.Entry(et.startPc(i), et.endPc(i), catchType, et.handlerPc(i));
             retVal.addEntry(exEntry);
         }
         return retVal;

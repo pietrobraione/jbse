@@ -197,8 +197,8 @@ public class ClassFileFactoryTest {
         for (int k = 0; k < et.getLength(); k++) {
             ArrayList<String> ls = new ArrayList<String>();
             ls.add("jsymba/dec/DecisionException");
-            ExceptionTableEntry e = et.getEntry(ls, 15);
-            etAct.add(e.getProgramCounterStart() + "," + e.getProgramCounterEnd() + "," + e.getProgramCounterHandler() + "," + e.getType());
+            ExceptionTable.Entry e = et.getEntry(ls, 15);
+            etAct.add(e.programCounterStart + "," + e.programCounterEnd + "," + e.programCounterHandler + "," + e.type);
         }
         assertEquals(etExp, etAct);
     }
