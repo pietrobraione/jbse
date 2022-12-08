@@ -642,7 +642,8 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * Returns all the annotations of a method that are available on the current classpath.
      * 
      * @param methodSignature the {@link Signature} of a method.
-     * @return an {@link String}{@code []} containing all the names of the annotations of the method (just the class name).
+     * @return an {@link String}{@code []} containing all the names of the annotations of 
+     *         the method (just the class name).
      *         If {@code methodSignature}'s name is signature polymorphic in this 
      *         class the method must succeed for all the polymorphic variants of the
      *         signature and return the annotation names for the 
@@ -994,7 +995,7 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * @return {@code true} iff the field is both final and constant.
      * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
      */
-    public final boolean isFieldConstant(Signature fieldSignature) 
+    public final boolean isFieldFinalConstant(Signature fieldSignature) 
     throws FieldNotFoundException {
         return isFieldFinal(fieldSignature) && hasFieldConstantValue(fieldSignature);
     }

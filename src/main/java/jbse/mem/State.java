@@ -295,8 +295,7 @@ public final class State implements Cloneable {
     /**
      * Getter for this state's classpath.
      * 
-     * @return a {@link Classpath} (a safety copy of 
-     *         the one used to construct this state).
+     * @return a {@link Classpath}.
      */
     public Classpath getClasspath() {
         return this.classHierarchy.getClasspath();
@@ -2404,13 +2403,13 @@ public final class State implements Cloneable {
                     continue; 
                 }
                 final Signature currentMethodSignature = getCurrentMethodSignature();
-                final ExceptionTable myExTable = getCurrentClass().getExceptionTable(currentMethodSignature);
-                final ExceptionTableEntry tmpEntry = myExTable.getEntry(excTypes, getCurrentProgramCounter());
-                if (tmpEntry == null) {
+                final ExceptionTable exceptionTable = getCurrentClass().getExceptionTable(currentMethodSignature);
+                final ExceptionTableEntry exceptionTableEntry = exceptionTable.getEntry(excTypes, getCurrentProgramCounter());
+                if (exceptionTableEntry == null) {
                     popCurrentFrame();
                 } else {
                     clearOperands();
-                    setProgramCounter(tmpEntry.getPCHandle());
+                    setProgramCounter(exceptionTableEntry.getProgramCounterHandler());
                     pushOperand(exceptionToThrow);
                     return;				
                 }

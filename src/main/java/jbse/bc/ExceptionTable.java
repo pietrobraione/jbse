@@ -7,7 +7,7 @@ import java.util.List;
  * Class that represent an exception table.
  */
 public class ExceptionTable {
-    private ArrayList<ExceptionTableEntry> exTable;
+    private ArrayList<ExceptionTableEntry> exceptionTable;
 
     /**
      * Constructor, Initialize the structure that will contain the exception table.
@@ -15,7 +15,7 @@ public class ExceptionTable {
      * @param length an {@code int}, the number of elements in exception table.
      */		
     public ExceptionTable(int length) {	
-        exTable = new ArrayList<ExceptionTableEntry>(length);
+        exceptionTable = new ArrayList<ExceptionTableEntry>(length);
     }
 
     /**
@@ -24,25 +24,25 @@ public class ExceptionTable {
      * @return an {@code int}, the number of elements in the exception table.
      */
     public int getLength() {
-        return exTable.size();
+        return exceptionTable.size();
     }
 
     /**
      * Seeks an entry in the table.
      * 
-     * @param excTypes a {@link List}{@code <}{@link String}{@code >}
+     * @param exceptionTypes a {@link List}{@code <}{@link String}{@code >}
      *        containing all the exception types we want to search.
-     * @param PC an {@code int}, the current program counter.
+     * @param programCounter an {@code int}, the current program counter.
      * @return an {@link ExceptionTableEntry} or {@code null} if the
      *         exception table does not contain an entry matching
      *         one of the exception types at the program counter.
      */
-    public ExceptionTableEntry getEntry(List<String> excTypes, int PC) {
-        for (ExceptionTableEntry tmpEntry : this.exTable) {
-            if (excTypes.contains(tmpEntry.getType()) && 
-                (PC >= tmpEntry.getStartPC()) && 
-                (PC < tmpEntry.getEndPC())) {
-                return tmpEntry;
+    public ExceptionTableEntry getEntry(List<String> exceptionTypes, int programCounter) {
+        for (ExceptionTableEntry entry : this.exceptionTable) {
+            if (exceptionTypes.contains(entry.getType()) && 
+                (programCounter >= entry.getProgramCounterStart()) && 
+                (programCounter < entry.getProgramCounterEnd())) {
+                return entry;
             }
         }
         return null;
@@ -54,6 +54,6 @@ public class ExceptionTable {
      * @param entry The {@link ExceptionTableEntry} to add.
      */
     public void addEntry(ExceptionTableEntry entry) {
-        exTable.add(entry);
+        exceptionTable.add(entry);
     }
 }

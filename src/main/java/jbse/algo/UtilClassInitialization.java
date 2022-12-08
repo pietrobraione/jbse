@@ -623,7 +623,7 @@ public final class UtilClassInitialization {
 		private void setConstantField(Klass k, Signature sig, ClassFile classFile) 
 		throws HeapMemoryExhaustedException {
 			try {
-				if (classFile.isFieldConstant(sig)) {
+				if (classFile.isFieldFinalConstant(sig)) {
 					Value v = null; //to keep the compiler happy
 					final ConstantPoolValue cpv = classFile.fieldConstantValue(sig);
 					if (cpv instanceof ConstantPoolPrimitive) {
