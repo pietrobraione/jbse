@@ -8,7 +8,12 @@ import java.util.Map;
 
 import jbse.val.Value;
 
-public class SnippetFactory {
+/**
+ * Factory for {@link Snippet}s.
+ * 
+ * @author Pietro Braione
+ */
+public final class SnippetFactory {
     private final HashMap<Integer, Signature> signatures = new HashMap<>();
     private final HashMap<Integer, Integer> integers = new HashMap<>();
     private final HashMap<Integer, Float> floats = new HashMap<>();

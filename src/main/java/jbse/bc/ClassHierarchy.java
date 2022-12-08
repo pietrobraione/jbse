@@ -148,7 +148,7 @@ public final class ClassHierarchy implements Cloneable {
     	if (classPath == null || factoryClass == null || expansionBackdoor == null || modelClassSubstitutions == null) {
     		throw new InvalidInputException("Attempted creation of a " + this.getClass().getName() + " with a null classPath, or factoryClass, or expansionBackdoor, or modelClassSubstitutions.");
     	}
-        this.cp = classPath.clone(); //safety copy
+        this.cp = classPath; //safety copy
         this.cfs = new ClassFileStore();
         this.expansionBackdoor = new HashMap<>(expansionBackdoor); //safety copy
         this.modelClassSubstitutions = new HashMap<>(modelClassSubstitutions); //safety copy
@@ -174,10 +174,10 @@ public final class ClassHierarchy implements Cloneable {
     /**
      * Returns the {@link Classpath} of this hierarchy.
      * 
-     * @return a {@link Classpath} (safety copy).
+     * @return a {@link Classpath}.
      */
     public Classpath getClasspath() {
-        return this.cp.clone();
+        return this.cp;
     }
     
     /**
@@ -284,6 +284,7 @@ public final class ClassHierarchy implements Cloneable {
     throws InvalidInputException {
         this.cfs.putClassFile(initiatingLoader, classFile);
     }
+    //TODO make it private? It is invoked by just one class different from this
     
     /**
      * Given a class name and the identifier of an initiating class loader 
@@ -427,16 +428,6 @@ public final class ClassHierarchy implements Cloneable {
         return this.systemPackages.get(packageName);
     }
     
-    /**
-     * Gets the system packages.
-     * 
-     * @return a {@link Set}{@code <}{@link String}{@code >} of all
-     *         the system package names.
-     */
-    public Set<String> getSystemPackages() {
-        return new HashSet<>(this.systemPackages.keySet());
-    }
-
     /**
      * Lists the concrete subclasses of a class. <br />
      * <em>Note:</em> An exact implementation of this method, 
@@ -708,7 +699,7 @@ public final class ClassHierarchy implements Cloneable {
             if (rethrowInvalidInputException) {
                 throw e;
             }
-            //this should never happen
+            //an InvalidInputException that should never happen
             throw new UnexpectedInternalException(e);
         } catch (AlreadyDefinedClassException e) {
             //this should never happen
@@ -718,6 +709,7 @@ public final class ClassHierarchy implements Cloneable {
     
     /**
      * Defines a class from a bytecode array according to the JVMS v8 section 5.3.5.
+     * Also invoked by the native method {@code ClassLoader.defineClass1}.
      * 
      * @param definingClassLoader an {@code int}, the identifier of the defining class loader.
      * @param classSignature a {@link String}, the name of the class to be defined. If it is not
@@ -1272,8 +1264,7 @@ public final class ClassHierarchy implements Cloneable {
         }
 
         //attempts to find a superclass or superinterface containing 
-        //a declaration for the method
-        Signature methodSignaturePolymorphic = resolveMethodSignaturePolymorphic(methodSignature, isInterface, methodSignatureClass);
+        //a declaration for the method:
 
         //searches for the method declaration in the superclasses; for
         //interfaces this means searching only in the interface
@@ -1288,13 +1279,14 @@ public final class ClassHierarchy implements Cloneable {
 
         //searches for a single, non-abstract, maximally specific superinterface method 
         //(JVMS v8, section 5.4.3.3 step 3a and section 5.4.3.4 step 4)
-        accessed = accessed == null ? resolveMethodmaximallySpecificSuperinterface(methodSignature, methodSignatureClass) : accessed;
+        accessed = accessed == null ? resolveMethodMaximallySpecificSuperinterface(methodSignature, methodSignatureClass) : accessed;
 
         //searches in the superinterfaces
         //(JVMS v8, section 5.4.3.3 step 3b and 5.4.3.4 step 5)
         accessed = accessed == null ? resolveMethodSuperinterfaces(methodSignature, methodSignatureClass) : accessed;
 
         //exits if lookup failed
+        //(JVMS v8, section 5.4.3.3 step 3c and 5.4.3.4 step 6)
         if (accessed == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
@@ -1302,6 +1294,7 @@ public final class ClassHierarchy implements Cloneable {
         //if a declaration has found, then it checks accessibility and, in case, 
         //raises IllegalAccessError; otherwise, returns the resolved method signature
         try {
+            final Signature methodSignaturePolymorphic = resolveMethodSignaturePolymorphic(methodSignature, isInterface, methodSignatureClass);
             if (isMethodAccessible(accessor, accessed, methodSignatureClass, methodSignaturePolymorphic)) {
                 //everything went ok
                 return accessed;
@@ -1354,7 +1347,7 @@ public final class ClassHierarchy implements Cloneable {
         return retVal;
     }
     
-    private ClassFile resolveMethodmaximallySpecificSuperinterface(Signature methodSignature, ClassFile methodSignatureClass) {
+    private ClassFile resolveMethodMaximallySpecificSuperinterface(Signature methodSignature, ClassFile methodSignatureClass) {
     	ClassFile retVal = null;
         final Set<ClassFile> nonabstractMaxSpecMethods = maximallySpecificSuperinterfaceMethods(methodSignatureClass, methodSignature, true);
         if (nonabstractMaxSpecMethods.size() == 1) {
@@ -1915,7 +1908,7 @@ public final class ClassHierarchy implements Cloneable {
     
     
     private ClassFile lookupMethodImplVirtual_recurse(ClassFile receiverClass, ClassFile resolutionClass, Signature methodSignature) 
-    throws MethodAbstractException, IncompatibleClassFileException {
+    throws IncompatibleClassFileException {
     	try {
         	ClassFile retVal = null;
         	

@@ -15,17 +15,18 @@ import jbse.common.Util;
 
 /**
  * Class representing a classpath for symbolic execution.
+ * Immutable.
  * 
  * @author Pietro Braione
  */
-public class Classpath implements Cloneable {
+public final class Classpath {
     private final Path jbseLibPath;
     private final Path javaHome;
-    private ArrayList<Path> bootClassPath; //nonfinal because of clone
-    private ArrayList<Path> extClassPath; //nonfinal because of clone
-    private ArrayList<Path> extDirs; //nonfinal because of clone
-    private ArrayList<Path> userClassPath; //nonfinal because of clone
-    private ArrayList<Path> classPath; //nonfinal because of clone
+    private final ArrayList<Path> bootClassPath;
+    private final ArrayList<Path> extDirs;
+    private final ArrayList<Path> extClassPath;
+    private final ArrayList<Path> userClassPath;
+    private final ArrayList<Path> classPath;
 
     /**
      * Constructor.
@@ -59,11 +60,11 @@ public class Classpath implements Cloneable {
         addClassPath(this.bootClassPath, jbseLibPath);
         
         //extension paths and dirs
-        this.extClassPath = new ArrayList<>();
         this.extDirs = new ArrayList<>();
+        this.extClassPath = new ArrayList<>();
         for (Path p : extDirs) {
-        	addAllJars(this.extClassPath, p);
             addClassPath(this.extDirs, p);            
+        	addAllJars(this.extClassPath, p);
         }
         
         //user paths
@@ -91,7 +92,7 @@ public class Classpath implements Cloneable {
      *        is not a path to a jar file or a directory, the method
      *        does nothing.
      */
-    private void addClassPath(List<Path> paths, Path path) {
+    private static void addClassPath(List<Path> paths, Path path) {
         if (Util.isJarFile(path)) {
             paths.add(path);
         } else if (Files.isDirectory(path)) {
@@ -109,7 +110,7 @@ public class Classpath implements Cloneable {
      *        is not a path to a directory, the method does nothing.
      * @throws IOException if an I/O error occurs.
      */
-    private void addAllJars(List<Path> paths, Path path) throws IOException {
+    private static void addAllJars(List<Path> paths, Path path) throws IOException {
         try (final DirectoryStream<Path> stream = Files.newDirectoryStream(path, Util::isJarFile)) {
         	stream.forEach(jar -> addClassPath(paths, jar.toAbsolutePath()));
         } catch (NoSuchFileException | NotDirectoryException e) {
@@ -183,23 +184,5 @@ public class Classpath implements Cloneable {
      */
     public Iterable<Path> classPath() {
         return Collections.unmodifiableCollection(this.classPath);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public Classpath clone() {
-        final Classpath o;
-
-        try {
-            o = (Classpath) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new InternalError(e); 
-        }
-
-        o.bootClassPath = (ArrayList<Path>) this.bootClassPath.clone();
-        o.extClassPath = (ArrayList<Path>) this.extClassPath.clone();
-        o.userClassPath = (ArrayList<Path>) this.userClassPath.clone();
-        o.classPath = (ArrayList<Path>) this.classPath.clone();
-        return o;
     }
 }

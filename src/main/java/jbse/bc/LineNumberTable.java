@@ -8,14 +8,19 @@ import java.util.NoSuchElementException;
  * 
  * @author Pietro Braione
  */
-public class LineNumberTable implements Iterable<LineNumberTable.Row> {
-    public static class Row {
+public final class LineNumberTable implements Iterable<LineNumberTable.Row> {
+    public static final class Row {
         public final int start;
         public final int lineNumber;
 
-        public Row(int start, int lineNumber) {
+        Row(int start, int lineNumber) {
             this.start = start;
             this.lineNumber = lineNumber;
+        }
+
+        @Override
+        public String toString() {
+            return "<" + this.start + " " + this.lineNumber + ">";
         }
     }
 
@@ -34,9 +39,10 @@ public class LineNumberTable implements Iterable<LineNumberTable.Row> {
         }
         
         this.rows[this.next] = new Row(start, lineNumber);
-        this.next++;
+        ++this.next;
     }
 
+    @Override
     public Iterator<Row> iterator() {
         return new MyIterator();
     }

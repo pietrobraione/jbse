@@ -12,39 +12,39 @@ import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.RenameUnsupportedException;
 
-class ClassFileBoolean extends ClassFilePrimitive {	
+final class ClassFileBoolean extends ClassFilePrimitive {	
     ClassFileBoolean() { super("boolean"); }	
 }
 
-class ClassFileByte extends ClassFilePrimitive {
+final class ClassFileByte extends ClassFilePrimitive {
     ClassFileByte() { super("byte"); }	
 }
 
-class ClassFileCharacter extends ClassFilePrimitive {	
+final class ClassFileCharacter extends ClassFilePrimitive {	
     ClassFileCharacter() { super("char"); }	
 }
 
-class ClassFileShort extends ClassFilePrimitive {
+final class ClassFileShort extends ClassFilePrimitive {
     ClassFileShort() { super("short"); }	
 }
 
-class ClassFileInteger extends ClassFilePrimitive {
+final class ClassFileInteger extends ClassFilePrimitive {
     ClassFileInteger() { super("int"); }	
 }
 
-class ClassFileLong extends ClassFilePrimitive {
+final class ClassFileLong extends ClassFilePrimitive {
     ClassFileLong() { super("long"); }	
 }
 
-class ClassFileFloat extends ClassFilePrimitive {
+final class ClassFileFloat extends ClassFilePrimitive {
     ClassFileFloat() { super("float"); }	
 }
 
-class ClassFileDouble extends ClassFilePrimitive {
+final class ClassFileDouble extends ClassFilePrimitive {
     ClassFileDouble() { super("double"); }	
 }
 
-class ClassFileVoid extends ClassFilePrimitive {
+final class ClassFileVoid extends ClassFilePrimitive {
     ClassFileVoid() { super("void"); }	
 }
 

@@ -254,7 +254,7 @@ public final class Type {
 
     /**
      * Given a class name in internal format, returns
-     * the suffix of the topmost container class name 
+     * the suffix of the topmost contained class name 
      * in the case it is a nested class.
      * 
      * @param className a {@link String}, a class name.

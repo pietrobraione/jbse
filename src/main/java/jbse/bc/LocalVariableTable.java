@@ -1,5 +1,8 @@
 package jbse.bc;
 
+import static jbse.common.Type.isCat_1;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -7,22 +10,20 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import jbse.common.Type;
-
 /**
  * Class for local variable tables and local variable type tables.
  * 
  * @author Pietro Braione
  */
-public class LocalVariableTable implements Iterable<LocalVariableTable.Row> {
-    public static class Row {
+public final class LocalVariableTable implements Iterable<LocalVariableTable.Row> {
+    public static final class Row {
         public final int slot;
         public final String descriptor;
         public final String name;
         public final int start;
         public final int length;
 
-        public Row(int slot, String descriptor, String name, int start, int length) {
+        Row(int slot, String descriptor, String name, int start, int length) {
             this.slot = slot;
             this.descriptor = descriptor;
             this.name = name;
@@ -32,7 +33,7 @@ public class LocalVariableTable implements Iterable<LocalVariableTable.Row> {
 
         @Override
         public String toString() {
-            return "<" + slot + " " + descriptor + " " + name + " " + start + " " + length + ">";
+            return "<" + this.slot + " " + this.descriptor + " " + this.name + " " + this.start + " " + this.length + ">";
         }
     }
 
@@ -67,8 +68,7 @@ public class LocalVariableTable implements Iterable<LocalVariableTable.Row> {
         if (slot >= this.slots) {
             return;
         }
-        if ((descriptor.charAt(0) == Type.DOUBLE || descriptor.charAt(0) == Type.LONG)
-            && slot >= this.slots - 1) {
+        if (!isCat_1(descriptor.charAt(0)) && slot >= this.slots - 1) {
             return;
         }
 
@@ -97,7 +97,7 @@ public class LocalVariableTable implements Iterable<LocalVariableTable.Row> {
     public Iterable<Row> rows(int slot) {
         Set<Row> retVal = this.entries.get(slot);
         if (retVal == null) {
-            retVal = new HashSet<>();
+            retVal = Collections.emptySet();
         }
         return retVal;
     }

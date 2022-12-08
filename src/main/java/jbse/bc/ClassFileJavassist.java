@@ -10,11 +10,9 @@ import static javassist.bytecode.AccessFlag.SUPER;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP;
 import static jbse.bc.Signatures.JAVA_METHODTYPE;
-import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.SIGNATURE_POLYMORPHIC_DESCRIPTOR;
 import static jbse.bc.Signatures.SUN_CALLERSENSITIVE;
-import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.internalClassName;
@@ -100,16 +98,14 @@ public class ClassFileJavassist extends ClassFile {
      * @param className a {@code String}, the name of the class (used only for
      *        error reporting).
      * @param bytecode a {@code byte[]}, the bytecode of the class.
-     * @param superClass a {@link ClassFile}, the superclass. It must be {@code null} for
-     *        <em>dummy</em>, i.e., incomplete, classfiles that are created to access
-     *        the bytecode conveniently.
+     * @param superClass a {@link ClassFile}, the superclass.
      * @param superInterfaces a {@link ClassFile}{@code []}, the superinterfaces 
      *        (empty array when no superinterfaces). 
      *        It must be {@code null} for <em>dummy</em>, i.e., incomplete, classfiles 
      *        that are created to access the bytecode conveniently.
      * @throws ClassFileIllFormedException if the {@code bytecode} 
      *         is ill-formed.
-     * @throws InvalidInputException if {@code butecode == null}, or 
+     * @throws InvalidInputException if {@code bytecode == null}, or 
      *         {@code className}, {@code superClass} or {@code superInterfaces} do 
      *         not agree with {@code bytecode}.
      */
@@ -128,16 +124,17 @@ public class ClassFileJavassist extends ClassFile {
             checkSuper(this.cf, superClass, superInterfaces);
             
             //inits
+            final boolean isDummy = (superInterfaces == null);
             this.isAnonymousUnregistered = false;
             this.definingClassLoader = definingClassLoader;
             this.className = internalClassName(this.cf.getName());
             this.cp = this.cf.getConstPool();
-            this.bytecode = (superInterfaces == null ? bytecode : null); //only dummy classfiles (without a superInterfaces array) cache their bytecode
+            this.bytecode = (isDummy ? bytecode : null); //only dummy classfiles cache their bytecode
             this.superClass = superClass;
             this.superInterfaces = superInterfaces;
             this.cpPatches = null;
             this.hostClass = null;
-            this.fieldsStatic = this.fieldsObject = this.constructors = null;
+            this.fieldsStatic = this.fieldsObject = this.methods = this.constructors = null;
         } catch (IOException e) {
             throw new ClassFileIllFormedException(className);
         }
@@ -146,14 +143,12 @@ public class ClassFileJavassist extends ClassFile {
     /**
      * Constructor for anonymous (unregistered) classes.
      * @param hostClass a {@link ClassFile}, the host class for the anonymous class. 
-     *        It must not be null.
+     *        It must not be {@code null}.
      * @param bytecode a {@code byte[]}, the bytecode of the class. It must not be {@code null}.
-     * @param superClass a {@link ClassFile}, the superclass. It must be {@code null} for
-     *        <em>dummy</em>, i.e., incomplete, classfiles that are created to access
-     *        the bytecode conveniently.
+     * @param superClass a {@link ClassFile}, the superclass.
      * @param superInterfaces a {@link ClassFile}{@code []}, the superinterfaces 
      *        (empty array when no superinterfaces). 
-     *        It can be {@code null} for <em>dummy</em>, i.e., incomplete, classfiles 
+     *        It must be {@code null} for <em>dummy</em>, i.e., incomplete, classfiles 
      *        that are created to access the bytecode conveniently.
      * @param cpPatches a {@link Object}{@code []}; The i-th element of this
      *        array patches the i-th element in the constant pool defined
@@ -176,16 +171,13 @@ public class ClassFileJavassist extends ClassFile {
                 throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with bytecode parameter whose value is null.");
             }
             
-            //determines if it is dummy
-            final boolean isDummy = (superClass == null);
-            
-            //checks superInterfaces, isDummy and hostClass
-            if (superInterfaces == null && !isDummy) {
-                throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with superInterfaces parameter whose value is null but the ClassFile is not dummy.");
-            }
+            //checks host class
             if (hostClass == null) {
                 throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with hostClass parameter whose value is null.");
             }
+            
+            //determines if it is dummy
+            final boolean isDummy = (superInterfaces == null);
             
             //reads and patches the bytecode
             this.cf = new javassist.bytecode.ClassFile(new DataInputStream(new ByteArrayInputStream(bytecode)));
@@ -210,7 +202,7 @@ public class ClassFileJavassist extends ClassFile {
             this.superInterfaces = superInterfaces;
             this.cpPatches = (cpPatches == null ? null : cpPatches.clone());
             this.hostClass = hostClass;
-            this.fieldsStatic = this.fieldsObject = this.constructors = null;
+            this.fieldsStatic = this.fieldsObject = this.methods = this.constructors = null;
         } catch (IOException e) {
             throw new ClassFileIllFormedException("anonymous");
         }
@@ -498,7 +490,7 @@ public class ClassFileJavassist extends ClassFile {
     
     @Override
     public boolean isDummy() {
-        return (this.isAnonymousUnregistered ? this.hostClass == null : this.superInterfaces == null);
+        return (this.superInterfaces == null);
     }
 
     @Override
@@ -681,7 +673,7 @@ public class ClassFileJavassist extends ClassFile {
      * @param methodSignature a {@link Signature}.
      * @return {@code null} if no method with {@code methodSignature} 
      *         signature is declared in this classfile, otherwise the 
-     *         {@link CtBehavior} for it; the class name in {@code methodSignature}
+     *         {@link MethodInfo} for it; the class name in {@code methodSignature}
      *         is ignored.
      */
     private MethodInfo findMethodDeclarationNonSignaturePolymorphic(Signature methodSignature) {
@@ -691,8 +683,7 @@ public class ClassFileJavassist extends ClassFile {
 
         final List<MethodInfo> ms = this.cf.getMethods();
         for (MethodInfo m : ms) {
-            final String internalName = m.getName();
-            if (internalName.equals(methodSignature.getName()) &&
+            if (m.getName().equals(methodSignature.getName()) &&
                 m.getDescriptor().equals(methodSignature.getDescriptor())) {
                 return m;
             }
@@ -995,7 +986,7 @@ public class ClassFileJavassist extends ClassFile {
     throws MethodNotFoundException {
         final String[] annotations;
     	if (hasOneSignaturePolymorphicMethodDeclaration(methodSignature.getName())) {
-    		annotations = getMethodAvailableAnnotations(new Signature(methodSignature.getClassName(), "(" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, methodSignature.getName()));
+    		annotations = getMethodAvailableAnnotations(new Signature(methodSignature.getClassName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR, methodSignature.getName()));
     	} else {
     		annotations = getMethodAvailableAnnotations(methodSignature);
     	}

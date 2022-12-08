@@ -1263,7 +1263,7 @@ public final class RunParameters implements Cloneable {
      * or {@link #setHeapScope(Map<String, Integer>)}
      * 
      * @param className a {@link String}, the name of a class.
-     * @param heapScope a {@link Function}{@code <}{@link State}{@code , }{@link Integer}{@code >}, 
+     * @param heapScopeCalculator a {@link Function}{@code <}{@link State}{@code , }{@link Integer}{@code >}, 
      *        the function that calculates the heap scope associated to {@link className} from 
      *        the initial state.
      * @see {@link #setHeapScope(String, int)} for a precise definition of heap scope.
@@ -1278,7 +1278,6 @@ public final class RunParameters implements Cloneable {
      * {@link #setHeapScopeComputed(String, Function<State, Integer>)}, followed by a sequence of calls to 
      * {@link #setHeapScopeComputed(String, Function<State, Integer>)} for all the entries in the map.
      * 
-     * @param className a {@link String}, the name of a class.
      * @param heapScope a {@link Map}{@code <}{@link String}{@code , }{@link Function}{@code <}{@link State}{@code , }{@link Integer}{@code >>}, 
      *        associating class names with a function that calculates the 
      *        heap scope for the class from the initial state. All the

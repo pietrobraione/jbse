@@ -1,25 +1,87 @@
 package jbse.bc;
 
-import java.util.List;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import jbse.bc.exc.InvalidIndexException;
 import jbse.val.Value;
 
+/**
+ * A bytecode snippet that may be injected
+ * during the regular execution.  
+ * 
+ * @author Pietro Braione
+ * @see SnippetFactory
+ */
 public final class Snippet {
-    private final Map<Integer, Signature> signatures;
-    private final Map<Integer, Integer> integers;
-    private final Map<Integer, Float> floats;
-    private final Map<Integer, Long> longs;
-    private final Map<Integer, Double> doubles;
-    private final Map<Integer, String> strings;
-    private final Map<Integer, String> classes;
-    private final List<Value> args;
+	/** Constant pool: {@link Signature}s. Immutable. */
+    private final HashMap<Integer, Signature> signatures;
+    
+	/** Constant pool: integer values. Immutable. */
+    private final HashMap<Integer, Integer> integers;
+    
+	/** Constant pool: float values. Immutable. */
+    private final HashMap<Integer, Float> floats;
+    
+	/** Constant pool: long values. Immutable. */
+    private final HashMap<Integer, Long> longs;
+    
+	/** Constant pool: double values. Immutable. */
+    private final HashMap<Integer, Double> doubles;
+    
+	/** Constant pool: {@link String}s. Immutable. */
+    private final HashMap<Integer, String> strings;
+    
+	/** Constant pool: class names.Immutable.  */
+    private final HashMap<Integer, String> classes;
+    
+    /** The arguments to the snippet. Immutable. */
+    private final ArrayList<Value> args;
+    
+    /** The bytecode snippet to be executed. Immutable. */
     private final byte[] bytecode;
     
-    Snippet(Map<Integer, Signature> signatures, Map<Integer, Integer> integers, Map<Integer, Float> floats, 
-            Map<Integer, Long> longs, Map<Integer, Double> doubles, Map<Integer, String> strings, 
-            Map<Integer, String> classes, List<Value> args, byte[] bytecode) {
+    /**
+     * Constructor.
+     * 
+     * @param signatures a {@link HashMap} mapping an integer, interpreted
+     *        as a constant pool index referred by {@code bytecode}, to a
+     *        {@link Signature} constant value. The caller must give up 
+     *        ownership of this argument.
+     * @param integers a {@link HashMap} mapping an integer, interpreted
+     *        as a constant pool index referred by {@code bytecode}, to a
+     *        {@link Integer} constant value. The caller must give up 
+     *        ownership of this argument.
+     * @param floats a {@link HashMap} mapping an integer, interpreted
+     *        as a constant pool index referred by {@code bytecode}, to a
+     *        {@link Float} constant value. The caller must give up 
+     *        ownership of this argument.
+     * @param longs a {@link HashMap} mapping an integer, interpreted
+     *        as a constant pool index referred by {@code bytecode}, to a
+     *        {@link Long} constant value. The caller must give up 
+     *        ownership of this argument.
+     * @param doubles a {@link HashMap} mapping an integer, interpreted
+     *        as a constant pool index referred by {@code bytecode}, to a
+     *        {@link Double} constant value. The caller must give up 
+     *        ownership of this argument.
+     * @param strings a {@link HashMap} mapping an integer, interpreted
+     *        as a constant pool index referred by {@code bytecode}, to a
+     *        {@link String} constant value. The caller must give up 
+     *        ownership of this argument.
+     * @param classes a {@link HashMap} mapping an integer, interpreted
+     *        as a constant pool index referred by {@code bytecode}, to a
+     *        {@link String} constant value to be interpreted as a class
+     *        name. The caller must give up ownership of this argument.
+     * @param args an {@link ArrayList}{@code<}{@link Value}{@code >}
+     *        that is interpreted as the list of arguments, stored in the
+     *        local variables accessed by {@code bytecode}.  The caller 
+     *        must give up ownership of this argument.
+     * @param bytecode a {@code byte[]} containing the bytecode of the 
+     *        snippet. The caller must give up ownership of this argument. 
+     */
+    Snippet(HashMap<Integer, Signature> signatures, HashMap<Integer, Integer> integers, HashMap<Integer, Float> floats, 
+            HashMap<Integer, Long> longs, HashMap<Integer, Double> doubles, HashMap<Integer, String> strings, 
+            HashMap<Integer, String> classes, ArrayList<Value> args, byte[] bytecode) {
         this.signatures = signatures;
         this.integers = integers;
         this.floats = floats;
@@ -31,38 +93,108 @@ public final class Snippet {
         this.bytecode = bytecode;
     }
     
-    public Map<Integer, Signature> getSignatures() {
+    /**
+     * Returns the {@link Signature}s.
+     * 
+     * @return the {@link Signature} constants 
+     *         stored in this object. The returned
+     *         value shall not be modified by the
+     *         caller.
+     */
+    HashMap<Integer, Signature> getSignatures() {
         return this.signatures;
     }
     
-    public Map<Integer, Integer> getIntegers() {
+    /**
+     * Returns the {@link Integer}s.
+     * 
+     * @return the {@link Integer} constants 
+     *         stored in this object. The returned
+     *         value shall not be modified by the
+     *         caller.
+     */
+    HashMap<Integer, Integer> getIntegers() {
         return this.integers;
     }
     
-    public Map<Integer, Float> getFloats() {
+    /**
+     * Returns the {@link Float}s.
+     * 
+     * @return the {@link Float} constants 
+     *         stored in this object. The returned
+     *         value shall not be modified by the
+     *         caller.
+     */
+    HashMap<Integer, Float> getFloats() {
         return this.floats;
     }
     
-    public Map<Integer, String> getStrings() {
+    /**
+     * Returns the {@link String}s.
+     * 
+     * @return the {@link String} constants 
+     *         stored in this object. The returned
+     *         value shall not be modified by the
+     *         caller.
+     */
+    HashMap<Integer, String> getStrings() {
         return this.strings;
     }
     
-    public Map<Integer, String> getClasses() {
+    /**
+     * Returns the class names.
+     * 
+     * @return the class names constants 
+     *         stored in this object. The returned
+     *         value shall not be modified by the
+     *         caller.
+     */
+    HashMap<Integer, String> getClasses() {
         return this.classes;
     }
     
-    public Map<Integer, Long> getLongs() {
+    /**
+     * Returns the {@link Long}s.
+     * 
+     * @return the {@link Long} constants 
+     *         stored in this object. The returned
+     *         value shall not be modified by the
+     *         caller.
+     */
+    HashMap<Integer, Long> getLongs() {
         return this.longs;
     }
     
-    public Map<Integer, Double> getDoubles() {
+    /**
+     * Returns the {@link Double}s.
+     * 
+     * @return the {@link Double} constants 
+     *         stored in this object. The returned
+     *         value shall not be modified by the
+     *         caller.
+     */
+    HashMap<Integer, Double> getDoubles() {
         return this.doubles;
     }
     
-    public List<Value> getArgs() {
+    /**
+     * Returns the arguments.
+     * 
+     * @return the arguments stored in this object. 
+     *         The returned value shall not be 
+     *         modified by the caller.
+     */
+    public ArrayList<Value> getArgs() {
     	return this.args;
     }
     
+    /**
+     * Returns the bytecode.
+     * 
+     * @return the bytecode stored in this object.
+     *         The returned value shall not be 
+     *         modified by the caller.
+     */
     public byte[] getBytecode() {
         return this.bytecode;
     }
@@ -73,7 +205,7 @@ public final class Snippet {
      * 
      * @return a nonnegative {@code int}.
      */
-    public int size() {
+    int size() {
     	return this.signatures.size() +
                this.integers.size() +
                this.floats.size() +
@@ -92,7 +224,7 @@ public final class Snippet {
      *         float, long, double, String or Class constant corresponding
      *         to {@code index}. 
      */
-    public boolean containsValueFromConstantPool(int index) {
+    boolean containsValueFromConstantPool(int index) {
     	return this.integers.containsKey(index) ||
                this.floats.containsKey(index) ||
                this.longs.containsKey(index) ||
@@ -112,7 +244,7 @@ public final class Snippet {
      *         float, long, double, String or Class constant corresponding
      *         to {@code index}.
      */
-    public ConstantPoolValue getValueFromConstantPool(int index) throws InvalidIndexException {
+    ConstantPoolValue getValueFromConstantPool(int index) throws InvalidIndexException {
     	if (this.integers.containsKey(index)) {
     		return new ConstantPoolPrimitive(this.integers.get(index));
     	} else if (this.floats.containsKey(index)) {

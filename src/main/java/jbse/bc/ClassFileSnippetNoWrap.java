@@ -16,16 +16,17 @@ import jbse.bc.exc.RenameUnsupportedException;
 
 /**
  * A {@link ClassFile} that can be created on-the-fly for code
- * snippets. It is an anonymous class in the sense of {@link sun.misc.Unsafe#defineAnonymousClass}.
+ * snippets. It is an anonymous class in the sense of 
+ * {@link sun.misc.Unsafe#defineAnonymousClass}.
  * 
  * @author Pietro Braione
  */
-public class ClassFileSnippetNoWrap extends ClassFile {
-	final Snippet snippet;
-	final ClassFile hostClass;
-    final int definingClassLoader;
-    final String packageName;
-    final String className;
+public final class ClassFileSnippetNoWrap extends ClassFile {
+	private final Snippet snippet;
+	private final ClassFile hostClass;
+	private final int definingClassLoader;
+	private final String packageName;
+	private final String className;
     
     /**
      * Constructor.
