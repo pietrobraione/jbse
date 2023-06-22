@@ -4,7 +4,7 @@ import static jbse.bc.Signatures.JBSE_JAVA_CONCURRENTMAP_REFINEIN;
 import static jbse.bc.Signatures.JBSE_JAVA_CONCURRENTMAP_REFINEOUTKEY;
 
 /**
- * Meta-level implementation of  {@link jbse.base.JAVA_CONCURRENTMAP#refineOnKeyCombinationsAndBranch(Object...)}.
+ * Meta-level implementation of {@link jbse.base.JAVA_CONCURRENTMAP#refineOnKeyCombinationsAndBranch(Object...)}.
  * 
  * @author Pietro Braione
  */
