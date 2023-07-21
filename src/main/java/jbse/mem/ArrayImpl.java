@@ -582,10 +582,10 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     public Collection<AccessOutcome> get(Calculator calc, Primitive index) 
     throws InvalidInputException, InvalidTypeException {
         if (calc == null || index == null) {
-            throw new InvalidInputException("Attempted array fast access with null calc or index.");
+            throw new InvalidInputException("Attempted array access with null calc or index.");
         }
         if (index.getType() != INT) {
-            throw new InvalidTypeException("Attempted array fast access with an index with type " + index.getType() + ".");
+            throw new InvalidTypeException("Attempted array access with an index with type " + index.getType() + ".");
         }
         final ArrayList<AccessOutcome> retVal = new ArrayList<>();
         final Primitive inRange = inRange(calc, index);
