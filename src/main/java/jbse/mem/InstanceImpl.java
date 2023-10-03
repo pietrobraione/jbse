@@ -31,15 +31,12 @@ public abstract class InstanceImpl extends HeapObjektImpl implements Instance {
      * @param origin the {@link ReferenceSymbolic} providing origin of 
      *        the {@code Instance}, if symbolic, or {@code null}, if concrete.
      * @param epoch the creation {@link HistoryPoint} of this {@link InstanceImpl}. 
-     * @param numOfStaticFields an {@code int}, the number of static fields.
-     * @param fieldSignatures varargs of field {@link Signature}s, all the
-     *        fields this instance knows.
-     * @throws InvalidInputException if {@code calc == null || classFile == null || fieldSignatures == null}.
+     * @throws InvalidInputException if {@code calc == null || classFile == null}.
      * @throws InvalidTypeException iff {@code classFile} is invalid (not for an instance type). 
      */
-    protected InstanceImpl(Calculator calc, boolean symbolic, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, int numOfStaticFields, Signature... fieldSignatures) 
+    protected InstanceImpl(Calculator calc, boolean symbolic, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch) 
     throws InvalidTypeException, InvalidInputException {
-        super(calc, symbolic, classFile, origin, epoch, false, numOfStaticFields, fieldSignatures);
+        super(calc, symbolic, classFile, origin, epoch, false);
         if (classFile == null || !classFile.isReference()) {
             throw new InvalidTypeException("Attempted creation of an instance with type " + classFile.getClassName() + ".");
         }

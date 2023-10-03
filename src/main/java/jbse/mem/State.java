@@ -1526,8 +1526,6 @@ public final class State implements Cloneable {
     }
     
     private InstanceImpl doCreateInstance(Calculator calc, ClassFile classFile) {
-        final int numOfStaticFields = classFile.numOfStaticFields();
-        final Signature[] fieldsSignatures = classFile.getObjectFields();
         final ClassFile cf_JAVA_CLASSLOADER;
         final ClassFile cf_JAVA_THREAD;
         try {
@@ -1541,11 +1539,11 @@ public final class State implements Cloneable {
         }
         try {
             if (classFile.isSubclass(cf_JAVA_CLASSLOADER)) {
-                return new InstanceImpl_JAVA_CLASSLOADER(calc, classFile, null, this.historyPoint, this.nextClassLoaderIdentifier++, numOfStaticFields, fieldsSignatures);
+                return new InstanceImpl_JAVA_CLASSLOADER(calc, classFile, null, this.historyPoint, this.nextClassLoaderIdentifier++);
             } else if (classFile.isSubclass(cf_JAVA_THREAD)) {
-                return new InstanceImpl_JAVA_THREAD(calc, classFile, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
+                return new InstanceImpl_JAVA_THREAD(calc, classFile, null, this.historyPoint);
             } else {
-                return new InstanceImpl_DEFAULT(calc, false, classFile, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
+                return new InstanceImpl_DEFAULT(calc, false, classFile, null, this.historyPoint);
             }
         } catch (InvalidTypeException | InvalidInputException e) {
             //this should never happen
@@ -1572,9 +1570,7 @@ public final class State implements Cloneable {
             if (cf_JAVA_CLASS == null) {
                 throw new UnexpectedInternalException("Could not find the classfile for java.lang.Class.");
             }
-            final int numOfStaticFields = cf_JAVA_CLASS.numOfStaticFields();
-            final Signature[] fieldsSignatures = cf_JAVA_CLASS.getObjectFields();
-            final InstanceImpl_JAVA_CLASS myObj = new InstanceImpl_JAVA_CLASS(calc, cf_JAVA_CLASS, null, this.historyPoint, representedClass, numOfStaticFields, fieldsSignatures);
+            final InstanceImpl_JAVA_CLASS myObj = new InstanceImpl_JAVA_CLASS(calc, cf_JAVA_CLASS, null, this.historyPoint, representedClass);
             final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
             
             //initializes the fields of the new instance: The only
@@ -1632,9 +1628,7 @@ public final class State implements Cloneable {
         if (existsKlass(classFile)) {
             return;
         }
-        final int numOfStaticFields = classFile.numOfStaticFields();
-        final Signature[] fieldsSignatures = classFile.getObjectFields();
-        final KlassImpl k = new KlassImpl(calc, false, classFile, createSymbolKlassPseudoReference(this.historyPoint, classFile), this.historyPoint, numOfStaticFields, fieldsSignatures);
+        final KlassImpl k = new KlassImpl(calc, false, classFile, createSymbolKlassPseudoReference(this.historyPoint, classFile), this.historyPoint);
         k.setIdentityHashCode(calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(classFile, k);
     }
@@ -1665,9 +1659,7 @@ public final class State implements Cloneable {
         if (existsKlass(classFile)) {
             return;
         }
-        final int numOfStaticFields = classFile.numOfStaticFields();
-        final Signature[] fieldsSignatures = classFile.getObjectFields();
-        final KlassImpl k = new KlassImpl(calc, true, classFile, createSymbolKlassPseudoReference(this.lastPreInitialHistoryPoint, classFile), this.lastPreInitialHistoryPoint, numOfStaticFields, fieldsSignatures);
+        final KlassImpl k = new KlassImpl(calc, true, classFile, createSymbolKlassPseudoReference(this.lastPreInitialHistoryPoint, classFile), this.lastPreInitialHistoryPoint);
         try {
         	initWithSymbolicValues(k, classFile);
         } catch (NullPointerException e) {
@@ -1830,9 +1822,7 @@ public final class State implements Cloneable {
         if (cannotExecuteSymbolically(classFile)) {
             throw new CannotAssumeSymbolicObjectException("JBSE does not allow to execute symbolically the methods of class " + classFile.getClassName() + ".");
         }
-        final int numOfStaticFields = classFile.numOfStaticFields();
-        final Signature[] fieldsSignatures = classFile.getObjectFields();
-        final InstanceImpl_DEFAULT obj = new InstanceImpl_DEFAULT(calc, true, classFile, origin, origin.historyPoint(), numOfStaticFields, fieldsSignatures);
+        final InstanceImpl_DEFAULT obj = new InstanceImpl_DEFAULT(calc, true, classFile, origin, origin.historyPoint());
         try {
         	initWithSymbolicValues(obj, classFile);
         } catch (NullPointerException e) {

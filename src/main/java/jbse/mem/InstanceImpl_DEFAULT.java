@@ -28,15 +28,12 @@ public final class InstanceImpl_DEFAULT extends InstanceImpl {
      * @param origin the {@link ReferenceSymbolic} providing origin of 
      *        the {@code Instance}, if symbolic, or {@code null}, if concrete.
      * @param epoch the creation {@link HistoryPoint} of this {@link InstanceImpl_DEFAULT}. 
-     * @param numOfStaticFields an {@code int}, the number of static fields.
-     * @param fieldSignatures varargs of field {@link Signature}s, all the
-     *        fields this instance knows. It must not be {@code null}.
-     * @throws InvalidInputException if {@code calc == null || classFile == null || fieldSignatures == null}.
+     * @throws InvalidInputException if {@code calc == null || classFile == null}.
      * @throws InvalidTypeException iff {@code classFile} is invalid. 
      */
-    protected InstanceImpl_DEFAULT(Calculator calc, boolean symbolic, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, int numOfStaticFields, Signature... fieldSignatures) 
+    protected InstanceImpl_DEFAULT(Calculator calc, boolean symbolic, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch) 
     throws InvalidInputException, InvalidTypeException {
-        super(calc, symbolic, classFile, origin, epoch, numOfStaticFields, fieldSignatures);
+        super(calc, symbolic, classFile, origin, epoch);
     }
 
 	@Override

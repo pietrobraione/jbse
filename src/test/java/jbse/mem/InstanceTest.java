@@ -55,9 +55,7 @@ public class InstanceTest {
     PleaseLoadClassException, InvalidTypeException, RenameUnsupportedException {
         final String className = "tsafe/main/SimpleCalculator";
         final ClassFile classFile = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
-        final int numOfStaticFields = classFile.numOfStaticFields();
-        final Signature[] fieldsSignatures = classFile.getObjectFields();
-        final Instance i = new InstanceImpl_DEFAULT(this.calc, false, classFile, null, null, numOfStaticFields, fieldsSignatures);
+        final Instance i = new InstanceImpl_DEFAULT(this.calc, false, classFile, null, null);
         final Signature sigMinLat = new Signature(className, "D", "minLat");
         final Value valMinLat = i.getFieldValue(sigMinLat);
         assertEquals(valMinLat, this.calc.valDouble(0));
@@ -69,9 +67,7 @@ public class InstanceTest {
     PleaseLoadClassException, InvalidTypeException, RenameUnsupportedException {
         final String className = "tsafe/main/SimpleCalculator";
         final ClassFile classFile = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
-        final int numOfStaticFields = classFile.numOfStaticFields();
-        final Signature[] fieldsSignatures = classFile.getObjectFields();
-        final Instance i = new InstanceImpl_DEFAULT(this.calc, false, classFile, null, null, numOfStaticFields, fieldsSignatures);
+        final Instance i = new InstanceImpl_DEFAULT(this.calc, false, classFile, null, null);
         final Signature sigMinLat = new Signature(className, "D", "minLat");
         final Value valMinLat = i.getFieldValue(sigMinLat);
         final Value valMinLat2 = i.getFieldValue("minLat", className);
@@ -84,9 +80,7 @@ public class InstanceTest {
     PleaseLoadClassException, InvalidTypeException, RenameUnsupportedException {
         final String className = "tsafe/main/SimpleCalculator";
         final ClassFile classFile = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
-        final int numOfStaticFields = classFile.numOfStaticFields();
-        final Signature[] fieldsSignatures = classFile.getObjectFields();
-        final Instance i = new InstanceImpl_DEFAULT(this.calc, false, classFile, null, null, numOfStaticFields, fieldsSignatures);
+        final Instance i = new InstanceImpl_DEFAULT(this.calc, false, classFile, null, null);
         final Signature sigMinLat = new Signature(className, "D", "minLat");
         i.setFieldValue(sigMinLat, this.calc.valDouble(1.0d));
         final Value valMinLat = i.getFieldValue("minLat", className);
@@ -99,9 +93,7 @@ public class InstanceTest {
     PleaseLoadClassException, InvalidTypeException, RenameUnsupportedException {
         final String className = "tsafe/main/SimpleCalculator";
         final ClassFile classFile = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
-        final int numOfStaticFields = classFile.numOfStaticFields();
-        final Signature[] fieldsSignatures = classFile.getObjectFields();
-        final Instance i = new InstanceImpl_DEFAULT(this.calc, false, classFile, null, null, numOfStaticFields, fieldsSignatures);
+        final Instance i = new InstanceImpl_DEFAULT(this.calc, false, classFile, null, null);
         final Instance iClone = i.clone();
         final Signature sigMinLat = new Signature(className, "D", "minLat");
         i.setFieldValue(sigMinLat, this.calc.valDouble(1.0d));

@@ -13,15 +13,31 @@ import jbse.mem.exc.HeapMemoryExhaustedException;
  * Class that implements the heap in the JVM's memory.
  */
 final class Heap implements Cloneable {
+	/**
+	 * The maximum heap size.
+	 */
     private final long maxHeapSize;
+
+    /**
+	 * The possible delegate heap (null if none). 
+	 */
 	private Heap delegate; //nonfinal to allow cloning
+	
+	/**
+	 * Maps heap positions to the {@link HeapObjekt}s 
+	 * stored at that positions.
+	 */
     private TreeMap<Long, HeapObjekt> objects; //nonfinal to allow cloning
+    
+    /**
+     * The next available heap position.
+     */
     private long nextIndex;
     
     /**
      * Constructor.
      * 
-     * @param maxHeapSize an {@code int}, the maximum number
+     * @param maxHeapSize a {@code long}, the maximum number
      *        of objects this heap can store.
      */
     Heap(long maxHeapSize) {
@@ -35,7 +51,7 @@ final class Heap implements Cloneable {
      * Stores a new object into the heap up to the
      * maximum capacity of the heap.
      * 
-     * @param item the {@link InstanceImpl} to be stored in 
+     * @param item the {@link HeapObjektImpl} to be stored in 
      *        the heap.
      * @return the position in the heap  
      *         where {@code item} is stored.
@@ -53,7 +69,7 @@ final class Heap implements Cloneable {
      * Stores a new object into the heap. This operation
      * always succeeds.
      * 
-     * @param item the {@link InstanceImpl} to be stored in 
+     * @param item the {@link HeapObjektImpl} to be stored in 
      *        the heap.
      * @return the position in the heap  
      *         where {@code item} is stored.
@@ -89,7 +105,7 @@ final class Heap implements Cloneable {
     /**
      * Sets an object into some heap location.
      * 
-     * @param ref a {@code long}, the location where the instance
+     * @param pos a {@code long}, the location where the instance
      *        must be stored.
      * @param item the {@link HeapObjekt} to stored at {@code pos}.
      */
@@ -100,8 +116,7 @@ final class Heap implements Cloneable {
     /**
      * Gets an object from the heap.
      * 
-     * @param pos a {@code long}, the location where the object
-     *        must be stored.
+     * @param pos a {@code long}.
      * @return the {@link HeapObjekt} at position {@code pos}, or 
      *         {@code null} if nothing is stored at {@code pos}.
      */
@@ -126,11 +141,11 @@ final class Heap implements Cloneable {
      * at some position.
      * 
      * @param pos a {@code long}. It must be 
-     * {@link #existsAt(long) existsObjectAt}{@code (pos) == true}.
+     *        {@link #existsAt(long) existsAt}{@code (pos) == true}.
      * @return the {@link ObjektImpl} stored at {@code pos}, obtained
-     * by walking through the delegation chain until either an {@link ObjektImpl}
-     * or an {@link ObjektWrapper} is found (in the latter case, the wrapped
-     * object is returned).
+     *         by walking through the delegation chain until either an {@link ObjektImpl}
+     *         or an {@link ObjektWrapper} is found (in the latter case, the wrapped
+     *         object is returned).
      */
     private HeapObjektImpl getTheRealThing(long pos) {
 		final HeapObjekt localObjekt = this.objects.get(pos);

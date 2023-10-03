@@ -1,7 +1,6 @@
 package jbse.mem;
 
 import jbse.bc.ClassFile;
-import jbse.bc.Signature;
 import jbse.common.exc.InvalidInputException;
 import jbse.val.Calculator;
 import jbse.val.HistoryPoint;
@@ -28,14 +27,11 @@ public abstract class HeapObjektImpl extends ObjektImpl implements HeapObjekt {
      * @param staticFields {@code true} if this object stores
      *        the static fields, {@code false} if this object stores
      *        the object (nonstatic) fields.
-     * @param numOfStaticFields an {@code int}, the number of static fields.
-     * @param fieldSignatures varargs of field {@link Signature}s, all the
-     *        fields this object knows.  It must not be {@code null}.
-     * @throws InvalidInputException if {@code calc == null || classFile == null || fieldSignatures == null}.
+     * @throws InvalidInputException if {@code calc == null || classFile == null}.
      */
-    protected HeapObjektImpl(Calculator calc, boolean symbolic, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, boolean staticFields, int numOfStaticFields, Signature... fieldSignatures) 
+    protected HeapObjektImpl(Calculator calc, boolean symbolic, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, boolean staticFields) 
     throws InvalidInputException {
-    	super(calc, symbolic, classFile, origin, epoch, staticFields, numOfStaticFields, fieldSignatures);
+    	super(calc, symbolic, classFile, origin, epoch, staticFields);
     }
     
     abstract HeapObjektWrapper<? extends HeapObjektImpl> makeWrapper(Heap destinationHeap, long destinationPosition);

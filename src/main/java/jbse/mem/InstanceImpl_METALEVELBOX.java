@@ -31,7 +31,7 @@ public final class InstanceImpl_METALEVELBOX extends InstanceImpl implements Ins
 
 	protected InstanceImpl_METALEVELBOX(Calculator calc, HistoryPoint epoch, Object it) 
 	throws InvalidTypeException, InvalidInputException {
-		super(calc, false, new ClassFileFoo(), null, epoch, 0);
+		super(calc, false, new ClassFileFoo(), null, epoch);
 		this.it = it;
 	}
 

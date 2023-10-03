@@ -321,8 +321,8 @@ public interface Array extends HeapObjekt {
     /**
      * Sets an element of the array. It <em>assumes</em> that the index 
      * by which the array is accessed may be in range (i.e., that 
-     * {@code this.}{@link #inRange(Calculator, Primitive) inRange(calc, index)} is 
-     * satisfiable) and updates the theory accordingly by adding a 
+     * {@code this.}{@link #inRange(Calculator, Primitive) inRange(calc, index)} 
+     * is satisfiable) and updates the theory accordingly by adding a 
      * new entry. All the entries already present are unaffected, 
      * so keep care to constrain them before using this method, 
      * or you might obtain a mutually contradictory set of entries.

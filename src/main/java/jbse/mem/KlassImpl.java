@@ -28,14 +28,11 @@ public final class KlassImpl extends ObjektImpl implements Klass {
      * @param origin a {@link KlassPseudoReference} "pointing" to this 
      *        {@link KlassImpl}.
      * @param epoch the creation {@link HistoryPoint} of this {@link KlassImpl}.
-     * @param numOfStaticFields an {@code int}, the number of static fields.
-     * @param fieldSignatures varargs of field {@link Signature}s, all the
-     *        fields this object knows. It must not be {@code null}.
-     * @throws InvalidInputException if {@code calc == null || classFile == null || fieldSignatures == null}.
+     * @throws InvalidInputException if {@code calc == null || classFile == null}.
      */
-    KlassImpl(Calculator calc, boolean symbolic, ClassFile classFile, KlassPseudoReference origin, HistoryPoint epoch, int numOfStaticFields, Signature... fieldSignatures) 
+    KlassImpl(Calculator calc, boolean symbolic, ClassFile classFile, KlassPseudoReference origin, HistoryPoint epoch) 
     throws InvalidInputException {
-        super(calc, symbolic, classFile, origin, epoch, true, numOfStaticFields, fieldSignatures);
+        super(calc, symbolic, classFile, origin, epoch, true);
         this.initializationStarted = false;
         this.initializationCompleted = false;
     }

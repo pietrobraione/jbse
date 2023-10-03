@@ -25,7 +25,7 @@ final class ArrayWrapper extends HeapObjektWrapper<ArrayImpl> implements Array {
     /**
      * Constructor.
      * 
-     * @param destinationHeap the {@link Heap} where the clone of {@code instance} 
+     * @param destinationHeap the {@link Heap} where the clone of {@code delegate} 
      *        must be put.
      * @param destinationPosition the position in {@code destinationHeap} where
      *        the clone must be put.

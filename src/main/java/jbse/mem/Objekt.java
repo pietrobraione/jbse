@@ -106,7 +106,7 @@ public interface Objekt extends Cloneable {
     Value getFieldValue(Signature sig);
 
     /**
-     * Gets the value in a field of the {@link Instance}.
+     * Gets the value in a field of the {@link Objekt}.
      * 
      * @param fieldName the name of the field.
      * @param fieldClass the name of the class 
