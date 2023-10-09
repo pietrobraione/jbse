@@ -24,11 +24,11 @@ java {
 dependencies {
     implementation group: 'org.javassist', name:'javassist', version:'3.29.1-GA'
     implementation name: 'tools'
-    testImplementation 'junit:junit:4.11'
+    testImplementation 'junit:junit:4.13.2'
 }
 
 group = 'jbse'
-version = '0.10.0-SNAPSHOT'
+version = '0.11.0-SNAPSHOT'
 description = 'JBSE'
 
 tasks.withType(JavaCompile) {
