@@ -12,7 +12,18 @@ import jbse.val.KlassPseudoReference;
  * in the static method area, i.e., its static fields.
  */
 public final class KlassImpl extends ObjektImpl implements Klass {
+	/**
+	 * {@code true} iff the initialization of this
+	 * object (i.e., the execution of the <clinit>
+	 * method) was started.
+	 */
     private boolean initializationStarted;
+    
+    /**
+     * {@code true} iff the initialization of this
+	 * object (i.e., the execution of the <clinit>
+	 * method) was completed.
+     */
     private boolean initializationCompleted;
 
     /**
@@ -37,8 +48,8 @@ public final class KlassImpl extends ObjektImpl implements Klass {
         this.initializationCompleted = false;
     }
 
-	KlassWrapper makeWrapper(StaticMethodArea destinationStaticArea, ClassFile classFile) {
-		return new KlassWrapper(destinationStaticArea, classFile, this);
+	KlassWrapper makeWrapper(StaticMethodArea destinationStaticArea) {
+		return new KlassWrapper(destinationStaticArea, this);
 	}
 
     @Override

@@ -418,6 +418,13 @@ public final class RunParameters implements Cloneable {
      */
     private boolean showWarnings = true;
 
+    /**
+     * {@code true} iff the final statistics on the 
+     * decision procedure usage by JBSE should be very
+     * detailed.
+     */
+    private boolean showDetailedDecisionProcedureStats = false;
+
     /** 
      * {@code true} iff the interactions between the 
      * runner and the decision procedure must be logged to 
@@ -2411,11 +2418,36 @@ public final class RunParameters implements Cloneable {
     public boolean getShowWarnings() {
         return this.showWarnings;
     }
+    
+    /**
+     * Instructs whether the final statistics on the 
+     * decision procedure usage by JBSE should be very
+     * detailed or not  
+     * (by default they are not).
+     * 
+     * @param show {@code true} iff the statistics must
+     *        be detailed.
+     */
+    public void setShowDetailedDecisionProcedureStats(boolean show) { 
+        this.showDetailedDecisionProcedureStats = show; 
+    }
+
+    /**
+     * Returns whether the final statistics on the 
+     * decision procedure usage by JBSE should be very
+     * detailed or not.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean getShowDetailedDecisionProcedureStats() {
+    	return this.showDetailedDecisionProcedureStats;
+    }
 
     /**
      * Instructs whether the interactions between the runner 
      * and the decision procedure should be logged 
      * (by default they are not).
+     * 
      * @param show {@code true} iff the interactions must
      *        be logged.
      */

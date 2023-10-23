@@ -1630,7 +1630,7 @@ public final class State implements Cloneable {
         }
         final KlassImpl k = new KlassImpl(calc, false, classFile, createSymbolKlassPseudoReference(this.historyPoint, classFile), this.historyPoint);
         k.setIdentityHashCode(calc.valInt(0)); //doesn't care because it is not used
-        this.staticMethodArea.set(classFile, k);
+        this.staticMethodArea.set(k);
     }
 
     /**
@@ -1668,7 +1668,7 @@ public final class State implements Cloneable {
         }
         k.setIdentityHashCode(calc.valInt(0)); //doesn't care because it is not used
         k.setInitializationCompleted(); //nothing else to do
-        this.staticMethodArea.set(classFile, k);
+        this.staticMethodArea.set(k);
     }
 
     /**
@@ -3693,10 +3693,9 @@ public final class State implements Cloneable {
                 this.heap.set(oPos, o);
             } else if (c instanceof ClauseAssumeClassInitialized) {
                 final ClauseAssumeClassInitialized cCl = (ClauseAssumeClassInitialized) c;
-                final ClassFile cf = cCl.getClassFile();
                 final Klass k = cCl.getKlass(); //note that the getter produces a safety copy
                 if (k != null) {
-                    this.staticMethodArea.set(cf, k);
+                    this.staticMethodArea.set(k);
                 }
             } //else do nothing
         }

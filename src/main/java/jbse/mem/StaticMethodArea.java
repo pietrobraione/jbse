@@ -27,8 +27,8 @@ final class StaticMethodArea implements Cloneable {
         return (this.objects.containsKey(classFile) || (this.delegate != null && this.delegate.contains(classFile))); 
     }
 
-    void set(ClassFile classFile, Klass k) {
-        this.objects.put(classFile, k);
+    void set(Klass k) {
+        this.objects.put(k.getType(), k);
     }
 
     Klass get(ClassFile classFile) {
@@ -36,8 +36,8 @@ final class StaticMethodArea implements Cloneable {
     		final Klass localKlass = this.objects.get(classFile);
     		if (localKlass == null) {
     			final KlassImpl trueKlass = getTheRealThing(classFile);
-    			final KlassWrapper delegateKlass = trueKlass.makeWrapper(this, classFile);
-    			set(classFile, delegateKlass);
+    			final KlassWrapper delegateKlass = trueKlass.makeWrapper(this);
+    			set(delegateKlass);
     			return delegateKlass;
     		} else {
     			return localKlass;
@@ -71,7 +71,7 @@ final class StaticMethodArea implements Cloneable {
         for (ClassFile pos : filledPositions()) {
             if (!this.objects.containsKey(pos)) {
             	final KlassImpl trueKlass = getTheRealThing(pos);
-            	final KlassWrapper delegateObjekt = trueKlass.makeWrapper(this, pos);
+            	final KlassWrapper delegateObjekt = trueKlass.makeWrapper(this);
             	this.objects.put(pos, delegateObjekt);
             }
         }
