@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id 'eclipse'
     id 'ca.coglinc2.javacc' version '3.0.0'
-    id 'com.github.johnrengelman.shadow' version '7.0.0'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 def javaVersion = JavaLanguageVersion.of(8)
@@ -53,7 +53,7 @@ task copyToLib(type: Copy) {
 }
 
 shadowJar {
-    classifier = 'shaded'
+    archiveClassifier = 'shaded'
     exclude 'tools.jar'
     relocate 'javassist', 'jbse.javassist'
 }
