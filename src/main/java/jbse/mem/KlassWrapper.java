@@ -1,6 +1,5 @@
 package jbse.mem;
 
-import jbse.bc.ClassFile;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.ReferenceSymbolic;
@@ -10,21 +9,18 @@ import jbse.val.ReferenceSymbolic;
  */
 final class KlassWrapper extends ObjektWrapper<KlassImpl> implements Klass {
 	private final StaticMethodArea destinationStaticArea;
-	private final ClassFile classFile;
 	
 	/**
 	 * Constructor.
 	 * 
 	 * @param destinationStaticArea the {@link StaticMethodArea} where the clone of 
 	 *        {@code delegate} must be put.
-	 * @param classFile the {@link ClassFile} of {@code delegate}.
 	 * @param delegate the initial delegate, the {@link KlassImpl} that must be 
 	 *        cloned upon writing.
 	 */
-    KlassWrapper(StaticMethodArea destinationStaticArea, ClassFile classFile, KlassImpl delegate) {
+    KlassWrapper(StaticMethodArea destinationStaticArea, KlassImpl delegate) {
     	super(delegate);
     	this.destinationStaticArea = destinationStaticArea;
-    	this.classFile = classFile;
     }
     
 	protected final void possiblyCloneDelegate() {
@@ -35,7 +31,7 @@ final class KlassWrapper extends ObjektWrapper<KlassImpl> implements Klass {
     	//otherwise, clones the delegate and puts it in the static method area
     	setDelegate(getDelegate().clone());
     	setDelegateIsAClone();
-    	this.destinationStaticArea.set(this.classFile, getDelegate());
+    	this.destinationStaticArea.set(getDelegate());
     }
 
 	@Override

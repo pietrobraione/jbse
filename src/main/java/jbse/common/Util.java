@@ -93,13 +93,6 @@ public final class Util {
 		return Files.exists(path) && !Files.isDirectory(path) && JAR_EXTENSION.matches(path);
 	}
 
-    /**
-     * Do not instantiate it!
-     */
-    private Util() {
-        //intentionally empty
-    }
-
 	/**
 	 * Returns an {@link Iterable} that scans a {@link List} in 
 	 * reverse order, from tail to head.
@@ -132,4 +125,11 @@ public final class Util {
 			}
 		};
 	}
+
+    /**
+     * Do not instantiate it!
+     */
+    private Util() {
+        //intentionally empty
+    }
 }

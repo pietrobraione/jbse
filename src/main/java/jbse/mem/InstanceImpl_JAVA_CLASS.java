@@ -21,9 +21,9 @@ public final class InstanceImpl_JAVA_CLASS extends InstanceImpl implements Insta
     /** The signers of this class. Mutable. */
     private ReferenceConcrete signers;
     
-    protected InstanceImpl_JAVA_CLASS(Calculator calc, ClassFile cf_JAVA_CLASS, ReferenceSymbolic origin, HistoryPoint epoch, ClassFile representedClass, int numOfStaticFields, Signature... fieldSignatures) 
+    protected InstanceImpl_JAVA_CLASS(Calculator calc, ClassFile cf_JAVA_CLASS, ReferenceSymbolic origin, HistoryPoint epoch, ClassFile representedClass) 
     throws InvalidTypeException, InvalidInputException {
-        super(calc, false, cf_JAVA_CLASS, origin, epoch, numOfStaticFields, fieldSignatures);
+        super(calc, false, cf_JAVA_CLASS, origin, epoch);
         if (cf_JAVA_CLASS == null || !JAVA_CLASS.equals(cf_JAVA_CLASS.getClassName())) {
             throw new InvalidTypeException("Attempted creation of an instance of java.lang.Class with type " + classFile.getClassName());
         }

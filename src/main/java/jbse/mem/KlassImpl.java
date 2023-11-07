@@ -12,7 +12,18 @@ import jbse.val.KlassPseudoReference;
  * in the static method area, i.e., its static fields.
  */
 public final class KlassImpl extends ObjektImpl implements Klass {
+	/**
+	 * {@code true} iff the initialization of this
+	 * object (i.e., the execution of the <clinit>
+	 * method) was started.
+	 */
     private boolean initializationStarted;
+    
+    /**
+     * {@code true} iff the initialization of this
+	 * object (i.e., the execution of the <clinit>
+	 * method) was completed.
+     */
     private boolean initializationCompleted;
 
     /**
@@ -28,20 +39,17 @@ public final class KlassImpl extends ObjektImpl implements Klass {
      * @param origin a {@link KlassPseudoReference} "pointing" to this 
      *        {@link KlassImpl}.
      * @param epoch the creation {@link HistoryPoint} of this {@link KlassImpl}.
-     * @param numOfStaticFields an {@code int}, the number of static fields.
-     * @param fieldSignatures varargs of field {@link Signature}s, all the
-     *        fields this object knows. It must not be {@code null}.
-     * @throws InvalidInputException if {@code calc == null || classFile == null || fieldSignatures == null}.
+     * @throws InvalidInputException if {@code calc == null || classFile == null}.
      */
-    KlassImpl(Calculator calc, boolean symbolic, ClassFile classFile, KlassPseudoReference origin, HistoryPoint epoch, int numOfStaticFields, Signature... fieldSignatures) 
+    KlassImpl(Calculator calc, boolean symbolic, ClassFile classFile, KlassPseudoReference origin, HistoryPoint epoch) 
     throws InvalidInputException {
-        super(calc, symbolic, classFile, origin, epoch, true, numOfStaticFields, fieldSignatures);
+        super(calc, symbolic, classFile, origin, epoch, true);
         this.initializationStarted = false;
         this.initializationCompleted = false;
     }
 
-	KlassWrapper makeWrapper(StaticMethodArea destinationStaticArea, ClassFile classFile) {
-		return new KlassWrapper(destinationStaticArea, classFile, this);
+	KlassWrapper makeWrapper(StaticMethodArea destinationStaticArea) {
+		return new KlassWrapper(destinationStaticArea, this);
 	}
 
     @Override

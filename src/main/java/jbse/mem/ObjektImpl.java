@@ -23,7 +23,7 @@ import jbse.val.Value;
  */
 public abstract class ObjektImpl implements Objekt {
     /** ClassFile for this object's class. Immutable. */
-    protected final ClassFile classFile; //TODO why protected?
+    protected final ClassFile classFile; //TODO why protected? why here and not just in instance?
 
     /** Whether this object is symbolic. */
     private boolean symbolic;
@@ -63,7 +63,7 @@ public abstract class ObjektImpl implements Objekt {
     private Primitive identityHashCode;
 
     /** 
-     * The fields as a map of signatures (as strings) to variables.
+     * The fields as a map of signatures to variables.
      * Immutable for arrays, but mutable otherwise (the map
      * is by itself immutable but the stored Variables may be 
      * mutable). 
@@ -88,21 +88,18 @@ public abstract class ObjektImpl implements Objekt {
      * @param staticFields {@code true} if this object stores
      *        the static fields, {@code false} if this object stores
      *        the object (nonstatic) fields.
-     * @param numOfStaticFields an {@code int}, the number of static fields.
-     * @param fieldSignatures varargs of field {@link Signature}s, all the
-     *        fields this object knows.
-     * @throws InvalidInputException if {@code calc == null || classFile == null || fieldSignatures == null}.
+     * @throws InvalidInputException if {@code calc == null || classFile == null}.
      */
-    protected ObjektImpl(Calculator calc, boolean symbolic, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, boolean staticFields, int numOfStaticFields, Signature... fieldSignatures) 
+    protected ObjektImpl(Calculator calc, boolean symbolic, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, boolean staticFields) 
     throws InvalidInputException {
-    	if (calc == null || classFile == null || fieldSignatures == null) {
-    		throw new InvalidInputException("Attempted to create an ObjektImpl with a null Calculator, ClassFile or field signatures parameter.");
+    	if (calc == null || classFile == null) {
+    		throw new InvalidInputException("Attempted to create an ObjektImpl with a null Calculator or ClassFile parameter.");
     	}
         this.symbolic = symbolic;
         this.fields = new HashMap<>();
         this.staticFields = staticFields;
-        this.numOfStaticFields = numOfStaticFields;
-        this.fieldSignatures = Arrays.asList(fieldSignatures.clone()); //safety copy
+        this.numOfStaticFields = classFile.numOfStaticFields();
+        this.fieldSignatures = Arrays.asList(classFile.getObjectFields().clone()); //safety copy - possibly useless
         int curSlot = 0;
         for (Signature fieldSignature : this.fieldSignatures) {
             if ((staticFields && curSlot < numOfStaticFields) ||
@@ -184,6 +181,15 @@ public abstract class ObjektImpl implements Objekt {
         }
     }
     
+    /**
+     * Converts a slot offset into a position
+     * into {@code this.fieldSignatures}.
+     * 
+     * @param ofst an offset of a field as
+     *        used by sun.misc.Unsafe methods.
+     * @return the position in {@code this.fieldSignatures}
+     *         of the corresponding field.
+     */
     private int ofstToPos(int ofst) {
         return this.fieldSignatures.size() - 1 - ofst;
     }

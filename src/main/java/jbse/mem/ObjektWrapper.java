@@ -26,10 +26,6 @@ abstract class ObjektWrapper<T extends ObjektImpl> implements Objekt {
 	/**
 	 * Constructor.
 	 * 
-	 * @param destinationHeap the {@link Heap} where the clone of {@code instance} 
-	 *        must be put.
-	 * @param destinationPosition the position in {@code destinationHeap} where
-	 *        the clone must be put.
 	 * @param delegate the initial delegate, the {@link ObjektImpl} that must be 
 	 *        cloned upon writing.
 	 */

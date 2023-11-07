@@ -34,7 +34,7 @@ abstract class HeapObjektWrapper<T extends HeapObjektImpl> extends ObjektWrapper
     	//otherwise, clones the delegate and puts it in the heap
     	setDelegate((T) getDelegate().clone());
     	setDelegateIsAClone();
-    	this.destinationHeap.set(this.destinationPosition, getDelegate());
+    	this.destinationHeap.set(this.destinationPosition, getDelegate()); //TODO why set the heap with the delegate when the heap is already set with the wrapper that delegates to the delegate?
     }
     
     protected final long getDestinationPosition() {
@@ -46,6 +46,8 @@ abstract class HeapObjektWrapper<T extends HeapObjektImpl> extends ObjektWrapper
     	return getDelegate().isInitial();
     }
 	
+    //note that makeInitial is not implemented here because the different
+    //subclasses (InstanceWrapper_XXXX) have different implementations
 	public abstract void makeInitial() throws InvalidInputException;
 
     @Override

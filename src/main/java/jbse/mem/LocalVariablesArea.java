@@ -31,7 +31,7 @@ class LocalVariablesArea implements Cloneable {
      * Constructor.
      * 
      * @param lvt a {@link LocalVariableTable}, the local variable table.
-     * @param lvt a {@link LocalVariableTable}, the local variable type table.
+     * @param lvtt a {@link LocalVariableTable}, the local variable type table.
      */
     LocalVariablesArea(LocalVariableTable lvt, LocalVariableTable lvtt) {
         this.lvt = lvt;

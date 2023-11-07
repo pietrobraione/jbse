@@ -15,12 +15,14 @@ import jbse.algo.exc.MetaUnsupportedException;
 import jbse.algo.exc.NotYetImplementedException;
 import jbse.algo.exc.UninterpretedUnsupportedException;
 import jbse.apps.DecisionProcedureDecoratorPrint;
+import jbse.apps.DecisionProcedureDecoratorStats;
 import jbse.apps.DecisionProcedureDecoratorTimer;
 import jbse.apps.IO;
 import jbse.apps.Formatter;
 import jbse.apps.StateFormatterGraphviz;
 import jbse.apps.StateFormatterJUnitTestSuite;
 import jbse.apps.StateFormatterText;
+import jbse.apps.Stats;
 import jbse.apps.StateFormatterPath;
 import jbse.apps.Timer;
 import jbse.apps.Util;
@@ -121,6 +123,9 @@ public final class Run {
 
     /** The {@link Timer} for the decision procedure. */
     private Timer timer = null;
+
+    /** The {@link Stats} for the decision procedure. */
+    private Stats stats = null;
 
     /** The {@link DecisionProcedureGuidance}, whenever this method is chosen for stepping the {@link Engine}. */
     private DecisionProcedureGuidance guidance = null;
@@ -996,11 +1001,18 @@ public final class Run {
     			core = c.createAndWrap(core, calc);
     		}
 
-    		//wraps with timer
-    		final DecisionProcedureDecoratorTimer tCore = new DecisionProcedureDecoratorTimer(core);
-    		this.timer = tCore;
-    		core = tCore;
-
+    		//wraps with timer/stats
+    		if (this.parameters.getShowDetailedDecisionProcedureStats()) {
+    			final DecisionProcedureDecoratorStats sCore = new DecisionProcedureDecoratorStats(core);
+    			this.timer = sCore;
+    			this.stats = sCore;
+    			core = sCore;
+    		} else {
+    			final DecisionProcedureDecoratorTimer tCore = new DecisionProcedureDecoratorTimer(core);
+    			this.timer = tCore;
+    			core = tCore;
+    		}
+    		
     		//wraps with printer if interaction with decision procedure must be shown
     		if (this.parameters.getShowDecisionProcedureInteraction()) {
     			core = new DecisionProcedureDecoratorPrint(core, out);
@@ -1131,6 +1143,22 @@ public final class Run {
             (this.timer == null ? 
              "." :
              ", " + MSG_END_DECISION + Util.formatTime(elapsedTimeDecisionProcedure) + " (" + Util.formatTimePercent(elapsedTimeDecisionProcedure, elapsedTime) + " of total)."));
+        if (this.stats != null) {
+        	log(MSG_END_DETAILED_DECISION_PROCEDURE_STATS);
+        	log(MSG_PUSH_ASSUMPTION + "\t" + this.stats.countPushAssumption() + " calls " + Util.formatTime(this.stats.timePushAssumption()));
+        	log(MSG_CLEAR_ASSUMPTIONS + "\t" + this.stats.countClearAssumptions() + " calls " + Util.formatTime(this.stats.timeClearAssumptions()));
+        	log(MSG_ADD_ASSUMPTIONS + "\t" + this.stats.countAddAssumptions() + " calls " + Util.formatTime(this.stats.timeAddAssumptions()));
+        	log(MSG_SET_ASSUMPTIONS + "\t" + this.stats.countSetAssumptions() + " calls " + Util.formatTime(this.stats.timeSetAssumptions()));
+        	log(MSG_GET_ASSUMPTIONS + "\t" + this.stats.countGetAssumptions() + " calls " + Util.formatTime(this.stats.timeGetAssumptions()));
+        	log(MSG_IS_SAT + "\t" + this.stats.countIsSat() + " calls " + Util.formatTime(this.stats.timeIsSat()));
+        	log(MSG_IS_SAT_ALIASES + "\t" + this.stats.countIsSatAliases() + " calls " + Util.formatTime(this.stats.timeIsSatAliases()));
+        	log(MSG_IS_SAT_EXPANDS + "\t" + this.stats.countIsSatExpands() + " calls " + Util.formatTime(this.stats.timeIsSatExpands()));
+        	log(MSG_IS_SAT_NULL + "\t" + this.stats.countIsSatNull() + " calls " + Util.formatTime(this.stats.timeIsSatNull()));
+        	log(MSG_IS_SAT_INITIALIZED + "\t" + this.stats.countIsSatInitialized() + " calls " + Util.formatTime(this.stats.timeIsSatInitialized()));
+        	log(MSG_IS_SAT_NOT_INITIALIZED + "\t" + this.stats.countIsSatNotInitialized() + " calls " + Util.formatTime(this.stats.timeIsSatNotInitialized()));
+        	log(MSG_GET_MODEL + "\t" + this.stats.countGetModel() + " calls " + Util.formatTime(this.stats.timeGetModel()));
+        	log(MSG_SIMPLIFY + "\t" + this.stats.countSimplify() + " calls " + Util.formatTime(this.stats.timeSimplify()));
+        }
     }
 
     /**
@@ -1230,6 +1258,9 @@ public final class Run {
     /** Message: elapsed time in the decision procedure. */
     private static final String MSG_END_DECISION = "Elapsed time in decision procedure: ";
 
+    /** Message: detailed decision procedure statistics */
+    private static final String MSG_END_DETAILED_DECISION_PROCEDURE_STATS = "Detailed statistics of decision procedure invocations:";
+    
     /** Message: average speed. */
     private static final String MSG_END_SPEED = "Average speed: ";
 
@@ -1266,6 +1297,45 @@ public final class Run {
     /** Message: will ask to the user whether clauses are satisfiable or not. */
     private static final String MSG_DECISION_INTERACTIVE = "Will query via console about the satisfiability of a clause when necessary.";
 
+    /** Message: pushAssumption() */
+    private static final String MSG_PUSH_ASSUMPTION = "pushAssumption()     ";
+
+    /** Message: clearAssumptions() */
+    private static final String MSG_CLEAR_ASSUMPTIONS = "clearAssumptions()   ";
+
+    /** Message: addAssumptions() */
+    private static final String MSG_ADD_ASSUMPTIONS = "addAssumptions()      ";
+
+    /** Message: setAssumptions() */
+    private static final String MSG_SET_ASSUMPTIONS = "setAssumptions()      ";
+
+    /** Message: getAssumptions() */
+    private static final String MSG_GET_ASSUMPTIONS = "getAssumptions()      ";
+
+    /** Message: isSat() */
+    private static final String MSG_IS_SAT = "isSat()              ";
+
+    /** Message: isSatAliases() */
+    private static final String MSG_IS_SAT_ALIASES = "isSatAliases()       ";
+
+    /** Message: isSatExpands() */
+    private static final String MSG_IS_SAT_EXPANDS = "isSatExpands()       ";
+
+    /** Message: isSatNull() */
+    private static final String MSG_IS_SAT_NULL = "isSatNull()          ";
+
+    /** Message: isSatInitialized() */
+    private static final String MSG_IS_SAT_INITIALIZED = "isSatInitialized()   ";
+
+    /** Message: isSatNotInitialized() */
+    private static final String MSG_IS_SAT_NOT_INITIALIZED = "isSatNotInitialized()";
+
+    /** Message: getModel() */
+    private static final String MSG_GET_MODEL = "getModel()           ";
+
+    /** Message: simplify() */
+    private static final String MSG_SIMPLIFY = "simplify()            ";
+    
     /** Warning: unrecognizable signature. */
     private static final String WARNING_PARAMETERS_UNRECOGNIZABLE_VARIABLE = "Unrecognizable variable will not be observed: ";
 

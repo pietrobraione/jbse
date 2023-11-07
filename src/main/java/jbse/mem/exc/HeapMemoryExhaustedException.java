@@ -5,7 +5,6 @@ package jbse.mem.exc;
  * in the heap fails because the heap is full.
  * 
  * @author Pietro Braione
- *
  */
 public final class HeapMemoryExhaustedException extends Exception {
     /**

@@ -684,7 +684,7 @@ public final class ClassHierarchy implements Cloneable {
                         if (definingClassLoader == CLASSLOADER_BOOT) {
                             registerSystemPackage(classSignature, findBytecodeResult.loadedFrom);
                         }
-                    } //TODO else throw LinkageError???
+                    }
                 } else { //the initiating loader is a user-defined classloader and we do not bypass standard loading
                     //JVMS v8, section 5.3.1: the JVM invokes the loadClass method of the classloader.
                     //This cannot be done here, so we interrupt the invoker with an exception.

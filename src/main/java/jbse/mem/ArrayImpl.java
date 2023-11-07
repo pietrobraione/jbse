@@ -417,7 +417,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
      */
     private ArrayImpl(Calculator calc, boolean isSymbolicInitial, Value initValue, Primitive length, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, int maxSimpleArrayLength) 
     throws InvalidInputException, InvalidTypeException {
-        super(calc, isSymbolicInitial, classFile, origin, epoch, false, 0);
+        super(calc, isSymbolicInitial, classFile, origin, epoch, false);
         if (classFile == null || !classFile.isArray()) {
             throw new InvalidTypeException("Attempted creation of an array with type " + classFile.getClassName());
         }
@@ -455,7 +455,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
      * @throws NullPointerException if {@code backingArray == null}.
      */
     public ArrayImpl(Calculator calc, Reference referenceToBackingArray, ArrayImpl backingArray) throws InvalidInputException {
-        super(calc, true, backingArray.classFile, backingArray.getOrigin(), backingArray.historyPoint(), false, 0);
+        super(calc, true, backingArray.classFile, backingArray.getOrigin(), backingArray.historyPoint(), false);
         if (!backingArray.isInitial) {
         	throw new InvalidInputException("Invoked ArrayImpl constructor for symbolic arrays with a backing array parameter that is not initial.");
         }
@@ -582,10 +582,10 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     public Collection<AccessOutcome> get(Calculator calc, Primitive index) 
     throws InvalidInputException, InvalidTypeException {
         if (calc == null || index == null) {
-            throw new InvalidInputException("Attempted array fast access with null calc or index.");
+            throw new InvalidInputException("Attempted array access with null calc or index.");
         }
         if (index.getType() != INT) {
-            throw new InvalidTypeException("Attempted array fast access with an index with type " + index.getType() + ".");
+            throw new InvalidTypeException("Attempted array access with an index with type " + index.getType() + ".");
         }
         final ArrayList<AccessOutcome> retVal = new ArrayList<>();
         final Primitive inRange = inRange(calc, index);
