@@ -9,7 +9,6 @@ import static jbse.common.Type.isArray;
 import static jbse.common.Type.isTypeParameter;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.splitClassGenericSignatureTypeParameters;
-import static jbse.common.Type.splitParametersGenericSignatures;
 import static jbse.common.Type.splitReturnValueDescriptor;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.TYPEVAR;

@@ -35,9 +35,9 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Meta-level implementation of {@link jbse.base.JAVA_MAP#refineOnKeyCombinationsAndBranch(Object...)},
- * {@link jbse.base.JAVA_CONCURRENTMAP#refineOnKeyCombinationsAndBranch(Object...)} and
- * {@link jbse.base.JAVA_LINKEDMAP#refineOnKeyCombinationsAndBranch(Object...)}.
+ * Meta-level implementation of {@link jbse.base.JAVA_MAP#refineOnKeyCombinationsAndBranch(Object[])},
+ * {@link jbse.base.JAVA_CONCURRENTMAP#refineOnKeyCombinationsAndBranch(Object[])} and
+ * {@link jbse.base.JAVA_LINKEDMAP#refineOnKeyCombinationsAndBranch(Object[])}.
  * 
  * @author Pietro Braione
  */

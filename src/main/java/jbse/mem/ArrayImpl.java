@@ -291,7 +291,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
          * @param accessCondition an {@link Expression} denoting a  
          *        condition over the array index. 
          * @param returnedValue a {@link Value} denoting the value returned  
-         *        by an array access with index satisfying {@code exp}. It 
+         *        by an array access with index satisfying {@code accessCondition}. It 
          *        can be a {@link Value} of the array member type, 
          *        or the special {@link ReferenceArrayImmaterial} value denoting 
          *        a reference to another array not yet available in the state's heap,
@@ -620,7 +620,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
                 } else if (inRangeEntry.surelyFalse()) {
                     //do nothing (not returned in the result)
                 } else { //inRangeEntry is possibly satisfiable
-                	//TODO is the next block equivalent to just cloning e?
+                	//TODO is the next block equivalent to just cloning e? Shouldn't we specialize e.getAccessCondition over the actual index (i.e., shouldn't it be inRangeEntry)?
                     if (e instanceof AccessOutcomeInValue) {
                         retVal.add(new AccessOutcomeInValueImpl(e.getAccessCondition(), ((AccessOutcomeInValue) e).getValue()));
                     } else { //e instanceof AccessOutcomeInInitialArray
@@ -638,6 +638,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
                 //do nothing
             } else { //outOfRange is possibly satisfiable
                 try {
+                	//TODO Shouldn't we specialize this.indexInRange over the actual index (i.e., shouldn't it be inRangeEntry)?
 					retVal.add(new AccessOutcomeOutImpl((Expression) calc.push(this.indexInRange).not().pop()));
 				} catch (InvalidOperandException e) {
 		            //this should never happen
@@ -729,7 +730,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
             throw new InvalidInputException("Attempted array access with null calc or index.");
         }
         return new Iterator<AccessOutcomeIn>() {
-            //this iterator filters the relevant members in Array.this.values
+            //this iterator filters the relevant members in ArrayImpl.this.entries
             //by wrapping the default iterator to it
             private final Iterator<AccessOutcomeInImpl> it = ArrayImpl.this.entries.iterator();
             private ArrayImpl.AccessOutcomeIn next = null;
@@ -795,7 +796,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
             @Override
             public void remove() {
                 if (this.canRemove) { 
-                    it.remove();
+                    this.it.remove();
                 } else {
                     throw new IllegalStateException();
                 }
@@ -859,9 +860,9 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     				srcPos instanceof Simplex && destPos instanceof Simplex && 
     				length instanceof Simplex) {
     			//fast operation
-    			int srcPosInt = ((Integer) ((Simplex) srcPos).getActualValue()).intValue();
-    			int destPosInt = ((Integer) ((Simplex) destPos).getActualValue()).intValue();
-    			int lengthInt = ((Integer) ((Simplex) length).getActualValue()).intValue();
+    			final int srcPosInt = ((Integer) ((Simplex) srcPos).getActualValue()).intValue();
+    			final int destPosInt = ((Integer) ((Simplex) destPos).getActualValue()).intValue();
+    			final int lengthInt = ((Integer) ((Simplex) length).getActualValue()).intValue();
     			final ArrayList<Integer> destPosEntries = new ArrayList<>(); //buffer to avoid concurrent modification when this == srcImpl
     			final ArrayList<AccessOutcomeInImpl> destEntries = new ArrayList<>(); //buffer to avoid concurrent modification when this == srcImpl
     			for (int ofst = 0; ofst < lengthInt; ++ofst) {
@@ -921,7 +922,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     			}
 
     			//returns the iterator
-    			return ArrayImpl.this.entries.iterator(); //for sake of simplicity all the entries are considered potentially affected
+    			return this.entries.iterator(); //for sake of simplicity all the entries are considered potentially affected
     		}
     	} catch (InvalidOperandException e) {
 			//this should never happen
@@ -982,7 +983,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
 
     @Override
     public boolean hasOffset(int slot) {
-    	return (hasSimpleRep() ? 0 <= slot && slot <= ((Integer) ((Simplex) getLength()).getActualValue()).intValue() : false);
+    	return (hasSimpleRep() ? 0 <= slot && slot < ((Integer) ((Simplex) getLength()).getActualValue()).intValue() : false);
     }
 
     @Override

@@ -1,7 +1,6 @@
 package jbse.mem;
 
 import jbse.bc.ClassFile;
-import jbse.bc.Signature;
 import jbse.common.exc.InvalidInputException;
 import jbse.val.Calculator;
 import jbse.val.HistoryPoint;

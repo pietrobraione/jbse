@@ -150,6 +150,10 @@ public final class State implements Cloneable {
     /** Maps file identifier to meta-level open files. */
     private FilesMapper filesMapper = new FilesMapper();
     
+    /** 
+     * Maps memory addresses of relevant structures to the corresponding 
+     * meta-level structures implementing them.
+     */
     private MemoryAddressesMapper memoryAddressesMapper = new MemoryAddressesMapper();
     
     /** The registered performance counters. */
@@ -161,14 +165,14 @@ public final class State implements Cloneable {
     /** The JVM heap. */
     private Heap heap;
 
+    /** The JVM static method area. */
+    private StaticMethodArea staticMethodArea = new StaticMethodArea();
+
     /** 
      * The object that fetches classfiles from the classpath, stores them, 
      * and allows visiting the whole class/interface hierarchy. 
      */
     private ClassHierarchy classHierarchy;
-
-    /** The JVM static method area. */
-    private StaticMethodArea staticMethodArea = new StaticMethodArea();
     
     /** The current phase of symbolic execution. */
     private Phase phase = Phase.PRE_INITIAL;
@@ -467,6 +471,7 @@ public final class State implements Cloneable {
      * Disables the possibility of having 
      * other assumptions being issued later
      * during symbolic execution.
+     * 
      * @throws FrozenStateException if the state is frozen.
      */
     public void disableAssumptionViolation() throws FrozenStateException {

@@ -4,7 +4,7 @@ import static jbse.bc.Signatures.JBSE_JAVA_MAP_REFINEIN;
 import static jbse.bc.Signatures.JBSE_JAVA_MAP_REFINEOUTKEY;
 
 /**
- * Meta-level implementation of {@link jbse.base.JAVA_MAP#refineOnKeyCombinationsAndBranch(Object...)}.
+ * Meta-level implementation of {@link jbse.base.JAVA_MAP#refineOnKeyCombinationsAndBranch(Object[])}.
  * 
  * @author Pietro Braione
  */

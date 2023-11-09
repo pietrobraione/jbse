@@ -4,7 +4,7 @@ import static jbse.bc.Signatures.JBSE_JAVA_LINKEDMAP_REFINEIN;
 import static jbse.bc.Signatures.JBSE_JAVA_LINKEDMAP_REFINEOUTKEY;
 
 /**
- * Meta-level implementation of {@link jbse.base.JAVA_LINKEDMAP#refineOnKeyCombinationsAndBranch(Object...)}.
+ * Meta-level implementation of {@link jbse.base.JAVA_LINKEDMAP#refineOnKeyCombinationsAndBranch(Object[])}.
  * 
  * @author Pietro Braione
  */

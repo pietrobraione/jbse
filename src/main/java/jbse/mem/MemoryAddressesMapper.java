@@ -13,7 +13,7 @@ import jbse.common.exc.UnexpectedInternalException;
 
 /**
  * Maps memory addresses to several internal structures
- * (memory blocks, inflaters...)
+ * (memory blocks, inflaters...).
  * 
  * @author Pietro Braione
  *

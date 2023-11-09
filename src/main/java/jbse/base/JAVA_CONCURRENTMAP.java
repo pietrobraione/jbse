@@ -1282,7 +1282,7 @@ implements ConcurrentMap<K, V>, Serializable {
 	 *        then {@code 2^n} branches will be created for all
 	 *        possible subsets of keys.
 	 */
-	private native void refineOnKeyCombinationsAndBranch(Object... keys);
+	private native void refineOnKeyCombinationsAndBranch(Object[] keys);
 
 	/**
 	 * Causes symbolic execution to branch on the cases:
@@ -1340,7 +1340,7 @@ implements ConcurrentMap<K, V>, Serializable {
 
 	/**
 	 * Upcalled by {@link #refineOnKeyAndBranch(Object)},
-	 * {@link #refineOnKeyCombinationsAndBranch(Object...)}, 
+	 * {@link #refineOnKeyCombinationsAndBranch(Object[])}, 
 	 * {@link #refineOnValueAndBranch(Object)}, and
 	 * {@link #refineOnFreshEntryAndBranch()}. 
 	 * Refines this object by assuming that a key/value pair
@@ -1362,7 +1362,7 @@ implements ConcurrentMap<K, V>, Serializable {
 
 	/**
 	 * Upcalled by {@link #refineOnKeyAndBranch(Object)},
-	 * and {@link #refineOnKeyCombinationsAndBranch(Object...)}. 
+	 * and {@link #refineOnKeyCombinationsAndBranch(Object[])}. 
 	 * Refines this object by assuming that a key
 	 * is not present in it. This object must be initial.
 	 * 

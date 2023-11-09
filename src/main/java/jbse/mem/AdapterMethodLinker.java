@@ -131,7 +131,7 @@ final class AdapterMethodLinker implements Cloneable {
     
     /**
      * Checks whether a  a signature polymorphic nonintrinsic 
-     * method is linked to an adapter/appendix. 
+     * method is linked to an adapter/appendix pair. 
      * 
      * @param signature a {@link Signature}.
      * @return {@code true} iff {@code signature} is the
@@ -145,16 +145,17 @@ final class AdapterMethodLinker implements Cloneable {
     /**
      * Links a signature polymorphic nonintrinsic method
      * to an adapter method, represented as a reference to
-     * a {@link java.lang.invoke.MemberName}, and an appendix.
+     * a {@link java.lang.invoke.MemberName}, and an appendix, 
+     * represented as an {@link Object}{@code []}.
      * 
      * @param signature a {@link Signature}. It should be 
      *        the signature of a signature polymorphic
      *        nonintrinsic method, but this is not checked.
      * @param adapter a {@link ReferenceConcrete}. It should
-     *        refer an {@link Instance} of a {@link java.lang.invoke.MemberName},
+     *        refer an {@link Instance} of class {@link java.lang.invoke.MemberName},
      *        but this is not checked.
      * @param appendix a {@link ReferenceConcrete}. It should
-     *        refer an {@link Instance} of a {@link java.lang.Object[]},
+     *        refer an {@link Array} of class {@link java.lang.Object}{@code []},
      *        but this is not checked.
      * @throws InvalidInputException if any of the 
      *         parameters is {@code null}.
@@ -196,7 +197,7 @@ final class AdapterMethodLinker implements Cloneable {
         
     /**
      * Checks whether a dynamic call site is linked to an 
-     * adapter/appendix. 
+     * adapter/appendix pair. 
      * 
      * @param containerClass the {@link ClassFile} of the 
      *        dynamic call site method.
@@ -220,7 +221,7 @@ final class AdapterMethodLinker implements Cloneable {
     /**
      * Links a dynamic call site to an adapter method, represented 
      * as a reference to a {@link java.lang.invoke.MemberName}, 
-     * and an appendix.
+     * and an appendix, represented as an {@link Object}{@code []}.
      * 
      * @param containerClass the {@link ClassFile} of the 
      *        dynamic call site method.
@@ -231,10 +232,10 @@ final class AdapterMethodLinker implements Cloneable {
      * @param programCounter an {@code int}, the displacement
      *        in the method's bytecode of the dynamic call site.
      * @param adapter a {@link ReferenceConcrete}. It should
-     *        refer an {@link Instance} of a {@link java.lang.invoke.MemberName},
+     *        refer an {@link Instance} of class {@link java.lang.invoke.MemberName},
      *        but this is not checked.
      * @param appendix a {@link ReferenceConcrete}. It should
-     *        refer an {@link Instance} of a {@link java.lang.Object[]},
+     *        refer an {@link Array} of class {@link java.lang.Object}{@code []},
      *        but this is not checked.
      * @throws InvalidInputException if any of the 
      *         parameters is {@code null}, or if the {@code containerClass}, 
@@ -259,8 +260,8 @@ final class AdapterMethodLinker implements Cloneable {
      * @param programCounter an {@code int}, the displacement
      *        in the method's bytecode of the dynamic call site.
      * @return a {@link ReferenceConcrete} to a {@code java.lang.invoke.MemberName}
-     *         set with a previous call to {@link #linkMethod(Signature, ReferenceConcrete, ReferenceConcrete) link}, 
-     *         or {@code null} if {@code signature} was not previously linked.
+     *         set with a previous call to {@link #linkCallSite(ClassFile, String, String, int, ReferenceConcrete, ReferenceConcrete) linkCallSite}, 
+     *         or {@code null} if the call site was not previously linked.
      * @throws InvalidInputException if any of the parameters
      *         is {@code null}, or if the parameters do not 
      *         indicate a method's dynamic call site.
@@ -271,8 +272,7 @@ final class AdapterMethodLinker implements Cloneable {
     }
     
     /**
-     * Returns the appendix for a linked signature 
-     * polymorphic nonintrinsic method.
+     * Returns the appendix for a dynamic call site.
      * 
      * @param containerClass the {@link ClassFile} of the 
      *        dynamic call site method.
@@ -283,8 +283,8 @@ final class AdapterMethodLinker implements Cloneable {
      * @param programCounter an {@code int}, the displacement
      *        in the method's bytecode of the dynamic call site.
      * @return a {@link ReferenceConcrete} to an {@code Object[]}
-     *         set with a previous call to {@link #linkMethod(Signature, ReferenceConcrete, ReferenceConcrete) link}, 
-     *         or {@code null} if {@code signature} was not previously linked.
+     *         set with a previous call to {@link #linkCallSite(ClassFile, String, String, int, ReferenceConcrete, ReferenceConcrete) linkCallSite}, 
+     *         or {@code null} if the call site was not previously linked.
      * @throws InvalidInputException if any of the parameters
      *         is {@code null}, or if the parameters do not 
      *         indicate a method's dynamic call site.
