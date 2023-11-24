@@ -999,6 +999,8 @@ public final class Signatures {
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_FIELD + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "staticFieldBase");
     public static final Signature SUN_UNSAFE_STATICFIELDOFFSET = 
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_FIELD + TYPEEND + ")" + LONG, "staticFieldOffset");
+    public static final Signature SUN_UNSAFE_STOREFENCE = 
+    	new Signature(SUN_UNSAFE, "()" + VOID, "storeFence");
     public static final Signature SUN_UNSAFE_UNPARK = 
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "unpark");
     public static final Signature SUN_URLCLASSPATH_GETLOOKUPCACHEURLS =

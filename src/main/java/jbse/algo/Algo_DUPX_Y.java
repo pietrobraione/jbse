@@ -212,7 +212,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         try {
             //we need a fourth cat1 operand
             final Value value4 = state.popOperand();
-            if (!isCat_1(value3.getType())) {
+            if (!isCat_1(value4.getType())) {
                 throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }

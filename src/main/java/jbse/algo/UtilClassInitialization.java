@@ -516,7 +516,7 @@ public final class UtilClassInitialization {
 				//JVMS v8 section 5.5, point 7
 				if (!classFile.isInterface() || recurSuperinterfaces) {
 					for (ClassFile superinterface : Util.reverse(classFile.getSuperInterfaces())) {
-						if (hasANonStaticImplementedMethod(classFile)) {
+						if (hasANonStaticImplementedMethod(superinterface)) {
 							phase1(true, superinterface);
 						}
 					}

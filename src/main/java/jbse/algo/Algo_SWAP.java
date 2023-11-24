@@ -1,6 +1,9 @@
 package jbse.algo;
 
+import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
+import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.bc.Offsets.SWAP_OFFSET;
+import static jbse.common.Type.isCat_1;
 
 import java.util.function.Supplier;
 
@@ -49,7 +52,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 
     @Override
     protected StrategyRefine<DecisionAlternative_NONE> refiner() {
-        return (state, alt) -> { };
+        return (state, alt) -> { 
+            if (!isCat_1(this.data.operand(0).getType()) || !isCat_1(this.data.operand(1).getType())) {
+                throwVerifyError(state, this.ctx.getCalculator());
+                exitFromAlgorithm();
+            }
+        };
     }
 
     @Override

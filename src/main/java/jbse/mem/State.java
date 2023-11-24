@@ -375,6 +375,82 @@ public final class State implements Cloneable {
     }
 
     /**
+     * Checks whether this state may violate some
+     * assumption not yet assumed.
+     * 
+     * @return {@code true} iff it can.
+     */
+    public boolean mayViolateAssumption() {
+        return this.mayViolateAssumption;
+    }
+
+    /**
+     * Disables the possibility of having 
+     * other assumptions being issued later
+     * during symbolic execution.
+     * 
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public void disableAssumptionViolation() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        this.mayViolateAssumption = false;
+    }
+    
+    /**
+     * Declares that the standard (extensions and application) class loaders are ready
+     * to be used.
+     * 
+     * @throws InvalidInputException when the state is frozen, or the 
+     *         {@link Instance_JAVA_CLASSLOADER}s for the standard 
+     *         classloaders were not created in the heap 
+     *         (note that this method does not check that the 
+     *         {@link Instance_JAVA_CLASSLOADER}s were also initialized).
+     */
+    public void setStandardClassLoadersReady() throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        if (!this.standardClassLoadersNotReady) {
+            return; //nothing to do
+        }
+        if (this.objectDictionary.maxClassLoaders() <= CLASSLOADER_APP) {
+            throw new InvalidInputException("Invoked " + getClass().getName() + ".setStandardClassLoadersReady with true parameter, but the standard class loaders were not created yet.");
+        }
+        this.standardClassLoadersNotReady = false;
+    }
+    
+    /**
+     * Checks whether the bootstrap classloader should always load the 
+     * classes defined by the extensions and application classloaders.
+     * This method returns the value set by the constructor, 
+     * so it shall only be used to query it, not to decide during
+     * symbolic execution what loader to use. For the latter use 
+     * the {@link #bypassStandardLoading()} method.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean shouldAlwaysBypassStandardLoading() {
+        return this.bypassStandardLoading;
+    }
+    
+    /**
+     * Checks whether the bootstrap classloader should load the 
+     * classes defined by the extensions and application classloaders, 
+     * either because users want to always use it at the purpose, 
+     * or because the extensions and application classloaders
+     * are not yet ready to be used.
+     * 
+     * @return {@code true} iff {@link #shouldAlwaysBypassStandardLoading()}, or 
+     *         if the method {@link #setStandardClassLoadersReady()}
+     *         was not previously invoked.
+     */
+    public boolean bypassStandardLoading() {
+        return this.bypassStandardLoading || this.standardClassLoadersNotReady;
+    }
+
+    /**
      * Returns and deletes the value from the top of the current 
      * operand stack.
      * 
@@ -419,11 +495,10 @@ public final class State implements Cloneable {
      * @throws ThreadStackEmptyException if the thread stack is empty.
      * @throws InvalidNumberOfOperandsException if the current operand
      *         stack is empty. 
-     * @throws FrozenStateException if the state is frozen.
      */
     public Value topOperand() 
-    throws ThreadStackEmptyException, InvalidNumberOfOperandsException, FrozenStateException {
-        return getCurrentFrame().top();
+    throws ThreadStackEmptyException, InvalidNumberOfOperandsException {
+        return this.stack.currentFrame().top();
     }
 
     /**
@@ -455,30 +530,6 @@ public final class State implements Cloneable {
     		throw new FrozenStateException();
     	}
         getCurrentFrame().clear();
-    }
-
-    /**
-     * Checks whether this state may violate some
-     * assumption not yet assumed.
-     * 
-     * @return {@code true} iff it can.
-     */
-    public boolean mayViolateAssumption() {
-        return this.mayViolateAssumption;
-    }
-
-    /**
-     * Disables the possibility of having 
-     * other assumptions being issued later
-     * during symbolic execution.
-     * 
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public void disableAssumptionViolation() throws FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        this.mayViolateAssumption = false;
     }
     
     /**
@@ -523,6 +574,87 @@ public final class State implements Cloneable {
     public Signature getRootMethodSignature() throws ThreadStackEmptyException {
         return this.stack.rootFrame().getMethodSignature();
     }
+    /**
+     * Removes the current {@link Frame} from the thread stack.
+     * 
+     * @return the popped {@link Frame}.
+     * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public Frame popCurrentFrame() throws ThreadStackEmptyException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+    	return this.stack.pop();
+    }
+
+    /**
+     * Removes all the frames from the thread stack.
+     * 
+     * @throws FrozenStateException if the state is frozen. 
+     */
+    public void clearStack() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        this.stack.clear();
+    }
+
+    /**
+     * Returns the root frame.
+     * 
+     * @return a {@link Frame}, the root (first pushed) one.
+     * @throws ThreadStackEmptyException if the 
+     *         thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public Frame getRootFrame() throws ThreadStackEmptyException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        return this.stack.rootFrame();
+    }
+
+    /**
+     * Returns the current frame.
+     * 
+     * @return a {@link Frame}, the current (last pushed) one.
+     * @throws ThreadStackEmptyException if the 
+     *         thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public Frame getCurrentFrame() throws ThreadStackEmptyException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        return this.stack.currentFrame();
+    }
+
+    /**
+     * Returns an immutable view of the thread stack.
+     * 
+     * @return a {@link List}{@code <}{@link Frame}{@code >} 
+     *         of the method activation frames in the thread stack, 
+     *         in their push order.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public List<Frame> getStack() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        return this.stack.frames();
+    }
+
+    /**
+     * Returns the size of the thread stack.
+     * 
+     * @return an {@code int}, the size.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public int getStackSize() {
+        return this.stack.frames().size();
+    }
+
 
     /**
      * Returns a {@link Reference} to the root object, i.e., the 
@@ -616,9 +748,590 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        getCurrentFrame().setLocalVariableValue(slot, this.stack.currentFrame().getProgramCounter(), val);
+        getCurrentFrame().setLocalVariableValue(slot, getCurrentFrame().getProgramCounter(), val);
     }
 
+
+    /**
+     * Returns the instruction in the current method pointed by 
+     * the state's current program counter.
+     * 
+     * @return a {@code byte} representing the 
+     *         bytecode pointed by the state's current program
+     *         counter.
+     * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public byte getInstruction() 
+    throws ThreadStackEmptyException, FrozenStateException {
+        return getCurrentFrame().getInstruction();
+    }
+
+    /**
+     * Returns the instruction in the current method pointed by 
+     * the state's current program counter plus a displacement.
+     * 
+     * @param displacement a {@code int} representing a displacement
+     *        from the current program counter.
+     * @return a {@code byte} representing the 
+     *         bytecode pointed by the state's current program
+     *         counter plus {@code displacement}.
+     * @throws InvalidProgramCounterException iff the frame's program
+     *         counter plus {@code displacement} does not point to 
+     *         a bytecode.
+     * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public byte getInstruction(int displacement) 
+    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
+        return getCurrentFrame().getInstruction(displacement);
+    }
+
+    /**
+     * Returns the source code row corresponding to the 
+     * frame's program counter.
+     *  
+     * @return the source code row corresponding to the 
+     *         state's program counter, or {@code -1} 
+     *         iff no debug information is available. 
+     * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public int getSourceRow() throws ThreadStackEmptyException, FrozenStateException {
+        return getCurrentFrame().getSourceRow();
+    }
+
+    /**
+     * Returns the current program counter.
+     * 
+     * @return an {@code int} representing the state's 
+     *         current program counter.
+     * @throws ThreadStackEmptyException if the thread stack is empty.
+     */
+    public int getCurrentProgramCounter() throws ThreadStackEmptyException {
+        return this.stack.currentFrame().getProgramCounter();
+    }
+
+    /**
+     * Sets the return program counter of the current frame.
+     * 
+     * @param returnPCOffset the offset of the return program counter 
+     *        w.r.t. the current program counter.
+     * @throws InvalidProgramCounterException iff current + offset program counter
+     *        yield an invalid offset.
+     * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public void setReturnProgramCounter(int returnPCOffset) 
+    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        getCurrentFrame().setReturnProgramCounter(returnPCOffset);
+    }
+
+    /**
+     * Returns the return program counter of the caller frame
+     * stored for a return bytecode.
+     * 
+     * @return an {@code int}, the return program counter.
+     * @throws ThreadStackEmptyException  if the thread stack is empty.
+     */
+    public int getReturnProgramCounter() throws ThreadStackEmptyException {
+        return this.stack.currentFrame().getReturnProgramCounter();
+    }
+
+    /**
+     * Increments/decrements the program counter by an arbitrary number.
+     * 
+     * @param n the {@code int} value to be added to the current 
+     *          program counter.
+     * @throws InvalidProgramCounterException if the incremented program counter
+     *         would not point to a valid bytecode in the current method 
+     *         (the state's program counter is not changed).
+     * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public void incProgramCounter(int n) 
+    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
+        setProgramCounter(getCurrentProgramCounter() + n);
+    }
+
+    /**
+     * Sets the state's program counter.
+     * 
+     * @param newPC the new program counter value.
+     * @throws InvalidProgramCounterException if {@code newPC} does not 
+     *         point to a valid bytecode in the current method (the
+     *         state's program counter is not changed).
+     * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public void setProgramCounter(int newPC) 
+    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
+        getCurrentFrame().setProgramCounter(newPC);
+    }
+
+    /**
+     * Unwinds the stack of this state until it finds an exception 
+     * handler for an object. If the thread stack is empty after 
+     * unwinding, sets the state to stuck with the unhandled exception
+     * throw as a cause.
+     * 
+     * @param exceptionToThrow a {@link Reference} to a throwable 
+     *        {@link Objekt} in the state's {@link Heap}.
+     * @throws InvalidInputException if the state is frozen, or 
+     *         {@code exceptionToThrow} is an unresolved symbolic reference, 
+     *         or is a null reference, or is a reference to an object that 
+     *         does not extend {@code java.lang.Throwable}.
+     * @throws InvalidIndexException if the exception type field in a row of the exception table 
+     *         does not contain the index of a valid CONSTANT_Class in the class constant pool.
+     * @throws InvalidProgramCounterException if the program counter handle in a row 
+     *         of the exception table does not contain a valid program counter.
+     */
+    public void unwindStack(Reference exceptionToThrow) 
+    throws InvalidInputException, InvalidIndexException, InvalidProgramCounterException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        //checks that exceptionToThrow is resolved to a throwable Objekt
+        final Objekt myException = getObject(exceptionToThrow);
+        final ClassFile cf_JAVA_THROWABLE;
+        try {
+            cf_JAVA_THROWABLE = this.classHierarchy.loadCreateClass(JAVA_THROWABLE);
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
+                 RenameUnsupportedException | WrongClassNameException | IncompatibleClassFileException |
+                 InvalidInputException | ClassFileNotAccessibleException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
+        if (myException == null || !myException.getType().isSubclass(cf_JAVA_THROWABLE)) {
+            throw new InvalidInputException("Attempted to throw an unresolved or null reference, or a reference to an object that is not Throwable.");
+        }
+
+        //fills a vector with all the superclass names of the exception
+        final ArrayList<String> excTypes = new ArrayList<>();
+        for (ClassFile f : myException.getType().superclasses()) {
+            excTypes.add(f.getClassName());
+        }
+
+        //unwinds the stack
+        try {
+            while (true) {
+                if (this.stack.isEmpty()) {
+                	if (phase() == Phase.POST_INITIAL) {
+                		setStuckException(exceptionToThrow);
+                	}
+                    return;
+                }
+                if (getCurrentFrame() instanceof SnippetFrameNoWrap) {
+                    //cannot catch anything and has no current method either
+                    popCurrentFrame();
+                    continue; 
+                }
+                final Signature currentMethodSignature = getCurrentMethodSignature();
+                final ExceptionTable exceptionTable = getCurrentClass().getExceptionTable(currentMethodSignature);
+                final Entry exceptionTableEntry = exceptionTable.getEntry(excTypes, getCurrentProgramCounter());
+                if (exceptionTableEntry == null) {
+                    popCurrentFrame();
+                } else {
+                    clearOperands();
+                    setProgramCounter(exceptionTableEntry.programCounterHandler);
+                    pushOperand(exceptionToThrow);
+                    return;				
+                }
+            }
+        } catch (ThreadStackEmptyException | MethodNotFoundException | 
+                 MethodCodeNotFoundException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
+    }
+
+    /**
+     * Creates a new frame for a (nonnative) method and pushes it 
+     * on this state's stack.
+     * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param classMethodImpl the {@link ClassFile} containing the 
+     *        bytecode for the method.
+     * @param methodSignatureImpl the {@link Signature} of the method 
+     *        for which the frame is built.
+     * @param isRoot {@code true} iff the frame is the root frame of 
+     *        symbolic execution (i.e., on the top of the thread stack).
+     * @param returnPCOffset the offset from the current program counter 
+     *        of the return program counter. It is ignored if 
+     *        {@code isRoot == true}.
+     * @param args varargs of method call arguments.
+     * @throws NullMethodReceiverException when the method is not static
+     *         and the first argument in {@code args} is the null reference.
+     * @throws MethodNotFoundException when {@code classMethodImpl}
+     *         does not contain a declaration for {@code methodSignatureImpl}.
+     * @throws MethodCodeNotFoundException when {@code classMethodImpl}
+     *         does not contain bytecode for {@code methodSignatureImpl}.
+     * @throws InvalidInputException when {@code classMethodImpl == null || 
+     *         methodSignatureImpl == null || args == null}.
+     * @throws InvalidSlotException when there are 
+     *         too many {@code arg}s or some of their types are 
+     *         incompatible with their respective slots types.
+     * @throws InvalidTypeException when narrowing of an argument (performed to match
+     *         the method's signature) fails.
+     * @throws InvalidProgramCounterException when {@code isRoot == false} and
+     *         {@code returnPCOffset} is not a valid program count offset for the
+     *         state's current frame.
+     * @throws ThreadStackEmptyException when {@code isRoot == false} and the 
+     *         state's thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public void pushFrame(Calculator calc, ClassFile classMethodImpl, Signature methodSignatureImpl, boolean isRoot, int returnPCOffset, Value... args) 
+    throws NullMethodReceiverException, MethodNotFoundException, MethodCodeNotFoundException, InvalidInputException, InvalidSlotException, 
+    InvalidTypeException, InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+    	if (calc == null || classMethodImpl == null || methodSignatureImpl == null || args == null) {
+    		throw new InvalidInputException("Tried to invoke " + this.getClass().getName() + ".pushFrame with null calc or classMethodImpl or methodSignatureImpl or args.");
+    	}
+        final boolean isStatic = classMethodImpl.isMethodStatic(methodSignatureImpl);
+        
+        //checks the "this" parameter (invocation receiver) if necessary
+        if (!isStatic) {
+            if (args.length == 0 || !(args[0] instanceof Reference)) {
+                throw new UnexpectedInternalException("Args for method invocation do not correspond to method signature."); //TODO better exception
+            }
+            if (isNull((Reference) args[0])) {
+                throw new NullMethodReceiverException();
+            }
+        }
+        
+        //sets the return program counter
+        if (isRoot) {
+            //do nothing, after creation the frame has already a dummy return program counter
+        } else {
+            setReturnProgramCounter(returnPCOffset);
+        }
+
+        //narrows the int args if the method signature requires a narrower type
+        narrowArgs(calc, args, methodSignatureImpl, isStatic);
+
+        //creates the new frame and sets its args
+        final MethodFrame f = new MethodFrame(methodSignatureImpl, classMethodImpl);
+        f.setArgs(args);
+
+        //pushes the new frame on the thread stack
+        this.stack.push(f);
+    }
+    
+    /**
+     * Creates a {@link SnippetFactory} for snippets
+     * that can be pushed on the current stack with
+     * {@link #pushSnippetFrameNoWrap(Snippet, int, int, String) pushSnippetFrameNoWrap}.
+     * 
+     * @return a {@link SnippetFactory}.
+     */
+    public SnippetFactory snippetFactoryNoWrap() {
+        return new SnippetFactory();
+    }
+    
+    /**
+     * Creates a {@link SnippetFactory} for snippets
+     * that can be pushed on the current stack with
+     * {@link #pushSnippetFrameWrap(Snippet, int) pushSnippetFrameWrap}.
+     * 
+     * @return a {@link SnippetFactory}.
+     * @throws ThreadStackEmptyException if the stack is empty.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public SnippetFactory snippetFactoryWrap() 
+    throws FrozenStateException, ThreadStackEmptyException {
+        return new SnippetFactory(getCurrentClass());
+    }
+    
+    /**
+     * Creates a new frame for a {@link Snippet} and
+     * pushes it on this state's stack. The created frame 
+     * will inherit the context of the current frame, including
+     * the current class (on which the additional constant pool
+     * items will be injected), will operate on its operand stack 
+     * and local variables. Note that it is possible to wrap only 
+     * a {@link MethodFrame}, not another snippet frame.
+     * 
+     * @param snippet a {@link Snippet}.
+     * @param returnPCOffset the offset from the current 
+     *        program counter of the return program counter.
+     * @throws InvalidProgramCounterException if {@code returnPCOffset} 
+     *         is not a valid program count offset for the state's current frame.
+     * @throws ThreadStackEmptyException if the state's thread stack is empty.
+     * @throws InvalidInputException if the state is frozen, or 
+     *         {@link #getCurrentFrame()} is not a {@link MethodFrame}.
+     */
+    public void pushSnippetFrameWrap(Snippet snippet, int returnPCOffset) 
+    throws InvalidProgramCounterException, ThreadStackEmptyException, InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        try {
+            //sets the return program counter
+            setReturnProgramCounter(returnPCOffset);
+
+            //creates the new snippet frame
+            final Frame f = new SnippetFrameWrap(snippet, (MethodFrame) getCurrentFrame());
+
+            //pushes the frame
+            this.stack.push(f);
+        } catch (InvalidInputException e) {
+        	throw new UnexpectedInternalException("Found a method frame with a snippet classfile.");
+        } catch (ClassCastException e) {
+            throw new InvalidInputException("Cannot push a snippet frame whose context is not a method frame.");
+        }
+    }
+    
+    /**
+     * Creates a new frame for a {@link Snippet} and
+     * pushes it on this state's stack. The created frame
+     * will have its own operand stack and no local variables.
+     * 
+     * @param snippet a {@link Snippet}.
+     * @param returnPCOffset the offset from the current 
+     *        program counter of the return program counter.
+     * @param hostClass a {@code ClassFile}, the host class 
+     *        assumed for the current class of the frame.
+     * @throws InvalidProgramCounterException if {@code returnPCOffset} 
+     *         is not a valid program count offset for the state's current frame.
+     * @throws ThreadStackEmptyException if the state's thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public void pushSnippetFrameNoWrap(Snippet snippet, int returnPCOffset, ClassFile hostClass) 
+    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
+    	if (this.frozen) {
+    	    throw new FrozenStateException();
+    	}
+    	
+        //sets the return program counter
+        setReturnProgramCounter(returnPCOffset);
+
+        //creates the new snippet frame
+        final Frame f = new SnippetFrameNoWrap(snippet, hostClass, "$SNIPPET$" + this.snippetClassFileCounter++);
+
+        this.stack.push(f);
+    }
+    
+    /**
+     * Creates a new frame for a {@link Snippet} and
+     * pushes it on this state's stack. The created frame
+     * will have its own operand stack and no local variables.
+     * The assumed dynamic package (i.e., defining class loader
+     * and package name) will be the same of the topmost frame
+     * present on the stack before the invocation of this method, 
+     * as if the current class were the same before and after the
+     * invocation of the method. Therefore, invoking this method is
+     * equivalent to invoking 
+     * {@link #pushSnippetFrameNoWrap(Snippet, int, ClassFile) pushSnippetFrameNoWrap}{@code (snippet, returnPCOffset, }
+     * {@link #getCurrentClass()}{@code ).}
+     * 
+     * @param snippet a {@link Snippet}.
+     * @param returnPCOffset the offset from the current 
+     *        program counter of the return program counter.
+     * @throws InvalidProgramCounterException if {@code returnPCOffset} 
+     *         is not a valid program count offset for the state's current frame.
+     * @throws ThreadStackEmptyException if the state's thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public void pushSnippetFrameNoWrap(Snippet snippet, int returnPCOffset) 
+    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
+    	pushSnippetFrameNoWrap(snippet, returnPCOffset, getCurrentClass());
+    }
+    
+    private void narrowArgs(Calculator calc, Value[] args, Signature methodSignatureImpl, boolean isStatic) 
+    throws InvalidTypeException, InvalidInputException {
+        final String[] paramsDescriptor = Type.splitParametersDescriptors(methodSignatureImpl.getDescriptor());
+        final int expectedNumberOfArgs = paramsDescriptor.length + (isStatic ? 0 : 1);
+        if (args.length != expectedNumberOfArgs) {
+        	throw new InvalidInputException("Tried to create a method frame with a number of arguments " + args.length + " different from the expected number of arguments " + expectedNumberOfArgs + ".");
+        }
+        for (int i = 0; i < paramsDescriptor.length; ++i) {
+            if (Type.isPrimitive(paramsDescriptor[i]) && ! Type.isPrimitiveOpStack(paramsDescriptor[i].charAt(0))) {
+                final int indexArg = i + (isStatic ? 0 : 1);
+                if (args[indexArg] == null) {
+                	throw new InvalidInputException("Tried to create a method frame with a null argument args[" + indexArg + "].");
+                }
+                try {
+					args[indexArg] = calc.push((Primitive) args[indexArg]).narrow(paramsDescriptor[i].charAt(0)).pop();
+				} catch (InvalidOperandException e) {
+					//this should never happen
+					throw new UnexpectedInternalException(e);
+				}
+            }
+        }
+    }
+
+    /**
+     * Makes symbolic arguments for the root method invocation. This includes the
+     * root object.
+     * @param f the root {@link MethodFrame}.
+     * @param isStatic
+     *        {@code true} iff INVOKESTATIC method invocation rules 
+     *        must be applied.
+     * @return a {@link Value}{@code []}, the array of the symbolic parameters
+     *         for the method call. Note that the reference to the root object
+     *         is a {@link ReferenceSymbolic}.
+     * @throws HeapMemoryExhaustedException if the heap is full.
+     * @throws CannotAssumeSymbolicObjectException if the root object has class 
+     *         {@code java.lang.Class} or {@code java.lang.ClassLoader}.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    private Value[] makeArgsSymbolic(MethodFrame f, boolean isStatic) 
+    throws HeapMemoryExhaustedException, CannotAssumeSymbolicObjectException, FrozenStateException {
+        final Signature methodSignature = f.getMethodSignature();
+        final String[] paramsDescriptors = Type.splitParametersDescriptors(methodSignature.getDescriptor());
+        final int numArgs = parametersNumber(methodSignature.getDescriptor(), isStatic);
+        final String methodGenericSignatureType;
+		try {
+			methodGenericSignatureType = f.getMethodClass().getMethodGenericSignatureType(methodSignature);
+		} catch (MethodNotFoundException e) {
+			//this should not happen
+			throw new UnexpectedInternalException(e);
+		}
+        final String[] paramsGenericSignatureTypes = (methodGenericSignatureType == null ? paramsDescriptors : Type.splitParametersGenericSignatures(methodGenericSignatureType));
+
+        //produces the args as symbolic values from the method's signature
+        final ClassFile methodClass = f.getMethodClass();
+        final String methodClassName = methodClass.getClassName();
+        final Value[] args = new Value[numArgs];
+        for (int i = 0, slot = 0; i < numArgs; ++i) {
+            //builds a symbolic value from signature and name
+            final String variableName = f.getLocalVariableDeclaredName(slot);
+            try {
+                if (slot == ROOT_THIS_SLOT && !isStatic) {
+                	final String thisType = Type.REFERENCE + methodClassName + Type.TYPEEND;
+                    args[i] = (Value) createSymbolLocalVariable(thisType, thisType, variableName);
+                } else {
+                    args[i] = (Value) createSymbolLocalVariable(paramsDescriptors[(isStatic ? i : i - 1)], paramsGenericSignatureTypes[(isStatic ? i : i - 1)], variableName);
+                }
+            } catch (InvalidTypeException | InvalidInputException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
+
+            //next slot
+            ++slot;
+            if (!Type.isCat_1(args[i].getType())) {
+                ++slot;
+            }
+        }
+
+        return args;
+    }
+
+    /**
+     * Creates a new frame for a method invocation and pushes it 
+     * on a state's stack. The actual parameters of the invocation are 
+     * initialized with symbolic values.
+     *  
+     * @param classMethodImpl
+     *        the {@link ClassFile} containing the bytecode for the method.
+     * @param methodSignatureImpl 
+     *        the {@link Signature} of the method for which the 
+     *        frame is built. The bytecode for the method will be
+     *        looked for in 
+     *        {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}.
+     * @return a {@link ReferenceSymbolic}, the "this" (target) of the method invocation
+     *         if the invocation is not static, otherwise {@code null}.
+     * @throws MethodNotFoundException when {@code classMethodImpl}
+     *         does not contain a declaration for {@code methodSignatureImpl}.
+     * @throws MethodCodeNotFoundException when {@code classMethodImpl}
+     *         does not contain bytecode for {@code methodSignatureImpl}.
+     * @throws HeapMemoryExhaustedException if the heap is full.
+     * @throws CannotAssumeSymbolicObjectException if the target of the method invocation 
+     *         has class {@code java.lang.Class} or {@code java.lang.ClassLoader}.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public ReferenceSymbolic pushFrameSymbolic(ClassFile classMethodImpl, Signature methodSignatureImpl) 
+    throws MethodNotFoundException, MethodCodeNotFoundException, 
+    HeapMemoryExhaustedException, CannotAssumeSymbolicObjectException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        final boolean isStatic = classMethodImpl.isMethodStatic(methodSignatureImpl);
+        final MethodFrame f = new MethodFrame(methodSignatureImpl, classMethodImpl);
+        final Value[] args = makeArgsSymbolic(f, isStatic);
+        try {
+            f.setArgs(args);
+        } catch (InvalidSlotException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
+        this.stack.push(f);
+        return (isStatic ? null : ((ReferenceSymbolic) args[0]));
+    }
+
+    /**
+     * Parses the signature of a method, and returns the
+     * {@code this} parameter as found on the operand stack. 
+     * 
+     * @param methodSignature
+     *        the {@link Signature} of a method. It is <em>not</em>
+     *        checked.
+     * @return the {@link Reference} to the receiver of
+     *         the method according to {@link methodSignature}'s 
+     *         declared list of parameters, or {@link null} if the 
+     *         operand stack has not enough items, or the
+     *         item in the position of the "this" parameter is
+     *         not a reference. 
+     * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public Reference peekReceiverArg(Signature methodSignature) 
+    throws ThreadStackEmptyException, FrozenStateException {
+        final String[] paramsDescriptors = Type.splitParametersDescriptors(methodSignature.getDescriptor());
+        final int nParams = paramsDescriptors.length + 1;
+        final Collection<Value> opStackVals = getCurrentFrame().operands();
+        int i = 1;
+        for (Value val : opStackVals) { 
+            if (i == nParams) {
+                if (! (val instanceof Reference)) {
+                    return null;
+                }
+                return (Reference) val;
+            }
+            ++i;
+        }
+        return null;
+    }
+    
+    /**
+     * Collects and disposes the unreachable heap objects.
+     * 
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public void gc() throws FrozenStateException {
+        final Set<Long> doNotDispose = new ReachableObjectsCollector().reachable(this, true);
+        this.heap.disposeExcept(doNotDispose);
+    }
+    
+    /**
+     * Getter for garbage collection.
+     * 
+     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
+     *         of all the references in the object dictionary.
+     */
+    Collection<ReferenceConcrete> getObjectsInDictionary() {
+        return this.objectDictionary.getReferences();
+    }
+
+    /**
+     * Returns the static method area of this state.
+     * 
+     * @return the state's static method area as an 
+     *         immutable {@link Map}{@code <}{@link ClassFile}{@code , }{@link Klass}{@code >}.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public Map<ClassFile, Klass> getStaticMethodArea() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        return Collections.unmodifiableMap(this.staticMethodArea.getObjects());
+    }    
 
     /**
      * Tests whether a class is initialized.
@@ -632,89 +1345,91 @@ public final class State implements Cloneable {
         return this.staticMethodArea.contains(classFile);
     }
 
-
     /**
-     * Tests whether a symbolic reference is resolved.
+     * Returns the {@link Klass} object corresponding to 
+     * a given class name.
      * 
-     * @param ref a {@link ReferenceSymbolic}.
-     * @return {@code true} iff {@code ref} is resolved.
-     *         Note that in the positive case either the 
-     *         {@link State}'s heap contains an {@link Objekt}
-     *         at the position indicated by {@code ref}, 
-     *         or {@code ref} is resolved by null.
-     * @throws NullPointerException if {@code ref == null}.
-     */
-    public boolean resolved(ReferenceSymbolic ref) {
-        return this.pathCondition.resolved(ref);
-    }
-
-    /**
-     * Returns the heap position associated to a resolved 
-     * symbolic reference.
-     * 
-     * @param ref a {@link ReferenceSymbolic}. It must be 
-     * {@link #resolved}{@code (reference) == true}.
-     * @return a {@code long}, the heap position to which
-     * {@code ref} has been resolved.
-     * @throws NullPointerException if {@code ref == null}.
-     */
-    public long getResolution(ReferenceSymbolic ref) {
-        return this.pathCondition.getResolution(ref);
-    }
-
-    /**
-     * Tests whether a reference is null.
-     * 
-     * @param ref a {@link Reference}.
-     * @return {@code true} iff {@code ref} is {@link Null}, 
-     * or if is a symbolic reference resolved to null.
-     * @throws NullPointerException if {@code ref == null}.
-     */
-    public boolean isNull(Reference ref) {
-        if (ref instanceof ReferenceSymbolic) {
-            final ReferenceSymbolic refS = (ReferenceSymbolic) ref;
-            return (resolved(refS) && getResolution(refS) == jbse.mem.Util.POS_NULL);
-        } else {
-            return (ref == Null.getInstance());
-        }
-    }
-
-    /**
-     * Gets an object from the heap.
-     * 
-     * @param ref a {@link Reference}.
-     * @return the {@link HeapObjekt} referred to by {@code ref}, or 
-     *         {@code null} if {@code ref} does not refer to 
-     *         an object in the heap, i.e.
-     *         <ul>
-     *         <li>{@code ref} is {@link Null}, or</li> 
-     *         <li>{@code ref} is concrete and its heap position is free, or</li> 
-     *         <li>{@code ref} is symbolic and resolved to null, or</li> 
-     *         <li>{@code ref} is symbolic and unresolved, or</li>
-     *         <li>{@code ref} is a {@link KlassPseudoReference}.</li>
-     *         </ul>
+     * @param classFile a {@link ClassFile}.
+     * @return the {@link Klass} object corresponding to 
+     *         the memory representation of the class 
+     *         {@code classFile}, or {@code null} 
+     *         if the class has not been initialized.
      * @throws FrozenStateException if the state is frozen.
-     * @throws NullPointerException if {@code ref == null}.
      */
-    public HeapObjekt getObject(Reference ref) throws FrozenStateException {
+    public Klass getKlass(ClassFile classFile) throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        final HeapObjekt retVal;
-        if (ref.isSymbolic()) {
-            final ReferenceSymbolic refSymbolic = (ReferenceSymbolic) ref;
-            if (resolved(refSymbolic)) {
-                final long pos = getResolution(refSymbolic);
-                retVal = this.heap.getObject(pos);
-            } else {
-                retVal = null;
-            }
-        } else {
-            final ReferenceConcrete refConcrete = (ReferenceConcrete) ref;
-            final long pos = refConcrete.getHeapPosition();
-            retVal = this.heap.getObject(pos);
+        return this.staticMethodArea.get(classFile);
+    }
+    
+    /**
+     * Creates a concrete {@link Klass} object and puts it in the 
+     * static area of this state. It does not initialize the constant 
+     * fields nor loads on the stack of the state the frames for the
+     * {@code <clinit>} methods. It does not create {@link Klass} objects
+     * for superclasses. If the {@link Klass} already exists it does nothing.
+     * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param classFile the {@link ClassFile} of the class for which
+     *        the {@link Klass} object must be created. The method 
+     *        creates a {@link Klass} object only for {@code classFile}, 
+     *        not for its superclasses in the hierarchy.
+     * @throws FrozenStateException if the state is frozen.
+     * @throws InvalidInputException if {@code calc == null || classFile == null}.
+     */
+    public void ensureKlass(Calculator calc, ClassFile classFile) 
+    throws FrozenStateException, InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        if (calc == null || classFile == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".ensureKlass with null Calculator calc or ClassFile classFile parameter.");
         }
-        return retVal;
+        if (existsKlass(classFile)) {
+            return;
+        }
+        final KlassImpl k = new KlassImpl(calc, false, classFile, createSymbolKlassPseudoReference(this.historyPoint, classFile), this.historyPoint);
+        k.setIdentityHashCode(calc.valInt(0)); //doesn't care because it is not used
+        this.staticMethodArea.set(k);
+    }
+
+    /**
+     * Creates a symbolic {@link Klass} object and puts it in the 
+     * static area of this state. It does not initialize the constant 
+     * fields. It does not create {@link Klass} objects
+     * for superclasses. If the {@link Klass} already exists it 
+     * does nothing.
+     * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param classFile the {@link ClassFile} of the class for which
+     *        the {@link Klass} object must be created. The method 
+     *        creates a {@link Klass} object only for {@code classFile}, 
+     *        not for its superclasses in the hierarchy.
+     * @throws FrozenStateException if the state is frozen.
+     * @throws InvalidInputException if {@code calc == null || classFile == null}.
+     */
+    public void ensureKlassSymbolic(Calculator calc, ClassFile classFile) 
+    throws FrozenStateException, InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        if (calc == null || classFile == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".ensureKlassSymbolic with null Calculator calc or ClassFile classFile parameter.");
+        }
+        if (existsKlass(classFile)) {
+            return;
+        }
+        final KlassImpl k = new KlassImpl(calc, true, classFile, createSymbolKlassPseudoReference(this.lastPreInitialHistoryPoint, classFile), this.lastPreInitialHistoryPoint);
+        try {
+        	initWithSymbolicValues(k, classFile);
+        } catch (NullPointerException e) {
+        	//this should never happen
+        	throw new UnexpectedInternalException(e);
+        }
+        k.setIdentityHashCode(calc.valInt(0)); //doesn't care because it is not used
+        k.setInitializationCompleted(); //nothing else to do
+        this.staticMethodArea.set(k);
     }
 
     /**
@@ -749,6 +1464,19 @@ public final class State implements Cloneable {
         resetDepth();
         resetCount();
     }
+
+    /**
+     * Sets this state to its post-initizialization
+     * phase.
+     * 
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public void setPhasePostInitial() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        this.phase = Phase.POST_INITIAL;
+    }
     
     /**
      * Sets the state's depth to {@code 0}, the value of 
@@ -763,37 +1491,6 @@ public final class State implements Cloneable {
         this.depth = 0;
     }
 
-    /**
-     * Sets this state to its post-initizialization
-     * phase.
-     * 
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public void setPhasePostInitial() throws FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        this.phase = Phase.POST_INITIAL;
-    }
-
-    /**
-     * Returns the {@link Klass} object corresponding to 
-     * a given class name.
-     * 
-     * @param classFile a {@link ClassFile}.
-     * @return the {@link Klass} object corresponding to 
-     *         the memory representation of the class 
-     *         {@code classFile}, or {@code null} 
-     *         if the class has not been initialized.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public Klass getKlass(ClassFile classFile) throws FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        return this.staticMethodArea.get(classFile);
-    }
-    
     /**
      * Checks whether a  a signature polymorphic nonintrinsic 
      * method is linked to an adapter/appendix. 
@@ -1325,6 +2022,61 @@ public final class State implements Cloneable {
     }
 
     /**
+     * Returns a copy of the state's heap.
+     * 
+     * @return a copy the state's heap as a 
+     * {@link SortedMap}{@code <}{@link Long}{@code , }{@link Objekt}{@code >}
+     * mapping heap positions to the {@link Objekt}s stored 
+     * at them.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    //TODO raise the abstraction level and make this method return a SortedMap<Reference, Objekt>
+    public SortedMap<Long, Objekt> getHeap() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        return this.heap.getObjects();
+    }
+
+    /**
+     * Gets an object from the heap.
+     * 
+     * @param ref a {@link Reference}.
+     * @return the {@link HeapObjekt} referred to by {@code ref}, or 
+     *         {@code null} if {@code ref} does not refer to 
+     *         an object in the heap, i.e.
+     *         <ul>
+     *         <li>{@code ref} is {@link Null}, or</li> 
+     *         <li>{@code ref} is concrete and its heap position is free, or</li> 
+     *         <li>{@code ref} is symbolic and resolved to null, or</li> 
+     *         <li>{@code ref} is symbolic and unresolved, or</li>
+     *         <li>{@code ref} is a {@link KlassPseudoReference}.</li>
+     *         </ul>
+     * @throws FrozenStateException if the state is frozen.
+     * @throws NullPointerException if {@code ref == null}.
+     */
+    public HeapObjekt getObject(Reference ref) throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        final HeapObjekt retVal;
+        if (ref.isSymbolic()) {
+            final ReferenceSymbolic refSymbolic = (ReferenceSymbolic) ref;
+            if (resolved(refSymbolic)) {
+                final long pos = getResolution(refSymbolic);
+                retVal = this.heap.getObject(pos);
+            } else {
+                retVal = null;
+            }
+        } else {
+            final ReferenceConcrete refConcrete = (ReferenceConcrete) ref;
+            final long pos = refConcrete.getHeapPosition();
+            retVal = this.heap.getObject(pos);
+        }
+        return retVal;
+    }
+
+    /**
      * Creates a new {@link Array} of a given class in the heap of 
      * the state.
      * 
@@ -1608,75 +2360,6 @@ public final class State implements Cloneable {
     }
 
     /**
-     * Creates a concrete {@link Klass} object and puts it in the 
-     * static area of this state. It does not initialize the constant 
-     * fields nor loads on the stack of the state the frames for the
-     * {@code <clinit>} methods. It does not create {@link Klass} objects
-     * for superclasses. If the {@link Klass} already exists it does nothing.
-     * 
-     * @param calc a {@link Calculator}. It must not be {@code null}.
-     * @param classFile the {@link ClassFile} of the class for which
-     *        the {@link Klass} object must be created. The method 
-     *        creates a {@link Klass} object only for {@code classFile}, 
-     *        not for its superclasses in the hierarchy.
-     * @throws FrozenStateException if the state is frozen.
-     * @throws InvalidInputException if {@code calc == null || classFile == null}.
-     */
-    public void ensureKlass(Calculator calc, ClassFile classFile) 
-    throws FrozenStateException, InvalidInputException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        if (calc == null || classFile == null) {
-            throw new InvalidInputException("Invoked method " + getClass().getName() + ".ensureKlass with null Calculator calc or ClassFile classFile parameter.");
-        }
-        if (existsKlass(classFile)) {
-            return;
-        }
-        final KlassImpl k = new KlassImpl(calc, false, classFile, createSymbolKlassPseudoReference(this.historyPoint, classFile), this.historyPoint);
-        k.setIdentityHashCode(calc.valInt(0)); //doesn't care because it is not used
-        this.staticMethodArea.set(k);
-    }
-
-    /**
-     * Creates a symbolic {@link Klass} object and puts it in the 
-     * static area of this state. It does not initialize the constant 
-     * fields. It does not create {@link Klass} objects
-     * for superclasses. If the {@link Klass} already exists it 
-     * does nothing.
-     * 
-     * @param calc a {@link Calculator}. It must not be {@code null}.
-     * @param classFile the {@link ClassFile} of the class for which
-     *        the {@link Klass} object must be created. The method 
-     *        creates a {@link Klass} object only for {@code classFile}, 
-     *        not for its superclasses in the hierarchy.
-     * @throws FrozenStateException if the state is frozen.
-     * @throws InvalidInputException if {@code calc == null || classFile == null}.
-     */
-    public void ensureKlassSymbolic(Calculator calc, ClassFile classFile) 
-    throws FrozenStateException, InvalidInputException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        if (calc == null || classFile == null) {
-            throw new InvalidInputException("Invoked method " + getClass().getName() + ".ensureKlassSymbolic with null Calculator calc or ClassFile classFile parameter.");
-        }
-        if (existsKlass(classFile)) {
-            return;
-        }
-        final KlassImpl k = new KlassImpl(calc, true, classFile, createSymbolKlassPseudoReference(this.lastPreInitialHistoryPoint, classFile), this.lastPreInitialHistoryPoint);
-        try {
-        	initWithSymbolicValues(k, classFile);
-        } catch (NullPointerException e) {
-        	//this should never happen
-        	throw new UnexpectedInternalException(e);
-        }
-        k.setIdentityHashCode(calc.valInt(0)); //doesn't care because it is not used
-        k.setInitializationCompleted(); //nothing else to do
-        this.staticMethodArea.set(k);
-    }
-
-    /**
      * Creates a new {@link HeapObjekt} of a given class in the heap of 
      * the state. The {@link HeapObjekt}'s fields are initialized with symbolic 
      * values.
@@ -1802,22 +2485,22 @@ public final class State implements Cloneable {
      * @return {@code true} iff the class cannot be executed
      *         symbolically. 
      */
-    private boolean cannotExecuteSymbolically(ClassFile classFile) throws InvalidInputException {
+    private boolean cannotExecuteSymbolically(ClassFile classFile) {
     	if (JAVA_CLASS.equals(classFile.getClassName())) {
     		return true;
     	}
         final ClassFile cf_JAVA_CLASSLOADER;
         try {
             cf_JAVA_CLASSLOADER = this.classHierarchy.loadCreateClass(JAVA_CLASSLOADER);
+        	if (classFile.isSubclass(cf_JAVA_CLASSLOADER)) {
+        		return true;
+        	}
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
                  RenameUnsupportedException | WrongClassNameException | IncompatibleClassFileException |
                  InvalidInputException | ClassFileNotAccessibleException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-    	if (classFile.isSubclass(cf_JAVA_CLASSLOADER)) {
-    		return true;
-    	}
     	
     	return false;
     }
@@ -2165,58 +2848,6 @@ public final class State implements Cloneable {
     }
     
     /**
-     * Declares that the standard (extensions and application) class loaders are ready
-     * to be used.
-     * 
-     * @throws InvalidInputException when the state is frozen, or the 
-     *         {@link Instance_JAVA_CLASSLOADER}s for the standard 
-     *         classloaders were not created in the heap 
-     *         (note that this method does not check that the 
-     *         {@link Instance_JAVA_CLASSLOADER}s were also initialized).
-     */
-    public void setStandardClassLoadersReady() throws InvalidInputException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        if (!this.standardClassLoadersNotReady) {
-            return; //nothing to do
-        }
-        if (this.objectDictionary.maxClassLoaders() <= CLASSLOADER_APP) {
-            throw new InvalidInputException("Invoked " + getClass().getName() + ".setStandardClassLoadersReady with true parameter, but the standard class loaders were not created yet.");
-        }
-        this.standardClassLoadersNotReady = false;
-    }
-    
-    /**
-     * Checks whether the bootstrap classloader should always load the 
-     * classes defined by the extensions and application classloaders.
-     * This method returns the value set by the constructor, 
-     * so it shall only be used to query it, not to decide during
-     * symbolic execution what loader to use. For the latter use 
-     * the {@link #bypassStandardLoading()} method.
-     * 
-     * @return a {@code boolean}.
-     */
-    public boolean shouldAlwaysBypassStandardLoading() {
-        return this.bypassStandardLoading;
-    }
-    
-    /**
-     * Checks whether the bootstrap classloader should load the 
-     * classes defined by the extensions and application classloaders, 
-     * either because users want to always use it at the purpose, 
-     * or because the extensions and application classloaders
-     * are not yet ready to be used.
-     * 
-     * @return {@code true} iff {@link #shouldAlwaysBypassStandardLoading()}, or 
-     *         if the method {@link #setStandardClassLoadersReady()}
-     *         was not previously invoked.
-     */
-    public boolean bypassStandardLoading() {
-        return this.bypassStandardLoading || this.standardClassLoadersNotReady;
-    }
-    
-    /**
      * Checks if there is an {@link Instance} of {@code java.lang.invoke.MethodType} 
      * in this state's heap for some descriptor.
      * 
@@ -2339,530 +2970,84 @@ public final class State implements Cloneable {
     	}
         this.objectDictionary.putMethodHandle(refKind, container, descriptorResolved, name, referenceMethodHandle);
     }
-
+    
     /**
-     * Unwinds the stack of this state until it finds an exception 
-     * handler for an object. If the thread stack is empty after 
-     * unwinding, sets the state to stuck with the unhandled exception
-     * throw as a cause.
+     * Returns the state's path condition clauses.
      * 
-     * @param exceptionToThrow a {@link Reference} to a throwable 
-     *        {@link Objekt} in the state's {@link Heap}.
-     * @throws InvalidInputException if the state is frozen, or 
-     *         {@code exceptionToThrow} is an unresolved symbolic reference, 
-     *         or is a null reference, or is a reference to an object that 
-     *         does not extend {@code java.lang.Throwable}.
-     * @throws InvalidIndexException if the exception type field in a row of the exception table 
-     *         does not contain the index of a valid CONSTANT_Class in the class constant pool.
-     * @throws InvalidProgramCounterException if the program counter handle in a row 
-     *         of the exception table does not contain a valid program counter.
+     * @return a read-only {@link List}{@code <}{@link Clause}{@code >} 
+     * representing all the {@link Clause}s cumulated in {@code this}. 
+     * It is valid until {@code this} is modified.
      */
-    public void unwindStack(Reference exceptionToThrow) 
-    throws InvalidInputException, InvalidIndexException, InvalidProgramCounterException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        //checks that exceptionToThrow is resolved to a throwable Objekt
-        final Objekt myException = getObject(exceptionToThrow);
-        final ClassFile cf_JAVA_THROWABLE;
-        try {
-            cf_JAVA_THROWABLE = this.classHierarchy.loadCreateClass(JAVA_THROWABLE);
-        } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
-                 RenameUnsupportedException | WrongClassNameException | IncompatibleClassFileException |
-                 InvalidInputException | ClassFileNotAccessibleException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
-        if (myException == null || !myException.getType().isSubclass(cf_JAVA_THROWABLE)) {
-            throw new InvalidInputException("Attempted to throw an unresolved or null reference, or a reference to an object that is not Throwable.");
-        }
-
-        //fills a vector with all the superclass names of the exception
-        final ArrayList<String> excTypes = new ArrayList<String>();
-        for (ClassFile f : myException.getType().superclasses()) {
-            excTypes.add(f.getClassName());
-        }
-
-        //unwinds the stack
-        try {
-            while (true) {
-                if (this.stack.isEmpty()) {
-                	if (phase() == Phase.POST_INITIAL) {
-                		setStuckException(exceptionToThrow);
-                	}
-                    return;
-                }
-                if (getCurrentFrame() instanceof SnippetFrameNoWrap) {
-                    //cannot catch anything and has no current method either
-                    popCurrentFrame();
-                    continue; 
-                }
-                final Signature currentMethodSignature = getCurrentMethodSignature();
-                final ExceptionTable exceptionTable = getCurrentClass().getExceptionTable(currentMethodSignature);
-                final Entry exceptionTableEntry = exceptionTable.getEntry(excTypes, getCurrentProgramCounter());
-                if (exceptionTableEntry == null) {
-                    popCurrentFrame();
-                } else {
-                    clearOperands();
-                    setProgramCounter(exceptionTableEntry.programCounterHandler);
-                    pushOperand(exceptionToThrow);
-                    return;				
-                }
-            }
-        } catch (ThreadStackEmptyException | MethodNotFoundException | 
-                 MethodCodeNotFoundException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
+    public List<Clause> getPathCondition() {
+        return this.pathCondition.getClauses();
     }
 
     /**
-     * Creates a new frame for a (nonnative) method and pushes it 
-     * on this state's stack.
+     * Returns the path condition clauses that have been pushed since
+     * the last call of {@link #resetLastPathConditionClauses()}. Used to determine
+     * how many clauses have not yet been sent to the decision procedure.
      * 
-     * @param calc a {@link Calculator}. It must not be {@code null}.
-     * @param classMethodImpl the {@link ClassFile} containing the 
-     *        bytecode for the method.
-     * @param methodSignatureImpl the {@link Signature} of the method 
-     *        for which the frame is built.
-     * @param isRoot {@code true} iff the frame is the root frame of 
-     *        symbolic execution (i.e., on the top of the thread stack).
-     * @param returnPCOffset the offset from the current program counter 
-     *        of the return program counter. It is ignored if 
-     *        {@code isRoot == true}.
-     * @param args varargs of method call arguments.
-     * @throws NullMethodReceiverException when the method is not static
-     *         and the first argument in {@code args} is the null reference.
-     * @throws MethodNotFoundException when {@code classMethodImpl}
-     *         does not contain a declaration for {@code methodSignatureImpl}.
-     * @throws MethodCodeNotFoundException when {@code classMethodImpl}
-     *         does not contain bytecode for {@code methodSignatureImpl}.
-     * @throws InvalidInputException when {@code classMethodImpl == null || 
-     *         methodSignatureImpl == null || args == null}.
-     * @throws InvalidSlotException when there are 
-     *         too many {@code arg}s or some of their types are 
-     *         incompatible with their respective slots types.
-     * @throws InvalidTypeException when narrowing of an argument (performed to match
-     *         the method's signature) fails.
-     * @throws InvalidProgramCounterException when {@code isRoot == false} and
-     *         {@code returnPCOffset} is not a valid program count offset for the
-     *         state's current frame.
-     * @throws ThreadStackEmptyException when {@code isRoot == false} and the 
-     *         state's thread stack is empty.
-     * @throws FrozenStateException if the state is frozen.
+     * @return a read-only {@link Iterable}{@code <}{@link Clause}{@code >} 
+     * representing all the {@link Clause}s cumulated in {@code this}. 
+     * It is valid until {@code this} is modified, or {@link #resetLastPathConditionClauses()}
+     * is invoked.
      */
-    public void pushFrame(Calculator calc, ClassFile classMethodImpl, Signature methodSignatureImpl, boolean isRoot, int returnPCOffset, Value... args) 
-    throws NullMethodReceiverException, MethodNotFoundException, MethodCodeNotFoundException, InvalidInputException, InvalidSlotException, 
-    InvalidTypeException, InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-    	if (calc == null || classMethodImpl == null || methodSignatureImpl == null || args == null) {
-    		throw new InvalidInputException("Tried to invoke " + this.getClass().getName() + ".pushFrame with null calc or classMethodImpl or methodSignatureImpl or args.");
-    	}
-        final boolean isStatic = classMethodImpl.isMethodStatic(methodSignatureImpl);
-        
-        //checks the "this" parameter (invocation receiver) if necessary
-        if (!isStatic) {
-            if (args.length == 0 || !(args[0] instanceof Reference)) {
-                throw new UnexpectedInternalException("Args for method invocation do not correspond to method signature."); //TODO better exception
+    public Iterable<Clause> getLastPathConditionPushedClauses() {
+        return () -> {
+            final ListIterator<Clause> it = this.pathCondition.getClauses().listIterator();
+            final int fwdEnd = this.pathCondition.getClauses().size() - this.nPushedClauses;
+            for (int i = 1; i <= fwdEnd; ++i) {
+                it.next();
             }
-            if (isNull((Reference) args[0])) {
-                throw new NullMethodReceiverException();
-            }
-        }
-        
-        //sets the return program counter
-        if (isRoot) {
-            //do nothing, after creation the frame has already a dummy return program counter
+            return it;
+        };
+    }
+    
+    
+    /**
+     * Tests whether a symbolic reference is resolved.
+     * 
+     * @param ref a {@link ReferenceSymbolic}.
+     * @return {@code true} iff {@code ref} is resolved.
+     *         Note that in the positive case either the 
+     *         {@link State}'s heap contains an {@link Objekt}
+     *         at the position indicated by {@code ref}, 
+     *         or {@code ref} is resolved by null.
+     * @throws NullPointerException if {@code ref == null}.
+     */
+    public boolean resolved(ReferenceSymbolic ref) {
+        return this.pathCondition.resolved(ref);
+    }
+
+    /**
+     * Returns the heap position associated to a resolved 
+     * symbolic reference.
+     * 
+     * @param ref a {@link ReferenceSymbolic}. It must be 
+     * {@link #resolved}{@code (reference) == true}.
+     * @return a {@code long}, the heap position to which
+     * {@code ref} has been resolved.
+     * @throws NullPointerException if {@code ref == null}.
+     */
+    public long getResolution(ReferenceSymbolic ref) {
+        return this.pathCondition.getResolution(ref);
+    }
+
+    /**
+     * Tests whether a reference is null.
+     * 
+     * @param ref a {@link Reference}.
+     * @return {@code true} iff {@code ref} is {@link Null}, 
+     * or if is a symbolic reference resolved to null.
+     * @throws NullPointerException if {@code ref == null}.
+     */
+    public boolean isNull(Reference ref) {
+        if (ref instanceof ReferenceSymbolic) {
+            final ReferenceSymbolic refS = (ReferenceSymbolic) ref;
+            return (resolved(refS) && getResolution(refS) == jbse.mem.Util.POS_NULL);
         } else {
-            setReturnProgramCounter(returnPCOffset);
+            return (ref == Null.getInstance());
         }
-
-        //narrows the int args if the method signature requires a narrower type
-        narrowArgs(calc, args, methodSignatureImpl, isStatic);
-
-        //creates the new frame and sets its args
-        final MethodFrame f = new MethodFrame(methodSignatureImpl, classMethodImpl);
-        f.setArgs(args);
-
-        //pushes the new frame on the thread stack
-        this.stack.push(f);
-    }
-    
-    /**
-     * Creates a {@link SnippetFactory} for snippets
-     * that can be pushed on the current stack with
-     * {@link #pushSnippetFrameNoWrap(Snippet, int, int, String) pushSnippetFrameNoWrap}.
-     * 
-     * @return a {@link SnippetFactory}.
-     */
-    public SnippetFactory snippetFactoryNoWrap() {
-        return new SnippetFactory();
-    }
-    
-    /**
-     * Creates a {@link SnippetFactory} for snippets
-     * that can be pushed on the current stack with
-     * {@link #pushSnippetFrameWrap(Snippet, int) pushSnippetFrameWrap}.
-     * 
-     * @return a {@link SnippetFactory}.
-     * @throws ThreadStackEmptyException if the stack is empty.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public SnippetFactory snippetFactoryWrap() 
-    throws FrozenStateException, ThreadStackEmptyException {
-        return new SnippetFactory(getCurrentClass());
-    }
-    
-    /**
-     * Creates a new frame for a {@link Snippet} and
-     * pushes it on this state's stack. The created frame 
-     * will inherit the context of the current frame, including
-     * the current class (on which the additional constant pool
-     * items will be injected), will operate on its operand stack 
-     * and local variables. Note that it is possible to wrap only 
-     * a {@link MethodFrame}, not another snippet frame.
-     * 
-     * @param snippet a {@link Snippet}.
-     * @param returnPCOffset the offset from the current 
-     *        program counter of the return program counter.
-     * @throws InvalidProgramCounterException if {@code returnPCOffset} 
-     *         is not a valid program count offset for the state's current frame.
-     * @throws ThreadStackEmptyException if the state's thread stack is empty.
-     * @throws InvalidInputException if the state is frozen, or 
-     *         {@link #getCurrentFrame()} is not a {@link MethodFrame}.
-     */
-    public void pushSnippetFrameWrap(Snippet snippet, int returnPCOffset) 
-    throws InvalidProgramCounterException, ThreadStackEmptyException, InvalidInputException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        try {
-            //sets the return program counter
-            setReturnProgramCounter(returnPCOffset);
-
-            //creates the new snippet frame
-            final Frame f = new SnippetFrameWrap(snippet, (MethodFrame) getCurrentFrame());
-
-            //pushes the frame
-            this.stack.push(f);
-        } catch (InvalidInputException e) {
-        	throw new UnexpectedInternalException("Found a method frame with a snippet classfile.");
-        } catch (ClassCastException e) {
-            throw new InvalidInputException("Cannot push a snippet frame whose context is not a method frame.");
-        }
-    }
-    
-    /**
-     * Creates a new frame for a {@link Snippet} and
-     * pushes it on this state's stack. The created frame
-     * will have its own operand stack and no local variables.
-     * 
-     * @param snippet a {@link Snippet}.
-     * @param returnPCOffset the offset from the current 
-     *        program counter of the return program counter.
-     * @param hostClass a {@code ClassFile}, the host class 
-     *        assumed for the current class of the frame.
-     * @throws InvalidProgramCounterException if {@code returnPCOffset} 
-     *         is not a valid program count offset for the state's current frame.
-     * @throws ThreadStackEmptyException if the state's thread stack is empty.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public void pushSnippetFrameNoWrap(Snippet snippet, int returnPCOffset, ClassFile hostClass) 
-    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
-    	if (this.frozen) {
-    	    throw new FrozenStateException();
-    	}
-    	
-        //sets the return program counter
-        setReturnProgramCounter(returnPCOffset);
-
-        //creates the new snippet frame
-        final Frame f = new SnippetFrameNoWrap(snippet, hostClass, "$SNIPPET$" + this.snippetClassFileCounter++);
-
-        this.stack.push(f);
-    }
-    
-    /**
-     * Creates a new frame for a {@link Snippet} and
-     * pushes it on this state's stack. The created frame
-     * will have its own operand stack and no local variables.
-     * The assumed dynamic package (i.e., defining class loader
-     * and package name) will be the same of the topmost frame
-     * present on the stack before the invocation of this method, 
-     * as if the current class were the same before and after the
-     * invocation of the method. Therefore, invoking this method is
-     * equivalent to invoking 
-     * {@link #pushSnippetFrameNoWrap(Snippet, int, ClassFile) pushSnippetFrameNoWrap}{@code (snippet, returnPCOffset, }
-     * {@link #getCurrentClass()}{@code ).}
-     * 
-     * @param snippet a {@link Snippet}.
-     * @param returnPCOffset the offset from the current 
-     *        program counter of the return program counter.
-     * @throws InvalidProgramCounterException if {@code returnPCOffset} 
-     *         is not a valid program count offset for the state's current frame.
-     * @throws ThreadStackEmptyException if the state's thread stack is empty.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public void pushSnippetFrameNoWrap(Snippet snippet, int returnPCOffset) 
-    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
-    	pushSnippetFrameNoWrap(snippet, returnPCOffset, getCurrentClass());
-    }
-    
-    private void narrowArgs(Calculator calc, Value[] args, Signature methodSignatureImpl, boolean isStatic) 
-    throws InvalidTypeException, InvalidInputException {
-        final String[] paramsDescriptor = Type.splitParametersDescriptors(methodSignatureImpl.getDescriptor());
-        final int expectedNumberOfArgs = paramsDescriptor.length + (isStatic ? 0 : 1);
-        if (args.length != expectedNumberOfArgs) {
-        	throw new InvalidInputException("Tried to create a method frame with a number of arguments " + args.length + " different from the expected number of arguments " + expectedNumberOfArgs + ".");
-        }
-        for (int i = 0; i < paramsDescriptor.length; ++i) {
-            if (Type.isPrimitive(paramsDescriptor[i]) && ! Type.isPrimitiveOpStack(paramsDescriptor[i].charAt(0))) {
-                final int indexArg = i + (isStatic ? 0 : 1);
-                if (args[indexArg] == null) {
-                	throw new InvalidInputException("Tried to create a method frame with a null argument args[" + indexArg + "].");
-                }
-                try {
-					args[indexArg] = calc.push((Primitive) args[indexArg]).narrow(paramsDescriptor[i].charAt(0)).pop();
-				} catch (InvalidOperandException e) {
-					//this should never happen
-					throw new UnexpectedInternalException(e);
-				}
-            }
-        }
-    }
-
-    /**
-     * Makes symbolic arguments for the root method invocation. This includes the
-     * root object.
-     * @param f the root {@link MethodFrame}.
-     * @param isStatic
-     *        {@code true} iff INVOKESTATIC method invocation rules 
-     *        must be applied.
-     * @return a {@link Value}{@code []}, the array of the symbolic parameters
-     *         for the method call. Note that the reference to the root object
-     *         is a {@link ReferenceSymbolic}.
-     * @throws HeapMemoryExhaustedException if the heap is full.
-     * @throws CannotAssumeSymbolicObjectException if the root object has class 
-     *         {@code java.lang.Class} or {@code java.lang.ClassLoader}.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    private Value[] makeArgsSymbolic(MethodFrame f, boolean isStatic) 
-    throws HeapMemoryExhaustedException, CannotAssumeSymbolicObjectException, FrozenStateException {
-        final Signature methodSignature = f.getMethodSignature();
-        final String[] paramsDescriptors = Type.splitParametersDescriptors(methodSignature.getDescriptor());
-        final int numArgs = parametersNumber(methodSignature.getDescriptor(), isStatic);
-        final String methodGenericSignatureType;
-		try {
-			methodGenericSignatureType = f.getMethodClass().getMethodGenericSignatureType(methodSignature);
-		} catch (MethodNotFoundException e) {
-			//this should not happen
-			throw new UnexpectedInternalException(e);
-		}
-        final String[] paramsGenericSignatureTypes = (methodGenericSignatureType == null ? paramsDescriptors : Type.splitParametersGenericSignatures(methodGenericSignatureType));
-
-        //produces the args as symbolic values from the method's signature
-        final ClassFile methodClass = f.getMethodClass();
-        final String methodClassName = methodClass.getClassName();
-        final Value[] args = new Value[numArgs];
-        for (int i = 0, slot = 0; i < numArgs; ++i) {
-            //builds a symbolic value from signature and name
-            final String variableName = f.getLocalVariableDeclaredName(slot);
-            try {
-                if (slot == ROOT_THIS_SLOT && !isStatic) {
-                	final String thisType = Type.REFERENCE + methodClassName + Type.TYPEEND;
-                    args[i] = (Value) createSymbolLocalVariable(thisType, thisType, variableName);
-                } else {
-                    args[i] = (Value) createSymbolLocalVariable(paramsDescriptors[(isStatic ? i : i - 1)], paramsGenericSignatureTypes[(isStatic ? i : i - 1)], variableName);
-                }
-            } catch (InvalidTypeException | InvalidInputException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
-
-            //next slot
-            ++slot;
-            if (!Type.isCat_1(args[i].getType())) {
-                ++slot;
-            }
-        }
-
-        return args;
-    }
-
-    /**
-     * Creates a new frame for a method invocation and pushes it 
-     * on a state's stack. The actual parameters of the invocation are 
-     * initialized with symbolic values.
-     *  
-     * @param classMethodImpl
-     *        the {@link ClassFile} containing the bytecode for the method.
-     * @param methodSignatureImpl 
-     *        the {@link Signature} of the method for which the 
-     *        frame is built. The bytecode for the method will be
-     *        looked for in 
-     *        {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}.
-     * @return a {@link ReferenceSymbolic}, the "this" (target) of the method invocation
-     *         if the invocation is not static, otherwise {@code null}.
-     * @throws MethodNotFoundException when {@code classMethodImpl}
-     *         does not contain a declaration for {@code methodSignatureImpl}.
-     * @throws MethodCodeNotFoundException when {@code classMethodImpl}
-     *         does not contain bytecode for {@code methodSignatureImpl}.
-     * @throws HeapMemoryExhaustedException if the heap is full.
-     * @throws CannotAssumeSymbolicObjectException if the target of the method invocation 
-     *         has class {@code java.lang.Class} or {@code java.lang.ClassLoader}.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public ReferenceSymbolic pushFrameSymbolic(ClassFile classMethodImpl, Signature methodSignatureImpl) 
-    throws MethodNotFoundException, MethodCodeNotFoundException, 
-    HeapMemoryExhaustedException, CannotAssumeSymbolicObjectException, FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        final boolean isStatic = classMethodImpl.isMethodStatic(methodSignatureImpl);
-        final MethodFrame f = new MethodFrame(methodSignatureImpl, classMethodImpl);
-        final Value[] args = makeArgsSymbolic(f, isStatic);
-        try {
-            f.setArgs(args);
-        } catch (InvalidSlotException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
-        this.stack.push(f);
-        return (isStatic ? null : ((ReferenceSymbolic) args[0]));
-    }
-
-    /**
-     * Parses the signature of a method, and returns the
-     * {@code this} parameter as found on the operand stack. 
-     * 
-     * @param methodSignature
-     *        the {@link Signature} of a method. It is <em>not</em>
-     *        checked.
-     * @return the {@link Reference} to the receiver of
-     *         the method according to {@link methodSignature}'s 
-     *         declared list of parameters, or {@link null} if the 
-     *         operand stack has not enough items, or the
-     *         item in the position of the "this" parameter is
-     *         not a reference. 
-     * @throws ThreadStackEmptyException if the thread stack is empty.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public Reference peekReceiverArg(Signature methodSignature) 
-    throws ThreadStackEmptyException, FrozenStateException {
-        final String[] paramsDescriptors = Type.splitParametersDescriptors(methodSignature.getDescriptor());
-        final int nParams = paramsDescriptors.length + 1;
-        final Collection<Value> opStackVals = getCurrentFrame().operands();
-        int i = 1;
-        for (Value val : opStackVals) { 
-            if (i == nParams) {
-                if (! (val instanceof Reference)) {
-                    return null;
-                }
-                return (Reference) val;
-            }
-            ++i;
-        }
-        return null;
-    }
-
-    /**
-     * Removes the current {@link Frame} from the thread stack.
-     * 
-     * @return the popped {@link Frame}.
-     * @throws ThreadStackEmptyException if the thread stack is empty.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public Frame popCurrentFrame() throws ThreadStackEmptyException, FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-    	return this.stack.pop();
-    }
-
-    /**
-     * Removes all the frames from the thread stack.
-     * 
-     * @throws FrozenStateException if the state is frozen. 
-     */
-    public void clearStack() throws FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        this.stack.clear();
-    }
-
-    /**
-     * Returns the root frame.
-     * 
-     * @return a {@link Frame}, the root (first pushed) one.
-     * @throws ThreadStackEmptyException if the 
-     *         thread stack is empty.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public Frame getRootFrame() throws ThreadStackEmptyException, FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        return this.stack.rootFrame();
-    }
-
-    /**
-     * Returns the current frame.
-     * 
-     * @return a {@link Frame}, the current (last pushed) one.
-     * @throws ThreadStackEmptyException if the 
-     *         thread stack is empty.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public Frame getCurrentFrame() throws ThreadStackEmptyException, FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        return this.stack.currentFrame();
-    }
-
-    /**
-     * Returns an immutable view of the thread stack.
-     * 
-     * @return a {@link List}{@code <}{@link Frame}{@code >} 
-     *         of the method activation frames in the thread stack, 
-     *         in their push order.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public List<Frame> getStack() throws FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        return this.stack.frames();
-    }
-
-    /**
-     * Returns the size of the thread stack.
-     * 
-     * @return an {@code int}, the size.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public int getStackSize() {
-        return this.stack.frames().size();
-    }
-
-    /**
-     * Returns a copy of the state's heap.
-     * 
-     * @return a copy the state's heap as a 
-     * {@link SortedMap}{@code <}{@link Long}{@code , }{@link Objekt}{@code >}
-     * mapping heap positions to the {@link Objekt}s stored 
-     * at them.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    //TODO raise the abstraction level and make this method return a SortedMap<Reference, Objekt>
-    public SortedMap<Long, Objekt> getHeap() throws FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        return this.heap.getObjects();
     }
 
     /**
@@ -2924,140 +3109,6 @@ public final class State implements Cloneable {
                 };
             }
         };
-    }
-
-    /**
-     * Returns the static method area of this state.
-     * 
-     * @return the state's static method area as an 
-     *         immutable {@link Map}{@code <}{@link ClassFile}{@code , }{@link Klass}{@code >}.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public Map<ClassFile, Klass> getStaticMethodArea() throws FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        return Collections.unmodifiableMap(this.staticMethodArea.getObjects());
-    }
-
-    /**
-     * Returns the instruction in the current method pointed by 
-     * the state's current program counter.
-     * 
-     * @return a {@code byte} representing the 
-     *         bytecode pointed by the state's current program
-     *         counter.
-     * @throws ThreadStackEmptyException if the thread stack is empty.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public byte getInstruction() 
-    throws ThreadStackEmptyException, FrozenStateException {
-        return getCurrentFrame().getInstruction();
-    }
-
-    /**
-     * Returns the instruction in the current method pointed by 
-     * the state's current program counter plus a displacement.
-     * 
-     * @param displacement a {@code int} representing a displacement
-     *        from the current program counter.
-     * @return a {@code byte} representing the 
-     *         bytecode pointed by the state's current program
-     *         counter plus {@code displacement}.
-     * @throws InvalidProgramCounterException iff the frame's program
-     *         counter plus {@code displacement} does not point to 
-     *         a bytecode.
-     * @throws ThreadStackEmptyException if the thread stack is empty.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public byte getInstruction(int displacement) 
-    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
-        return getCurrentFrame().getInstruction(displacement);
-    }
-
-    /**
-     * Returns the source code row corresponding to the 
-     * frame's program counter.
-     *  
-     * @return the source code row corresponding to the 
-     *         state's program counter, or {@code -1} 
-     *         iff no debug information is available. 
-     * @throws ThreadStackEmptyException if the thread stack is empty.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public int getSourceRow() throws ThreadStackEmptyException, FrozenStateException {
-        return getCurrentFrame().getSourceRow();
-    }
-
-    /**
-     * Returns the current program counter.
-     * 
-     * @return an {@code int} representing the state's 
-     *         current program counter.
-     * @throws ThreadStackEmptyException if the thread stack is empty.
-     */
-    public int getCurrentProgramCounter() throws ThreadStackEmptyException {
-        return this.stack.currentFrame().getProgramCounter();
-    }
-
-    /**
-     * Sets the return program counter of the current frame.
-     * 
-     * @param returnPCOffset the offset of the return program counter 
-     *        w.r.t. the current program counter.
-     * @throws InvalidProgramCounterException iff current + offset program counter
-     *        yield an invalid offset.
-     * @throws ThreadStackEmptyException if the thread stack is empty.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public void setReturnProgramCounter(int returnPCOffset) 
-    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        getCurrentFrame().setReturnProgramCounter(returnPCOffset);
-    }
-
-    /**
-     * Returns the return program counter of the caller frame
-     * stored for a return bytecode.
-     * 
-     * @return an {@code int}, the return program counter.
-     * @throws ThreadStackEmptyException  if the thread stack is empty.
-     */
-    public int getReturnProgramCounter() throws ThreadStackEmptyException {
-        return this.stack.currentFrame().getReturnProgramCounter();
-    }
-
-    /**
-     * Increments/decrements the program counter by an arbitrary number.
-     * 
-     * @param n the {@code int} value to be added to the current 
-     *          program counter.
-     * @throws InvalidProgramCounterException if the incremented program counter
-     *         would not point to a valid bytecode in the current method 
-     *         (the state's program counter is not changed).
-     * @throws ThreadStackEmptyException if the thread stack is empty.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public void incProgramCounter(int n) 
-    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
-        setProgramCounter(getCurrentProgramCounter() + n);
-    }
-
-    /**
-     * Sets the state's program counter.
-     * 
-     * @param newPC the new program counter value.
-     * @throws InvalidProgramCounterException if {@code newPC} does not 
-     *         point to a valid bytecode in the current method (the
-     *         state's program counter is not changed).
-     * @throws ThreadStackEmptyException if the thread stack is empty.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public void setProgramCounter(int newPC) 
-    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
-        getCurrentFrame().setProgramCounter(newPC);
     }
     
     private void possiblyReset() {
@@ -3293,39 +3344,19 @@ public final class State implements Cloneable {
         this.pathCondition.addClauseAssumeClassNotInitialized(classFile);
         ++this.nPushedClauses;
     }
-
+	
     /**
-     * Returns the state's path condition clauses.
+     * Returns the number of assumed object of a given class.
      * 
-     * @return a read-only {@link List}{@code <}{@link Clause}{@code >} 
-     * representing all the {@link Clause}s cumulated in {@code this}. 
-     * It is valid until {@code this} is modified.
+     * @param className a {@link String}.
+     * @return the number of objects with class {@code className}
+     * assumed by this state, as resulting by the state's path 
+     * condition.
      */
-    public List<Clause> getPathCondition() {
-        return this.pathCondition.getClauses();
+    public int getNumAssumed(String className) {
+        return this.pathCondition.getNumAssumed(className);
     }
 
-    /**
-     * Returns the path condition clauses that have been pushed since
-     * the last call of {@link #resetLastPathConditionClauses()}. Used to determine
-     * how many clauses have not yet been sent to the decision procedure.
-     * 
-     * @return a read-only {@link Iterable}{@code <}{@link Clause}{@code >} 
-     * representing all the {@link Clause}s cumulated in {@code this}. 
-     * It is valid until {@code this} is modified, or {@link #resetLastPathConditionClauses()}
-     * is invoked.
-     */
-    public Iterable<Clause> getLastPathConditionPushedClauses() {
-        return () -> {
-            final ListIterator<Clause> it = this.pathCondition.getClauses().listIterator();
-            final int fwdEnd = this.pathCondition.getClauses().size() - this.nPushedClauses;
-            for (int i = 1; i <= fwdEnd; ++i) {
-                it.next();
-            }
-            return it;
-        };
-    }
-    
     /**
      * Determines whether some clauses have been pushed
      * after the last call to {@link #resetLastPathConditionClauses()}.
@@ -3640,18 +3671,6 @@ public final class State implements Cloneable {
      */
     public boolean stutters() {
     	return this.stutters;
-    }
-		
-    /**
-     * Returns the number of assumed object of a given class.
-     * 
-     * @param className a {@link String}.
-     * @return the number of objects with class {@code className}
-     * assumed by this state, as resulting by the state's path 
-     * condition.
-     */
-    public int getNumAssumed(String className) {
-        return this.pathCondition.getNumAssumed(className);
     }
 
     /**
@@ -3989,26 +4008,6 @@ public final class State implements Cloneable {
     		throw new FrozenStateException();
     	}
         this.wide = true;
-    }
-    
-    /**
-     * Collects and disposes the unreachable heap objects.
-     * 
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public void gc() throws FrozenStateException {
-        final Set<Long> doNotDispose = new ReachableObjectsCollector().reachable(this, true);
-        this.heap.disposeExcept(doNotDispose);
-    }
-    
-    /**
-     * Getter for garbage collection.
-     * 
-     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
-     *         of all the references in the object dictionary.
-     */
-    Collection<ReferenceConcrete> getObjectsInDictionary() {
-        return this.objectDictionary.getReferences();
     }
     
     private State deepCopyHeapAndStaticAreaExcluded() {

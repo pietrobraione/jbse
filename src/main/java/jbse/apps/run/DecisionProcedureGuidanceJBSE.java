@@ -1477,7 +1477,7 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
             		//finally checks whether now the two executions became aligned
             		this.aligned = symbolicAndConcreteAreAligned(postSymbolicState);
             	}
-			} catch (ThreadStackEmptyException | FrozenStateException e) {
+			} catch (ThreadStackEmptyException e) {
 				//this should never happen
 				throw new UnexpectedInternalException(e);
 			}

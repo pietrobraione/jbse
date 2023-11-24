@@ -385,7 +385,7 @@ public abstract class BytecodeData {
      *        Usually it is itself an immediate.
      * @throws InterruptException if the execution of the container
      *         {@link Algorithm} must be interrupted.
-     * @throws ClasspathException  when some standard classfile is not found, 
+     * @throws ClasspathException when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
      */
     protected final void readMethodSignature(State state, Calculator calc, int methodRefIndex)
@@ -408,6 +408,19 @@ public abstract class BytecodeData {
         }
     }
     
+    /**
+     * Reads a call site specifier.
+     * 
+     * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
+     * @param cssRefIndex an {@code int}, the index in the constant table
+     *        of the current class' classfile where the call site specifier is. 
+     *        Usually it is itself an immediate.
+     * @throws InterruptException if the execution of the container
+     *         {@link Algorithm} must be interrupted.
+     * @throws ClasspathException when some standard classfile is not found, 
+     *         or ill-formed, or not accessible.
+     */
     protected final void readCallSiteSpecifier(State state, Calculator calc, int cssRefIndex) 
     throws InterruptException, ClasspathException {
     	try {

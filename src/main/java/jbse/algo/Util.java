@@ -402,6 +402,21 @@ public final class Util {
         }
     }
     
+    /**
+     * Loads on the thread stack of a {@link State} a snippet frame that
+     * causes the upcall of the method {@link ClassLoader#loadClass(String)}.
+     * This triggers the loading of a class by a classloader.
+     * 
+     * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
+     * @param e the {@link PleaseLoadClassException} that was raised by the
+     *        {@link ClassHierarchy}, requiring to load the class.
+     * @throws ClasspathException unlikely, possibly thrown in case there is
+     *         an out of memory error and the OutOfMemoryError exception is 
+     *         not found on the classpath.
+     * @throws ThreadStackEmptyException if the thread stack of {@code state} is empty.
+     * @throws InvalidInputException should never be thrown.
+     */
     public static void invokeClassLoaderLoadClass(State state, Calculator calc, PleaseLoadClassException e) 
     throws ClasspathException, ThreadStackEmptyException, InvalidInputException {
         try {

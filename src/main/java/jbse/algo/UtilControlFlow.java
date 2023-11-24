@@ -244,8 +244,9 @@ public final class UtilControlFlow {
             }
             final ReferenceConcrete refToArray = 
                 state.createArray(calc, null, calc.valInt(stackDepth), cf_arrayJAVA_STACKTRACEELEMENT);
-            final Array theArray = (Array) state.getObject(refToArray);
             exc.setFieldValue(JAVA_THROWABLE_BACKTRACE, refToArray);
+            
+            final Array theArray = (Array) state.getObject(refToArray);
             int i = stackDepth - 1;
             for (Frame f : state.getStack()) {
                 if (f instanceof SnippetFrameNoWrap) {

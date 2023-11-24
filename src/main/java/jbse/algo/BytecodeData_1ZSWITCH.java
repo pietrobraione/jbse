@@ -33,9 +33,6 @@ public final class BytecodeData_1ZSWITCH extends BytecodeData {
         }
     }
 
-    /**
-     * Do not instantiate!
-     */
     private BytecodeData_1ZSWITCH(boolean isTableSwitch) {
         this.isTableSwitch = isTableSwitch;
     }

@@ -161,6 +161,7 @@ public final class Overrides {
     public static final String ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED                 = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_SHOULDBEINITIALIZED.class.getName());
     public static final String ALGO_SUN_UNSAFE_STATICFIELDBASE                     = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_STATICFIELDBASE.class.getName());
     public static final String ALGO_SUN_UNSAFE_STATICFIELDOFFSET                   = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_STATICFIELDOFFSET.class.getName());
+    public static final String ALGO_SUN_UNSAFE_STOREFENCE                          = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_STOREFENCE.class.getName());
 
     //Overriding meta-level implementations of jbse.meta.Analysis methods
     public static final String ALGO_JBSE_ANALYSIS_ANY                       = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ANY.class.getName());

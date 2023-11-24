@@ -25,7 +25,7 @@ public final class BytecodeData_1KME extends BytecodeData {
     protected void readImmediates(State state, Calculator calc) 
     throws InterruptException, ClasspathException, FrozenStateException {
         readImmediateUnsignedWord(state, calc, 1);
-        switch (kind) {
+        switch (this.kind) {
         case NONINTERFACE:
             readNoninterfaceMethodSignature(state, calc, immediateUnsignedWord());
             break;

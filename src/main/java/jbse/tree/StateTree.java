@@ -106,7 +106,7 @@ public class StateTree {
      */ 
     private static class BranchInfo {
         /** A {@link BranchPoint}. */
-        BranchPoint branch;
+        BranchPoint branchPoint;
 
         /** 
          * The total number of states in the branch identified by {@code branch}. 
@@ -124,7 +124,7 @@ public class StateTree {
          * Constructor for branch identification.
          */
         BranchInfo() {
-            this.branch = new BranchPoint();
+            this.branchPoint = new BranchPoint();
             this.totalStates = 0;
             this.emittedStates = 0;
         }
@@ -140,10 +140,10 @@ public class StateTree {
     private final BreadthMode breadthModePostInitial;
 
     /** Buffer of the inserted {@link State}s. */
-    private final LinkedList<State> stateBuffer = new LinkedList<State>();
+    private final LinkedList<State> stateBuffer = new LinkedList<>();
 
     /** Buffer of the inserted {@link BranchInfo}s. */
-    private final LinkedList<BranchInfo> branchList = new LinkedList<BranchInfo>();
+    private final LinkedList<BranchInfo> branchList = new LinkedList<>();
 
     /** 
      * Flag indicating whether the tree level has been increased 
@@ -284,7 +284,7 @@ public class StateTree {
      */
     public int getNumOfStatesAtBranch(BranchPoint bp) {
     	for (BranchInfo info : this.branchList) {
-    		if (info.branch == bp) {
+    		if (info.branchPoint == bp) {
     			return info.totalStates - info.emittedStates;
     		}
     	}
@@ -307,7 +307,7 @@ public class StateTree {
     	int position = 0;
     	boolean found = false;
     	for (BranchInfo info : this.branchList) {
-    		if (info.branch == bp) {
+    		if (info.branchPoint == bp) {
     			found = true;
     			break;
     		}
@@ -424,7 +424,7 @@ public class StateTree {
         if (this.branchList.isEmpty()) {
             return null;
         } else {
-            return this.branchList.getFirst().branch;
+            return this.branchList.getFirst().branchPoint;
         }
     }    
 
