@@ -18,7 +18,7 @@ JBSE is built with Gradle version 8.4, that is included in the repository. First
 
 ### Dependencies
 
-JBSE has several dependencies. It must be built using a JDK version 8 - neither less, nor more. We suggest to use the latest Eclipse Temurin from [Adoptium](https://adoptium.net/) v8 with HotSpot JVM (note that the JDK with the OpenJ9 JVM currently does not work, because there are some slight differences in the standard library classes). The Gradle wrapper `gradlew` included in the repository will take care to select the right version of the JDK. Gradle will automatically resolve and use the following compile-time-only dependency:
+JBSE has several dependencies. It must be built using a JDK version 8 - neither less, nor more. We suggest to use the latest Eclipse Temurin from [Adoptium](https://adoptium.net/) v8 with HotSpot JVM (note that the JDK with the OpenJ9 JVM currently does not work, because there are some slight differences in the standard library classes). If you are on an Apple Silicon Mac we suggest to use the JDK Zulu distribution from [Azul](https://www.azul.com/downloads/?package=jdk#zulu). The Gradle wrapper `gradlew` included in the repository will take care to select the right version of the JDK. Gradle will automatically resolve and use the following compile-time-only dependency:
 
 * [JavaCC](https://javacc.org), used for compiling the parser for the JBSE settings files.
 * [JUnit](http://junit.org), used for running the regression test suite.
