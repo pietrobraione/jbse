@@ -1,8 +1,6 @@
 package jbse.mem;
 
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -81,7 +79,7 @@ public class ArrayTest {
 		final ClassFile cfArray = this.hier.loadCreateClass("[I");
 		final ArrayImpl a = new ArrayImpl(this.calc, null, this.calc.valInt(0), cfArray, this.hp, 10);
 		final Primitive length = a.getLength();
-		assertThat(length, is(equalTo(this.calc.valInt(0))));
+		assertEquals(this.calc.valInt(0), length);
 	}
 
 	@Test
@@ -95,8 +93,8 @@ public class ArrayTest {
 		final Value nine = ((AccessOutcomeInValue) a.getFast(this.calc, this.calc.valInt(1))).getValue();
 		@SuppressWarnings("unused")
 		final Object foo = ((AccessOutcomeOut) a.getFast(this.calc, this.calc.valInt(3)));
-		assertThat(zero, is(equalTo(this.calc.valInt(0))));
-		assertThat(nine, is(equalTo(this.calc.valInt(9))));
+		assertEquals(this.calc.valInt(0), zero);
+		assertEquals(this.calc.valInt(9), nine);
 	}
 
 	@Test
@@ -112,10 +110,10 @@ public class ArrayTest {
 			++size; 
 			_outcome = affected.next();
 		}
-		assertThat(size, is(equalTo(1)));
+		assertEquals(1, size);
 		final AccessOutcomeInValue outcome = (AccessOutcomeInValue) _outcome;
-		assertThat(outcome.getValue(), is(equalTo(this.calc.valInt(0))));
-		assertThat(outcome.getAccessCondition(), is(equalTo(a.inRange(this.calc, a.getIndex()))));
+		assertEquals(this.calc.valInt(0), outcome.getValue());
+		assertEquals(a.inRange(this.calc, a.getIndex()), outcome.getAccessCondition());
 	}
 
 	@Test
@@ -129,7 +127,7 @@ public class ArrayTest {
 		outcome.excludeIndexFromAccessCondition(this.calc, this.calc.valInt(1));
 		a.set(this.calc, this.calc.valInt(1), this.calc.valInt(10));
 		final Collection<AccessOutcome> getOutcomes = a.get(this.calc, this.calc.valInt(1));
-		assertThat(getOutcomes.size(), is(equalTo(2))); //{(0<={I}<A && {I}==1) -> 10, ({I}<0 || {I}>=A) -> out_of_range}
+		assertEquals(2, getOutcomes.size()); //{(0<={I}<A && {I}==1) -> 10, ({I}<0 || {I}>=A) -> out_of_range}
 		int outcomeIn = 0;
 		int outcomeOut = 0;
 		for (AccessOutcome getOutcome : getOutcomes) {
@@ -146,7 +144,7 @@ public class ArrayTest {
 				}
 			}
 		}
-		assertThat(outcomeIn, is(equalTo(1))); //(0<={I}<A && {I}==1) -> 10
-		assertThat(outcomeOut, is(equalTo(1))); //({I}<0 || {I}>=A) -> out_of_range
+		assertEquals(1, outcomeIn); //(0<={I}<A && {I}==1) -> 10
+		assertEquals(1, outcomeOut); //({I}<0 || {I}>=A) -> out_of_range
 	}
 }

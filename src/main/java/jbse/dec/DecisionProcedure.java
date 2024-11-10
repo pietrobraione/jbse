@@ -30,7 +30,7 @@ import jbse.val.Simplex;
  * A {@code DecisionProcedure} can also simplify {@link Clause}s based 
  * on the current assumption.
  */
-public interface DecisionProcedure extends AutoCloseable {
+public interface DecisionProcedure {
 	/** Returns the {@link Calculator} used by this {@link DecisionProcedure}. */
 	Calculator getCalculator();
 	
@@ -302,7 +302,6 @@ public interface DecisionProcedure extends AutoCloseable {
      * 
      * @throws DecisionException upon failure.
      */
-    @Override
     default void close() throws DecisionException {
         //does nothing
     }

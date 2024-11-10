@@ -8,7 +8,6 @@ import static jbse.bc.Signatures.JAVA_ENUM;
 import static jbse.bc.Signatures.JAVA_SERIALIZABLE;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JBSE_BASE_MAKEKLASSSYMBOLIC;
-import static org.hamcrest.core.Is.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -87,28 +86,28 @@ public class ClassInitTest {
         } catch (InterruptException e) {
             //that's right, go on
         }
-        assertThat(this.state.getStackSize(), is(20));
+        assertEquals(20, this.state.getStackSize());
         final Iterator<Frame> itFrames = this.state.getStack().iterator();
         Frame f;
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(this.ctx.rootMethodSignature)); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(JBSE_BASE_MAKEKLASSSYMBOLIC)); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(new Signature("hier/A", "()V", "<clinit>"))); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(JBSE_BASE_MAKEKLASSSYMBOLIC)); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(new Signature("hier/E", "()V", "<clinit>"))); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(JBSE_BASE_MAKEKLASSSYMBOLIC)); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(new Signature("hier/G", "()V", "<clinit>"))); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(JBSE_BASE_MAKEKLASSSYMBOLIC)); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(new Signature("hier/F", "()V", "<clinit>"))); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(JBSE_BASE_MAKEKLASSSYMBOLIC)); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(new Signature("hier/H", "()V", "<clinit>"))); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(JBSE_BASE_MAKEKLASSSYMBOLIC)); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(new Signature("hier/D", "()V", "<clinit>"))); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(JBSE_BASE_MAKEKLASSSYMBOLIC)); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(new Signature("hier/B", "()V", "<clinit>"))); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(JBSE_BASE_MAKEKLASSSYMBOLIC)); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(new Signature("hier/I", "()V", "<clinit>"))); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(JBSE_BASE_MAKEKLASSSYMBOLIC)); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(new Signature("hier/C", "()V", "<clinit>"))); 
-        f = itFrames.next(); assertThat(f.getMethodSignature(), is(new Signature("java/lang/Object", "()V", "<clinit>"))); 
+        f = itFrames.next(); assertEquals(this.ctx.rootMethodSignature, f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(JBSE_BASE_MAKEKLASSSYMBOLIC, f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(new Signature("hier/A", "()V", "<clinit>"), f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(JBSE_BASE_MAKEKLASSSYMBOLIC, f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(new Signature("hier/E", "()V", "<clinit>"), f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(JBSE_BASE_MAKEKLASSSYMBOLIC, f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(new Signature("hier/G", "()V", "<clinit>"), f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(JBSE_BASE_MAKEKLASSSYMBOLIC, f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(new Signature("hier/F", "()V", "<clinit>"), f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(JBSE_BASE_MAKEKLASSSYMBOLIC, f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(new Signature("hier/H", "()V", "<clinit>"), f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(JBSE_BASE_MAKEKLASSSYMBOLIC, f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(new Signature("hier/D", "()V", "<clinit>"), f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(JBSE_BASE_MAKEKLASSSYMBOLIC, f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(new Signature("hier/B", "()V", "<clinit>"), f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(JBSE_BASE_MAKEKLASSSYMBOLIC, f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(new Signature("hier/I", "()V", "<clinit>"), f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(JBSE_BASE_MAKEKLASSSYMBOLIC, f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(new Signature("hier/C", "()V", "<clinit>"), f.getMethodSignature()); 
+        f = itFrames.next(); assertEquals(new Signature("java/lang/Object", "()V", "<clinit>"), f.getMethodSignature()); 
     }
 }

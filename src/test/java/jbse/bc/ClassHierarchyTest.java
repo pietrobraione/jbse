@@ -1,9 +1,7 @@
 package jbse.bc;
 
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.hamcrest.core.IsNull.nullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,19 +40,19 @@ public class ClassHierarchyTest {
     IncompatibleClassFileException, BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException {
         final ClassHierarchy hier = new ClassHierarchy(cp, ClassFileFactoryJavassist.class, Collections.emptyMap(), Collections.emptyMap());
         final ClassFile cf = hier.loadCreateClass("java/lang/Object");
-        assertThat(cf.getClassName(), is("java/lang/Object"));
-        assertThat(cf.getSuperclass(), is(nullValue()));
-        assertThat(cf.getPackageName(), is("java/lang"));
-        assertThat(cf.getSourceFile(), is("Object.java"));
-        assertThat(cf.isArray(), is(false));
-        assertThat(cf.isPrimitiveOrVoid(), is(false));
-        assertThat(cf.isReference(), is(true));
-        assertThat(cf.isPackage(), is(false));
-        assertThat(cf.isPrivate(), is(false));
-        assertThat(cf.isProtected(), is(false));
-        assertThat(cf.isPublic(), is(true));
-        assertThat(cf.isAnonymous(), is(false));
-        assertThat(cf.isAnonymousUnregistered(), is(false));
+        assertEquals("java/lang/Object", cf.getClassName());
+        assertEquals(null, cf.getSuperclass());
+        assertEquals("java/lang", cf.getPackageName());
+        assertEquals("Object.java", cf.getSourceFile());
+        assertEquals(false, cf.isArray());        
+        assertEquals(false, cf.isPrimitiveOrVoid());
+        assertEquals(true, cf.isReference());
+        assertEquals(false, cf.isPackage());
+        assertEquals(false, cf.isPrivate());
+        assertEquals(false, cf.isProtected());
+        assertEquals(true, cf.isPublic());
+        assertEquals(false, cf.isAnonymous());
+        assertEquals(false, cf.isAnonymousUnregistered());
     }
     
     @Test
@@ -63,16 +61,16 @@ public class ClassHierarchyTest {
     IncompatibleClassFileException, BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException {
         final ClassHierarchy hier = new ClassHierarchy(cp, ClassFileFactoryJavassist.class, Collections.emptyMap(), Collections.emptyMap());
         hier.loadCreateClass("java/util/ArrayList");
-        assertThat(hier.getClassFileClassArray(0, "java/util/ArrayList"), is(notNullValue()));
-        assertThat(hier.getClassFileClassArray(0, "java/util/AbstractList"), is(notNullValue()));
-        assertThat(hier.getClassFileClassArray(0, "java/util/AbstractCollection"), is(notNullValue()));
-        assertThat(hier.getClassFileClassArray(0, "java/lang/Object"), is(notNullValue()));
-        assertThat(hier.getClassFileClassArray(0, "java/util/List"), is(notNullValue()));
-        assertThat(hier.getClassFileClassArray(0, "java/util/Collection"), is(notNullValue()));
-        assertThat(hier.getClassFileClassArray(0, "java/lang/Iterable"), is(notNullValue()));
-        assertThat(hier.getClassFileClassArray(0, "java/util/RandomAccess"), is(notNullValue()));
-        assertThat(hier.getClassFileClassArray(0, "java/lang/Cloneable"), is(notNullValue()));
-        assertThat(hier.getClassFileClassArray(0, "java/io/Serializable"), is(notNullValue()));
+        assertNotNull(hier.getClassFileClassArray(0, "java/util/ArrayList"));
+        assertNotNull(hier.getClassFileClassArray(0, "java/util/AbstractList"));
+        assertNotNull(hier.getClassFileClassArray(0, "java/util/AbstractCollection"));
+        assertNotNull(hier.getClassFileClassArray(0, "java/lang/Object"));
+        assertNotNull(hier.getClassFileClassArray(0, "java/util/List"));
+        assertNotNull(hier.getClassFileClassArray(0, "java/util/Collection"));
+        assertNotNull(hier.getClassFileClassArray(0, "java/lang/Iterable"));
+        assertNotNull(hier.getClassFileClassArray(0, "java/util/RandomAccess"));
+        assertNotNull(hier.getClassFileClassArray(0, "java/lang/Cloneable"));
+        assertNotNull(hier.getClassFileClassArray(0, "java/io/Serializable"));
     }
     
     @Test
@@ -81,20 +79,20 @@ public class ClassHierarchyTest {
     IncompatibleClassFileException, BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException {
         final ClassHierarchy hier = new ClassHierarchy(cp, ClassFileFactoryJavassist.class, Collections.emptyMap(), Collections.emptyMap());
         final ClassFile cf = hier.getClassFilePrimitiveOrVoid("float");
-        assertThat(cf.getClassName(), is("float"));
-        assertThat(cf.getDeclaredConstructors().length, is(0));
-        assertThat(cf.getDeclaredFields().length, is(0));
-        assertThat(cf.getDeclaredMethods().length, is(0));
-        assertThat(cf.getPackageName(), is(""));
-        assertThat(cf.getSourceFile(), is(""));
-        assertThat(cf.isArray(), is(false));
-        assertThat(cf.isPrimitiveOrVoid(), is(true));
-        assertThat(cf.isReference(), is(false));
-        assertThat(cf.isPackage(), is(false));
-        assertThat(cf.isPrivate(), is(false));
-        assertThat(cf.isProtected(), is(false));
-        assertThat(cf.isPublic(), is(true));
-        assertThat(cf.isAnonymous(), is(false));
-        assertThat(cf.isAnonymousUnregistered(), is(false));
+        assertEquals("float", cf.getClassName());
+        assertEquals(0, cf.getDeclaredConstructors().length);
+        assertEquals(0, cf.getDeclaredFields().length);
+        assertEquals(0, cf.getDeclaredMethods().length);
+        assertEquals("", cf.getPackageName());
+        assertEquals("", cf.getSourceFile());
+        assertEquals(false, cf.isArray());
+        assertEquals(true, cf.isPrimitiveOrVoid());
+        assertEquals(false, cf.isReference());
+        assertEquals(false, cf.isPackage());
+        assertEquals(false, cf.isPrivate());
+        assertEquals(false, cf.isProtected());
+        assertEquals(true, cf.isPublic());
+        assertEquals(false, cf.isAnonymous());
+        assertEquals(false, cf.isAnonymousUnregistered());
     }
 }

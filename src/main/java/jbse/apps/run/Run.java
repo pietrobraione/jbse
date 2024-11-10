@@ -168,6 +168,9 @@ public final class Run {
 
     /** The number of states traversed during the pre-initial phase. */
     private long preInitialStateCount = 0;
+    
+    /** The time spent emitting the output. */ 
+    private long elapsedTimeEmit = 0;
 
     /**
      * Constructor.
@@ -1070,9 +1073,11 @@ public final class Run {
      * Emits the prologue of the symbolic execution.
      */
     private void emitPrologue() {
+    	final long timestampStart = System.currentTimeMillis();
         this.formatter.cleanup();
         this.formatter.formatPrologue();
         outNoBreak(this.formatter.emit());
+        this.elapsedTimeEmit += System.currentTimeMillis() - timestampStart;
     }
 
     /**
@@ -1083,18 +1088,22 @@ public final class Run {
      *        {@code s} is at a branch point.
      */
     private void emitState(State s) {
+    	final long timestampStart = System.currentTimeMillis();
         this.formatter.cleanup();
         this.formatter.formatState(s);
         outNoBreak(this.formatter.emit());
+        this.elapsedTimeEmit += System.currentTimeMillis() - timestampStart;
     }
 
     /**
      * Emits the epilogue of the symbolic execution.
      */
     private void emitEpilogue() {
+    	final long timestampStart = System.currentTimeMillis();
         this.formatter.cleanup();
         this.formatter.formatEpilogue();
         outNoBreak(this.formatter.emit());
+        this.elapsedTimeEmit += System.currentTimeMillis() - timestampStart;
     }
 
     /**
@@ -1136,13 +1145,14 @@ public final class Run {
         log(MSG_END_ELAPSED + Util.formatTime(elapsedTime) + ", " +
         	MSG_END_ELAPSED_PREINITIAL + Util.formatTime(elapsedTimePreInitialPhase) + ", " +
             MSG_END_SPEED + speed + " states/sec, " +
-            MSG_END_SPEED_POSTINITIAL + speedPostInitialPhase + " states/sec" +
+            MSG_END_SPEED_POSTINITIAL + speedPostInitialPhase + " states/sec, " +
+            MSG_END_ELAPSED_EMIT + Util.formatTime(this.elapsedTimeEmit) + " (" + Util.formatTimePercent(this.elapsedTimeEmit, elapsedTime) + " of total)" +
             (Run.this.parameters.getDoConcretization() ? 
              ", " + MSG_END_ELAPSED_CONCRETIZATION + Util.formatTime(this.elapsedTimeConcretization) + " (" + Util.formatTimePercent(this.elapsedTimeConcretization, elapsedTime) + " of total)" :
              "") +
             (this.timer == null ? 
              "." :
-             ", " + MSG_END_DECISION + Util.formatTime(elapsedTimeDecisionProcedure) + " (" + Util.formatTimePercent(elapsedTimeDecisionProcedure, elapsedTime) + " of total)."));
+             ", " + MSG_END_ELAPSED_DECISION + Util.formatTime(elapsedTimeDecisionProcedure) + " (" + Util.formatTimePercent(elapsedTimeDecisionProcedure, elapsedTime) + " of total)."));
         if (this.stats != null) {
         	log(MSG_END_DETAILED_DECISION_PROCEDURE_STATS);
         	log(MSG_PUSH_ASSUMPTION + "\t" + this.stats.countPushAssumption() + " calls " + Util.formatTime(this.stats.timePushAssumption()));
@@ -1256,7 +1266,10 @@ public final class Run {
     private static final String MSG_END_ELAPSED_CONCRETIZATION = "Elapsed concretization time: ";
 
     /** Message: elapsed time in the decision procedure. */
-    private static final String MSG_END_DECISION = "Elapsed time in decision procedure: ";
+    private static final String MSG_END_ELAPSED_DECISION = "Elapsed time in decision procedure: ";
+
+    /** Message: elapsed time emitting output. */
+    private static final String MSG_END_ELAPSED_EMIT = "Elapsed time emitting output: ";
 
     /** Message: detailed decision procedure statistics */
     private static final String MSG_END_DETAILED_DECISION_PROCEDURE_STATS = "Detailed statistics of decision procedure invocations:";

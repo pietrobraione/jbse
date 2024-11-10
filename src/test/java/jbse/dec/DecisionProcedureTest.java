@@ -2,9 +2,7 @@ package jbse.dec;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.hamcrest.CoreMatchers.instanceOf;
 
 import java.util.ArrayList;
 import java.util.TreeSet;
@@ -98,7 +96,7 @@ public class DecisionProcedureTest {
 		assertEquals(1, d.size());
 		DecisionAlternative_IFX dai = d.first();
 		assertTrue(dai.concrete());
-		assertThat(dai, instanceOf(DecisionAlternative_IFX_False.class));
+		assertTrue(dai instanceof DecisionAlternative_IFX_False);
 	}
 
 	@Test
@@ -118,8 +116,8 @@ public class DecisionProcedureTest {
 		DecisionAlternative_IFX dai2 = d.first();
 		assertFalse(dai1.concrete());
 		assertFalse(dai2.concrete());
-		assertThat(dai1, instanceOf(DecisionAlternative_IFX_True.class));
-		assertThat(dai2, instanceOf(DecisionAlternative_IFX_False.class));
+		assertTrue(dai1 instanceof DecisionAlternative_IFX_True);
+		assertTrue(dai2 instanceof DecisionAlternative_IFX_False);
 	}
 
 	@Test
@@ -135,7 +133,7 @@ public class DecisionProcedureTest {
 		assertEquals(1, d.size());
 		DecisionAlternative_XCMPY dac = d.first();
 		assertTrue(dac.concrete());
-		assertThat(dac, instanceOf(DecisionAlternative_XCMPY_Lt.class));
+		assertTrue(dac instanceof DecisionAlternative_XCMPY_Lt);
 	}
 
 	@Test
@@ -156,8 +154,8 @@ public class DecisionProcedureTest {
 		DecisionAlternative_XCMPY dac2 = d.first();
 		assertFalse(dac1.concrete());
 		assertFalse(dac2.concrete());
-		assertThat(dac1, instanceOf(DecisionAlternative_XCMPY_Gt.class));
-		assertThat(dac2, instanceOf(DecisionAlternative_XCMPY_Eq.class));
+		assertTrue(dac1 instanceof DecisionAlternative_XCMPY_Gt);
+		assertTrue(dac2 instanceof DecisionAlternative_XCMPY_Eq);
 	}
 
 	@Test

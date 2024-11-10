@@ -1,8 +1,6 @@
 package jbse.mem;
 
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,12 +43,12 @@ public class StateTest {
 	@Test
 	public void testFreshStateBasicChecks() throws InvalidClassFileFactoryClassException, InvalidInputException {
 		final State s = new State(true, HistoryPoint.unknown(), 10, 100, this.cp, ClassFileFactoryJavassist.class, Collections.emptyMap(), Collections.emptyMap(), new SymbolFactory());
-		assertThat(s.bypassStandardLoading(), is(true));
-		assertThat(s.getHistoryPoint(), is(equalTo(HistoryPoint.unknown())));
-		assertThat(s.phase(), is(Phase.PRE_INITIAL));
-		assertThat(s.getStackSize(), is(0));
-		assertThat(s.isStuck(), is(false));
-		assertThat(s.getStuckException(), is(equalTo(null)));
-		assertThat(s.getStuckReturn(), is(equalTo(null)));
+		assertEquals(true, s.bypassStandardLoading());
+		assertEquals(HistoryPoint.unknown(), s.getHistoryPoint());
+		assertEquals(Phase.PRE_INITIAL, s.phase());
+		assertEquals(0, s.getStackSize());
+		assertEquals(false, s.isStuck());
+		assertEquals(null, s.getStuckException());
+		assertEquals(null, s.getStuckReturn());
 	}
 }
