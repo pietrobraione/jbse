@@ -36,8 +36,9 @@ public final class Algo_SUN_UNSAFE_FREEMEMORY extends Algo_INVOKEMETA_Nonbranchi
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
+        	final long memoryAddressActual = state.getMemoryBlockAddress(this.memoryAddress);
             state.removeMemoryBlock(this.memoryAddress);
-            unsafe().freeMemory(this.memoryAddress);
+            unsafe().freeMemory(memoryAddressActual);
         };
     }
 }

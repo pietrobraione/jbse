@@ -288,7 +288,7 @@ public final class Signatures {
     public static final Signature JAVA_ATOMICLONG_VMSUPPORTSCS8 =
         new Signature(JAVA_ATOMICLONG, "()" + BOOLEAN, "VMSupportsCS8");
     public static final Signature JAVA_BUFFEREDIMAGE_INITIDS =
-    		new Signature(JAVA_BUFFEREDIMAGE, "()" + VOID, "initIDs");
+    	new Signature(JAVA_BUFFEREDIMAGE, "()" + VOID, "initIDs");
     public static final Signature JAVA_CLASS_DESIREDASSERTIONSTATUS0 =
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + BOOLEAN, "desiredAssertionStatus0");
     public static final Signature JAVA_CLASS_FORNAME0 =

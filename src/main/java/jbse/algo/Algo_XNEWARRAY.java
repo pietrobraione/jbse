@@ -95,7 +95,8 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
 
             //builds countsNonNegative, countsNegative; this are two
             //boolean Primitives stating that all the dimension count 
-            //values are nonnegative (respectively, negative)
+            //values are nonnegative (respectively, that at least one 
+            //dimension count is negative)
             try {
                 final Calculator calc = this.ctx.getCalculator();
                 Primitive tmp = calc.valBoolean(true);
@@ -196,7 +197,7 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
         int toCreateInCurrentLayer = 1;
 
         //creates all the layers of monodimensional arrays that it can create now, 
-        //initializes them, puts them in the heap, and sets toPush with a reference
+        //initializes them, puts them in the heap, and sets retVal with a reference
         //to the topmost array
         final Calculator calc = this.ctx.getCalculator();
         for (int currentLayer = 0; currentLayer < this.layersToCreateNow; ++currentLayer) {

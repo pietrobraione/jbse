@@ -137,7 +137,7 @@ abstract class Algo_JAVA_CLASS_GETDECLAREDX0 extends Algo_INVOKEMETA_Nonbranchin
             
             //gets the signatures of the fields/methods/constructors to emit; 
             //the position of the signature in signatures indicates its slot
-            final boolean onlyPublic = ((Simplex) this.data.operand(1)).surelyTrue();
+            final boolean onlyPublic = ((Integer) ((Simplex) this.data.operand(1)).getActualValue()).intValue() == 0 ? false : true;
             final List<Signature> signatures;
             final boolean skipBacktrace; //useful only for fields
             try {

@@ -22,7 +22,7 @@ import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 
 /**
- * Meta-level implementation of {@link java.lang.Class#setSigners()}.
+ * Meta-level implementation of {@link java.lang.Class#getSigners()}.
  *  
  * @author Pietro Braione
  *

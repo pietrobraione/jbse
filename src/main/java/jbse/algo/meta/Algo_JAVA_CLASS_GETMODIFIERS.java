@@ -19,7 +19,7 @@ import jbse.val.Reference;
 import jbse.val.Simplex;
 
 /**
- * Meta-level implementation of {@link java.lang.Class#isPrimitive()}.
+ * Meta-level implementation of {@link java.lang.Class#getModifiers()}.
  * 
  * @author Pietro Braione
  */
