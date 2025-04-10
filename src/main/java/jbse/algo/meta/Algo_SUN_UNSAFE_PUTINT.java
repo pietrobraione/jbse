@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Simplex;
@@ -21,13 +22,14 @@ public final class Algo_SUN_UNSAFE_PUTINT extends Algo_INVOKEMETA_Nonbranching {
     }
     
     @Override
-    protected void cookMore(State state) throws SymbolicValueNotAllowedException {
+    protected void cookMore(State state) throws SymbolicValueNotAllowedException, InvalidInputException {
         if (!(this.data.operand(1) instanceof Simplex) || !(this.data.operand(2) instanceof Simplex)) {
             throw new SymbolicValueNotAllowedException("sun.misc.Unsafe.putInt cannot be invoked with a symbolic argument");
         }
         final long memoryAddress = ((Long) ((Simplex) this.data.operand(1)).getActualValue()).longValue();
+    	final long memoryAddressActual = state.getMemoryBlockAddress(memoryAddress);
         final int value = ((Integer) ((Simplex) this.data.operand(2)).getActualValue()).intValue();
-        unsafe().putInt(memoryAddress, value);
+        unsafe().putInt(memoryAddressActual, value);
     }
     
     @Override
