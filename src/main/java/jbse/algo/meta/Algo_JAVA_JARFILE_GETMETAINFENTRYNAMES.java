@@ -90,7 +90,7 @@ public final class Algo_JAVA_JARFILE_GETMETAINFENTRYNAMES extends Algo_INVOKEMET
             jzfileField.setAccessible(true);
             jzfileField.set(jarFile, jzfile);
             
-            //invokes metacircularly the getEntryBytes method
+            //invokes metacircularly the getMetaInfEntryNames method
             final Method method = JarFile.class.getDeclaredMethod("getMetaInfEntryNames");
             method.setAccessible(true);
             this.entryNames = (String[]) method.invoke(jarFile);

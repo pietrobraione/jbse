@@ -76,7 +76,7 @@ public abstract class Algo_JAVA_ZIPFILE_GETENTRY_STARTS extends Algo_INVOKEMETA_
             throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (SecurityException | NoSuchMethodException | IllegalAccessException | IllegalArgumentException e) {
-            //this should not happen
+            //this should never happen
             failExecution(e);
         }
     }

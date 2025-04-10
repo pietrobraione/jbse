@@ -35,8 +35,9 @@ import jbse.val.Simplex;
 
 /**
  * Meta-level implementation of {@link java.io.FileOutputStream#open0(String, boolean)}.
+ * 
+ * @author Pietro Braione
  */
-
 public final class Algo_JAVA_FILEOUTPUTSTREAM_OPEN0 extends Algo_INVOKEMETA_Nonbranching {
     private Instance fileDescriptor; //set by cookMore
     private int fd; //set by cookMore

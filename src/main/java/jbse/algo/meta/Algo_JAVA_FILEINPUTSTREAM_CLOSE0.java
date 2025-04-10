@@ -79,13 +79,14 @@ public final class Algo_JAVA_FILEINPUTSTREAM_CLOSE0 extends Algo_INVOKEMETA_Nonb
             	final Simplex _fd = (Simplex) this.fileDescriptor.getFieldValue(JAVA_FILEDESCRIPTOR_FD);
             	this.fileId = ((Integer) _fd.getActualValue()).longValue();
             }
-            //TODO more checks
 
             //checks if the file is open
             if (this.fileId == INVALID_FILE_ID) {
                 //nothing to do
                 exitFromAlgorithm();
-            }            
+            }
+            
+            //TODO more checks
         } catch (ClassCastException e) {
             throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();

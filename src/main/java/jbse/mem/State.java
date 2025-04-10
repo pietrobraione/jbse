@@ -1960,7 +1960,7 @@ public final class State implements Cloneable {
      *        as known by this state (base-level address).
      * @return a {@code long}, the true address of the inflater block
      *         (meta-level address).
-     * @throws InvalidInputException  if {@code address} was not previously
+     * @throws InvalidInputException if {@code address} was not previously
      *         registered.
      */
     public long getInflater(long address) throws InvalidInputException {
@@ -2008,7 +2008,7 @@ public final class State implements Cloneable {
      * Registers a performance counter.
      * 
      * @param name a {@code String}, the name of the performance counter.
-     * @throws InvalidIndexException if the state is frozen, or 
+     * @throws InvalidInputException if the state is frozen, or 
      *         {@code name} is already registered.
      */
     public void registerPerfCounter(String name) throws InvalidInputException {

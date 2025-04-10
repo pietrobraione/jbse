@@ -20,11 +20,10 @@ import jbse.val.Simplex;
  * An {@link Algorithm} for an auxiliary method for the implementation of
  * {@link jbse.algo.Util#invokeClassLoaderLoadClass(State, jbse.bc.exc.PleaseLoadClassException)}. 
  * It registers a loaded class in the current state's loaded class cache. Its first parameter is 
- * an {@code int}, the identifier of a (initiating) classloader, its second parameter is an
- * {@link Instance_JAVA_CLASS} produced by a call to {@code java.lang.ClassLoader#loadClass(String)}.
+ * an {@code int}, the identifier of a (initiating) classloader, its second parameter is a reference
+ * to an {@link Instance_JAVA_CLASS} produced by a call to {@code java.lang.ClassLoader#loadClass(String)}.
  * 
  * @author Pietro Braione
- *
  */
 public final class Algo_noclass_REGISTERLOADEDCLASS extends Algo_INVOKEMETA_Nonbranching {
     private int classLoader; //set by cookMore

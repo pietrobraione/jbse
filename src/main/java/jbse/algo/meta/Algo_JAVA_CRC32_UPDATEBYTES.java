@@ -69,7 +69,7 @@ public final class Algo_JAVA_CRC32_UPDATEBYTES extends Algo_INVOKEMETA_Nonbranch
                 buf[i] = ((Byte) _buf_i.getActualValue()).byteValue();
             }
             
-            //gets the third (int off) parameter
+            //gets the third (int ofst) parameter
             final Primitive _ofst = (Primitive) this.data.operand(2);
             if (_ofst.isSymbolic()) {
                 throw new SymbolicValueNotAllowedException("The int off parameter to invocation of method java.util.zip.CRC32.updateBytes cannot be a symbolic value.");

@@ -813,7 +813,7 @@ public final class StateFormatterText implements Formatter {
     }
 
     private static void sourceLine(Frame f, StringBuilder sb, List<Path> srcPath) {
-        int sourceRow = f.getSourceRow();
+        final int sourceRow = f.getSourceRow();
         if (sourceRow == -1) { 
             sb.append("<UNKNOWN>");
         } else { 

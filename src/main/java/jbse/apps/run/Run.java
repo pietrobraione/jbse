@@ -1084,8 +1084,6 @@ public final class Run {
      * Emits a {@link State} of the symbolic execution.
      * 
      * @param s the {@link State} to be emitted.
-     * @param isRootBranch {@code true} iff 
-     *        {@code s} is at a branch point.
      */
     private void emitState(State s) {
     	final long timestampStart = System.currentTimeMillis();

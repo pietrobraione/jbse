@@ -48,7 +48,7 @@ public final class Algo_JAVA_INFLATER_INIT extends Algo_INVOKEMETA_Nonbranching 
             this.nowrap = (((Integer) ((Simplex) _nowrap).getActualValue()).intValue() > 0);
             //TODO what if jzentry is not open?
             
-            //invokes metacircularly the getEntryCrc method
+            //invokes metacircularly the init method
             final Method method = Inflater.class.getDeclaredMethod("init", boolean.class);
             method.setAccessible(true);
             this.address = (long) method.invoke(null, this.nowrap);
