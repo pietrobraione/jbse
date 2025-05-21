@@ -34,7 +34,7 @@ import java.util.function.Supplier;
 import jbse.algo.BytecodeData_1KME.Kind;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.Algo_JAVA_METHODHANDLE_INVOKEBASIC;
-import jbse.algo.meta.Algo_JAVA_METHODHANDLE_LINKTO;
+import jbse.algo.meta.Algo_JAVA_METHODHANDLE_LINKTOX;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
@@ -76,14 +76,14 @@ StrategyDecide<DecisionAlternative_NONE>,
 StrategyRefine<DecisionAlternative_NONE>, 
 StrategyUpdate<DecisionAlternative_NONE>> {
 	private final Algo_JAVA_METHODHANDLE_INVOKEBASIC algo_JAVA_METHODHANDLE_INVOKEBASIC; //set by constructor
-	private final Algo_JAVA_METHODHANDLE_LINKTO algo_JAVA_METHODHANDLE_LINKTO; //set by constructor
+	private final Algo_JAVA_METHODHANDLE_LINKTOX algo_JAVA_METHODHANDLE_LINKTOX; //set by constructor
 	private ClassFile clazz; //set by bytecodeCooker
 	private Signature adapterSignature; //set by bytecodeCooker
 	private Value[] parameters; //set by bytecodeCooker
 	
 	public Algo_INVOKEHANDLE() { 
 		this.algo_JAVA_METHODHANDLE_INVOKEBASIC = new Algo_JAVA_METHODHANDLE_INVOKEBASIC();
-		this.algo_JAVA_METHODHANDLE_LINKTO = new Algo_JAVA_METHODHANDLE_LINKTO();
+		this.algo_JAVA_METHODHANDLE_LINKTOX = new Algo_JAVA_METHODHANDLE_LINKTOX();
 		this.algo_JAVA_METHODHANDLE_INVOKEBASIC.setFeatures(false, false, false, true, JAVA_METHODHANDLE_INVOKEBASIC);
 	}
 
@@ -107,21 +107,21 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 				case "invokeBasic":
 					continueWith(this.algo_JAVA_METHODHANDLE_INVOKEBASIC);
 				case "linkToInterface":
-					this.algo_JAVA_METHODHANDLE_LINKTO.setFeatures(false, false, true, true, JAVA_METHODHANDLE_LINKTOINTERFACE);
-					this.algo_JAVA_METHODHANDLE_LINKTO.setLinkFeatures(true, false, false);
-					continueWith(this.algo_JAVA_METHODHANDLE_LINKTO);
+					this.algo_JAVA_METHODHANDLE_LINKTOX.setFeatures(false, false, true, true, JAVA_METHODHANDLE_LINKTOINTERFACE);
+					this.algo_JAVA_METHODHANDLE_LINKTOX.setLinkFeatures(true, false, false);
+					continueWith(this.algo_JAVA_METHODHANDLE_LINKTOX);
 				case "linkToSpecial":
-					this.algo_JAVA_METHODHANDLE_LINKTO.setFeatures(false, false, true, true, JAVA_METHODHANDLE_LINKTOSPECIAL);
-					this.algo_JAVA_METHODHANDLE_LINKTO.setLinkFeatures(false, true, false);
-					continueWith(this.algo_JAVA_METHODHANDLE_LINKTO);
+					this.algo_JAVA_METHODHANDLE_LINKTOX.setFeatures(false, false, true, true, JAVA_METHODHANDLE_LINKTOSPECIAL);
+					this.algo_JAVA_METHODHANDLE_LINKTOX.setLinkFeatures(false, true, false);
+					continueWith(this.algo_JAVA_METHODHANDLE_LINKTOX);
 				case "linkToStatic":
-					this.algo_JAVA_METHODHANDLE_LINKTO.setFeatures(false, false, true, true, JAVA_METHODHANDLE_LINKTOSTATIC);
-					this.algo_JAVA_METHODHANDLE_LINKTO.setLinkFeatures(false, false, true);
-					continueWith(this.algo_JAVA_METHODHANDLE_LINKTO);
+					this.algo_JAVA_METHODHANDLE_LINKTOX.setFeatures(false, false, true, true, JAVA_METHODHANDLE_LINKTOSTATIC);
+					this.algo_JAVA_METHODHANDLE_LINKTOX.setLinkFeatures(false, false, true);
+					continueWith(this.algo_JAVA_METHODHANDLE_LINKTOX);
 				case "linkToVirtual":
-					this.algo_JAVA_METHODHANDLE_LINKTO.setFeatures(false, false, true, true, JAVA_METHODHANDLE_LINKTOVIRTUAL);
-					this.algo_JAVA_METHODHANDLE_LINKTO.setLinkFeatures(false, false, false);
-					continueWith(this.algo_JAVA_METHODHANDLE_LINKTO);
+					this.algo_JAVA_METHODHANDLE_LINKTOX.setFeatures(false, false, true, true, JAVA_METHODHANDLE_LINKTOVIRTUAL);
+					this.algo_JAVA_METHODHANDLE_LINKTOX.setLinkFeatures(false, false, false);
+					continueWith(this.algo_JAVA_METHODHANDLE_LINKTOX);
 				default:
 					//this should never happen
 					failExecution("Unrecognized signature-polymorphic intrinsic method (unreachable code).");

@@ -993,7 +993,6 @@ public final class Run {
     		if (this.parameters.getUseConservativeRepOks()) {
     			final RunnerParameters checkerParameters = this.parameters.getConcretizationDriverParameters();
     			checkerParameters.setDecisionProcedure(this.decisionProcedureConcretization);
-    			@SuppressWarnings("resource")
     			final DecisionProcedureConservativeRepOk dec = 
     			new DecisionProcedureConservativeRepOk(core, checkerParameters, this.parameters.getConservativeRepOks());
     			core = dec;

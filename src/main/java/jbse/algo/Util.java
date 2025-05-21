@@ -226,19 +226,18 @@ public final class Util {
      * an invocation to {@link #lookupMethodImplOverriding}
      * can indeed override a method implementation.
      * 
-     * @param state a {@link State}. It must not be {@code null}.
      * @param classFileMethodOverridden the {@link ClassFile} where the overridden method 
      *        implementation is, or {@code null} if the method is classless.
      * @param methodSignatureOverridden the {@link Signature} of the overridden 
      *        method implementation. It must not be {@code null}.
-     * @param classFileMethodOverridingResolved the {@link ClassFile} where the overriding method implementation is, 
-     *        or {@code null} if the method is classless.. It must not be {@code null}.
+     * @param classFileMethodOverriding the {@link ClassFile} where the overriding method implementation is, 
+     *        or {@code null} if the method is classless.
      * @param methodSignatureOverriding. It must not be {@code null}.
      * @throws BaseUnsupportedExceptionBaseUnsupportedException if the base-level overriding fails 
      *         because the overriding method is abstract or has a signature that is incompatible 
      *         with the one of the overridden method.
      */
-    public static void checkOverridingMethodFits(State state, ClassFile classFileMethodOverridden, Signature methodSignatureOverridden, ClassFile classFileMethodOverriding, Signature methodSignatureOverriding) 
+    public static void checkOverridingMethodFits(ClassFile classFileMethodOverridden, Signature methodSignatureOverridden, ClassFile classFileMethodOverriding, Signature methodSignatureOverriding) 
     throws BaseUnsupportedException, MethodNotFoundException {
         if (!classFileMethodOverriding.hasMethodImplementation(methodSignatureOverriding)) {
             throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " is abstract.");

@@ -107,7 +107,7 @@ public final class Algo_JAVA_METHODHANDLE_INVOKEBASIC extends Algo_INVOKEMETA_No
 	        //gets the MemberName this.form.vmentry
 	        final Reference referenceVmentry = (Reference) instanceForm.getFieldValue(JAVA_LAMBDAFORM_VMENTRY);
 			if (state.isNull(referenceVmentry)) {
-				throw new UndefinedResultException("The 'this' parameter to java.lang.invoke.MethodHandle.invokeBasic has null value for the field Membername form.vmentry.");
+				throw new UndefinedResultException("The 'this' parameter to java.lang.invoke.MethodHandle.invokeBasic has null value for the field MemberName form.vmentry.");
 			}
 			final Instance instanceVmentry = (Instance) state.getObject(referenceVmentry);
 	        final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().loadCreateClass(JAVA_MEMBERNAME);
@@ -141,7 +141,7 @@ public final class Algo_JAVA_METHODHANDLE_INVOKEBASIC extends Algo_INVOKEMETA_No
 	        //...and the clazz
 	        final Reference referenceClazz = (Reference) instanceVmentry.getFieldValue(JAVA_MEMBERNAME_CLAZZ);
 			if (state.isNull(referenceName)) {
-				throw new UndefinedResultException("The 'this' parameter to java.lang.invoke.MethodHandle.invokeBasic has null value for the field ClassFile form.vmentry.clazz.");
+				throw new UndefinedResultException("The 'this' parameter to java.lang.invoke.MethodHandle.invokeBasic has null value for the field Class form.vmentry.clazz.");
 			}
 			final Instance_JAVA_CLASS instanceClazz = (Instance_JAVA_CLASS) state.getObject(referenceClazz);
 	        this.clazz = instanceClazz.representedClass();

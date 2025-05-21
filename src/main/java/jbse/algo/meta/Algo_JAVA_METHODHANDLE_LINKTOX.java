@@ -81,7 +81,7 @@ import jbse.val.exc.InvalidTypeException;
  * 
  * @author Pietro Braione
  */
-public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbranching {
+public final class Algo_JAVA_METHODHANDLE_LINKTOX extends Algo_INVOKEMETA_Nonbranching {
 	private boolean isLinkInterface;       //set by setLinkFeatures
 	private boolean isLinkSpecial;         //set by setLinkFeatures
 	private boolean isLinkStatic;          //set by setLinkFeatures
@@ -229,7 +229,7 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
             
             //in the case of varargs methods, if the number of operands is more than the 
             //number of parameters in the method signature, or the last operand is not a vararg
-            //array type, decides to boxe the last parameters in a varargs array. 
+            //array type, boxes the last parameters in a varargs array. 
             //Remember to exclude the trailing MemberName, that shall *not* be passed
             //as a parameter to the invoked method!!!
     		final boolean boxVarargs;
@@ -331,7 +331,7 @@ public final class Algo_JAVA_METHODHANDLE_LINKTO extends Algo_INVOKEMETA_Nonbran
         try {
             final ClassHierarchy hier = state.getClassHierarchy();
             final ClassFile classFileMethodOverriding = hier.getClassFileClassArray(CLASSLOADER_APP, methodSignatureOverriding.getClassName()); //if lookup of overriding method succeeded, the class is surely loaded
-            checkOverridingMethodFits(state, this.methodImplClass, this.methodImplSignature, classFileMethodOverriding, methodSignatureOverriding);
+            checkOverridingMethodFits(this.methodImplClass, this.methodImplSignature, classFileMethodOverriding, methodSignatureOverriding);
             this.methodImplClass = classFileMethodOverriding;
             this.methodImplSignature = methodSignatureOverriding;
         } catch (MethodNotFoundException e) {

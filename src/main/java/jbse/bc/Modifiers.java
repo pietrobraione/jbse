@@ -112,7 +112,7 @@ public final class Modifiers {
         
         return flags;
     }
-    	
+
 	private static boolean canBeStaticallyBound(ClassFile cfMethod, Signature methodSignature) throws MethodNotFoundException {
 		//a default method cannot be statically bound
 		if (cfMethod.isInterface() && !cfMethod.isMethodAbstract(methodSignature)) {

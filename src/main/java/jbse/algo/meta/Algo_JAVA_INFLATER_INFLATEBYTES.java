@@ -130,13 +130,13 @@ public final class Algo_JAVA_INFLATER_INFLATEBYTES extends Algo_INVOKEMETA_Nonbr
         try {
             final Calculator calc = this.ctx.getCalculator();
             
-            //builds a zsRef
+            //builds a ZStreamRef
             final Class<?> clZStreamRef = Class.forName("java.util.zip.ZStreamRef");
             final Constructor<?> consZStreamRef = clZStreamRef.getDeclaredConstructor(long.class);
             consZStreamRef.setAccessible(true);
             final Object zsRef = consZStreamRef.newInstance(zsrefAddress);
             
-            //gets this.inflater.buf
+            //gets this._inflater.buf
             final Reference bufReference = (Reference) this._inflater.getFieldValue(JAVA_INFLATER_BUF);
             if (state.isNull(bufReference)) {
                 //method invoked on a closed inflater
@@ -151,7 +151,7 @@ public final class Algo_JAVA_INFLATER_INFLATEBYTES extends Algo_INVOKEMETA_Nonbr
             final int inBufLength = ((Integer) ((Simplex) _inBuf.getLength()).getActualValue()).intValue();
             final byte[] inBuf = new byte[inBufLength];
             for (int i = 0; i < inBufLength; ++i) {
-                final Simplex inBuf_i = (Simplex) ((Array.AccessOutcomeInValue) _inBuf.get(calc, calc.valInt(i)).iterator().next()).getValue(); 
+                final Simplex inBuf_i = (Simplex) ((Array.AccessOutcomeInValue) _inBuf.getFast(calc, calc.valInt(i))).getValue(); 
                 inBuf[i] = ((Byte) inBuf_i.getActualValue()).byteValue();
             }
             
@@ -227,7 +227,7 @@ public final class Algo_JAVA_INFLATER_INFLATEBYTES extends Algo_INVOKEMETA_Nonbr
         } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | 
                  InstantiationException | IllegalAccessException | IllegalArgumentException | 
                  InvocationTargetException | InvalidTypeException | 
-                 NoSuchFieldException | ClassCastException e) {
+                 NoSuchFieldException | ClassCastException | FastArrayAccessNotAllowedException e) {
             //this should never happen
             failExecution(e);
         }
@@ -247,13 +247,13 @@ public final class Algo_JAVA_INFLATER_INFLATEBYTES extends Algo_INVOKEMETA_Nonbr
                 //this should never happen
                 failExecution(e);
             }
-            updateInflater(state);
+            updateInflater();
         };
     }
     
-    private void updateInflater(State state) throws InvalidInputException {
+    private void updateInflater() throws InvalidInputException {
         try {
-            //reads the possibly modified fields of this.inflaterMeta
+            //reads the possibly modified fields of this.inflater (meta-level inflater)
             final Field offFld = Inflater.class.getDeclaredField(JAVA_INFLATER_OFF.getName());
             offFld.setAccessible(true);
             final int off = ((Integer) offFld.get(this.inflater)).intValue();
@@ -267,7 +267,7 @@ public final class Algo_JAVA_INFLATER_INFLATEBYTES extends Algo_INVOKEMETA_Nonbr
             needDictFld.setAccessible(true);
             final boolean needDict = ((Boolean) needDictFld.get(this.inflater)).booleanValue();
             
-            //updates this.inflaterBase
+            //updates this._inflater (base-level inflater)
             final Calculator calc = this.ctx.getCalculator();
             this._inflater.setFieldValue(JAVA_INFLATER_OFF, calc.valInt(off));
             this._inflater.setFieldValue(JAVA_INFLATER_LEN, calc.valInt(len));

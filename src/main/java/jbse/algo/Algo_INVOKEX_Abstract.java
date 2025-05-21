@@ -300,7 +300,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 
             final ClassHierarchy hier = state.getClassHierarchy();
             final ClassFile classFileMethodOverriding = hier.getClassFileClassArray(CLASSLOADER_APP, methodSignatureOverriding.getClassName()); //if lookup of overriding method succeeded, the class is surely loaded
-            checkOverridingMethodFits(state, this.methodImplClass, this.methodImplSignature, classFileMethodOverriding, methodSignatureOverriding);
+            checkOverridingMethodFits(this.methodImplClass, this.methodImplSignature, classFileMethodOverriding, methodSignatureOverriding);
             this.methodImplClass = classFileMethodOverriding;
             this.methodImplSignature = methodSignatureOverriding;
             this.isMethodImplSignaturePolymorphic = this.methodImplClass.isMethodSignaturePolymorphic(this.methodImplSignature);

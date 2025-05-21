@@ -120,7 +120,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             //589 (C++ method MethodHandles::resolve_MemberName, invoked by the former, does the 
             //heavy lifting of resolution).
             
-            //gets the container class of the MemberName
+            //gets the container class of the MemberName (field clazz)
             final Instance_JAVA_CLASS memberNameContainerClassObject = 
                 (Instance_JAVA_CLASS) getInstance(state, memberNameObject.getFieldValue(JAVA_MEMBERNAME_CLAZZ), "java.lang.invoke.MethodHandleNatives.resolve", "Class self.clazz", FAIL_JBSE /* TODO is it ok? */, THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
             final ClassFile memberNameContainerClass = memberNameContainerClassObject.representedClass();

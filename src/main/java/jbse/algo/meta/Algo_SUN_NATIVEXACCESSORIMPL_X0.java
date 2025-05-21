@@ -414,7 +414,7 @@ abstract class Algo_SUN_NATIVEXACCESSORIMPL_X0 extends Algo_INVOKEMETA_Nonbranch
                 final Signature methodSignatureOverriding = lookupMethodImplOverriding(state, this.ctx, this.methodConstructorClassFile, this.methodConstructorSignature, this.isInterface, this.isSpecial, this.isStatic, this.isNative, false);
                 if (methodSignatureOverriding != null) {
                     final ClassFile classFileMethodOverriding = hier.getClassFileClassArray(CLASSLOADER_APP, methodSignatureOverriding.getClassName()); //if lookup had success, the overriding class is already loaded
-                    checkOverridingMethodFits(state, this.methodConstructorClassFile, this.methodConstructorSignature, classFileMethodOverriding, methodSignatureOverriding);
+                    checkOverridingMethodFits(this.methodConstructorClassFile, this.methodConstructorSignature, classFileMethodOverriding, methodSignatureOverriding);
                     this.methodConstructorClassFile = classFileMethodOverriding;
                     this.methodConstructorSignature = methodSignatureOverriding;
                 }

@@ -347,7 +347,7 @@ public final class UtilJavaLangInvokeObjects {
      * @throws InterruptException if the execution of the invoking {@link Algorithm} must be interrupted.
      * @throws FrozenStateException if {@code state} is frozen.
      */
-    public static String getDescriptorFromMethodType(State state, Reference methodTypeReference) 
+    private static String getDescriptorFromMethodType(State state, Reference methodTypeReference) 
     throws InvalidInputException, ThreadStackEmptyException, InterruptException, FrozenStateException {
     	if (state == null || methodTypeReference == null) {
     		throw new InvalidInputException("Invoked " + UtilJavaLangInvokeObjects.class.getCanonicalName() + ".getDescriptorFromMethodType with null state or methodTypeReference parameter");
@@ -375,7 +375,7 @@ public final class UtilJavaLangInvokeObjects {
                     .addArg(methodTypeReference)
                     .op_aload((byte) 0)
                     .op_invokevirtual(JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING)
-                    .op_pop() //we cannot use the return value so we need to clean the stack
+                    .op_pop() //we cannot use the return value so we need to clean the operand stack
                     .op_return()
                     .mk();
                 final ClassFile cf_JAVA_MEMBERNAME = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME); //surely loaded

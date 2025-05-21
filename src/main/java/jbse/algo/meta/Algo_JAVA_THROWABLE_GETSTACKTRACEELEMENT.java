@@ -18,6 +18,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.Array.AccessOutcomeInValue;
 import jbse.mem.State;
+import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
@@ -63,9 +64,9 @@ public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT extends Algo_INVOKEM
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
             try {
-                final Value toPush = ((AccessOutcomeInValue) this.backtrace.get(this.ctx.getCalculator(), this.index).iterator().next()).getValue();
+                final Value toPush = ((AccessOutcomeInValue) this.backtrace.getFast(this.ctx.getCalculator(), (Simplex) this.index)).getValue();
                 state.pushOperand(toPush);
-            } catch (InvalidTypeException | ThreadStackEmptyException | ClassCastException e) {
+            } catch (InvalidTypeException | ThreadStackEmptyException | ClassCastException | FastArrayAccessNotAllowedException e) {
                 //this should never happen
                 failExecution(e);
             }
