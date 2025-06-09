@@ -38,6 +38,13 @@ public abstract class Frame implements Cloneable {
 
     /** The program counter when the frame will be again the current one. */
     private int returnProgramCounter;
+	
+	/**
+	 * Counts the number of backjumps performed by the execution
+	 * of the code in this frame. A backjump is performed whenever
+	 * the program counter decreases instead of increasing.
+	 */
+	private int backjumps;
     
     /**
      * Constructor.
@@ -50,6 +57,7 @@ public abstract class Frame implements Cloneable {
         this.bytecode = bytecode.clone();
         this.programCounter = 0;
         this.returnProgramCounter = UNKNOWN_PC;
+        this.backjumps = 0;
     }
 
     /**
@@ -80,6 +88,9 @@ public abstract class Frame implements Cloneable {
      */
     public final void setProgramCounter(int programCounter) throws InvalidProgramCounterException {
         boundCheckPCValue(programCounter);
+        if (programCounter < this.programCounter) {
+        	++this.backjumps;
+        }
         this.programCounter = programCounter;
         this.returnProgramCounter = UNKNOWN_PC;
     }
@@ -190,6 +201,17 @@ public abstract class Frame implements Cloneable {
      * @return a {@link Signature}.
      */
     public abstract Signature getMethodSignature();
+	
+	/**
+	 * Returns the number of backjumps performed
+	 * during the execution of the code in this
+	 * frame.
+	 * 
+	 * @return an {@code int}.
+	 */
+	public final int backjumps() {
+		return this.backjumps;
+	}
 
     /**
      * Returns a read-only version of the local variable area.

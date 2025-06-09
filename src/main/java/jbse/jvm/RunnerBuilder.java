@@ -56,7 +56,7 @@ public class RunnerBuilder {
 		this.engine = this.eb.build(parameters.getEngineParameters());
 		return new Runner(this.engine, parameters.getActions(), parameters.getIdentifierSubregion(), 
 				parameters.getTimeout(), parameters.getHeapScope(), parameters.getDepthScope(), 
-				parameters.getCountScope());
+				parameters.getCountScope(), parameters.getStackScope(), parameters.getLoopsScope());
 	}
 	
 	/**

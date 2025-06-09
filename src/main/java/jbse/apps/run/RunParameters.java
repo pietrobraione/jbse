@@ -30,6 +30,7 @@ import jbse.jvm.ExecutionObserver;
 import jbse.jvm.RunnerParameters;
 import jbse.jvm.EngineParameters.BreadthMode;
 import jbse.jvm.EngineParameters.StateIdentificationMode;
+import jbse.jvm.RunnerParameters.ScopeLoopsItem;
 import jbse.mem.State;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.RewriterCalculatorRewriting;
@@ -1380,6 +1381,34 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
+     * Sets a limited stack scope. 
+     * If a state has a number of thread stack frames greater than the 
+     * stack scope the exploration of the branch it belongs is interrupted.
+     * 
+     * @param stackScope an {@code int}, the stack scope.
+     */
+    public void setStackScope(int stackScope) { 
+    	this.runnerParameters.setStackScope(stackScope); 
+    }
+
+    /**
+     * Sets an unlimited stack scope; this is the default behaviour.
+     */
+    public void setStackScopeUnlimited() { 
+    	this.runnerParameters.setStackScopeUnlimited();
+    }
+
+    /**
+     * Gets the stack scope.
+     * 
+     * @return an {@code int}, the stack scope or {@code 0}
+     *         for unlimited stack scope.
+     */
+    public int getStackScope() {
+        return this.runnerParameters.getStackScope();
+    }
+
+    /**
      * Gets the count scope.
      * 
      * @return an {@code int}, the count scope or {@code 0}
@@ -1388,7 +1417,46 @@ public final class RunParameters implements Cloneable {
     public int getCountScope() {
         return this.runnerParameters.getCountScope();
     }
-
+    
+    /**
+     * Adds a pattern to the loops scope, i.e., the maximum
+     * number of backjumps a method call can perform, 
+     * above which the current trace is abandoned.
+     * 
+     * @param patternClass a {@code String}, a regular expression
+     *        matching the classes of a set of methods.
+     * @param patternDescriptor a {@code String}, a regular expression
+     *        matching the descriptors of a set of methods.
+     * @param patternName a {@code String}, a regular expression
+     *        matching the names of a set of methods.
+     * @param loopsScope an {@code int}, the maximum number of 
+     *        backjumps the methods whose designators match
+     *        {@code (patternClass, patternDescriptor, patternName)}
+     *        can perform.
+     * @throws NullPointerException if {@code patternClass == null || patternDescriptor == null || patternName == null}.
+     * @throws IllegalArgumentException if {@code loopsScope < 1} or any of {@code patternClass}, 
+     *         {@code patternDescriptor}, or {@code patternName} is not a regular expression. 
+     */
+    public void addLoopsScope(String patternClass, String patternDescriptor, String patternName, int loopsScope) {
+    	this.runnerParameters.addLoopsScope(patternClass, patternDescriptor, patternName, loopsScope);
+    }
+    
+    /**
+     * Clears the loops scope.
+     */
+    public void clearLoopsScope() {
+    	this.runnerParameters.clearLoopsScope();
+    }
+    
+    /**
+     * Gets the loops scope.
+     * 
+     * @return an unmodifiable {@link List}{@code <}{@link ScopeLoopsItem}{@code >}.
+     */
+    public List<ScopeLoopsItem> getLoopsScope() {
+    	return this.runnerParameters.getLoopsScope();
+    }
+    
     //no setActions(Actions), setActionsNothing(), getActions()
 
     /**

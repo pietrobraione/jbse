@@ -3,12 +3,16 @@ package jbse.jvm;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import jbse.bc.Classpath;
 import jbse.bc.Signature;
@@ -36,6 +40,23 @@ import jbse.val.Calculator;
  *
  */
 public final class RunnerParameters implements Cloneable {
+	/**
+	 * Data class describing a loops scope 
+	 * item.
+	 */
+	public static class ScopeLoopsItem {
+		public final Pattern patternClass;
+		public final Pattern patternDescriptor;
+		public final Pattern patternName;
+		public final int scopeLoops;
+		public ScopeLoopsItem(Pattern patternClass, Pattern patternDescriptor, Pattern patternName, int scopeLoops) {
+			this.patternClass = patternClass;
+			this.patternDescriptor = patternDescriptor;
+			this.patternName = patternName;
+			this.scopeLoops = scopeLoops;
+		}
+	}
+	
     /** The engine parameters */
     private EngineParameters engineParameters;
 
@@ -53,6 +74,12 @@ public final class RunnerParameters implements Cloneable {
 
     /** The count scope. */
     private int countScope = 0;
+
+    /** The stack scope. */
+    private int stackScope = 0;
+    
+    /** The loops scope. */
+    private ArrayList<ScopeLoopsItem> loopsScope = new ArrayList<>();
 
     /** The {@link Actions}. */
     private Actions actions = new Actions();
@@ -1029,6 +1056,85 @@ public final class RunnerParameters implements Cloneable {
     }
 
     /**
+     * Sets a limited stack scope. 
+     * If a state has a number of thread stack frames greater than the 
+     * stack scope the exploration of the branch it belongs is interrupted.
+     * 
+     * @param stackScope an {@code int}, the stack scope.
+     */
+    public void setStackScope(int stackScope) { 
+        this.stackScope = stackScope; 
+    }
+
+    /**
+     * Sets an unlimited stack scope; this is the default behaviour.
+     */
+    public void setStackScopeUnlimited() { 
+        this.stackScope = 0; 
+    }
+
+    /**
+     * Gets the stack scope.
+     * 
+     * @return an {@code int}, the stack scope or {@code 0}
+     *         for unlimited stack scope.
+     */
+    public int getStackScope() {
+        return this.stackScope;
+    }
+    
+    /**
+     * Adds a pattern to the loops scope, i.e., the maximum
+     * number of backjumps a method call can perform, 
+     * above which the current trace is abandoned.
+     * 
+     * @param patternClass a {@code String}, a regular expression
+     *        matching the classes of a set of methods.
+     * @param patternDescriptor a {@code String}, a regular expression
+     *        matching the descriptors of a set of methods.
+     * @param patternName a {@code String}, a regular expression
+     *        matching the names of a set of methods.
+     * @param loopsScope an {@code int}, the maximum number of 
+     *        backjumps the methods whose designators match
+     *        {@code (patternClass, patternDescriptor, patternName)}
+     *        can perform.
+     * @throws NullPointerException if {@code patternClass == null || patternDescriptor == null || patternName == null}.
+     * @throws IllegalArgumentException if {@code loopsScope < 1} or any of {@code patternClass}, 
+     *         {@code patternDescriptor}, or {@code patternName} is not a regular expression. 
+     */
+    public void addLoopsScope(String patternClass, String patternDescriptor, String patternName, int loopsScope) {
+    	Objects.requireNonNull(patternClass);
+    	Objects.requireNonNull(patternDescriptor);
+    	Objects.requireNonNull(patternName);
+    	if (loopsScope < 1) {
+    		throw new IllegalArgumentException();
+    	}
+    	try {
+	    	final Pattern _patternClass = Pattern.compile(patternClass);
+	    	final Pattern _patternDescriptor = Pattern.compile(patternDescriptor);
+	    	final Pattern _patternName = Pattern.compile(patternName);
+	    	this.loopsScope.add(new ScopeLoopsItem(_patternClass, _patternDescriptor, _patternName, loopsScope));
+    	} catch (PatternSyntaxException e) {
+    		throw new IllegalArgumentException(e);
+    	}
+    }
+    
+    /**
+     * Clears the loops scope.
+     */
+    public void clearLoopsScope() {
+    	this.loopsScope.clear();
+    }
+    
+    /**
+     * Gets the loops scope.
+     * 
+     * @return an unmodifiable {@link List}{@code <}{@link ScopeLoopsItem}{@code >}.
+     */
+    public List<ScopeLoopsItem> getLoopsScope() {
+    	return Collections.unmodifiableList(this.loopsScope);
+    }
+    /**
      * Sets the actions to be performed while running.
      * 
      * @param actions the {@link Actions} to be performed.
@@ -1106,8 +1212,11 @@ public final class RunnerParameters implements Cloneable {
         if (this.heapScopeStatic != null) {
             o.heapScopeStatic = (HashMap<String, Integer>) this.heapScopeStatic.clone();
         }
-        if (this.heapScopeComputed!= null) {
+        if (this.heapScopeComputed != null) {
             o.heapScopeComputed = (HashMap<String, Function<State, Integer>>) this.heapScopeComputed.clone();
+        }
+        if (this.loopsScope != null) {
+        	o.loopsScope = (ArrayList<ScopeLoopsItem>) this.loopsScope.clone();
         }
         //actions cannot be cloned, as they come with a context. Beware!
         return o;

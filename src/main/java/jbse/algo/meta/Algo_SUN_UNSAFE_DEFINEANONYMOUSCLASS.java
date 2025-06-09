@@ -81,7 +81,7 @@ public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_
     InvalidInputException, InvalidTypeException, ThreadStackEmptyException {
     	final Calculator calc = this.ctx.getCalculator();
         try {
-            //gets the name of the host class
+            //gets the host class
             final Reference refClassHost = (Reference) this.data.operand(1);
             if (state.isNull(refClassHost)) {
                 throwNew(state, calc, ILLEGAL_ARGUMENT_EXCEPTION); //this is the behaviour of Hotspot

@@ -3,12 +3,15 @@ package jbse.jvm;
 import static jbse.val.HistoryPoint.BRANCH_IDENTIFIER_SEPARATOR_COMPACT;
 import static jbse.val.HistoryPoint.BRANCH_IDENTIFIER_SEPARATOR_LONG;
 
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 
 import jbse.algo.exc.CannotManageStateException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionBacktrackException;
 import jbse.dec.exc.DecisionException;
+import jbse.jvm.RunnerParameters.ScopeLoopsItem;
 import jbse.jvm.exc.CannotBacktrackException;
 import jbse.jvm.exc.EngineStuckException;
 import jbse.jvm.exc.FailureException;
@@ -131,6 +134,24 @@ public class Runner {
          *         {@link Runner#run run}ning.
          */
         public boolean atScopeExhaustionCount() { return false; }
+
+        /**
+         * Invoked by a {@link Runner}'s {@link Runner#run run} method 
+         * whenever after a step the stack scope has been exhausted.
+         * 
+         * @return {@code true} iff the {@link Runner} must stop
+         *         {@link Runner#run run}ning.
+         */
+        public boolean atScopeExhaustionStack() { return false; }
+
+        /**
+         * Invoked by a {@link Runner}'s {@link Runner#run run} method 
+         * whenever after a step the loops scope has been exhausted.
+         * 
+         * @return {@code true} iff the {@link Runner} must stop
+         *         {@link Runner#run run}ning.
+         */
+        public boolean atScopeExhaustionLoops() { return false; }
 
         /**
          * Invoked by a {@link Runner}'s {@link Runner#run run} method 
@@ -402,6 +423,12 @@ public class Runner {
     /** The count scope. */
     private final int countScope;
 
+    /** The stack scope. */
+    private final int stackScope;
+    
+    /** The loops scope. */
+    private final List<ScopeLoopsItem> loopsScope;
+
     /** The timeout. */
     private long timeout;
 
@@ -433,7 +460,8 @@ public class Runner {
      *        {@link Map}{@code <}{@link String}{@code , }{@link Integer}{@code >}
      *        mapping class names with their respective scopes ({@code <= 0} means unlimited).
      * @param depthScope the depth scope, an {@code int} ({@code <= 0} means unlimited).
-     * @param countScope the count scope, an  {@code int}({@code <= 0} means unlimited).
+     * @param countScope the count scope, an {@code int} ({@code <= 0} means unlimited).
+     * @param countScope the stack scope, an {@code int} ({@code <= 0} means unlimited).
      */
     Runner(Engine engine, 
            Actions actions, 
@@ -441,7 +469,9 @@ public class Runner {
            long timeout, 
            Map<String, Integer> heapScope, 
            int depthScope, 
-           int countScope) {
+           int countScope,
+           int stackScope,
+           List<ScopeLoopsItem> loopsScope) {
         this.engine = engine;
         this.actions = actions;
         this.actions.engine = engine;
@@ -450,6 +480,8 @@ public class Runner {
         this.heapScope = heapScope;
         this.depthScope = depthScope;
         this.countScope = countScope;
+        this.stackScope = stackScope;
+        this.loopsScope = loopsScope;
         this.pathsOutOfScope = 0;
         this.pathsTot = 0;
     }
@@ -472,7 +504,7 @@ public class Runner {
     }
 
     private boolean outOfScope() {
-        return (outOfScopeHeap() || outOfScopeDepth() || outOfScopeCount());
+        return (outOfScopeHeap() || outOfScopeDepth() || outOfScopeCount() || outOfScopeStack() || outOfScopeLoops());
     }
 
     private boolean outOfScopeHeap() {
@@ -494,6 +526,39 @@ public class Runner {
     private boolean outOfScopeCount() {
         final boolean retVal = (this.countScope > 0 && this.engine.getCurrentState().phase() == Phase.POST_INITIAL && this.engine.getCurrentState().getCount() > this.countScope);
         return retVal;
+    }
+
+    private boolean outOfScopeStack() {
+        final boolean retVal = (this.stackScope > 0 && this.engine.getCurrentState().phase() == Phase.POST_INITIAL && this.engine.getCurrentState().getStackSize() > this.stackScope);
+        return retVal;
+    }
+
+    private boolean outOfScopeLoops() {
+    	if (this.loopsScope.isEmpty()) {
+    		return false;
+    	}
+    	final State currentState = this.engine.getCurrentState();
+    	if (currentState.phase() != Phase.POST_INITIAL) {
+    		return false;
+    	}
+    	try {
+    		final String currentMethodClass = currentState.getCurrentMethodSignature().getClassName();
+    		final String currentMethodDescriptor = currentState.getCurrentMethodSignature().getDescriptor();
+    		final String currentMethodName = currentState.getCurrentMethodSignature().getName();
+    		final int backjumps = currentState.getCurrentFrameBackjumps();
+    		for (ScopeLoopsItem item : this.loopsScope) {
+    			final Matcher matcherClass = item.patternClass.matcher(currentMethodClass);
+    			final Matcher matcherDescriptor = item.patternDescriptor.matcher(currentMethodDescriptor);
+    			final Matcher matcherName = item.patternName.matcher(currentMethodName);
+    			if (matcherClass.matches() && matcherDescriptor.matches() && matcherName.matches() &&
+    			backjumps > item.scopeLoops) {
+    				return true;
+    			}
+    		}
+    		return false;
+    	} catch (ThreadStackEmptyException e) {
+    		return false;
+    	}
     }
 
     /**
@@ -585,6 +650,12 @@ public class Runner {
                     }
                     if (outOfScopeCount()) {
                         if (this.actions.atScopeExhaustionCount()) { return; }
+                    }
+                    if (outOfScopeStack()) {
+                        if (this.actions.atScopeExhaustionStack()) { return; }
+                    }
+                    if (outOfScopeLoops()) {
+                        if (this.actions.atScopeExhaustionLoops()) { return; }
                     }
                 }
 

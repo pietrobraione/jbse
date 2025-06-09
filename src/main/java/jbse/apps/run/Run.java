@@ -345,6 +345,19 @@ public final class Run {
         }
 
         @Override
+        public boolean atScopeExhaustionStack() {
+            this.pathKind = PathTypes.OUT_OF_SCOPE;
+            this.endOfPathMessage = WARNING_SCOPE_EXHAUSTED_STACK;
+            return super.atScopeExhaustionCount();
+        }
+
+        public boolean atScopeExhaustionLoops() {
+            this.pathKind = PathTypes.OUT_OF_SCOPE;
+            this.endOfPathMessage = WARNING_SCOPE_EXHAUSTED_LOOPS;
+            return super.atScopeExhaustionCount();
+        }
+
+        @Override
         public boolean atCannotManageStateException(CannotManageStateException e)
         throws CannotManageStateException {
             if (e instanceof CannotInvokeNativeException) {
@@ -1364,6 +1377,12 @@ public final class Run {
 
     /** Warning: exhausted count scope. */
     private static final String WARNING_SCOPE_EXHAUSTED_COUNT = " path exhausted count scope.";
+
+    /** Warning: exhausted stack scope. */
+    private static final String WARNING_SCOPE_EXHAUSTED_STACK = " path exhausted stack scope.";
+
+    /** Warning: exhausted loops scope. */
+    private static final String WARNING_SCOPE_EXHAUSTED_LOOPS = " path exhausted loops scope.";
 
     /** Warning: cannot manage a native method invocation. */
     private static final String WARNING_CANNOT_INVOKE_NATIVE = " performed an unmanageable native method invocation: ";

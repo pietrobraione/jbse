@@ -629,6 +629,19 @@ public final class State implements Cloneable {
     	}
         return this.stack.currentFrame();
     }
+    
+    /**
+	 * Returns the number of backjumps performed
+	 * during the execution of the code in the
+	 * current frame.
+	 * 
+     * @return an {@code int}.
+     * @throws ThreadStackEmptyException if the 
+     *         thread stack is empty.
+     */
+    public int getCurrentFrameBackjumps() throws ThreadStackEmptyException {
+    	return this.stack.currentFrame().backjumps();
+    }
 
     /**
      * Returns an immutable view of the thread stack.
@@ -654,7 +667,6 @@ public final class State implements Cloneable {
     public int getStackSize() {
         return this.stack.frames().size();
     }
-
 
     /**
      * Returns a {@link Reference} to the root object, i.e., the 
