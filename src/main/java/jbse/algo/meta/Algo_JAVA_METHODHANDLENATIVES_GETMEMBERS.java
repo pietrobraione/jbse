@@ -60,6 +60,7 @@ import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
 import jbse.val.Null;
+import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Simplex;
 
@@ -155,7 +156,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_GETMEMBERS extends Algo_INVOKEM
 							--rskip;
 						} else if (rfill < rlimit) {
 							try {
-								final Instance result = (Instance) ((AccessOutcomeInValue) arrayResults.getFast(calc, calc.valInt(rfill++))).getValue();
+								final Reference referenceResult = (Reference) ((AccessOutcomeInValue) arrayResults.getFast(calc, calc.valInt(rfill++))).getValue();
+								final Instance result = (Instance) state.getObject(referenceResult);
 			                    final ClassHierarchy hier = state.getClassHierarchy();
 			                    final ClassFile classFileMemberName = hier.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME); //surely loaded
 								if (!classFileMemberName.equals(result.getType())) {
@@ -232,7 +234,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_GETMEMBERS extends Algo_INVOKEM
 							--rskip;
 						} else if (rfill < rlimit) {
 							try {
-								final Instance result = (Instance) ((AccessOutcomeInValue) arrayResults.getFast(calc, calc.valInt(rfill++))).getValue();
+								final Reference referenceResult = (Reference) ((AccessOutcomeInValue) arrayResults.getFast(calc, calc.valInt(rfill++))).getValue();
+								final Instance result = (Instance) state.getObject(referenceResult);
 			                    final ClassHierarchy hier = state.getClassHierarchy();
 			                    final ClassFile classFileMemberName = hier.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_MEMBERNAME);
 								if (!classFileMemberName.equals(result.getType())) {
@@ -245,8 +248,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_GETMEMBERS extends Algo_INVOKEM
 								//is an abstract interface method or a default method). Since JBSE 
 								//does not use miranda slots we always set clazz to the method holder
 			                    state.ensureInstance_JAVA_CLASS(calc, sigAndHolderMethod.holder);
-			                    final ReferenceConcrete fieldHolder = state.referenceToInstance_JAVA_CLASS(sigAndHolderMethod.holder);
-			                    result.setFieldValue(JAVA_MEMBERNAME_CLAZZ, fieldHolder);
+			                    final ReferenceConcrete methodHolder = state.referenceToInstance_JAVA_CLASS(sigAndHolderMethod.holder);
+			                    result.setFieldValue(JAVA_MEMBERNAME_CLAZZ, methodHolder);
 								//flags
 			                    //determines the flags based on the kind of invocation, 
 			                    //see hotspot:/src/share/vm/prims/methodHandles.cpp line 176 
