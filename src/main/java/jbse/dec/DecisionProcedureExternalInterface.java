@@ -225,4 +225,20 @@ public abstract class DecisionProcedureExternalInterface {
      * To be invoked when the decision procedure fails.
      */
     public abstract void fail();
+
+    /**
+     * Returns the total number of bytes sent as
+     * queries to the external decision procedure.
+     * 
+     * @return a {@code long}.
+     */
+	public abstract long bytesQueries();
+
+	/**
+     * Returns the total number of tokens sent as
+     * queries to the external decision procedure.
+     * 
+     * @return a {@code long}.
+	 */
+	public abstract long numTokensQueries();
 }

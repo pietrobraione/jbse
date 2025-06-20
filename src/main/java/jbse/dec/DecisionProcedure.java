@@ -305,4 +305,21 @@ public interface DecisionProcedure {
     default void close() throws DecisionException {
         //does nothing
     }
+    
+    /**
+     * Returns the total number of bytes sent as
+     * queries to possible external decision procedures.
+     * 
+     * @return a {@code long}.
+     */
+    default long bytesQueries() { return 0L; }
+
+
+	/**
+     * Returns the total number of tokens sent as
+     * queries to possible external decision procedures.
+     * 
+     * @return a {@code long}.
+	 */
+	default long numTokensQueries() { return 0L; }
 }

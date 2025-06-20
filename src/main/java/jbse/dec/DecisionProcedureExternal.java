@@ -331,4 +331,14 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
             throw new DecisionException(NOT_WORKING);
         }
     }
+    
+    @Override
+    protected final long bytesQueriesLocal() {
+		return this.extIf.bytesQueries();
+	}
+
+    @Override
+    protected final long numTokensQueriesLocal() {
+		return this.extIf.numTokensQueries();
+	}
 }

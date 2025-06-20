@@ -28,115 +28,125 @@ import jbse.val.Simplex;
  *
  */
 public class DecisionProcedureDecorator implements DecisionProcedure {
-    private final DecisionProcedure component;
+	private final DecisionProcedure component;
 
-    public DecisionProcedureDecorator(DecisionProcedure component)
-    throws InvalidInputException {
-    	if (component == null) {
-    		throw new InvalidInputException("Attempted to decorate a null DecisionProcedure component.");
-    	}
-        this.component = component;
-    }
-    
-    @Override
-    public Calculator getCalculator() {
-    	return this.component.getCalculator();
-    }
+	public DecisionProcedureDecorator(DecisionProcedure component)
+	throws InvalidInputException {
+		if (component == null) {
+			throw new InvalidInputException("Attempted to decorate a null DecisionProcedure component.");
+		}
+		this.component = component;
+	}
 
-    @Override
-    public void goFastAndImprecise() {
-        this.component.goFastAndImprecise();
-    }
+	@Override
+	public Calculator getCalculator() {
+		return this.component.getCalculator();
+	}
 
-    @Override
-    public void stopFastAndImprecise() {
-        this.component.stopFastAndImprecise();
-    }
+	@Override
+	public void goFastAndImprecise() {
+		this.component.goFastAndImprecise();
+	}
 
-    @Override
-    public void pushAssumption(Clause c) 
-    throws InvalidInputException, DecisionException, ContradictionException {
-        this.component.pushAssumption(c);
-    }
+	@Override
+	public void stopFastAndImprecise() {
+		this.component.stopFastAndImprecise();
+	}
 
-    @Override
-    public void clearAssumptions() throws DecisionException {
-        this.component.clearAssumptions();
-    }
-    
-    @Override
-    public void addAssumptions(Iterable<Clause> assumptionsToAdd) 
-    throws InvalidInputException, DecisionException, ContradictionException {
-        this.component.addAssumptions(assumptionsToAdd);
-    }
-    
-    @Override
-    public void addAssumptions(Clause... assumptionsToAdd) 
-    throws InvalidInputException, DecisionException, ContradictionException {
-        this.component.addAssumptions(assumptionsToAdd);
-    }
-    
-    @Override
-    public void setAssumptions(Collection<Clause> newAssumptions) 
-    throws InvalidInputException, DecisionException, ContradictionException {
-        this.component.setAssumptions(newAssumptions);
-    }
-    
-    @Override
-    public List<Clause> getAssumptions() 
-    throws DecisionException {
-        return this.component.getAssumptions();
-    }
+	@Override
+	public void pushAssumption(Clause c) 
+	throws InvalidInputException, DecisionException, ContradictionException {
+		this.component.pushAssumption(c);
+	}
 
-    @Override
-    public boolean isSat(Expression exp) 
-    throws InvalidInputException, DecisionException {
-        return this.component.isSat(exp);
-    }
+	@Override
+	public void clearAssumptions() throws DecisionException {
+		this.component.clearAssumptions();
+	}
 
-    @Override
-    public boolean isSatNull(ReferenceSymbolic r) 
-    throws InvalidInputException, DecisionException {
-        return this.component.isSatNull(r);
-    }
+	@Override
+	public void addAssumptions(Iterable<Clause> assumptionsToAdd) 
+	throws InvalidInputException, DecisionException, ContradictionException {
+		this.component.addAssumptions(assumptionsToAdd);
+	}
 
-    @Override
-    public boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o)
-    throws InvalidInputException, DecisionException {
-        return this.component.isSatAliases(r, heapPos, o);
-    }
+	@Override
+	public void addAssumptions(Clause... assumptionsToAdd) 
+	throws InvalidInputException, DecisionException, ContradictionException {
+		this.component.addAssumptions(assumptionsToAdd);
+	}
 
-    @Override
-    public boolean isSatExpands(ReferenceSymbolic r, ClassFile classFile)
-    throws InvalidInputException, DecisionException {
-        return this.component.isSatExpands(r, classFile);
-    }
+	@Override
+	public void setAssumptions(Collection<Clause> newAssumptions) 
+	throws InvalidInputException, DecisionException, ContradictionException {
+		this.component.setAssumptions(newAssumptions);
+	}
 
-    @Override
-    public boolean isSatInitialized(ClassFile classFile) 
-    throws InvalidInputException, DecisionException {
-        return this.component.isSatInitialized(classFile);
-    }
+	@Override
+	public List<Clause> getAssumptions() 
+	throws DecisionException {
+		return this.component.getAssumptions();
+	}
 
-    @Override
-    public boolean isSatNotInitialized(ClassFile classFile) 
-    throws InvalidInputException, DecisionException {
-        return this.component.isSatNotInitialized(classFile);
-    }
+	@Override
+	public boolean isSat(Expression exp) 
+	throws InvalidInputException, DecisionException {
+		return this.component.isSat(exp);
+	}
 
-    @Override
-    public Map<PrimitiveSymbolic, Simplex> getModel() throws DecisionException {
-        return this.component.getModel();
-    }
+	@Override
+	public boolean isSatNull(ReferenceSymbolic r) 
+	throws InvalidInputException, DecisionException {
+		return this.component.isSatNull(r);
+	}
 
-    @Override
-    public Primitive simplify(Primitive c) throws DecisionException {
-        return this.component.simplify(c);
-    }
+	@Override
+	public boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o)
+	throws InvalidInputException, DecisionException {
+		return this.component.isSatAliases(r, heapPos, o);
+	}
 
-    @Override
-    public void close() 
-    throws DecisionException {
-        this.component.close();
-    }
+	@Override
+	public boolean isSatExpands(ReferenceSymbolic r, ClassFile classFile)
+	throws InvalidInputException, DecisionException {
+		return this.component.isSatExpands(r, classFile);
+	}
+
+	@Override
+	public boolean isSatInitialized(ClassFile classFile) 
+	throws InvalidInputException, DecisionException {
+		return this.component.isSatInitialized(classFile);
+	}
+
+	@Override
+	public boolean isSatNotInitialized(ClassFile classFile) 
+	throws InvalidInputException, DecisionException {
+		return this.component.isSatNotInitialized(classFile);
+	}
+
+	@Override
+	public Map<PrimitiveSymbolic, Simplex> getModel() throws DecisionException {
+		return this.component.getModel();
+	}
+
+	@Override
+	public Primitive simplify(Primitive c) throws DecisionException {
+		return this.component.simplify(c);
+	}
+
+	@Override
+	public void close() 
+	throws DecisionException {
+		this.component.close();
+	}
+
+	@Override
+	public long bytesQueries() {
+		return this.component.bytesQueries();
+	}
+
+	@Override
+	public long numTokensQueries() {
+		return this.component.numTokensQueries();
+	}
 }

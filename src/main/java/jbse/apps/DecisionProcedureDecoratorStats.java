@@ -67,106 +67,132 @@ public final class DecisionProcedureDecoratorStats extends DecisionProcedureDeco
         super(component);
     }
     
+    @Override
 	public long countPushAssumption() {
 		return this.countPushAssumption;
 	}
 	
+    @Override
 	public long countClearAssumptions() {
 		return this.countClearAssumptions;
 	}
 	
+    @Override
 	public long countAddAssumptions() {
 		return this.countAddAssumptions;
 	}
 	
+    @Override
 	public long countSetAssumptions() {
 		return this.countSetAssumptions;
 	}
 	
+    @Override
 	public long countGetAssumptions() {
 		return this.countGetAssumptions;
 	}
 	
+    @Override
 	public long countIsSat() {
 		return this.countIsSat;
 	}
 	
+    @Override
 	public long countIsSatAliases() {
 		return this.countIsSatAliases;
 	}
 	
+    @Override
 	public long countIsSatExpands() {
 		return this.countIsSatExpands;
 	}
 	
+    @Override
 	public long countIsSatNull() {
 		return this.countIsSatNull;
 	}
 	
+    @Override
 	public long countIsSatInitialized() {
 		return this.countIsSatInitialized;
 	}
 	
+    @Override
 	public long countIsSatNotInitialized() {
 		return this.countIsSatNotInitialized;
 	}
 	
+    @Override
 	public long countGetModel() {
 		return this.countGetModel;
 	}
 	
+    @Override
 	public long countSimplify() {
 		return this.countSimplify;
 	}
 	
+    @Override
 	public long timePushAssumption() {
 		return this.timePushAssumption;
 	}
 	
+    @Override
 	public long timeClearAssumptions() {
 		return this.timeClearAssumptions;
 	}
 	
+    @Override
 	public long timeAddAssumptions() {
 		return this.timeAddAssumptions;
 	}
 	
+    @Override
 	public long timeSetAssumptions() {
 		return this.timeSetAssumptions;
 	}
 	
+    @Override
 	public long timeGetAssumptions() {
 		return this.timeGetAssumptions;
 	}
 	
+    @Override
 	public long timeIsSat() {
 		return this.timeIsSat;
 	}
 	
+    @Override
 	public long timeIsSatAliases() {
 		return this.timeIsSatAliases;
 	}
 	
+    @Override
 	public long timeIsSatExpands() {
 		return this.timeIsSatExpands;
 	}
 	
+    @Override
 	public long timeIsSatNull() {
 		return this.timeIsSatNull;
 	}
 	
+    @Override
 	public long timeIsSatInitialized() {
 		return this.timeIsSatInitialized;
 	}
 	
+    @Override
 	public long timeIsSatNotInitialized() {
 		return this.timeIsSatNotInitialized;
 	}
 	
+    @Override
 	public long timeGetModel() {
 		return this.timeGetModel;
 	}
 	
+    @Override
 	public long timeSimplify() {
 		return this.timeSimplify;
 	}
@@ -316,5 +342,15 @@ public final class DecisionProcedureDecoratorStats extends DecisionProcedureDeco
         final long elapsed = elapsed();
         this.timeSimplify += elapsed;
         return result;
+    }
+    
+    @Override
+    public long bytesQueries() {
+    	return super.bytesQueries();
+    }
+    
+    @Override
+    public long numTokensQueries() {
+    	return super.numTokensQueries();
     }
 }

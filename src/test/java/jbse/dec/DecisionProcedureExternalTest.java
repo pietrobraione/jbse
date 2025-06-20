@@ -175,8 +175,16 @@ public class DecisionProcedureExternalTest {
         public void fail() {
             this.working = false;
         }
-        
-        
+
+		@Override
+		public long bytesQueries() {
+			return 0; //unused
+		}
+
+		@Override
+		public long numTokensQueries() {
+			return 0; //unused
+		}
     }
 
     @Before

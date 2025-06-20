@@ -1178,6 +1178,7 @@ public final class Run {
         	log(MSG_IS_SAT_NOT_INITIALIZED + "\t" + this.stats.countIsSatNotInitialized() + " calls " + Util.formatTime(this.stats.timeIsSatNotInitialized()));
         	log(MSG_GET_MODEL + "\t" + this.stats.countGetModel() + " calls " + Util.formatTime(this.stats.timeGetModel()));
         	log(MSG_SIMPLIFY + "\t" + this.stats.countSimplify() + " calls " + Util.formatTime(this.stats.timeSimplify()));
+        	log(MSG_QUERIES_BYTES_TOKENS + "\t" + this.stats.bytesQueries() + " bytes, " + this.stats.numTokensQueries() + " tokens");
         }
     }
 
@@ -1358,6 +1359,9 @@ public final class Run {
 
     /** Message: simplify() */
     private static final String MSG_SIMPLIFY = "simplify()            ";
+    
+    /** Message: simplify() */
+    private static final String MSG_QUERIES_BYTES_TOKENS = "Sent query data: ";
     
     /** Warning: unrecognizable signature. */
     private static final String WARNING_PARAMETERS_UNRECOGNIZABLE_VARIABLE = "Unrecognizable variable will not be observed: ";

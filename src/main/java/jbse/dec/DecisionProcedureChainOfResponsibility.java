@@ -923,4 +923,32 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     protected void closeLocal() throws DecisionException {
         //default implementation
     }
+    
+    @Override
+    public final long bytesQueries() {
+    	return bytesQueriesLocal() + (hasNext() ? this.next.bytesQueries() : 0L);
+    }
+
+    /**
+     * May be implemented by subclasses to calculate the number 
+     * of bytes sent by the local decision procedure to an external
+     * solver. By default it returns 0L.
+     */
+    protected long bytesQueriesLocal() {
+        return 0L;
+    }
+    
+    @Override
+    public final long numTokensQueries() {
+    	return numTokensQueriesLocal() + (hasNext() ? this.next.numTokensQueries() : 0L);
+    }
+
+    /**
+     * May be implemented by subclasses to calculate the number 
+     * of tokens sent by the local decision procedure to an external
+     * solver. By default it returns 0L.
+     */
+    protected long numTokensQueriesLocal() {
+        return 0L;
+    }
 }

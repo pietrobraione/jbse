@@ -27,6 +27,8 @@ public interface Stats extends Timer {
 	long timeIsSatNotInitialized();
 	long timeGetModel();
 	long timeSimplify();
+	long bytesQueries();
+	long numTokensQueries();
 	
 	@Override
 	default long getTime() {

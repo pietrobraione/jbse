@@ -79,6 +79,8 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
     private Process solver;
     private BufferedReader solverIn;
     private BufferedWriter solverOut;
+	private long bytesQueries;
+	private long numTokensQueries;
     private String currentQueryPositive;
     private String currentQueryNegative;
     private boolean hasCurrentClause;
@@ -105,6 +107,8 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
         this.solver = pb.start();
         this.solverIn = new BufferedReader(new InputStreamReader(this.solver.getInputStream()));
         this.solverOut = new BufferedWriter(new OutputStreamWriter(this.solver.getOutputStream()));
+        this.bytesQueries = 0L;
+        this.numTokensQueries = 0L;
         
         final String query = PROLOGUE + PUSH_1;
         sendAndCheckAnswer(query);
@@ -453,6 +457,9 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
         try {
             this.solverOut.write(query);
             this.solverOut.flush();
+    		this.bytesQueries += query.getBytes().length;
+    		final String[] queryTokens = query.replace("(", " ").replace(")", " ").trim().split("\\s+"); //thanks for the idea Peter Norvig!
+    		this.numTokensQueries += queryTokens.length;
         } catch (IOException e) {
             this.working = false;
             throw e;
@@ -993,4 +1000,14 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
 		}
         this.solver.destroyForcibly();
     }
+    
+    @Override
+	public long bytesQueries() {
+		return this.bytesQueries;
+	}
+	
+	@Override
+	public long numTokensQueries() {
+		return this.numTokensQueries;
+	}
 }
