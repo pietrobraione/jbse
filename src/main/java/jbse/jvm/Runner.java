@@ -433,16 +433,34 @@ public class Runner {
     private long timeout;
 
     /** Counter for the total number of analyzed paths. */
-    private long pathsTot;
+    private long pathsTotal;
+
+    /** Counter for the number of analyzed paths that are safe (i.e., end without failing any assertion). */
+    private long pathsSafe;
+
+    /** Counter for the number of analyzed paths that are unsafe (i.e., end by failing an assertion). */
+    private long pathsUnsafe;
+
+    /** Counter for the number of analyzed paths that are contradictory (i.e., end by failing an assumption). */
+    private long pathsContradictory;
 
     /** Counter for the number of analyzed paths stopped because of scope exhaustion. */
     private long pathsOutOfScope;
+
+    /** Counter for the number of analyzed paths stopped because they cannot be managed by symbolic execution. */
+    private long pathsUnmanageable;
+
+    /** Counter for the number of analyzed paths stopped because they raised a JBSE internal exception. */
+    private long pathsError;
 
     /** Stores the start time. */
     private long startTime;
 
     /** Stores the stop time. */
     private long stopTime;
+
+    /** Stores the boot (pre-initial) time. */
+    private long bootTime;
 
     /**
      * Constructor.
@@ -482,8 +500,16 @@ public class Runner {
         this.countScope = countScope;
         this.stackScope = stackScope;
         this.loopsScope = loopsScope;
+        this.pathsTotal = 0;
+        this.pathsSafe = 0;
+        this.pathsUnsafe = 0;
+        this.pathsContradictory = 0;
         this.pathsOutOfScope = 0;
-        this.pathsTot = 0;
+        this.pathsUnmanageable = 0;
+        this.pathsError = 0;
+        this.startTime = 0;
+        this.stopTime = 0;
+        this.bootTime = 0;
     }
     
     public Engine getEngine() {
@@ -579,6 +605,13 @@ public class Runner {
     ClasspathException, ThreadStackEmptyException, 
     ContradictionException, DecisionException, EngineStuckException, 
     FailureException, NonexistingObservedVariablesException  {
+        this.pathsTotal = 0;
+        this.pathsSafe = 0;
+        this.pathsUnsafe = 0;
+        this.pathsContradictory = 0;
+        this.pathsOutOfScope = 0;
+        this.pathsUnmanageable = 0;
+        this.pathsError = 0;
         this.startTime = System.currentTimeMillis();
 
         try {
@@ -593,14 +626,18 @@ public class Runner {
     ClasspathException, ThreadStackEmptyException, 
     ContradictionException, DecisionException, EngineStuckException, 
     FailureException, NonexistingObservedVariablesException  {
+    	boolean atPreInitialPhase = true;
         if (this.actions.atStart()) { return; }
         //performs the symbolic execution loop
         while (true) {
+        	boolean pathIsSafe = true; //initially assumes the path is safe
             if (this.actions.atPathStart()) { return; }
 
             //explores the path
             while (this.engine.canStep() && currentStateIsInRunSubregion()) {
                 if (this.engine.atInitialState()) {
+                	atPreInitialPhase = false;
+                	this.bootTime = System.currentTimeMillis();
                     if (this.actions.atInitial()) { return; }
                 }
                 if (this.engine.currentMethodChanged()) {
@@ -614,20 +651,36 @@ public class Runner {
                 try {
                     bp = this.engine.step();
                 } catch (CannotManageStateException e) {
+                	pathIsSafe = false;
+                	++this.pathsUnmanageable;
                     if (this.actions.atCannotManageStateException(e)) { return; }
-                } catch (ClasspathException e) {
-                    if (this.actions.atClasspathException(e)) { return; }
                 } catch (ContradictionException e) {
+                	pathIsSafe = false;
+                	++this.pathsContradictory;
                     if (this.actions.atContradictionException(e)) { return; }
+                } catch (FailureException e) {
+                	pathIsSafe = false;
+                	++this.pathsUnsafe;
+                    if (this.actions.atFailureException(e)) { return; }
+                } catch (ClasspathException e) {
+                	pathIsSafe = false;
+                	++this.pathsError;
+                    if (this.actions.atClasspathException(e)) { return; }
                 } catch (DecisionException e) {
+                	pathIsSafe = false;
+                	++this.pathsError;
                     if (this.actions.atDecisionException(e)) { return; }
                 } catch (EngineStuckException e) {
+                	pathIsSafe = false;
+                	++this.pathsError;
                     if (this.actions.atEngineStuckException(e)) { return; }
-                } catch (FailureException e) {
-                    if (this.actions.atFailureException(e)) { return; }
                 } catch (ThreadStackEmptyException e) {
+                	pathIsSafe = false;
+                	++this.pathsError;
                     if (this.actions.atThreadStackEmptyException(e)) { return; }
                 } catch (NonexistingObservedVariablesException e) {
+                	pathIsSafe = false;
+                	++this.pathsError;
                     if (this.actions.atNonexistingObservedVariablesException(e)) { return; }
                 } finally {
                     if (this.actions.atStepFinally()) { return; }
@@ -679,7 +732,8 @@ public class Runner {
             if (currentStateIsInRunSubregion()) {
                 //in this case, the state must be stuck (it should be impossible that a state
                 //is both stuck and out of the run subregion)
-                ++this.pathsTot;
+                ++this.pathsTotal;
+                if (pathIsSafe) { ++this.pathsSafe; }
                 if (this.actions.atPathEnd()) { return; }
             }
 
@@ -704,10 +758,20 @@ public class Runner {
                 if (found) {
                     if (this.actions.atBacktrackPost(bp)) { return; }
                 } else {
+                    if (atPreInitialPhase) {
+                    	//this means that an exception was raised during the
+                    	//pre-initial phase: fixes the stats
+                    	this.bootTime = System.currentTimeMillis();
+                    }
                     this.actions.atEnd();
                     return;
                 }
             } else {
+                if (atPreInitialPhase) {
+                	//this means that an exception was raised during the
+                	//pre-initial phase: fixes the stats
+                	this.bootTime = System.currentTimeMillis();
+                }
                 this.actions.atEnd();
                 return;
             }
@@ -719,10 +783,21 @@ public class Runner {
      * the method {@link #run()} was invoked.
      * 
      * @return a {@code long}, {@code 0L} if this 
-     * method is invoked before {@link #run()}.
+     *         method is invoked before {@link #run()}.
      */
     public long getStartTime() {
         return this.startTime;
+    }
+
+    /**
+     * Returns the boot (pre-initial) time, i.e., the time 
+     * when the execution was at the initial state.
+     * 
+     * @return a {@code long}, {@code 0L} if this 
+     *         method is invoked before {@link #run()}.
+     */
+    public long getBootTime() {
+        return this.bootTime;
     }
 
     /**
@@ -730,7 +805,7 @@ public class Runner {
      * the method {@link #run()} was invoked.
      * 
      * @return a {@code long}, {@code 0L} if this 
-     * method is invoked before {@link #run()}.
+     *         method is invoked before {@link #run()}.
      */
     public long getStopTime() {
         return this.stopTime;
@@ -740,20 +815,86 @@ public class Runner {
      * Returns the total number of paths explored until 
      * its invocation.
      * 
-     * @return a {@code long}.
+     * @return a {@code long}. It is equal to 
+     *         {@link #getPathsSafe()}{@code + }
+     *         {@link #getPathsUnsafe()}{@code + }
+     *         {@link #getPathsOutOfScope()}{@code + }
+     *         {@link #getPathsContradictory()}{@code + }
+     *         {@link #getPathsUnmanageable()}{@code + }
+     *         {@link #getPathsError()}.
      */
     public long getPathsTotal() {
-        return this.pathsTot;
+        return this.pathsTotal;
+    }
+
+    /**
+     * Returns the total number of safe paths explored 
+     * until its invocation. Safe paths are all the paths
+     * that do not fail any assertion.
+     * 
+     * @return a {@code long}.
+     */
+    public long getPathsSafe() {
+        return this.pathsSafe;
+    }
+
+    /**
+     * Returns the total number of unsafe paths explored 
+     * until its invocation. Unsafe paths are all the paths
+     * that fail an assertion.
+     * 
+     * @return a {@code long}.
+     */
+    public long getPathsUnsafe() {
+        return this.pathsUnsafe;
     }
 
     /**
      * Returns the total number of out-of-scope paths explored 
-     * until its invocation.
+     * until its invocation. Out-of-scope paths are all the paths
+     * that are terminated prematurely because they exhaust
+     * a bound.
      * 
      * @return a {@code long}.
      */
     public long getPathsOutOfScope() {
         return this.pathsOutOfScope;
+    }
+
+    /**
+     * Returns the total number of contradictory paths explored 
+     * until its invocation. Contradictory paths are all the paths
+     * that are terminated prematurely because they contradict an 
+     * assumption.
+     * 
+     * @return a {@code long}.
+     */
+    public long getPathsContradictory() {
+        return this.pathsContradictory;
+    }
+
+    /**
+     * Returns the total number of unmanageable paths explored 
+     * until its invocation. Unmanageable paths are all the paths
+     * that are terminated prematurely because the symbolic executor
+     * is unable to symbolically execute them. 
+     * 
+     * @return a {@code long}.
+     */
+    public long getPathsUnmanageable() {
+        return this.pathsUnmanageable;
+    }
+
+    /**
+     * Returns the total number of error paths explored 
+     * until its invocation. Error paths are all the paths
+     * that are terminated prematurely because the symbolic executor
+     * generated an internal exception. 
+     * 
+     * @return a {@code long}.
+     */
+    public long getPathsError() {
+        return this.pathsError;
     }
 }
 

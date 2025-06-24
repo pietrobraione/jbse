@@ -198,19 +198,27 @@ public final class RunParameters implements Cloneable {
         OUT_OF_SCOPE,
 
         /**
+         * A contradictory leaf, i.e, the final 
+         * state of a path that violates an 
+         * assumption.
+         */
+        CONTRADICTORY,
+
+        /**
          * An unmanageable leaf, i.e., the final 
          * state of a path that cannot be executed
          * because the symbolic executor is unable
          * to do that.
          */
         UNMANAGEABLE,
-
+        
         /**
-         * A contradictory leaf, i.e, the final 
-         * state of a path that violates an 
-         * assumption.
+         * An error leaf, i.e., the final 
+         * state of a path that cannot be executed
+         * because the symbolic executor raised an
+         * internal exception.
          */
-        CONTRADICTORY
+        ERROR
     }
 
     /**

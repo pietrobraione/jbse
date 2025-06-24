@@ -136,18 +136,6 @@ public final class Run {
     /** The concretization checker. */
     private InitialHeapChecker checker = null;
 
-    /** Counter for the number of analyzed paths that are safe (do not violate assertions). */
-    private long pathsSafe = 0;
-
-    /** Counter for the number of analyzed paths that are unsafe (violate some assertion). */
-    private long pathsUnsafe = 0;
-
-    /** 
-     * Counter for the number of analyzed paths that are unmanageable 
-     * (the symbolic executor is not able to execute them). 
-     */
-    private long pathsUnmanageable = 0;
-
     /** Counter for the number of analyzed paths that are safe and concretizable. */
     private long pathsConcretizableSafe = 0;
 
@@ -162,9 +150,6 @@ public final class Run {
     
     /** Whether we are still in the pre-initial phase. */
     private boolean atPreInitialPhase = true;
-
-    /** The timestamp of the end of the pre-initial phase. */
-    private long timestampPreInitialPhaseEnd = 0;
 
     /** The number of states traversed during the pre-initial phase. */
     private long preInitialStateCount = 0;
@@ -260,7 +245,6 @@ public final class Run {
         @Override
         public boolean atInitial() {
         	Run.this.atPreInitialPhase = false;
-        	Run.this.timestampPreInitialPhaseEnd = System.currentTimeMillis();
         	Run.this.preInitialStateCount = getEngine().getAnalyzedStates();
         	return super.atInitial();
         }
@@ -297,8 +281,7 @@ public final class Run {
             Run.this.emitEpilogue();
             if (Run.this.atPreInitialPhase) {
             	//this means that an exception was raised during the
-            	//pre-initial phase: fix the stats
-            	Run.this.timestampPreInitialPhaseEnd = System.currentTimeMillis();
+            	//pre-initial phase: fixes the stats
             	Run.this.preInitialStateCount = getEngine().getAnalyzedStates();
             }
             super.atEnd();
@@ -348,13 +331,13 @@ public final class Run {
         public boolean atScopeExhaustionStack() {
             this.pathKind = PathTypes.OUT_OF_SCOPE;
             this.endOfPathMessage = WARNING_SCOPE_EXHAUSTED_STACK;
-            return super.atScopeExhaustionCount();
+            return super.atScopeExhaustionStack();
         }
 
         public boolean atScopeExhaustionLoops() {
             this.pathKind = PathTypes.OUT_OF_SCOPE;
             this.endOfPathMessage = WARNING_SCOPE_EXHAUSTED_LOOPS;
-            return super.atScopeExhaustionCount();
+            return super.atScopeExhaustionLoops();
         }
 
         @Override
@@ -483,29 +466,29 @@ public final class Run {
                 final CounterKind counterKind;
                 switch (this.pathKind) {
                 case SAFE:
-                    ++Run.this.pathsSafe;
                     this.endOfPathMessage = MSG_PATH_SAFE;
                     counterKind = CounterKind.INC_SAFE;
                     break;
                 case UNSAFE:
-                    ++Run.this.pathsUnsafe;
                     this.endOfPathMessage = MSG_PATH_UNSAFE;
                     counterKind = CounterKind.INC_UNSAFE;
                     break;
                 case OUT_OF_SCOPE:
-                    //counter is provided by runner
                     //this.endOfPathMessage already set
                     counterKind = CounterKind.INC_OUT_OF_SCOPE;
-                    break;
-                case UNMANAGEABLE:
-                    ++Run.this.pathsUnmanageable;
-                    //this.endOfPathMessage already set
-                    counterKind = null;
                     break;
                 case CONTRADICTORY:
                     this.endOfPathMessage = MSG_PATH_CONTRADICTORY;
                     counterKind = null;
                     break;
+                case UNMANAGEABLE:
+                    //this.endOfPathMessage already set
+                    counterKind = null;
+                    break;
+                case ERROR:
+                    //no this.endOfPathMessage, the error message is printed upon error occurrence
+                    counterKind = null;
+                	break;
                 default: //to keep compiler happy:
                     throw new AssertionError();
                 }
@@ -1120,26 +1103,20 @@ public final class Run {
      * Prints statistics.
      */
     private void printFinalStats() {
-        final long elapsedTime = this.runner.getStopTime() - this.runner.getStartTime();
-        final long elapsedTimePreInitialPhase = (this.timestampPreInitialPhaseEnd - this.runner.getStartTime());
+        final long elapsedTime = (this.runner.getStopTime() - this.runner.getStartTime());
+        final long elapsedTimePreInitialPhase = (this.runner.getBootTime() - this.runner.getStartTime());
         final long elapsedTimeDecisionProcedure = (this.timer == null ? 0 : this.timer.getTime());
         final long speed = this.engine.getAnalyzedStates() * 1000 / elapsedTime;
         final long speedPostInitialPhase = (elapsedTime == elapsedTimePreInitialPhase) ? 0 : (this.engine.getAnalyzedStates() - this.preInitialStateCount) * 1000 / (elapsedTime - elapsedTimePreInitialPhase);
-        final long pathsViolatingAssumptions = 
-            this.runner.getPathsTotal() -
-            this.pathsSafe - 
-            this.pathsUnsafe -
-            this.runner.getPathsOutOfScope() -
-            this.pathsUnmanageable;
         log(MSG_END_STATES + this.engine.getAnalyzedStates() + ", " +
         	MSG_END_STATES_PREINITIAL + this.preInitialStateCount + ", " +
             MSG_END_PATHS_TOT + this.runner.getPathsTotal() + ", " +
-            MSG_END_PATHS_SAFE + this.pathsSafe + 
+            MSG_END_PATHS_SAFE + this.runner.getPathsSafe() + 
             (Run.this.parameters.getDoConcretization() ? 
              " (" + this.pathsConcretizableSafe + " concretizable)" :
              "") +
             ", " +
-            MSG_END_PATHS_UNSAFE + this.pathsUnsafe + 
+            MSG_END_PATHS_UNSAFE + this.runner.getPathsUnsafe() + 
             (Run.this.parameters.getDoConcretization() ? 
              " (" + this.pathsConcretizableUnsafe + " concretizable)" :
              "") +
@@ -1149,9 +1126,9 @@ public final class Run {
              " (" + this.pathsConcretizableOutOfScope + " concretizable)" :  
              "") +
             ", " +
-            MSG_END_PATHS_VIOLATING_ASSUMPTION + pathsViolatingAssumptions +
+            MSG_END_PATHS_VIOLATING_ASSUMPTION + this.runner.getPathsContradictory() +
             ", " +
-            MSG_END_PATHS_UNMANAGEABLE + this.pathsUnmanageable + ".");
+            MSG_END_PATHS_UNMANAGEABLE + this.runner.getPathsUnmanageable() + ".");
         log(MSG_END_ELAPSED + Util.formatTime(elapsedTime) + ", " +
         	MSG_END_ELAPSED_PREINITIAL + Util.formatTime(elapsedTimePreInitialPhase) + ", " +
             MSG_END_SPEED + speed + " states/sec, " +
