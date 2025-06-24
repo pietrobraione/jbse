@@ -936,7 +936,7 @@ public final class Run {
     				z3CommandLine.add(path == null ? "z3" : path.toString());
     				z3CommandLine.add(switchChar + "smt2");
     				z3CommandLine.add(switchChar + "in");
-    				z3CommandLine.add(switchChar + "t:10");
+    				z3CommandLine.add(switchChar + "t:10000");
     				core = new DecisionProcedureSMTLIB2_AUFNIRA(core, z3CommandLine);
     				coreNumeric = (needHeapCheck ? new DecisionProcedureSMTLIB2_AUFNIRA(coreNumeric, z3CommandLine) : null);
     			} else if (type == DecisionProcedureType.CVC4) {
