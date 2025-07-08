@@ -568,9 +568,9 @@ public class Runner {
     		return false;
     	}
     	try {
-    		final String currentMethodClass = currentState.getCurrentMethodSignature().getClassName();
-    		final String currentMethodDescriptor = currentState.getCurrentMethodSignature().getDescriptor();
-    		final String currentMethodName = currentState.getCurrentMethodSignature().getName();
+    		final String currentMethodClass = (currentState.getCurrentMethodSignature().getClassName() == null ? "" : currentState.getCurrentMethodSignature().getClassName());
+    		final String currentMethodDescriptor = (currentState.getCurrentMethodSignature().getDescriptor() == null ? "" : currentState.getCurrentMethodSignature().getDescriptor());
+    		final String currentMethodName = (currentState.getCurrentMethodSignature().getName() == null ? "" : currentState.getCurrentMethodSignature().getName());
     		final int backjumps = currentState.getCurrentFrameBackjumps();
     		for (ScopeLoopsItem item : this.loopsScope) {
     			final Matcher matcherClass = item.patternClass.matcher(currentMethodClass);
