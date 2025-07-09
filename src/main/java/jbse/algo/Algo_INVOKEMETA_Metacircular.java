@@ -35,7 +35,6 @@ import java.util.function.Supplier;
 
 import jbse.algo.exc.CannotAccessImplementationReflectively;
 import jbse.algo.exc.CannotInvokeNativeException;
-import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.exc.BadClassFileVersionException;
@@ -343,7 +342,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     //TODO unify with Algo_XYLOAD_GETX
     protected final void refineRefExpands(State state, DecisionAlternative_XYLOAD_GETX_Expands drc) 
     throws ContradictionException, InvalidTypeException, InvalidInputException, InterruptException, 
-    SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
+    CannotAssumeSymbolicObjectException, ClasspathException, FrozenStateException {
     	final Calculator calc = this.ctx.getCalculator();
         final ReferenceSymbolic referenceToExpand = drc.getValueToLoad();
         final String classNameOfReferenceToExpand = className(referenceToExpand.getStaticType());
@@ -355,8 +354,6 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, calc, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
-        } catch (CannotAssumeSymbolicObjectException e) {
-            throw new SymbolicValueNotAllowedException(e);
         } catch (DecisionException e) {
             //this should never happen, the decision was already checked
         	failExecution(e);
@@ -387,7 +384,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
         return new StrategyRefine_XLOAD_GETX() {
             @Override
             public void refineRefExpands(State s, DecisionAlternative_XLOAD_GETX_Expands drc)
-            throws ContradictionException, InvalidTypeException, SymbolicValueNotAllowedException, 
+            throws ContradictionException, InvalidTypeException, CannotAssumeSymbolicObjectException, 
             InterruptException, ClasspathException, InvalidInputException {
                 Algo_INVOKEMETA_Metacircular.this.refineRefExpands(s, drc);
             }

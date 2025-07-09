@@ -10,7 +10,6 @@ import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
 
-import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
@@ -22,6 +21,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.mem.State;
+import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_XLOAD_GETX;
@@ -111,7 +111,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
             @Override
             public void refineRefExpands(State s, DecisionAlternative_XLOAD_GETX_Expands alt) 
             throws ContradictionException, InvalidTypeException, InterruptException, 
-            SymbolicValueNotAllowedException, ClasspathException, InvalidInputException {
+            CannotAssumeSymbolicObjectException, ClasspathException, InvalidInputException {
                 Algo_XLOAD_GETX.this.refineRefExpands(s, alt); //implemented in Algo_XYLOAD_GETX
             }
 

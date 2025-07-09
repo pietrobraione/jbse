@@ -237,6 +237,10 @@ UP extends StrategyUpdate<R>> implements Action {
         } catch (InterruptException e) {
         	state.setStutters(true);
         	throw e;
+        } catch (CannotManageStateException e) {
+        	state.setStuckStop();
+        	state.setStutters(false);
+        	throw e;
         } catch (InvalidTypeException | InvalidOperatorException | 
         		 InvalidOperandException | ThreadStackEmptyException | 
         		 RenameUnsupportedException | InvalidProgramCounterException | 
@@ -265,6 +269,7 @@ UP extends StrategyUpdate<R>> implements Action {
         final boolean shouldRefine = outcome.shouldRefine();
         final boolean branchingDecision = outcome.branchingDecision();
         final boolean branchAdded = possiblyAddBranchPoint(decisionResults);
+        CannotManageStateException cannotManageStateException = null;
         for (R result : decisionResults) {
             final State stateCurrent = (tot > 1 ? state.lazyClone() : state);
 
@@ -287,6 +292,9 @@ UP extends StrategyUpdate<R>> implements Action {
                 this.updater.update(stateCurrent, result);
             } catch (InterruptException e) {
                 interrupt = e;
+            } catch (CannotManageStateException e) {
+            	stateCurrent.setStuckStop();
+            	cannotManageStateException = e;
             } catch (InvalidInputException | InvalidTypeException | 
                      InvalidOperatorException | InvalidOperandException | 
                      ThreadStackEmptyException | InvalidNumberOfOperandsException e) {
@@ -329,6 +337,10 @@ UP extends StrategyUpdate<R>> implements Action {
         
         if (tot > 1) {
         	state.freeze();
+        }
+        
+        if (cannotManageStateException != null) {
+        	throw cannotManageStateException;
         }
     }
 

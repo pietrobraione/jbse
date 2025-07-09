@@ -20,7 +20,6 @@ import java.util.function.Supplier;
 
 import jbse.algo.exc.MissingTriggerParameterException;
 import jbse.algo.exc.NotYetImplementedException;
-import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
@@ -36,6 +35,7 @@ import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.State;
+import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
@@ -209,7 +209,7 @@ StrategyUpdate_XALOAD> {
             @Override
             public void refineRefExpands(State state, DecisionAlternative_XALOAD_Expands altExpands) 
             throws DecisionException, ContradictionException, InvalidTypeException, InvalidInputException, 
-            InterruptException, SymbolicValueNotAllowedException, ClasspathException {
+            InterruptException, CannotAssumeSymbolicObjectException, ClasspathException {
                 //handles all the assumptions for reference resolution by expansion
                 Algo_XALOAD.this.refineRefExpands(state, altExpands); //implemented in Algo_XYLOAD_GETX
 

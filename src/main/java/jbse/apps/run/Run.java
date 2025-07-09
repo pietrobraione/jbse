@@ -59,6 +59,7 @@ import jbse.jvm.exc.FailureException;
 import jbse.jvm.exc.InitializationException;
 import jbse.jvm.exc.NonexistingObservedVariablesException;
 import jbse.mem.State;
+import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.CannotRefineException;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FrozenStateException;
@@ -358,6 +359,10 @@ public final class Run {
             } else if (e instanceof UninterpretedUnsupportedException) {
                 this.pathKind = PathTypes.UNMANAGEABLE;
                 this.endOfPathMessage = WARNING_UNINTERPRETED_UNSUPPORTED + e.getMessage();
+                return false;
+            } else if (e instanceof CannotAssumeSymbolicObjectException) {
+                this.pathKind = PathTypes.UNMANAGEABLE;
+                this.endOfPathMessage = WARNING_CANNOT_ASSUME_SYMBOLIC_OBJECT + e.getMessage();
                 return false;
             } else {
                 Run.this.err(ERROR_UNEXPECTED);
@@ -1366,7 +1371,7 @@ public final class Run {
     private static final String WARNING_SCOPE_EXHAUSTED_LOOPS = " path exhausted loops scope.";
 
     /** Warning: cannot manage a native method invocation. */
-    private static final String WARNING_CANNOT_INVOKE_NATIVE = " performed an unmanageable native method invocation: ";
+    private static final String WARNING_CANNOT_INVOKE_NATIVE = " cannot manage a native method invocation: ";
 
     /** Warning: cannot handle something. */
     private static final String WARNING_NOT_IMPLEMENTED_FEATURE = " met an unimplemented feature: ";
@@ -1377,6 +1382,9 @@ public final class Run {
     /** Warning: a method call cannot be treated as returning an uninterpreted function value. */
     private static final String WARNING_UNINTERPRETED_UNSUPPORTED = " method call cannot be treated as returning an uninterpreted function symbolic value: ";
 
+    /** Warning: a symbolic reference cannot be expanded because it has a symbolic type Class, Thread, or ClassLoader. */
+    private static final String WARNING_CANNOT_ASSUME_SYMBOLIC_OBJECT = " cannot expand symbolic reference to Class, Thread, or ClassLoader: ";
+    
     /** Error: unable to open dump file. */
     private static final String ERROR_DUMP_FILE_OPEN = "Could not open the dump file. The session will be displayed on console only.";
 

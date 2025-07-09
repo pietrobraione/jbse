@@ -1,11 +1,11 @@
 package jbse.algo;
 
-import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
+import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.ContradictionException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Out;
@@ -30,7 +30,7 @@ import jbse.val.exc.InvalidTypeException;
 abstract class StrategyRefine_XALOAD implements StrategyRefine<DecisionAlternative_XALOAD> {
     abstract public void refineRefExpands(State s, DecisionAlternative_XALOAD_Expands dac) 
     throws DecisionException, ContradictionException, InvalidTypeException, InvalidInputException, 
-    InterruptException, SymbolicValueNotAllowedException, ClasspathException;
+    InterruptException, CannotAssumeSymbolicObjectException, ClasspathException;
 
     abstract public void refineRefAliases(State s, DecisionAlternative_XALOAD_Aliases dai) 
     throws DecisionException, ContradictionException, InvalidInputException, InterruptException, 
@@ -48,14 +48,14 @@ abstract class StrategyRefine_XALOAD implements StrategyRefine<DecisionAlternati
     @Override
     public final void refine(final State s, DecisionAlternative_XALOAD r)
     throws DecisionException, ContradictionException, InvalidTypeException, InvalidInputException, 
-    InterruptException, SymbolicValueNotAllowedException, ClasspathException {
+    InterruptException, CannotAssumeSymbolicObjectException, ClasspathException {
         //a visitor redispatching to the methods which specialize this.refine
         final VisitorDecisionAlternative_XALOAD visitorRefine = 
             new VisitorDecisionAlternative_XALOAD() {
                 @Override
                 public void visitDecisionAlternative_XALOAD_Expands(DecisionAlternative_XALOAD_Expands dac)
                 throws DecisionException, ContradictionException, InvalidTypeException, InvalidInputException, 
-                InterruptException, SymbolicValueNotAllowedException, ClasspathException {
+                InterruptException, CannotAssumeSymbolicObjectException, ClasspathException {
                     StrategyRefine_XALOAD.this.refineRefExpands(s, dac);
                 }
     
@@ -90,7 +90,7 @@ abstract class StrategyRefine_XALOAD implements StrategyRefine<DecisionAlternati
             r.accept(visitorRefine);
         } catch (DecisionException | ContradictionException | 
                  InvalidTypeException | InvalidInputException | InterruptException | 
-                 SymbolicValueNotAllowedException | ClasspathException | 
+                 CannotAssumeSymbolicObjectException | ClasspathException | 
                  RuntimeException e) {
             throw e;
         } catch (Exception e) {

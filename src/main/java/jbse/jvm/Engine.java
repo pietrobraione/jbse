@@ -298,6 +298,7 @@ public final class Engine implements AutoCloseable {
   				             this.ctx.dispatcher.selectInit() :
   				             this.ctx.dispatcher.select(this.currentState.getInstruction()));
         	boolean hasContinuation;
+        	CannotManageStateException exception = null;
         	do {
         		try {
         			action.exec(this.currentState, this.ctx);
@@ -307,13 +308,16 @@ public final class Engine implements AutoCloseable {
         			if (hasContinuation) {
         				action = e.getContinuation();
         			}
-        		} catch (ClasspathException | CannotManageStateException | 
+        		} catch (ClasspathException | 
         				ThreadStackEmptyException | ContradictionException | 
         				DecisionException | FailureException | 
         				UnexpectedInternalException e) {
         			stopCurrentPath();
         			throw e;
-        		} 
+        		} catch (CannotManageStateException e) {
+        			exception = e;
+        			break;
+        		}
         	} while (hasContinuation);
 
         	//possibly gets information about symbolic references that were not expanded
@@ -362,6 +366,11 @@ public final class Engine implements AutoCloseable {
         	//updates stats
         	if (this.analyzedStates < Long.MAX_VALUE) { 
         		++this.analyzedStates;
+        	}
+        	
+        	//throws exception if its the case
+        	if (exception != null) {
+        		throw exception;
         	}
 
         	//returns

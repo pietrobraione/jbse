@@ -2520,7 +2520,7 @@ public final class State implements Cloneable {
     private InstanceImpl_DEFAULT newInstanceSymbolic(Calculator calc, ClassFile classFile, ReferenceSymbolic origin) 
     throws CannotAssumeSymbolicObjectException, InvalidTypeException, InvalidInputException {
         if (cannotExecuteSymbolically(classFile)) {
-            throw new CannotAssumeSymbolicObjectException("JBSE does not allow to execute symbolically the methods of class " + classFile.getClassName() + ".");
+            throw new CannotAssumeSymbolicObjectException("JBSE does not allow to create symbolic instances of class " + classFile.getClassName() + ".");
         }
         final InstanceImpl_DEFAULT obj = new InstanceImpl_DEFAULT(calc, true, classFile, origin, origin.historyPoint());
         try {
@@ -3174,7 +3174,7 @@ public final class State implements Cloneable {
      * @throws HeapMemoryExhaustedException if the heap is full.
      * @throws CannotAssumeSymbolicObjectException if {@code classFile} is
      *         a class that cannot be assumed to be symbolic
-     *         (currently {@code java.lang.Class} and {@code java.lang.ClassLoader}).
+     *         (currently {@code java.lang.Class}, {@code java.lang.Thread} and {@code java.lang.ClassLoader}).
      */
     public void assumeExpands(Calculator calc, ReferenceSymbolic referenceSymbolic, ClassFile classFile) 
     throws InvalidInputException, ContradictionException, HeapMemoryExhaustedException, 

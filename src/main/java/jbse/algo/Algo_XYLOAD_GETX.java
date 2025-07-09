@@ -18,7 +18,6 @@ import java.util.function.Supplier;
 
 import jbse.algo.exc.MissingTriggerParameterException;
 import jbse.algo.exc.NotYetImplementedException;
-import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -75,7 +74,7 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
     //TODO unify with Algo_INVOKEMETA_Metacircular
     protected final void refineRefExpands(State state, DecisionAlternative_XYLOAD_GETX_Expands drc) 
     throws ContradictionException, InvalidTypeException, InvalidInputException, InterruptException, 
-    SymbolicValueNotAllowedException, ClasspathException {
+    CannotAssumeSymbolicObjectException, ClasspathException {
     	final Calculator calc = this.ctx.getCalculator();
         final ReferenceSymbolic referenceToExpand = drc.getValueToLoad();
         final String classNameOfReferenceToExpand = className(referenceToExpand.getStaticType());
@@ -87,8 +86,6 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, calc, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
-        } catch (CannotAssumeSymbolicObjectException e) {
-            throw new SymbolicValueNotAllowedException(e);
         } catch (DecisionException e) {
             //this should never happen, the decision was already checked
         	failExecution(e);
