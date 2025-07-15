@@ -17,6 +17,7 @@ import jbse.algo.BytecodeCooker;
 import jbse.algo.StrategyDecide;
 import jbse.algo.StrategyRefine;
 import jbse.algo.StrategyUpdate;
+import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -63,6 +64,12 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
             } catch (ClassCastException e) {
                 throwVerifyError(state, calc);
                 exitFromAlgorithm();
+            }
+            
+            if  (this.src.isSymbolic() || this.srcPos.isSymbolic() ||
+            this.dest.isSymbolic() || this.destPos.isSymbolic() ||
+            this.length.isSymbolic()) {
+            	throw new SymbolicValueNotAllowedException("No symbolic value allowed in arraycopy");
             }
 
             if (state.isNull(this.src) || state.isNull(this.dest)) {

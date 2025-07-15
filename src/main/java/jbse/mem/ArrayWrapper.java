@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
+import jbse.bc.ClassFile;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
@@ -147,6 +148,12 @@ final class ArrayWrapper extends HeapObjektWrapper<ArrayImpl> implements Array {
     @Override
     public String valueString() {
         return getDelegate().valueString();
+    }
+    
+    @Override
+    public void refine(Calculator calc, ClassFile classSub, State state) throws InvalidInputException {
+        possiblyCloneDelegate();
+        getDelegate().refine(calc, classSub, state);
     }
 
     @Override

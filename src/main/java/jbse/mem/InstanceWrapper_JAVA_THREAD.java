@@ -1,8 +1,10 @@
 package jbse.mem;
 
 
+import jbse.bc.ClassFile;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
+import jbse.val.Calculator;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -44,6 +46,11 @@ final class InstanceWrapper_JAVA_THREAD extends InstanceWrapper<InstanceImpl_JAV
 	public void makeInitial() throws InvalidInputException {
 		throw new InvalidInputException("Attempted to makeInitial an instance of java.lang.Thread (or subclass).");
 	}
+    
+    @Override
+    public void refine(Calculator calc, ClassFile classSub, State state) throws InvalidInputException {
+		throw new InvalidInputException("Attempted to refine an instance of java.lang.Thread (or subclass).");
+    }
 
 	@Override
 	public final Instance_JAVA_THREAD clone() {

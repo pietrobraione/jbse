@@ -23,7 +23,7 @@ import jbse.val.Value;
  */
 public abstract class ObjektImpl implements Objekt {
     /** ClassFile for this object's class. Immutable. */
-    protected final ClassFile classFile; //TODO why protected? why here and not just in instance?
+    protected ClassFile classFile; //TODO why protected? why here and not just in instance?
 
     /** Whether this object is symbolic. */
     private boolean symbolic;
@@ -41,10 +41,10 @@ public abstract class ObjektImpl implements Objekt {
      * {@code true} if the object must store the static fields,
      * {@code false} if it must store the nonstatic fields.
      */
-    private final boolean staticFields;
+    protected final boolean staticFields;
 
-    /** The number of static fields. Immutable. */
-    private final int numOfStaticFields;
+    /** The number of static fields. */
+    protected int numOfStaticFields;
 
     /** 
      * All the signatures of all the fields declared by 
@@ -52,8 +52,8 @@ public abstract class ObjektImpl implements Objekt {
      * or superclasses (nonstatic). The position of a field
      * signature in this list (starting from the end) is 
      * the field's offset number, as used by sun.misc.Unsafe 
-     * methods. Immutable. */
-    private final List<Signature> fieldSignatures;
+     * methods. */
+    protected List<Signature> fieldSignatures;
 
     /** 
      * The identity hash code of this {@link ObjektImpl}. Mutable only
@@ -102,8 +102,8 @@ public abstract class ObjektImpl implements Objekt {
         this.fieldSignatures = Arrays.asList(classFile.getObjectFields().clone()); //safety copy - possibly useless
         int curSlot = 0;
         for (Signature fieldSignature : this.fieldSignatures) {
-            if ((staticFields && curSlot < numOfStaticFields) ||
-                (!staticFields && curSlot >= numOfStaticFields)) {
+            if ((staticFields && curSlot < this.numOfStaticFields) ||
+                (!staticFields && curSlot >= this.numOfStaticFields)) {
             	String fieldGenericSignatureType = null;
             	boolean found = false;
             	for (ClassFile cf : classFile.superclasses()) {

@@ -1,6 +1,8 @@
 package jbse.mem;
 
+import jbse.bc.ClassFile;
 import jbse.common.exc.InvalidInputException;
+import jbse.val.Calculator;
 
 /**
  * A Java object which may reside in the heap, 
@@ -29,6 +31,8 @@ public interface HeapObjekt extends Objekt {
      */
     //TODO this is really ugly! Possibly delete and do as with arrays, i.e., all objects are created symbolic/initial upon construction and never need to change from concrete to symbolic and to noninitial to initial.
     void makeInitial() throws InvalidInputException;
+    
+    void refine(Calculator calc, ClassFile classSub, State state) throws InvalidInputException;
     
 	HeapObjekt clone();
 }

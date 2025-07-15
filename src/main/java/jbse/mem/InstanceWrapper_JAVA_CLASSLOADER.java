@@ -1,7 +1,9 @@
 package jbse.mem;
 
+import jbse.bc.ClassFile;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
+import jbse.val.Calculator;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -37,6 +39,11 @@ final class InstanceWrapper_JAVA_CLASSLOADER extends InstanceWrapper<InstanceImp
 	public void makeInitial() throws InvalidInputException {
 		throw new InvalidInputException("Attempted to makeInitial an instance of java.lang.ClassLoader (or subclass).");
 	}
+    
+    @Override
+    public void refine(Calculator calc, ClassFile classSub, State state) throws InvalidInputException {
+		throw new InvalidInputException("Attempted to refine an instance of java.lang.ClassLoader (or subclass).");
+    }
 
 	@Override
 	public Instance_JAVA_CLASSLOADER clone() {

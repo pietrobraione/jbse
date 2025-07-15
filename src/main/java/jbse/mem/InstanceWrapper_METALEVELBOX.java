@@ -1,7 +1,9 @@
 package jbse.mem;
 
+import jbse.bc.ClassFile;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
+import jbse.val.Calculator;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -38,6 +40,11 @@ final class InstanceWrapper_METALEVELBOX extends InstanceWrapper<InstanceImpl_ME
         throw new InvalidInputException("Attempted to makeSymbolic a meta-level box.");
 		
 	}
+    
+    @Override
+    public void refine(Calculator calc, ClassFile classSub, State state) throws InvalidInputException {
+		throw new InvalidInputException("Attempted to refine a meta-level box.");
+    }
 
 	@Override
 	public InstanceWrapper_METALEVELBOX clone() {

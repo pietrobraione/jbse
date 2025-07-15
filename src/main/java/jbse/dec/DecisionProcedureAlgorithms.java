@@ -1872,15 +1872,15 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 
     /**
      * Returns all the heap objects in a state that may be possible
-     * aliases of a given {@link ReferenceSymbolic}.
+     * expansions of a given {@link ReferenceSymbolic}.
      *
      * @param hier a {@link ClassHierarchy}.
      * @param refClass a {@link ClassFile} for the static type of the reference 
      *        to be resolved.
-     * @return a {@link Set}{@code <}{@link String}{@code >}, listing
+     * @return a {@link Set}{@code <}{@link ClassFile}{@code >}, listing
      *         all the classes that are compatible, in their type and epoch of 
-     *         initialization, with {@code ref}.
-     *         If {@code ref} does not denote a reference or array type, the method 
+     *         initialization, with {@code refClass}.
+     *         If {@code refClass} does not denote a reference or array type, the method 
      *         returns {@code null}.
      * @throws InvalidInputException if one of the candidate subclass names 
      *         for {@code refClass} in {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s

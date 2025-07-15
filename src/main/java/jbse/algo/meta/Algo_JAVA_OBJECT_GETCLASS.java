@@ -56,6 +56,11 @@ public final class Algo_JAVA_OBJECT_GETCLASS extends Algo_INVOKEMETA_Nonbranchin
                 failExecution("The 'this' parameter to java.lang.Object.getClass method is symbolic and unresolved.");
             }
             this.className = thisObj.getType();
+            
+            if (thisObj.isSymbolic()) {
+            	throw new SymbolicValueNotAllowedException("Cannot get the class of a symbolic object");
+            }
+            
             state.ensureInstance_JAVA_CLASS(calc, this.className);
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, calc, OUT_OF_MEMORY_ERROR);

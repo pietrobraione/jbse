@@ -1,7 +1,9 @@
 package jbse.mem;
 
+import jbse.bc.ClassFile;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
+import jbse.val.Calculator;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -34,6 +36,12 @@ final class InstanceWrapper_DEFAULT extends InstanceWrapper<InstanceImpl_DEFAULT
 		possiblyCloneDelegate();
 		getDelegate().makeInitial();
 	}
+    
+    @Override
+    public void refine(Calculator calc, ClassFile classSub, State state) throws InvalidInputException {
+        possiblyCloneDelegate();
+        getDelegate().refine(calc, classSub, state);
+    }
 
 	@Override
 	public final Instance clone() {

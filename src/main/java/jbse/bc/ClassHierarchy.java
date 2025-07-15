@@ -477,9 +477,9 @@ public final class ClassHierarchy implements Cloneable {
             throw new InvalidInputException("Tried to get the concrete subclasses of a null classfile.");
         }
         final HashSet<ClassFile> retVal = new HashSet<>();
-        if (!classFile.isAbstract()) {
+        //if (!classFile.isAbstract()) {
             retVal.add(classFile);
-        }
+        //}
         final Set<String> moreSubclasses = this.expansionBackdoor.get(classFile.getClassName());
         if (moreSubclasses != null) {
             for (String subclassName : moreSubclasses) {

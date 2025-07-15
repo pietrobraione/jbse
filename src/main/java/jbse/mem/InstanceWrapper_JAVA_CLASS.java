@@ -3,6 +3,7 @@ package jbse.mem;
 import jbse.bc.ClassFile;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
+import jbse.val.Calculator;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 
@@ -50,8 +51,13 @@ final class InstanceWrapper_JAVA_CLASS extends InstanceWrapper<InstanceImpl_JAVA
 	public void makeInitial() throws InvalidInputException {
 		throw new InvalidInputException("Attempted to makeInitial an instance of java.lang.Class.");
 	}
+    
+    @Override
+    public void refine(Calculator calc, ClassFile classSub, State state) throws InvalidInputException {
+		throw new InvalidInputException("Attempted to refine an instance of java.lang.Class.");
+    }
 
-	@Override
+    @Override
 	public Instance_JAVA_CLASS clone() {
 		//a wrapper shall never be cloned
 		throw new UnexpectedInternalException("Tried to clone an InstanceWrapper_JAVA_CLASS.");
