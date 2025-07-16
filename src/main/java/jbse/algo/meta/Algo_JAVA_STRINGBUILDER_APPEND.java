@@ -1,13 +1,9 @@
 package jbse.algo.meta;
 
 import static jbse.algo.UtilControlFlow.continueWithBaseLevelImpl;
-import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
 import static jbse.algo.UtilControlFlow.failExecution;
-import static jbse.algo.UtilControlFlow.throwNew;
-import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.bc.Signatures.JAVA_STRINGBUILDER_APPEND_STRING;
-import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
 import java.util.function.Supplier;
 
@@ -18,12 +14,9 @@ import jbse.bc.Snippet;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
-import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
-import jbse.val.Calculator;
-import jbse.val.Primitive;
 import jbse.val.ReferenceConcrete;
 
 /**
@@ -42,23 +35,23 @@ public final class Algo_JAVA_STRINGBUILDER_APPEND extends Algo_INVOKEMETA_Nonbra
     @Override
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, InterruptException, InvalidInputException, ClasspathException {
-    	final Calculator calc = this.ctx.getCalculator();
+    	/*final Calculator calc = this.ctx.getCalculator();
         try {
             final Primitive toAppend = (Primitive) this.data.operand(1);
             if (toAppend.isSymbolic()) {
                 final String stringifiedSymbol = toAppend.toString();
                 state.ensureStringLiteral(calc, stringifiedSymbol);
                 this.refStringifiedSymbol = state.referenceToStringLiteral(stringifiedSymbol);
-            } else {
+            } else {*/
                 continueWithBaseLevelImpl(state, this.isInterface, this.isSpecial, this.isStatic); //executes the original StringBuilder.append implementation
-            }
+            /*}
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, calc, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
             throwVerifyError(state, calc);
             exitFromAlgorithm();
-        }
+        }*/
     }
 
     @Override
