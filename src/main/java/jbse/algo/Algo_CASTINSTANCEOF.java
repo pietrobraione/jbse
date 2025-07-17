@@ -84,7 +84,7 @@ StrategyUpdate<DecisionAlternative_CASTINSTANCEOF>> {
                     final ClassFile classObj = obj.getType();
                     if (obj.isSymbolic()) {
                     	this.refine = this.classCast.isSubclass(classObj);
-                    	this.isSubclass = classObj.isSubclass(this.classCast) || this.refine || this.classCast.isInterface();
+                    	this.isSubclass = classObj.isSubclass(this.classCast) || this.refine || this.classCast.isInterface() || classObj.isInterface();
                     } else {
                     	this.refine = false;
                     	this.isSubclass = classObj.isSubclass(this.classCast);
