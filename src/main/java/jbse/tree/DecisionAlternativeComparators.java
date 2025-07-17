@@ -258,6 +258,24 @@ public final class DecisionAlternativeComparators {
         };
     }
 
+    /**
+     * Default comparator for {@link DecisionAlternative_CASTINSTANCEOF}s.
+     * 
+     * @return A {@link Comparator}{@code <}{@link DecisionAlternative_XCMPY}{@code >} yielding
+     *         {@link DecisionAlternative_XCMPY_Gt} {@code <} {@link DecisionAlternative_XCMPY_Eq} 
+     *         {@code <} {@link DecisionAlternative_XCMPY_Lt}.
+     */
+    public static Comparator<DecisionAlternative_CASTINSTANCEOF> defaultComparatorDecisionAlternative_CASTINSTANCEOF() {
+        return new Comparator<DecisionAlternative_CASTINSTANCEOF>() {
+            @Override
+            public int compare(DecisionAlternative_CASTINSTANCEOF o1, DecisionAlternative_CASTINSTANCEOF o2) {
+                final int o1Pos = (o1 instanceof DecisionAlternative_CASTINSTANCEOF_Null) ? 0 : (o1 instanceof DecisionAlternative_CASTINSTANCEOF_IsSubclass) ? 1 : 2;
+                final int o2Pos = (o2 instanceof DecisionAlternative_CASTINSTANCEOF_Null) ? 0 : (o2 instanceof DecisionAlternative_CASTINSTANCEOF_IsSubclass) ? 1 : 2;
+                return o1Pos - o2Pos;
+            }
+        };
+    }
+
     private final HashMap<Class<?>, Comparator<?>> comparators = new HashMap<>(); 
 
     /**
@@ -272,6 +290,7 @@ public final class DecisionAlternativeComparators {
         this.comparators.put(DecisionAlternative_XNEWARRAY.class,  defaultComparatorDecisionAlternative_XNEWARRAY());
         this.comparators.put(DecisionAlternative_XASTORE.class,    defaultComparatorDecisionAlternative_XASTORE());
         this.comparators.put(DecisionAlternative_XALOAD.class,     defaultComparatorDecisionAlternative_XALOAD());
+        this.comparators.put(DecisionAlternative_CASTINSTANCEOF.class,     defaultComparatorDecisionAlternative_CASTINSTANCEOF());
     }
 
     /**
@@ -335,7 +354,8 @@ public final class DecisionAlternativeComparators {
                                           final Comparator<DecisionAlternative_XLOAD_GETX> cr,
                                           final Comparator<DecisionAlternative_XNEWARRAY> cn,
                                           final Comparator<DecisionAlternative_XASTORE> cs,
-                                          final Comparator<DecisionAlternative_XALOAD> cl) {
+                                          final Comparator<DecisionAlternative_XALOAD> cl,
+                                          final Comparator<DecisionAlternative_CASTINSTANCEOF> cci) {
         this(); //sets defaults
         if (cb != null) { this.comparators.put(DecisionAlternative_IFX.class,        reverseOrder(cb)); } 
         if (cc != null) { this.comparators.put(DecisionAlternative_XCMPY.class,      reverseOrder(cc)); }
@@ -344,6 +364,7 @@ public final class DecisionAlternativeComparators {
         if (cn != null) { this.comparators.put(DecisionAlternative_XNEWARRAY.class,  reverseOrder(cn)); }
         if (cs != null) { this.comparators.put(DecisionAlternative_XASTORE.class,    reverseOrder(cs)); }
         if (cl != null) { this.comparators.put(DecisionAlternative_XALOAD.class,     reverseOrder(cl)); }
+        if (cci != null) { this.comparators.put(DecisionAlternative_CASTINSTANCEOF.class,     reverseOrder(cci)); }
     }
 
     /**

@@ -24,7 +24,10 @@ import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.HeapObjekt;
-import jbse.tree.DecisionAlternative_NONE;
+import jbse.tree.DecisionAlternative_CASTINSTANCEOF;
+import jbse.tree.DecisionAlternative_CASTINSTANCEOF_IsNotSubclass;
+import jbse.tree.DecisionAlternative_CASTINSTANCEOF_IsSubclass;
+import jbse.tree.DecisionAlternative_CASTINSTANCEOF_Null;
 import jbse.val.Reference;
 
 /**
@@ -36,13 +39,16 @@ import jbse.val.Reference;
  */
 abstract class Algo_CASTINSTANCEOF extends Algorithm<
 BytecodeData_1CL,
-DecisionAlternative_NONE,
-StrategyDecide<DecisionAlternative_NONE>, 
-StrategyRefine<DecisionAlternative_NONE>, 
-StrategyUpdate<DecisionAlternative_NONE>> {
+DecisionAlternative_CASTINSTANCEOF,
+StrategyDecide<DecisionAlternative_CASTINSTANCEOF>, 
+StrategyRefine<DecisionAlternative_CASTINSTANCEOF>, 
+StrategyUpdate<DecisionAlternative_CASTINSTANCEOF>> {
 
+    protected ClassFile classCast; //result of the check, for the subclasses of this algorithm
     protected boolean isNull; //result of the check, for the subclasses of this algorithm
     protected boolean isSubclass; //result of the check, for the subclasses of this algorithm
+    protected boolean isNotSubclass; //result of the check, for the subclasses of this algorithm
+    protected boolean refine; //result of the check, for the subclasses of this algorithm
 
     @Override
     protected final Supplier<Integer> numOperands() {
@@ -59,30 +65,31 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         return (state) -> { 
             try {
                 //gets the operand
-                final Reference tmpValue = (Reference) this.data.operand(0);
+                final Reference referenceObj = (Reference) this.data.operand(0);
 
                 //checks whether the object's class is a subclass 
                 //of the class name from the constant pool
-                if (state.isNull(tmpValue)) {
+                if (state.isNull(referenceObj)) {
                     this.isNull = true;
+                    this.isSubclass = false;
+                    this.isNotSubclass = false;
                 } else {
                     this.isNull = false;
                     //performs resolution of the class name
                     final ClassFile currentClass = state.getCurrentClass();    
-                    final ClassFile classSuper = state.getClassHierarchy().resolveClass(currentClass, this.data.className(), state.bypassStandardLoading());
+                    this.classCast = state.getClassHierarchy().resolveClass(currentClass, this.data.className(), state.bypassStandardLoading());
                     
                     //gets the object's class
-                    final HeapObjekt obj = state.getObject(tmpValue);
-                    final ClassFile classSub = obj.getType();
+                    final HeapObjekt obj = state.getObject(referenceObj);
+                    final ClassFile classObj = obj.getType();
                     if (obj.isSymbolic()) {
-                    	boolean refine = classSuper.isSubclass(classSub);
-                    	if (refine) {
-                    		obj.refine(this.ctx.getCalculator(), classSuper, state);
-                    	}
-                    	this.isSubclass = classSub.isSubclass(classSuper) || refine;
+                    	this.refine = this.classCast.isSubclass(classObj);
+                    	this.isSubclass = classObj.isSubclass(this.classCast) || this.refine || this.classCast.isInterface();
                     } else {
-                    	this.isSubclass = classSub.isSubclass(classSuper);
+                    	this.refine = false;
+                    	this.isSubclass = classObj.isSubclass(this.classCast);
                     }
+                    this.isNotSubclass = !classObj.isSubclass(this.classCast);
                 }
             } catch (PleaseLoadClassException e) {
                 invokeClassLoaderLoadClass(state, this.ctx.getCalculator(), e);
@@ -114,20 +121,28 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     @Override
-    protected final Class<DecisionAlternative_NONE> classDecisionAlternative() {
-        return DecisionAlternative_NONE.class;
+    protected final Class<DecisionAlternative_CASTINSTANCEOF> classDecisionAlternative() {
+        return DecisionAlternative_CASTINSTANCEOF.class;
     }
 
     @Override
-    protected final StrategyDecide<DecisionAlternative_NONE> decider() {
+    protected final StrategyDecide<DecisionAlternative_CASTINSTANCEOF> decider() {
         return (state, result) -> { 
-            result.add(DecisionAlternative_NONE.instance());
-            return DecisionProcedureAlgorithms.Outcome.FF;
+        	if (this.isNull) {
+        		result.add(DecisionAlternative_CASTINSTANCEOF_Null.instance());
+        	}
+        	if (this.isSubclass) {
+        		result.add(DecisionAlternative_CASTINSTANCEOF_IsSubclass.instance(this.refine));
+        	}
+        	if (this.isNotSubclass) {
+        		result.add(DecisionAlternative_CASTINSTANCEOF_IsNotSubclass.instance());
+        	}
+            return DecisionProcedureAlgorithms.Outcome.val(false, result.size() > 1);
         };
     }
 
     @Override
-    protected final StrategyRefine<DecisionAlternative_NONE> refiner() {
+    protected final StrategyRefine<DecisionAlternative_CASTINSTANCEOF> refiner() {
         return (state, alt) -> { };
     }
 

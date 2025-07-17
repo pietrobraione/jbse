@@ -5,8 +5,12 @@ import static jbse.algo.UtilControlFlow.failExecution;
 import static jbse.algo.UtilControlFlow.throwNew;
 import static jbse.bc.Signatures.CLASS_CAST_EXCEPTION;
 
+import jbse.mem.HeapObjekt;
 import jbse.mem.exc.ThreadStackEmptyException;
-import jbse.tree.DecisionAlternative_NONE;
+import jbse.tree.DecisionAlternative_CASTINSTANCEOF;
+import jbse.tree.DecisionAlternative_CASTINSTANCEOF_IsSubclass;
+import jbse.tree.DecisionAlternative_CASTINSTANCEOF_Null;
+import jbse.val.Reference;
 
 /**
  * {@link Algorithm} implementing the checkcast bytecode.
@@ -15,11 +19,19 @@ import jbse.tree.DecisionAlternative_NONE;
  */
 final class Algo_CHECKCAST extends Algo_CASTINSTANCEOF {
     @Override
-    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+    protected StrategyUpdate<DecisionAlternative_CASTINSTANCEOF> updater() {
         return (state, alt) -> {
-            if (this.isSubclass) { //TODO does the this.isSubclass check conform to the specification of the checkcast bytecode in the JVMS v8?
+        	if (alt instanceof DecisionAlternative_CASTINSTANCEOF_IsSubclass || alt instanceof DecisionAlternative_CASTINSTANCEOF_Null) {
+                //gets the operand
+                final Reference referenceObj = (Reference) this.data.operand(0);
+
+        		if (alt instanceof DecisionAlternative_CASTINSTANCEOF_IsSubclass && ((DecisionAlternative_CASTINSTANCEOF_IsSubclass) alt).refine()) {
+                    final HeapObjekt obj = state.getObject(referenceObj);
+                    obj.refine(this.ctx.getCalculator(), this.classCast, state);
+        		}
+        		
                 try {
-                    state.pushOperand(this.data.operand(0));
+                    state.pushOperand(referenceObj);
                 } catch (ThreadStackEmptyException e) {
                     //this should never happen
                     failExecution(e);

@@ -1,6 +1,7 @@
 package jbse.algo;
 
-import jbse.tree.DecisionAlternative_NONE;
+import jbse.tree.DecisionAlternative_CASTINSTANCEOF;
+import jbse.tree.DecisionAlternative_CASTINSTANCEOF_IsSubclass;
 
 /**
  * {@link Algorithm} implementing the instanceof bytecode.
@@ -8,9 +9,9 @@ import jbse.tree.DecisionAlternative_NONE;
  * @author Pietro Braione
  */
 final class Algo_INSTANCEOF extends Algo_CASTINSTANCEOF {
-    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+    protected StrategyUpdate<DecisionAlternative_CASTINSTANCEOF> updater() {
         return (state, alt) -> {
-            if (!this.isNull && this.isSubclass) { //TODO does the this.isSubclass check conform to the specification of the instanceof bytecode in the JVMS v8?
+            if (alt instanceof DecisionAlternative_CASTINSTANCEOF_IsSubclass) {
                 state.pushOperand(this.ctx.getCalculator().valInt(1));
             } else { 
                 state.pushOperand(this.ctx.getCalculator().valInt(0));
