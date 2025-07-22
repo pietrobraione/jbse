@@ -191,7 +191,7 @@ public final class TriggerRulesRepo implements Cloneable {
 	 * Adds the rules necessary to make the map models work.
 	 */
 	public void addMapModelsRules() {
-		//java.util.HashMap (model)
+		/*//java.util.HashMap (model)
 		//1- expansion of a reference to a (not initial) HashMap triggers initSymbolic
 		final String NOT_JBSE_JAVA_HASHMAP_INITIALMAP = "(?!{°}*" + JAVA_HASHMAP + ":initialMap{EOL}){°}*";
 		addExpandTo(JAVA_HASHMAP, NOT_JBSE_JAVA_HASHMAP_INITIALMAP, JAVA_HASHMAP, JBSE_JAVA_MAP_INITSYMBOLIC, "{$REF}");
@@ -236,6 +236,7 @@ public final class TriggerRulesRepo implements Cloneable {
 		addExpandTo(JAVA_OBJECT, JBSE_JAVA_LINKEDHASHMAP_KEY, null, JBSE_JAVA_LINKEDMAP_ONKEYRESOLUTION, "{$REF}");
 		addResolveAliasInstanceof(JAVA_OBJECT, JBSE_JAVA_LINKEDHASHMAP_KEY, null, JBSE_JAVA_LINKEDMAP_ONKEYRESOLUTION, "{$REF}");
 		addResolveNull(JAVA_OBJECT, JBSE_JAVA_LINKEDHASHMAP_KEY, JBSE_JAVA_LINKEDMAP_ONKEYRESOLUTION, "{$REF}");
+		*/
 	}
 
 	/**

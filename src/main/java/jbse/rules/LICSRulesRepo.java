@@ -23,6 +23,7 @@ public final class LICSRulesRepo implements Cloneable {
 	private HashMap<String, Set<LICSRuleNotNull>> rulesNotNull = new HashMap<>();
 	
 	public LICSRulesRepo() {
+		/*
 		//adds some default rules
 		//java.lang.String
 		addResolveAliasInstanceof("" + ARRAYOF + CHAR, "{°}*java/lang/String:value", null);
@@ -36,6 +37,7 @@ public final class LICSRulesRepo implements Cloneable {
     	//java.util.LinkedHashMap (model)
 		final String JBSE_JAVA_LINKEDMAP_KEY = "(?!{°}*" + JAVA_LINKEDHASHMAP + ":initialMap::GET){°}*" + JAVA_LINKEDHASHMAP + ":initialMap::KEY{°}*";
     	addResolveAliasNever(JAVA_OBJECT, JBSE_JAVA_LINKEDMAP_KEY, JBSE_JAVA_LINKEDMAP_KEY);
+    	*/
 	}
 
     /**
