@@ -1134,8 +1134,9 @@ public final class Run {
             MSG_END_PATHS_UNMANAGEABLE + this.runner.getPathsUnmanageable() +
             ", " +
             MSG_END_PATHS_ERROR + this.runner.getPathsError() +
-            "), " +
-            MSG_END_ASSUMPTION_VIOLATIONS + this.runner.getAssumptionViolations() + ".");
+            ").");
+        log(MSG_END_ASSUMPTION_VIOLATIONS + this.runner.getAssumptionViolations() + ", " +
+            MSG_END_PENDING + this.engine.getPending() + ".");
         log(MSG_END_ELAPSED + Util.formatTime(elapsedTime) + ", " +
         	MSG_END_ELAPSED_PREINITIAL + Util.formatTime(elapsedTimePreInitialPhase) + ", " +
             MSG_END_SPEED + speed + " states/sec, " +
@@ -1283,6 +1284,9 @@ public final class Run {
 
     /** Message: total assumption violations. */
     private static final String MSG_END_ASSUMPTION_VIOLATIONS = "Assumption violations: ";
+
+    /** Message: total assumption violations. */
+    private static final String MSG_END_PENDING = "Pending backtrack states: ";
 
     /** Message: total paths. */
     private static final String MSG_END_PATHS_TOT = "Analyzed paths: ";

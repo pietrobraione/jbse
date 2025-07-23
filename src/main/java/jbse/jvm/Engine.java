@@ -411,6 +411,15 @@ public final class Engine implements AutoCloseable {
     public int getNumAssumed(String className) {
         return this.currentState.getNumAssumed(className);
     }
+       
+    /**
+     * Returns the total number of pending backtrack states.
+     * 
+     * @return a {@code int}.
+     */
+    public int getPending() {
+    	return this.ctx.stateTree.getNumOfStates();
+    }
     
     /**
      * Returns the number of states that remain to be explored

@@ -275,6 +275,16 @@ public class StateTree {
     }
     
     /**
+     * Returns the number of states that are stored
+     * in this {@link StateTree}.
+     * 
+     * @return an {@code int}.
+     */
+    public int getNumOfStates() {
+    	return this.stateBuffer.size();
+    }
+    
+    /**
      * Returns the number of states that remain to be explored
      * at a given branch.
      * 
