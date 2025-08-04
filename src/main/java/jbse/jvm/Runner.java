@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 
 import jbse.algo.exc.CannotManageStateException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionBacktrackException;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.RunnerParameters.ScopeLoopsItem;
@@ -331,6 +332,19 @@ public class Runner {
         throws NonexistingObservedVariablesException { throw e; }
 
         /**
+         * Invoked by a {@link Runner}'s {@link Runner#run run} method whenever an 
+         * {@link UnexpectedInternalException} is thrown by the {@link Engine}. 
+         * By default rethrows the exception.
+         * 
+         * @param e the {@link UnexpectedInternalException} thrown by the {@link Engine}.
+         * @return {@code true} iff the {@link Runner} must stop
+         *         {@link Runner#run run}ning.
+         * @throws NonexistingObservedVariablesException by default.
+         */
+        public boolean atUnexpectedInternalException(UnexpectedInternalException e) 
+        throws UnexpectedInternalException { throw e; }
+
+        /**
          * Invoked by a {@link Runner}'s {@link Runner#run run}  method whenever a 
          * {@link CannotManageStateException} is thrown by the {@link Engine}. 
          * By default rethrows the exception.
@@ -645,6 +659,7 @@ public class Runner {
                 BranchPoint bp = null;
                 try {
                     bp = this.engine.step();
+                //EngineStuckException shall never happen
                 } catch (CannotManageStateException e) {
                 	pathIsSafe = false;
                 	++this.pathsUnmanageable;
@@ -677,6 +692,10 @@ public class Runner {
                 	pathIsSafe = false;
                 	++this.pathsError;
                     if (this.actions.atNonexistingObservedVariablesException(e)) { return; }
+                } catch (UnexpectedInternalException e) {
+                	pathIsSafe = false;
+                	++this.pathsError;
+                    if (this.actions.atUnexpectedInternalException(e)) { return; }
                 } finally {
                     if (this.actions.atStepFinally()) { return; }
                 }

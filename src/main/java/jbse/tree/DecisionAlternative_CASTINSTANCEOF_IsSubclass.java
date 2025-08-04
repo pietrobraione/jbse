@@ -7,14 +7,14 @@ package jbse.tree;
  */
 public final class DecisionAlternative_CASTINSTANCEOF_IsSubclass extends DecisionAlternative_CASTINSTANCEOF {
 	private static final String C_ID = "CASTINSTANCEOF_IsSubclass";
-	private static final int HASH_CODE = 100002;
+	private static final int HASH_CODE = 9967;
 	private static final DecisionAlternative_CASTINSTANCEOF_IsSubclass INSTANCE_REFINE = new DecisionAlternative_CASTINSTANCEOF_IsSubclass(true);
 	private static final DecisionAlternative_CASTINSTANCEOF_IsSubclass INSTANCE_NOREFINE = new DecisionAlternative_CASTINSTANCEOF_IsSubclass(false);
 
 	private final boolean refine;
 	
 	private DecisionAlternative_CASTINSTANCEOF_IsSubclass(boolean refine) {
-		super(HASH_CODE);
+		super(HASH_CODE + (refine ? 0 : 6));
 		this.refine = refine;
 	}
 	
@@ -37,16 +37,21 @@ public final class DecisionAlternative_CASTINSTANCEOF_IsSubclass extends Decisio
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		return true;
+		final DecisionAlternative_CASTINSTANCEOF_IsSubclass other = (DecisionAlternative_CASTINSTANCEOF_IsSubclass) obj;
+		if (this.refine == other.refine) {
+			return true;
+		}
+		
+		return false;
 	}
 	
 	@Override
 	public int hashCode() {
-		return HASH_CODE;
+		return HASH_CODE + (this.refine ? 0 : 6);
 	}
 	
 	@Override
 	public String toString() {
-		return C_ID;
+		return C_ID + (this.refine ? "_ref" : "_noref");
 	}
 }

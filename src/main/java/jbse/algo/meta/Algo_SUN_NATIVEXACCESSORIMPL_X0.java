@@ -167,6 +167,9 @@ abstract class Algo_SUN_NATIVEXACCESSORIMPL_X0 extends Algo_INVOKEMETA_Nonbranch
             }
             final Instance methodConstructor = (Instance) state.getObject(refConstructorMethod);
             final Instance_JAVA_CLASS methodConstructorJavaClass = (Instance_JAVA_CLASS) state.getObject((Reference) methodConstructor.getFieldValue(this.signatureClazz));
+            if (methodConstructorJavaClass == null) {
+            	throw new SymbolicValueNotAllowedException("The " + this.javaReflectObject + " " + this.javaReflectObjectParamName + " argument to sun.reflect." + this.classAndMethodName + " was a symbolic object");
+            }
             this.methodConstructorClassFile = methodConstructorJavaClass.representedClass();
             
             if (!this.isMethod) {

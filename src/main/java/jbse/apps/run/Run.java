@@ -565,6 +565,14 @@ public final class Run {
         }
         
         @Override
+        public boolean atUnexpectedInternalException(UnexpectedInternalException e) 
+        throws UnexpectedInternalException {
+            Run.this.err(ERROR_UNEXPECTED);
+            Run.this.err(e);
+            return super.atUnexpectedInternalException(e);
+        }
+        
+        @Override
         public boolean atNonexistingObservedVariablesException(NonexistingObservedVariablesException e)
         throws NonexistingObservedVariablesException {
             for (int i : e.getVariableIndices()) {

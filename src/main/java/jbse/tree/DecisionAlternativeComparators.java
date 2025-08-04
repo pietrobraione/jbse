@@ -261,16 +261,20 @@ public final class DecisionAlternativeComparators {
     /**
      * Default comparator for {@link DecisionAlternative_CASTINSTANCEOF}s.
      * 
-     * @return A {@link Comparator}{@code <}{@link DecisionAlternative_XCMPY}{@code >} yielding
-     *         {@link DecisionAlternative_XCMPY_Gt} {@code <} {@link DecisionAlternative_XCMPY_Eq} 
-     *         {@code <} {@link DecisionAlternative_XCMPY_Lt}.
+     * @return A {@link Comparator}{@code <}{@link DecisionAlternative_CASTINSTANCEOF}{@code >} yielding
+     *         {@link DecisionAlternative_CASTINSTANCEOF_Null} {@code <} {@link DecisionAlternative_CASTINSTANCEOF_IsSubclass}{@code (true)} {@code <} 
+     *         {@link DecisionAlternative_CASTINSTANCEOF_IsSubclass}{@code (false)} {@code <} {@link DecisionAlternative_CASTINSTANCEOF_IsNotSubclass}.
      */
     public static Comparator<DecisionAlternative_CASTINSTANCEOF> defaultComparatorDecisionAlternative_CASTINSTANCEOF() {
         return new Comparator<DecisionAlternative_CASTINSTANCEOF>() {
             @Override
             public int compare(DecisionAlternative_CASTINSTANCEOF o1, DecisionAlternative_CASTINSTANCEOF o2) {
-                final int o1Pos = (o1 instanceof DecisionAlternative_CASTINSTANCEOF_Null) ? 0 : (o1 instanceof DecisionAlternative_CASTINSTANCEOF_IsSubclass) ? 1 : 2;
-                final int o2Pos = (o2 instanceof DecisionAlternative_CASTINSTANCEOF_Null) ? 0 : (o2 instanceof DecisionAlternative_CASTINSTANCEOF_IsSubclass) ? 1 : 2;
+                final int o1Pos = (o1 instanceof DecisionAlternative_CASTINSTANCEOF_Null) ? 0 : 
+                	(o1 instanceof DecisionAlternative_CASTINSTANCEOF_IsSubclass && ((DecisionAlternative_CASTINSTANCEOF_IsSubclass) o1).refine()) ? 1 : 
+                	(o1 instanceof DecisionAlternative_CASTINSTANCEOF_IsSubclass && !((DecisionAlternative_CASTINSTANCEOF_IsSubclass) o1).refine()) ? 2 : 3;
+                final int o2Pos = (o2 instanceof DecisionAlternative_CASTINSTANCEOF_Null) ? 0 : 
+                	(o2 instanceof DecisionAlternative_CASTINSTANCEOF_IsSubclass && ((DecisionAlternative_CASTINSTANCEOF_IsSubclass) o2).refine()) ? 1 : 
+                	(o2 instanceof DecisionAlternative_CASTINSTANCEOF_IsSubclass && !((DecisionAlternative_CASTINSTANCEOF_IsSubclass) o2).refine()) ? 2 : 3;
                 return o1Pos - o2Pos;
             }
         };
