@@ -586,9 +586,8 @@ public class Runner {
     			final Matcher matcherClass = item.patternClass.matcher(currentMethodClass);
     			final Matcher matcherDescriptor = item.patternDescriptor.matcher(currentMethodDescriptor);
     			final Matcher matcherName = item.patternName.matcher(currentMethodName);
-    			if (matcherClass.matches() && matcherDescriptor.matches() && matcherName.matches() &&
-    			backjumps > item.scopeLoops) {
-    				return true;
+    			if (matcherClass.matches() && matcherDescriptor.matches() && matcherName.matches()) {
+    				return  (backjumps > item.scopeLoops);
     			}
     		}
     		return false;
