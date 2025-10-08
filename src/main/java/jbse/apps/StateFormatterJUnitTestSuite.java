@@ -277,22 +277,30 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             final Collection<Clause> pathCondition = finalState.getPathCondition();
             for (Iterator<Clause> iterator = pathCondition.iterator(); iterator.hasNext(); ) {
                 final Clause clause = iterator.next();
-                this.s.append(INDENT);
+                final boolean clausePrinted;
                 if (clause instanceof ClauseAssumeExpands) {
+                	clausePrinted = true;
+                    this.s.append(INDENT);
                     final ClauseAssumeExpands clauseExpands = (ClauseAssumeExpands) clause;
                     final Symbolic symbol = clauseExpands.getReference();
                     final long heapPosition = clauseExpands.getHeapPosition();
                     setWithNewObject(finalState, symbol, heapPosition, iterator, model);
                 } else if (clause instanceof ClauseAssumeNull) {
+                	clausePrinted = true;
+                    this.s.append(INDENT);
                     final ClauseAssumeNull clauseNull = (ClauseAssumeNull) clause;
                     final ReferenceSymbolic symbol = clauseNull.getReference();
                     setWithNull(symbol);
                 } else if (clause instanceof ClauseAssumeAliases) {
+                	clausePrinted = true;
+                    this.s.append(INDENT);
                     final ClauseAssumeAliases clauseAliases = (ClauseAssumeAliases) clause;
                     final Symbolic symbol = clauseAliases.getReference();
                     final long heapPosition = clauseAliases.getHeapPosition();
                     setWithAlias(finalState, symbol, heapPosition);
                 } else if (clause instanceof ClauseAssume) {
+                	clausePrinted = true;
+                    this.s.append(INDENT);
                     if (model == null) {
                         this.panic = true;
                         return;
@@ -301,16 +309,18 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                     final Primitive p = clauseAssume.getCondition();
                     addPrimitiveSymbolAssignments(p, model);
                 } else {
-                    this.s.append(';');
+                	clausePrinted = false;
                 }
-                this.s.append(" // "); //comment
-                this.s.append(clause.toString());
-                if (this.clauseLength != null) {
-                    this.s.append(", ");
-                    this.s.append(this.clauseLength.toString());
-                    this.clauseLength = null;
+                if (clausePrinted) {
+                	this.s.append(" // "); //comment
+                	this.s.append(clause.toString());
+                	if (this.clauseLength != null) {
+                		this.s.append(", ");
+                		this.s.append(this.clauseLength.toString());
+                		this.clauseLength = null;
+                	}
+                	this.s.append('\n');
                 }
-                this.s.append('\n');
             }
         }
 
