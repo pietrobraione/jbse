@@ -690,8 +690,14 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 if (getVariableFor(symbol) == null) { //not yet done
                     final Simplex value = model.get(symbol);
                     if (value == null) {
-                        //this should never happen
-                        throw new UnexpectedInternalException("No value found in model for symbol " + symbol.toString() + ".");
+                    	//This can happen when the symbol belongs to a mangled
+                    	//subexpression (i.e., is involved in an operator that
+                    	//cannot be represented); in this case, since we have
+                    	//a model value for the subexpression but not for its
+                    	//components, we are stuck. Our (non-)solution is to
+                    	//do nothing (i.e., leave the slot corresponding to the
+                    	//symbol with its default value).
+                    	return;
                     }
                     setWithNumericValue(symbol, value);
                 }
