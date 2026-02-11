@@ -458,7 +458,7 @@ public final class Symbolizer {
 		}
 	}
 	
-	void setNewValue(State state, Slot slot, Value oldValue, ReferenceSymbolic newValue, HashSet<Objekt> visited) 
+	private void setNewValue(State state, Slot slot, Value oldValue, ReferenceSymbolic newValue, HashSet<Objekt> visited) 
 	throws InvalidInputException, InvalidTypeException, HeapMemoryExhaustedException, ThreadStackEmptyException {
 		if (oldValue instanceof ReferenceConcrete) {
 			final ReferenceConcrete valueRef = (ReferenceConcrete) oldValue;
@@ -539,7 +539,7 @@ public final class Symbolizer {
 		} //else, do nothing
 	}
 
-	class IndexVisitor implements PrimitiveVisitor {
+	private class IndexVisitor implements PrimitiveVisitor {
 		private final Term indexFormal;
 		private Primitive indexActual = null;
 
