@@ -7,7 +7,7 @@ import java.util.LinkedHashMap;
  * 
  * @author Pietro Braione
  */
-class Partition<X> {
+final class Partition<X> {
 	private class PartitionNode {
 		private final X element;
 		private PartitionNode parent;
@@ -50,7 +50,7 @@ class Partition<X> {
 	}
 	
 	X find (X elem) {
-		PartitionNode node = this.nodes.get(elem);
+		final PartitionNode node = this.nodes.get(elem);
 		if (node == null) {
 			return elem;
 		}

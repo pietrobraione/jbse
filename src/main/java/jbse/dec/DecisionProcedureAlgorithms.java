@@ -1701,7 +1701,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *        {@code reference} must be resolved by expansion in it.
 	 * @return A {@link String}{@code []}. Every element in it is a <em>type
 	 *         instantiation</em>, one for each element in 
-	 *         {@link #splitSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         {@link #splitSignature(String) splitSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
 	 *         A type instantiation is a string formed by the concatenation 
 	 *         of a class name and an optional list of type parameters, as 
 	 *         defined by the nonterminal {@code TypeParameters} in the grammar 
@@ -1709,25 +1709,25 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws InvalidInputException if {@code hier == null || reference == null || pathCondition == null}, 
 	 *         or if {@code reference} has not an expands clause in {@code pathCondition}.
 	 * @throws ClassFileNotFoundException if {@code hier} cannot load any class in the type erasures of
-	 *         {@link #splitSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         {@link #splitSignature(String) splitSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
 	 *         and fails with a {@link ClassFileNotFoundException}.
 	 * @throws ClassFileIllFormedException if {@code hier} cannot load any class in the type erasures of
-	 *         {@link #splitSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         {@link #splitSignature(String) splitSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
 	 *         and fails with a {@link ClassFileIllFormedException}.
 	 * @throws ClassFileNotAccessibleException if {@code hier} cannot load any class in the type erasures of
-	 *         {@link #splitSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         {@link #splitSignature(String) splitSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
 	 *         and fails with a {@link ClassFileNotAccessibleException}.
 	 * @throws IncompatibleClassFileException if {@code hier} cannot load any class in the type erasures of
-	 *         {@link #splitSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         {@link #splitSignature(String) splitSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
 	 *         and fails with a {@link IncompatibleClassFileException}.
 	 * @throws BadClassFileVersionException if {@code hier} cannot load any class in the type erasures of
-	 *         {@link #splitSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         {@link #splitSignature(String) splitSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
 	 *         and fails with a {@link BadClassFileVersionException}.
 	 * @throws RenameUnsupportedException if {@code hier} cannot load any class in the type erasures of
-	 *         {@link #splitSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         {@link #splitSignature(String) splitSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
 	 *         and fails with a {@link RenameUnsupportedException}.
 	 * @throws WrongClassNameException if {@code hier} cannot load any class in the type erasures of
-	 *         {@link #splitSignature(String) splitReferenceTypeSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
+	 *         {@link #splitSignature(String) splitSignature}{@code (reference.}{@link ReferenceSymbolic#getGenericSignatureType() getGenericSignatureType}{@code ())}.
 	 *         and fails with a {@link WrongClassNameException}.
 	 */
 	private static String[] findTypeInstantiations(ClassHierarchy hier, ReferenceSymbolic reference, List<Clause> pathCondition) 
