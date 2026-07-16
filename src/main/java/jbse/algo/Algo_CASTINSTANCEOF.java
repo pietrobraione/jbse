@@ -23,7 +23,7 @@ import jbse.bc.exc.PleaseLoadClassException;
 import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.dec.DecisionProcedureAlgorithms;
-import jbse.mem.Objekt;
+import jbse.mem.HeapObjekt;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
@@ -59,11 +59,11 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         return (state) -> { 
             try {
                 //gets the operand
-                final Reference tmpValue = (Reference) this.data.operand(0);
+                final Reference referenceObj = (Reference) this.data.operand(0);
 
                 //checks whether the object's class is a subclass 
                 //of the class name from the constant pool
-                if (state.isNull(tmpValue)) {
+                if (state.isNull(referenceObj)) {
                     this.isNull = true;
                 } else {
                     this.isNull = false;
@@ -72,9 +72,9 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     final ClassFile classSuper = state.getClassHierarchy().resolveClass(currentClass, this.data.className(), state.bypassStandardLoading());
                     
                     //gets the object's class
-                    final Objekt obj = state.getObject(tmpValue);
-                    final ClassFile classSub = obj.getType();
-                    this.isSubclass = classSub.isSubclass(classSuper);
+                    final HeapObjekt obj = state.getObject(referenceObj);
+                    final ClassFile classObj = obj.getType();
+                    this.isSubclass = classObj.isSubclass(classSuper);
                 }
             } catch (PleaseLoadClassException e) {
                 invokeClassLoaderLoadClass(state, this.ctx.getCalculator(), e);

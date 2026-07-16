@@ -270,11 +270,13 @@ public final class Engine implements AutoCloseable {
      * @throws FailureException iff the step causes a violation of some assertion; 
      *         in this case after the step it is 
      *         {@link #canStep() canStep}{@code () == false}.
+     * @throws UnexpectedInternalException iff some internal error happened during
+     *         the execution of the step.
      */
     public BranchPoint step() 
     throws EngineStuckException, CannotManageStateException, NonexistingObservedVariablesException, 
     ClasspathException, ThreadStackEmptyException, ContradictionException, DecisionException, 
-    FailureException {
+    FailureException, UnexpectedInternalException{
         try {
         	//checks the precondition
         	if (!canStep()) {
@@ -412,6 +414,15 @@ public final class Engine implements AutoCloseable {
         return this.currentState.getNumAssumed(className);
     }
     
+    /**
+     * Returns the total number of pending backtrack states.
+     * 
+     * @return a {@code int}.
+     */
+    public int getPending() {
+    	return this.ctx.stateTree.getNumOfStates();
+    }
+
     /**
      * Returns the number of states that remain to be explored
      * at a given branch.

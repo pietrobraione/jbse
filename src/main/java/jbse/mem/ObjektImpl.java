@@ -102,8 +102,8 @@ public abstract class ObjektImpl implements Objekt {
         this.fieldSignatures = Arrays.asList(classFile.getObjectFields().clone()); //safety copy - possibly useless
         int curSlot = 0;
         for (Signature fieldSignature : this.fieldSignatures) {
-            if ((staticFields && curSlot < numOfStaticFields) ||
-                (!staticFields && curSlot >= numOfStaticFields)) {
+            if ((staticFields && curSlot < this.numOfStaticFields) ||
+                (!staticFields && curSlot >= this.numOfStaticFields)) {
             	String fieldGenericSignatureType = null;
             	boolean found = false;
             	for (ClassFile cf : classFile.superclasses()) {

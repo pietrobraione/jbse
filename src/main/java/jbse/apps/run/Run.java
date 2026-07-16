@@ -563,7 +563,15 @@ public final class Run {
             Run.this.err(e);
             return super.atCannotBacktrackException(e);
         }
-        
+
+        @Override
+        public boolean atUnexpectedInternalException(UnexpectedInternalException e) 
+        throws UnexpectedInternalException {
+        	Run.this.err(ERROR_UNEXPECTED);
+        	Run.this.err(e);
+        	return super.atUnexpectedInternalException(e);
+        }
+
         @Override
         public boolean atNonexistingObservedVariablesException(NonexistingObservedVariablesException e)
         throws NonexistingObservedVariablesException {
@@ -1114,7 +1122,7 @@ public final class Run {
         final long speed = this.engine.getAnalyzedStates() * 1000 / elapsedTime;
         final long speedPostInitialPhase = (elapsedTime == elapsedTimePreInitialPhase) ? 0 : (this.engine.getAnalyzedStates() - this.preInitialStateCount) * 1000 / (elapsedTime - elapsedTimePreInitialPhase);
         log(MSG_END_STATES + this.engine.getAnalyzedStates() + ", " +
-        	MSG_END_STATES_PREINITIAL + this.preInitialStateCount + ", " +
+        	MSG_END_STATES_PREINITIAL + this.preInitialStateCount + " (" +
             MSG_END_PATHS_TOT + this.runner.getPathsTotal() + ", " +
             MSG_END_PATHS_SAFE + this.runner.getPathsSafe() + 
             (Run.this.parameters.getDoConcretization() ? 
@@ -1131,9 +1139,14 @@ public final class Run {
              " (" + this.pathsConcretizableOutOfScope + " concretizable)" :  
              "") +
             ", " +
-            MSG_END_PATHS_VIOLATING_ASSUMPTION + this.runner.getPathsContradictory() +
+            MSG_END_PATHS_UNMANAGEABLE + this.runner.getPathsUnmanageable() +
             ", " +
-            MSG_END_PATHS_UNMANAGEABLE + this.runner.getPathsUnmanageable() + ".");
+            MSG_END_PATHS_ERROR + this.runner.getPathsError() +
+            "), " +
+            MSG_END_ASSUMPTION_VIOLATIONS + this.runner.getAssumptionViolations() + 
+            ", " +
+            MSG_END_PENDING + this.engine.getPending() +
+            ".");
         log(MSG_END_ELAPSED + Util.formatTime(elapsedTime) + ", " +
         	MSG_END_ELAPSED_PREINITIAL + Util.formatTime(elapsedTimePreInitialPhase) + ", " +
             MSG_END_SPEED + speed + " states/sec, " +
@@ -1278,15 +1291,21 @@ public final class Run {
 
     /** Message: analyzed pre-initial states. */
     private static final String MSG_END_STATES_PREINITIAL = "Analyzed pre-initial states: ";
-
+   
+    /** Message: total assumption violations. */
+    private static final String MSG_END_ASSUMPTION_VIOLATIONS = "Assumption violations: ";
+    
+    /** Message: pending backtrack states. */
+    private static final String MSG_END_PENDING = "Pending backtrack states: ";
+    
     /** Message: total paths. */
     private static final String MSG_END_PATHS_TOT = "Analyzed paths: ";
 
-    /** Message: total paths violating assumptions. */
-    private static final String MSG_END_PATHS_VIOLATING_ASSUMPTION = "Violating assumptions: ";
-
     /** Message: total unmanageable paths. */
     private static final String MSG_END_PATHS_UNMANAGEABLE = "Unmanageable: ";
+
+    /** Message: total error paths. */
+    private static final String MSG_END_PATHS_ERROR = "Error: ";
 
     /** Message: total safe paths. */
     private static final String MSG_END_PATHS_SAFE = "Safe: ";

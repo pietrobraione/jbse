@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 
 import jbse.algo.exc.CannotManageStateException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionBacktrackException;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.RunnerParameters.ScopeLoopsItem;
@@ -331,6 +332,19 @@ public class Runner {
         throws NonexistingObservedVariablesException { throw e; }
 
         /**
+         * Invoked by a {@link Runner}'s {@link Runner#run run} method whenever an 
+         * {@link UnexpectedInternalException} is thrown by the {@link Engine}. 
+         * By default rethrows the exception.
+         * 
+         * @param e the {@link UnexpectedInternalException} thrown by the {@link Engine}.
+         * @return {@code true} iff the {@link Runner} must stop
+         *         {@link Runner#run run}ning.
+         * @throws NonexistingObservedVariablesException by default.
+         */
+        public boolean atUnexpectedInternalException(UnexpectedInternalException e) 
+        throws UnexpectedInternalException { throw e; }
+        
+        /**
          * Invoked by a {@link Runner}'s {@link Runner#run run}  method whenever a 
          * {@link CannotManageStateException} is thrown by the {@link Engine}. 
          * By default rethrows the exception.
@@ -432,17 +446,11 @@ public class Runner {
     /** The timeout. */
     private long timeout;
 
-    /** Counter for the total number of analyzed paths. */
-    private long pathsTotal;
-
     /** Counter for the number of analyzed paths that are safe (i.e., end without failing any assertion). */
     private long pathsSafe;
 
     /** Counter for the number of analyzed paths that are unsafe (i.e., end by failing an assertion). */
     private long pathsUnsafe;
-
-    /** Counter for the number of analyzed paths that are contradictory (i.e., end by failing an assumption). */
-    private long pathsContradictory;
 
     /** Counter for the number of analyzed paths stopped because of scope exhaustion. */
     private long pathsOutOfScope;
@@ -452,6 +460,9 @@ public class Runner {
 
     /** Counter for the number of analyzed paths stopped because they raised a JBSE internal exception. */
     private long pathsError;
+    
+    /** Counter for the total number of assumption violation (i.e., premature ends of paths by assumption failure). */
+    private long assumptionViolations;
 
     /** Stores the start time. */
     private long startTime;
@@ -500,13 +511,12 @@ public class Runner {
         this.countScope = countScope;
         this.stackScope = stackScope;
         this.loopsScope = loopsScope;
-        this.pathsTotal = 0;
         this.pathsSafe = 0;
         this.pathsUnsafe = 0;
-        this.pathsContradictory = 0;
         this.pathsOutOfScope = 0;
         this.pathsUnmanageable = 0;
         this.pathsError = 0;
+        this.assumptionViolations = 0;
         this.startTime = 0;
         this.stopTime = 0;
         this.bootTime = 0;
@@ -576,9 +586,8 @@ public class Runner {
     			final Matcher matcherClass = item.patternClass.matcher(currentMethodClass);
     			final Matcher matcherDescriptor = item.patternDescriptor.matcher(currentMethodDescriptor);
     			final Matcher matcherName = item.patternName.matcher(currentMethodName);
-    			if (matcherClass.matches() && matcherDescriptor.matches() && matcherName.matches() &&
-    			backjumps > item.scopeLoops) {
-    				return true;
+    			if (matcherClass.matches() && matcherDescriptor.matches() && matcherName.matches()) {
+    				return (backjumps > item.scopeLoops);
     			}
     		}
     		return false;
@@ -605,13 +614,12 @@ public class Runner {
     ClasspathException, ThreadStackEmptyException, 
     ContradictionException, DecisionException, EngineStuckException, 
     FailureException, NonexistingObservedVariablesException  {
-        this.pathsTotal = 0;
         this.pathsSafe = 0;
         this.pathsUnsafe = 0;
-        this.pathsContradictory = 0;
         this.pathsOutOfScope = 0;
         this.pathsUnmanageable = 0;
         this.pathsError = 0;
+        this.assumptionViolations = 0;
         this.startTime = System.currentTimeMillis();
 
         try {
@@ -650,13 +658,14 @@ public class Runner {
                 BranchPoint bp = null;
                 try {
                     bp = this.engine.step();
+                    //EngineStuckException shall never happen
                 } catch (CannotManageStateException e) {
                 	pathIsSafe = false;
                 	++this.pathsUnmanageable;
                     if (this.actions.atCannotManageStateException(e)) { return; }
                 } catch (ContradictionException e) {
                 	pathIsSafe = false;
-                	++this.pathsContradictory;
+                	++this.assumptionViolations;
                     if (this.actions.atContradictionException(e)) { return; }
                 } catch (FailureException e) {
                 	pathIsSafe = false;
@@ -682,6 +691,10 @@ public class Runner {
                 	pathIsSafe = false;
                 	++this.pathsError;
                     if (this.actions.atNonexistingObservedVariablesException(e)) { return; }
+                } catch (UnexpectedInternalException e) {
+                	pathIsSafe = false;
+                	++this.pathsError;
+                	if (this.actions.atUnexpectedInternalException(e)) { return; }
                 } finally {
                     if (this.actions.atStepFinally()) { return; }
                 }
@@ -692,7 +705,8 @@ public class Runner {
                     if (this.actions.atBranch(bp)) { return; }
                 }
 
-                if (outOfScope()) {
+                if (pathIsSafe && outOfScope()) {
+                	pathIsSafe = false;
                     ++this.pathsOutOfScope; 
                     this.engine.stopCurrentPath();
                     if (outOfScopeHeap()) { 
@@ -732,7 +746,6 @@ public class Runner {
             if (currentStateIsInRunSubregion()) {
                 //in this case, the state must be stuck (it should be impossible that a state
                 //is both stuck and out of the run subregion)
-                ++this.pathsTotal;
                 if (pathIsSafe) { ++this.pathsSafe; }
                 if (this.actions.atPathEnd()) { return; }
             }
@@ -824,7 +837,7 @@ public class Runner {
      *         {@link #getPathsError()}.
      */
     public long getPathsTotal() {
-        return this.pathsTotal;
+        return this.pathsSafe + this.pathsUnsafe + this.pathsOutOfScope + this.pathsUnmanageable + this.pathsError;
     }
 
     /**
@@ -862,18 +875,6 @@ public class Runner {
     }
 
     /**
-     * Returns the total number of contradictory paths explored 
-     * until its invocation. Contradictory paths are all the paths
-     * that are terminated prematurely because they contradict an 
-     * assumption.
-     * 
-     * @return a {@code long}.
-     */
-    public long getPathsContradictory() {
-        return this.pathsContradictory;
-    }
-
-    /**
      * Returns the total number of unmanageable paths explored 
      * until its invocation. Unmanageable paths are all the paths
      * that are terminated prematurely because the symbolic executor
@@ -895,6 +896,18 @@ public class Runner {
      */
     public long getPathsError() {
         return this.pathsError;
+    }
+    
+    /**
+     * Returns the total number of assumption violations  
+     * until its invocation. The total number of assumption
+     * violations is the total number of times that an 
+     * assumption was contradicted.
+     * 
+     * @return a {@code long}.
+     */
+    public long getAssumptionViolations() {
+        return this.assumptionViolations;
     }
 }
 

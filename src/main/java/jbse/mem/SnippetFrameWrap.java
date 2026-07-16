@@ -26,7 +26,7 @@ public final class SnippetFrameWrap extends Frame implements Cloneable {
      * @param snippet a {@link Snippet}.
      * @param contextFrame a {@link MethodFrame}, the activation context 
      *        this {@link SnippetFrameWrap} is a subcontext of. 
-     * @throws InvalidInputException if {@code contextFrame.}{@link MethodFrame#getMethodClass() getCurrentClass()} 
+     * @throws InvalidInputException if {@code contextFrame.}{@link MethodFrame#getMethodClass() getMethodClass()} 
      *         is a snippet classfile.
      */
     public SnippetFrameWrap(Snippet snippet, MethodFrame contextFrame) throws InvalidInputException {

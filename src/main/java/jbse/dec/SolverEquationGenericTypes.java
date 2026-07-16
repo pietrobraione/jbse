@@ -211,14 +211,14 @@ final class SolverEquationGenericTypes {
 
 	private void addEquationCurrent(TypeTerm lhs, TypeTerm rhs) {
 		if (this.solved || lhs == null || rhs == null) {
-			throw new UnexpectedInternalException("Invoked SolverEquationGenericTypes.addEquationScratch with wrong parameter.");
+			throw new UnexpectedInternalException("Invoked SolverEquationGenericTypes.addEquationCurrent with wrong parameter.");
 		}
 		this.equationsCurrent.add(new Equation(lhs, rhs));
 	}
 
 	private void addEquationsCurrent(TypeTerm[] lhss, TypeTerm[] rhss) {
 		if (lhss.length != rhss.length) {
-			throw new UnexpectedInternalException("Invoked SolverEquationGenericTypes.addEquationsScratch with lhss and rhss having different lengths.");
+			throw new UnexpectedInternalException("Invoked SolverEquationGenericTypes.addEquationsCurrent with lhss and rhss having different lengths.");
 		}
 		for (int i = 0; i < lhss.length; ++i) {
 			addEquationCurrent(lhss[i], rhss[i]);
@@ -256,7 +256,7 @@ final class SolverEquationGenericTypes {
 	
 	private boolean removeFunctors() {
 		boolean failed = false;
-		ArrayList<Equation> toProcess = new ArrayList<>();
+		final ArrayList<Equation> toProcess = new ArrayList<>();
 		
 		for (Equation e : this.equationsCurrent) {
 			if (e.left instanceof Apply && e.right instanceof Apply) {

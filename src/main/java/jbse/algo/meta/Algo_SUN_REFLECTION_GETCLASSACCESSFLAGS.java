@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.StrategyUpdate;
+import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.ClassFile;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
@@ -22,10 +23,13 @@ public final class Algo_SUN_REFLECTION_GETCLASSACCESSFLAGS extends Algo_INVOKEME
     }
 
     @Override
-    protected void cookMore(State state) throws FrozenStateException {
+    protected void cookMore(State state) throws FrozenStateException, SymbolicValueNotAllowedException {
         try {
             final Reference refParam = (Reference) this.data.operand(0);
             final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject(refParam);
+            if (clazz == null) {
+            	throw new SymbolicValueNotAllowedException("The clazz parameter is symbolic");
+            }
             final ClassFile cf = clazz.representedClass();
             this.flags = cf.getAccessFlags();
         } catch (ClassCastException | NullPointerException e) {
