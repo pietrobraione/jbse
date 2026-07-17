@@ -7,7 +7,7 @@ import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.algo.Util.valueString;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
-import static jbse.common.Type.internalClassName;
+import static jbse.common.Type.binaryToInternalClassName;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -85,7 +85,7 @@ public final class Algo_JAVA_WINNTFILESYSTEM_CANONICALIZEWITHPREFIX0 extends Alg
             try {
                 pathCanonical = (String) method.invoke(fileSystem, prefix, path);
             } catch (InvocationTargetException e) {
-                final String cause = internalClassName(e.getCause().getClass().getName());
+                final String cause = binaryToInternalClassName(e.getCause().getClass().getName());
                 throwNew(state, calc, cause);
                 exitFromAlgorithm();
             }

@@ -2,7 +2,7 @@ package jbse.algo.meta;
 
 import static jbse.algo.UtilControlFlow.failExecution;
 import static jbse.bc.Signatures.SUN_UNIXNATIVEDISPATCHER;
-import static jbse.common.Type.binaryClassName;
+import static jbse.common.Type.internalToBinaryClassName;
 
 import java.lang.reflect.Field;
 import java.util.function.Supplier;
@@ -33,7 +33,7 @@ public final class Algo_SUN_UNIXNATIVEDISPATCHER_INIT extends Algo_INVOKEMETA_No
 		//is loaded and initialized and peek the return 
 		//value from it
 		try {
-			final Class<?> class_SUN_UNIXNATIVEDISPATCHER = Class.forName(binaryClassName(SUN_UNIXNATIVEDISPATCHER));
+			final Class<?> class_SUN_UNIXNATIVEDISPATCHER = Class.forName(internalToBinaryClassName(SUN_UNIXNATIVEDISPATCHER));
 			final Field capabilitiesField = class_SUN_UNIXNATIVEDISPATCHER.getDeclaredField("capabilities");
 			capabilitiesField.setAccessible(true);
 			final int capabilitiesInt = capabilitiesField.getInt(null);

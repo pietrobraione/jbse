@@ -12,7 +12,7 @@ import static jbse.bc.Signatures.JAVA_INFLATER_LEN;
 import static jbse.bc.Signatures.JAVA_INFLATER_NEEDDICT;
 import static jbse.bc.Signatures.JAVA_INFLATER_OFF;
 import static jbse.bc.Signatures.JAVA_INFLATER_ZSREF;
-import static jbse.common.Type.internalClassName;
+import static jbse.common.Type.binaryToInternalClassName;
 import static jbse.common.Util.unsafe;
 
 import java.lang.reflect.Constructor;
@@ -113,7 +113,7 @@ public final class Algo_JAVA_INFLATER_INFLATEBYTES extends Algo_INVOKEMETA_Nonbr
             method.setAccessible(true);
             this.nread = (int) method.invoke(this.inflater, addr, this.inflatedBytes, 0, len);
         } catch (InvocationTargetException e) {
-            final String cause = internalClassName(e.getCause().getClass().getName());
+            final String cause = binaryToInternalClassName(e.getCause().getClass().getName());
             throwNew(state, this.ctx.getCalculator(), cause);
             exitFromAlgorithm();
         } catch (ClassCastException e) {

@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'eclipse'
-    id 'ca.coglinc2.javacc' version '3.0.0'
+    id 'org.javacc.javacc' version '3.0.3'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
@@ -28,7 +28,7 @@ dependencies {
 }
 
 group = 'jbse'
-version = '0.11.0-SNAPSHOT'
+version = '0.12.0-SNAPSHOT'
 description = 'JBSE'
 
 tasks.withType(JavaCompile) {

@@ -4,7 +4,7 @@ import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
 import static jbse.algo.UtilControlFlow.failExecution;
 import static jbse.algo.UtilControlFlow.throwNew;
 import static jbse.algo.UtilControlFlow.throwVerifyError;
-import static jbse.common.Type.internalClassName;
+import static jbse.common.Type.binaryToInternalClassName;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -65,7 +65,7 @@ public final class Algo_JAVA_ZIPFILE_FREEENTRY extends Algo_INVOKEMETA_Nonbranch
             method.setAccessible(true);
             method.invoke(null, state.getZipFileJz(jzfile), state.getZipFileEntryJz(this.jzentry));
         } catch (InvocationTargetException e) {
-            final String cause = internalClassName(e.getCause().getClass().getName());
+            final String cause = binaryToInternalClassName(e.getCause().getClass().getName());
             throwNew(state, this.ctx.getCalculator(), cause);
             exitFromAlgorithm();
         } catch (ClassCastException e) {

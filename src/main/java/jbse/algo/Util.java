@@ -17,7 +17,7 @@ import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_VALUE;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.noclass_REGISTERLOADEDCLASS;
-import static jbse.common.Type.binaryClassName;
+import static jbse.common.Type.internalToBinaryClassName;
 import static jbse.common.Type.getArrayMemberType;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
@@ -428,7 +428,7 @@ public final class Util {
             final ReferenceConcrete classLoaderReference = state.referenceToInstance_JAVA_CLASSLOADER(initiatingLoader);
 
             //makes the string for the class name
-            final String className = binaryClassName(e.className());
+            final String className = internalToBinaryClassName(e.className());
             state.ensureStringLiteral(calc, className);
             final ReferenceConcrete classNameReference = state.referenceToStringLiteral(className);
 

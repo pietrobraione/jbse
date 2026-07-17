@@ -6,7 +6,7 @@ import static jbse.algo.UtilControlFlow.throwNew;
 import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.algo.Util.valueString;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
-import static jbse.common.Type.internalClassName;
+import static jbse.common.Type.binaryToInternalClassName;
 
 import java.util.function.Supplier;
 
@@ -61,7 +61,7 @@ public final class Algo_JAVA_CLASSLOADER_FINDLOADEDCLASS0 extends Algo_INVOKEMET
                 return;
                 
             }
-            final String className = internalClassName(valueString(state, classNameRef));
+            final String className = binaryToInternalClassName(valueString(state, classNameRef));
             if (className == null) {
                 throw new SymbolicValueNotAllowedException("The className parameter to java.lang.ClassLoader.findLoadedClass0 cannot be a symbolic String");
             }

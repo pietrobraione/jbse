@@ -15,7 +15,7 @@ import static jbse.bc.Signatures.SIGNATURE_POLYMORPHIC_DESCRIPTOR;
 import static jbse.bc.Signatures.SUN_CALLERSENSITIVE;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
-import static jbse.common.Type.internalClassName;
+import static jbse.common.Type.binaryToInternalClassName;
 import static jbse.common.Type.classNameContained;
 import static jbse.common.Type.classNameContainer;
 
@@ -127,7 +127,7 @@ public class ClassFileJavassist extends ClassFile {
             final boolean isDummy = (superInterfaces == null);
             this.isAnonymousUnregistered = false;
             this.definingClassLoader = definingClassLoader;
-            this.className = internalClassName(this.cf.getName());
+            this.className = binaryToInternalClassName(this.cf.getName());
             this.cp = this.cf.getConstPool();
             this.bytecode = (isDummy ? bytecode : null); //only dummy classfiles cache their bytecode
             this.superClass = superClass;
@@ -195,7 +195,7 @@ public class ClassFileJavassist extends ClassFile {
             //inits
             this.isAnonymousUnregistered = true;
             this.definingClassLoader = hostClass.getDefiningClassLoader();
-            this.className = internalClassName(this.cf.getName());
+            this.className = binaryToInternalClassName(this.cf.getName());
             this.cp = this.cf.getConstPool();
             this.bytecode = (isDummy ? bytecode : null); //only dummy anonymous classfiles (without a host class) cache their bytecode
             this.superClass = superClass;
@@ -210,12 +210,12 @@ public class ClassFileJavassist extends ClassFile {
 
     private static void checkSuper(javassist.bytecode.ClassFile thisClassfile, ClassFile superClass, ClassFile[] superInterfaces) 
     throws InvalidInputException {
-        if (superClass != null && !superClass.getClassName().equals(internalClassName(thisClassfile.getSuperclass()))) {
-            throw new InvalidInputException("ClassFile constructor invoked with superClass and bytecode parameters that do not agree: superClass is for class " + superClass.getClassName() + " but bytecode requires " + internalClassName(thisClassfile.getSuperclass()) + ".");
+        if (superClass != null && !superClass.getClassName().equals(binaryToInternalClassName(thisClassfile.getSuperclass()))) {
+            throw new InvalidInputException("ClassFile constructor invoked with superClass and bytecode parameters that do not agree: superClass is for class " + superClass.getClassName() + " but bytecode requires " + binaryToInternalClassName(thisClassfile.getSuperclass()) + ".");
         }
         if (superInterfaces != null) {
             final String[] superInterfaceNames = Arrays.stream(superInterfaces).map(ClassFile::getClassName).toArray(String[]::new);
-            final String[] bytecodeSuperInterfaceNames = Arrays.stream(thisClassfile.getInterfaces()).map(Type::internalClassName).toArray(String[]::new);
+            final String[] bytecodeSuperInterfaceNames = Arrays.stream(thisClassfile.getInterfaces()).map(Type::binaryToInternalClassName).toArray(String[]::new);
             Arrays.sort(superInterfaceNames);
             Arrays.sort(bytecodeSuperInterfaceNames);
             if (superInterfaceNames.length != bytecodeSuperInterfaceNames.length) {
@@ -377,12 +377,12 @@ public class ClassFileJavassist extends ClassFile {
         	final String toContainer = classNameContainer(classNameNew);
             final int n = ica.tableLength();
             for (int i = 0; i < n; ++i) {
-            	final String innerClassName = internalClassName(ica.innerClass(i));
+            	final String innerClassName = binaryToInternalClassName(ica.innerClass(i));
             	if (fromContainer.equals(classNameContainer(innerClassName)) &&
             		!renames.containsKey(innerClassName)) {
             		renames.put(innerClassName, toContainer + classNameContained(innerClassName));
             	}
-                final String outerClassName = internalClassName(ica.outerClass(i));
+                final String outerClassName = binaryToInternalClassName(ica.outerClass(i));
                 if (outerClassName != null && fromContainer.equals(classNameContainer(outerClassName)) &&
                 	!renames.containsKey(outerClassName)) {
                 	renames.put(outerClassName, toContainer + classNameContained(outerClassName));
@@ -391,7 +391,7 @@ public class ClassFileJavassist extends ClassFile {
         }
         this.cf.renameClass(renames);
         this.cf.compact();
-        this.className = internalClassName(this.cf.getName());
+        this.className = binaryToInternalClassName(this.cf.getName());
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
 			this.cf.write(new DataOutputStream(baos));
@@ -415,7 +415,7 @@ public class ClassFileJavassist extends ClassFile {
         if (this.cp.getTag(classIndex) != ConstPool.CONST_Class) {
             throw new InvalidIndexException(entryInvalidMessage(classIndex));
         }
-        return internalClassName(this.cp.getClassInfo(classIndex));
+        return binaryToInternalClassName(this.cp.getClassInfo(classIndex));
     }
     
     private static final String BOOTSTRAP_METHOD_DESCRIPTOR_PREFIX = "(" + REFERENCE + JAVA_METHODHANDLES_LOOKUP + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + REFERENCE + JAVA_METHODTYPE + TYPEEND;
@@ -604,7 +604,7 @@ public class ClassFileJavassist extends ClassFile {
         if (this.cp.getTag(fieldIndex) != ConstPool.CONST_Fieldref) {
             throw new InvalidIndexException(entryInvalidMessage(fieldIndex));
         }
-        final String containerClass = internalClassName(this.cp.getFieldrefClassName(fieldIndex));
+        final String containerClass = binaryToInternalClassName(this.cp.getFieldrefClassName(fieldIndex));
         final String descriptor = this.cp.getFieldrefType(fieldIndex);
         final String name = this.cp.getFieldrefName(fieldIndex);
         return new Signature(containerClass, descriptor, name);
@@ -660,7 +660,7 @@ public class ClassFileJavassist extends ClassFile {
         if (this.cp.getTag(methodIndex) != ConstPool.CONST_InterfaceMethodref) {
             throw new InvalidIndexException(entryInvalidMessage(methodIndex));
         }
-        final String containerClass = internalClassName(this.cp.getInterfaceMethodrefClassName(methodIndex));
+        final String containerClass = binaryToInternalClassName(this.cp.getInterfaceMethodrefClassName(methodIndex));
         final String descriptor = this.cp.getInterfaceMethodrefType(methodIndex);
         final String name = this.cp.getInterfaceMethodrefName(methodIndex);
         return new Signature(containerClass, descriptor, name); 
@@ -699,7 +699,7 @@ public class ClassFileJavassist extends ClassFile {
         if (this.cp.getTag(methodIndex) != ConstPool.CONST_Methodref) {
             throw new InvalidIndexException(entryInvalidMessage(methodIndex));
         }
-        final String containerClass = internalClassName(this.cp.getMethodrefClassName(methodIndex));
+        final String containerClass = binaryToInternalClassName(this.cp.getMethodrefClassName(methodIndex));
         final String descriptor = this.cp.getMethodrefType(methodIndex);
         final String name = this.cp.getMethodrefName(methodIndex);
         return new Signature(containerClass, descriptor, name); 
@@ -717,7 +717,7 @@ public class ClassFileJavassist extends ClassFile {
         } else {
             String name = this.cf.getSuperclass();
             if (name != null) {
-                name = internalClassName(name);
+                name = binaryToInternalClassName(name);
             }
             return name;
         }
@@ -735,7 +735,7 @@ public class ClassFileJavassist extends ClassFile {
         final String[] ifs = this.cf.getInterfaces();
 
         for (String s : ifs) {
-            superinterfaces.add(internalClassName(s));
+            superinterfaces.add(binaryToInternalClassName(s));
         }
         return Collections.unmodifiableList(superinterfaces);
     }
@@ -765,7 +765,7 @@ public class ClassFileJavassist extends ClassFile {
             }
             break;
         case ConstPool.CONST_Class:
-        	retVal = new ConstantPoolClass(internalClassName(this.cp.getClassInfo(index))); break;
+        	retVal = new ConstantPoolClass(binaryToInternalClassName(this.cp.getClassInfo(index))); break;
         case ConstPool.CONST_Utf8:
         	retVal = new ConstantPoolUtf8(this.cp.getUtf8Info(index)); break;
         case ConstPool.CONST_MethodType:
@@ -1052,12 +1052,12 @@ public class ClassFileJavassist extends ClassFile {
         final ArrayList<String> anno = new ArrayList<>();
         if (ainfo != null) {
             for (Annotation a : ainfo.getAnnotations()) {
-                anno.add(internalClassName(a.getTypeName()));
+                anno.add(binaryToInternalClassName(a.getTypeName()));
             }
         }
         if (ainfo2 != null) {
             for (Annotation a : ainfo2.getAnnotations()) {
-                anno.add(internalClassName(a.getTypeName()));
+                anno.add(binaryToInternalClassName(a.getTypeName()));
             }
         }
         return anno.toArray(new String[0]);
@@ -1112,7 +1112,7 @@ public class ClassFileJavassist extends ClassFile {
         if (exc == null) {
             return new String[0];
         }
-        return Arrays.stream(exc.getExceptions()).map(Type::internalClassName).toArray(String[]::new);
+        return Arrays.stream(exc.getExceptions()).map(Type::binaryToInternalClassName).toArray(String[]::new);
     }
     
     private CodeAttribute getMethodCodeAttribute(Signature methodSignature) 
@@ -1349,16 +1349,16 @@ public class ClassFileJavassist extends ClassFile {
         final String name = getClassName();
         final int n = ica.tableLength();
         for (int i = 0; i < n; ++i)
-            if (name.equals(internalClassName(ica.innerClass(i)))) {
+            if (name.equals(binaryToInternalClassName(ica.innerClass(i)))) {
                 final String outName = ica.outerClass(i);
                 if (outName != null) {
-                    return internalClassName(outName);                    
+                    return binaryToInternalClassName(outName);                    
                 } else {
                     // maybe anonymous or local class.
                     final EnclosingMethodAttribute ema =
                         (EnclosingMethodAttribute) this.cf.getAttribute(EnclosingMethodAttribute.tag);
                     if (ema != null) {
-                        return internalClassName(ema.className()); //filtering through internalClassName is for safety (it is unclear what Javassist returns)
+                        return binaryToInternalClassName(ema.className()); //filtering through internalClassName is for safety (it is unclear what Javassist returns)
                     }
                 }
             }
@@ -1374,6 +1374,6 @@ public class ClassFileJavassist extends ClassFile {
         if (ema == null) {
             return null;
         }
-        return new Signature(internalClassName(ema.className()), ema.methodDescriptor(), ema.methodName());
+        return new Signature(binaryToInternalClassName(ema.className()), ema.methodDescriptor(), ema.methodName());
     }
 }

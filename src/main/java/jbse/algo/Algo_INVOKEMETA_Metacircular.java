@@ -18,7 +18,7 @@ import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
 import static jbse.common.Type.INT;
-import static jbse.common.Type.binaryClassName;
+import static jbse.common.Type.internalToBinaryClassName;
 import static jbse.common.Type.className;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isPrimitiveOpStack;
@@ -184,7 +184,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
             //reflects the arguments
             final String[] argsType = splitParametersDescriptors(this.methodSignatureImplementation.getDescriptor());
             final Object[] argsRefl = new Object[args.length];
-            final Class<?> methodClass = Class.forName(binaryClassName(this.methodSignatureImplementation.getClassName()));
+            final Class<?> methodClass = Class.forName(internalToBinaryClassName(this.methodSignatureImplementation.getClassName()));
             final Class<?>[] argsClass = new Class[args.length];
             for (int i = 0; i < args.length; ++i) {
                 if (args[i] instanceof Simplex) {
@@ -253,7 +253,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
         } else if (type.equals("" + Type.BOOLEAN)) {
             return boolean.class;
         } else {
-            return Class.forName(binaryClassName(className(type)));
+            return Class.forName(internalToBinaryClassName(className(type)));
         }
     }
 

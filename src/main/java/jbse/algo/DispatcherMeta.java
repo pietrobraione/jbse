@@ -1,7 +1,7 @@
 package jbse.algo;
 
-import static jbse.common.Type.binaryClassName;
-import static jbse.common.Type.internalClassName;
+import static jbse.common.Type.internalToBinaryClassName;
+import static jbse.common.Type.binaryToInternalClassName;
 
 import java.util.ArrayList;
 import java.util.regex.Pattern;
@@ -111,8 +111,8 @@ class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA<?, ?, ?, ?>> 
         }
 
         //looks for annotations
-        final String metaOverriddenBy = internalClassName(MetaOverriddenBy.class.getName());
-        final String uninterpreted = internalClassName(Uninterpreted.class.getName());
+        final String metaOverriddenBy = binaryToInternalClassName(MetaOverriddenBy.class.getName());
+        final String uninterpreted = binaryToInternalClassName(Uninterpreted.class.getName());
         final boolean overridAnnotationPresent = findMethodAnnotation(methodClass, methodSignature, metaOverriddenBy);
         final boolean unintAnnotationPresent = findMethodAnnotation(methodClass, methodSignature, uninterpreted);
         if (overridAnnotationPresent) { //MetaOverridden has highest priority
@@ -180,7 +180,7 @@ class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA<?, ?, ?, ?>> 
         try {
             @SuppressWarnings("unchecked")
             final Class<? extends Algo_INVOKEMETA<?, ?, ?, ?>> metaDelegateClass = (Class<? extends Algo_INVOKEMETA<?, ?, ?, ?>>) 
-                ClassLoader.getSystemClassLoader().loadClass(binaryClassName(metaDelegateClassName)).asSubclass(Algo_INVOKEMETA.class);            
+                ClassLoader.getSystemClassLoader().loadClass(internalToBinaryClassName(metaDelegateClassName)).asSubclass(Algo_INVOKEMETA.class);            
             final Algo_INVOKEMETA<?, ?, ?, ?> metaDelegate = metaDelegateClass.newInstance();
             loadMetaDelegate(methodSignatureResolved, metaDelegate);
         } catch (ClassNotFoundException e) {
