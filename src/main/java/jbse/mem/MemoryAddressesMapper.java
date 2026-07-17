@@ -516,14 +516,21 @@ final class MemoryAddressesMapper implements Cloneable {
         //zipFileEntries
         o.zipFileEntries = new HashMap<>();
         try {
-            final Method methodGetEntry = java.util.zip.ZipFile.class.getDeclaredMethod("getEntry", long.class, byte[].class, boolean.class);
+            Method methodGetEntry; //this method has different signatures depending on the revision of OpenJDK 8
+            boolean isMethodGetEntryNewSignature = false;
+            try {
+            	methodGetEntry = java.util.zip.ZipFile.class.getDeclaredMethod("getEntry", long.class, byte[].class, boolean.class);
+            } catch (NoSuchMethodException e) {
+            	methodGetEntry = java.util.zip.ZipFile.class.getDeclaredMethod("getEntry", long.class, byte[].class);
+            	isMethodGetEntryNewSignature = true;
+            }
             methodGetEntry.setAccessible(true);
             for (Map.Entry<Long, ZipFileEntry> entry : this.zipFileEntries.entrySet()) {
                 final ZipFileEntry zfe = entry.getValue();
                 final long _jzfile = zfe.jzfile;
                 final long jzfile = o.zipFiles.get(_jzfile).jzfile;
                 final byte[] name = zfe.name;
-                final long jzentryNew = (long) methodGetEntry.invoke(null, jzfile, name, true);
+                final long jzentryNew = (long) (isMethodGetEntryNewSignature ? methodGetEntry.invoke(null, jzfile, name) : methodGetEntry.invoke(null, jzfile, name, true));
                 final ZipFileEntry zfeNew = new ZipFileEntry(jzentryNew, _jzfile, name);
                 o.zipFileEntries.put(entry.getKey(), zfeNew);
             }
