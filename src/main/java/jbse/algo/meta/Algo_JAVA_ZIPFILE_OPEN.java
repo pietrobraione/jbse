@@ -6,7 +6,7 @@ import static jbse.algo.UtilControlFlow.throwNew;
 import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.algo.Util.valueString;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
-import static jbse.common.Type.internalClassName;
+import static jbse.common.Type.binaryToInternalClassName;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -86,7 +86,7 @@ public final class Algo_JAVA_ZIPFILE_OPEN extends Algo_INVOKEMETA_Nonbranching {
             method.setAccessible(true);
             this.jzfile = (long) method.invoke(null, this.name, this.mode, this.lastModified, this.usemmap);
         } catch (InvocationTargetException e) {
-            final String cause = internalClassName(e.getCause().getClass().getName());
+            final String cause = binaryToInternalClassName(e.getCause().getClass().getName());
             throwNew(state, calc, cause);
             exitFromAlgorithm();
         } catch (ClassCastException e) {

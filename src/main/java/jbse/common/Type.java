@@ -307,7 +307,7 @@ public final class Type {
      * @param className a {@link String}, a class name in internal format.
      * @return {@code className} in binary format.
      */
-    public static String binaryClassName(String className) {
+    public static String internalToBinaryClassName(String className) {
         return (className == null ? null : className.replace('/', '.'));
     }
 
@@ -317,7 +317,7 @@ public final class Type {
      * @param className a {@link String}, a class name in binary format.
      * @return {@code className} in internal format.
      */
-    public static String internalClassName(String className) {
+    public static String binaryToInternalClassName(String className) {
         return (className == null ? null : className.replace('.', '/'));
     }
 
@@ -327,7 +327,8 @@ public final class Type {
      * 
      * @param primitiveTypeInternal a {@code char}.
      * @return a {@link String}, the canonical name for
-     *        {@code primitiveTypeInternal}, or {@code null}
+     *        {@code primitiveTypeInternal}.
+     * @throws RuntimeException
      *        if {@code primitiveTypeInternal} is not the
      *        internal name of a primitive type or void.
      */
@@ -351,7 +352,7 @@ public final class Type {
         } else if (primitiveTypeInternal == VOID) {
             return "void";
         } else {
-            return null;
+        	throw new RuntimeException("Unexpected primitive type " + primitiveTypeInternal + ".");
         }
     }
 
@@ -363,14 +364,14 @@ public final class Type {
      * @return same as 
      *         {@link #toPrimitiveOrVoidCanonicalName(char) toPrimitiveOrVoidCanonicalName}{@code (primitiveTypeInternal.}
      *         {@link String#charAt(int) charAt}{@code (0))} if 
-     *         {@link #isPrimitive(String) isPrimitive}{@code (primitiveTypeInternal) || }{@link #isVoid(String) isVoid}{@code (primitiveTypeInternal)},
-     *         otherwise {@code null}.
+     *         {@link #isPrimitive(String) isPrimitive}{@code (primitiveTypeInternal) || }{@link #isVoid(String) isVoid}{@code (primitiveTypeInternal)}.
+     * @throws RuntimeException otherwise.
      */
     public static String toPrimitiveOrVoidCanonicalName(String primitiveTypeInternal) {
         if (isPrimitive(primitiveTypeInternal) || isVoid(primitiveTypeInternal)) {
             return toPrimitiveOrVoidCanonicalName(primitiveTypeInternal.charAt(0));
         } else {
-            return null;
+        	throw new RuntimeException("Unexpected primitive type " + primitiveTypeInternal + ".");
         }
     }
 
@@ -411,12 +412,18 @@ public final class Type {
     
     /**
      * Converts the canonical name of a type or void to its 
-     * corresponding internal name.
+     * corresponding internal name. Deprecated because a 
+     * canonical name cannot be reliably translated to an 
+     * internal name (and because in its current uses we
+     * are not sure that a canonical type name is passed
+     * as a parameter). 
+     * 
      * @param typeCanonical a {@link String}, the canonical
-     *        name of a primitive type or void.
+     *        name of a type.
      * @return a {@link String}, the internal name for
      *         {@code typeCanonical}.
      */
+    @Deprecated
     public static String toInternalName(String typeCanonical) {
     	final StringBuilder retVal = new StringBuilder();
     	String currentType = typeCanonical;
@@ -434,6 +441,53 @@ public final class Type {
     			return retVal.toString();
     		}
     	}
+    }
+    
+    /**
+     * Converts the internal name of a type or void to its 
+     * corresponding binary name.
+     * @param typeInternal a {@link String}, the internal
+     *        name of a type.
+     * @return a {@link String}, the binary name for
+     *         {@code typeInternal}.
+     */
+    public static String internalToBinaryTypeName(String typeInternal) {
+        return (isReference(typeInternal) ? internalToBinaryClassName(className(typeInternal)) : typeInternal);
+    }
+    
+    /**
+     * Converts the internal name of a type or void to its 
+     * corresponding canonical name.
+     * @param typeInternal a {@link String}, the internal
+     *        name of a type.
+     * @return a {@link String}, the canonical name for
+     *         {@code typeInternal}.
+     */
+    public static String internalToCanonicalTypeName(String typeInternal) {
+		final String s = typeInternal.replace('/', '.').replace('$', '.');
+
+		final char[] tmp = s.toCharArray();
+		int arrayNestingLevel = 0;
+		boolean hasReference = false;
+		int start = 0;
+		for (int i = 0; i < tmp.length ; ++i) {
+			if (tmp[i] == ARRAYOF) {
+				++arrayNestingLevel;
+			} else if (tmp[i] == REFERENCE) {
+				start = i + 1;
+				hasReference = true;
+				break;
+			} else {
+				start = i;
+				break;
+			}
+		}
+		final String t = hasReference ? s.substring(start, tmp.length - 1) : toPrimitiveOrVoidCanonicalName(s.charAt(start));
+		final StringBuilder retVal = new StringBuilder(t);
+		for (int k = 1; k <= arrayNestingLevel; ++k) {
+			retVal.append("[]");
+		}
+		return retVal.toString();
     }
 
     /**

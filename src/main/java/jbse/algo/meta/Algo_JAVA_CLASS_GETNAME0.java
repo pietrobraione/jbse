@@ -5,7 +5,7 @@ import static jbse.algo.UtilControlFlow.failExecution;
 import static jbse.algo.UtilControlFlow.throwNew;
 import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
-import static jbse.common.Type.binaryClassName;
+import static jbse.common.Type.internalToBinaryClassName;
 
 import java.util.function.Supplier;
 
@@ -53,7 +53,7 @@ public final class Algo_JAVA_CLASS_GETNAME0 extends Algo_INVOKEMETA_Nonbranching
                 //this should never happen
                 failExecution("The 'this' parameter to java.lang.Class.getName0 method is symbolic and unresolved.");
             }
-            final String className = binaryClassName(clazz.representedClass().getClassName()); //note that binaryClassName(x) == x if x is the canonical name of a primitive type
+            final String className = internalToBinaryClassName(clazz.representedClass().getClassName()); //note that binaryClassName(x) == x if x is the canonical name of a primitive type
             state.ensureStringLiteral(calc, className);
             this.refClassName = state.referenceToStringLiteral(className);
         } catch (HeapMemoryExhaustedException e) {

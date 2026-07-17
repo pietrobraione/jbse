@@ -15,7 +15,7 @@ import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
-import static jbse.common.Type.internalClassName;
+import static jbse.common.Type.binaryToInternalClassName;
 
 import java.util.function.Supplier;
 
@@ -73,7 +73,7 @@ public final class Algo_JAVA_CLASS_FORNAME0 extends Algo_INVOKEMETA_Nonbranching
                 throwNew(state, this.ctx.getCalculator(), NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
-            final String className = internalClassName(valueString(state, classNameRef));
+            final String className = binaryToInternalClassName(valueString(state, classNameRef));
             if (className == null) {
                 throw new SymbolicValueNotAllowedException("The className parameter to java.lang.Class.forName0 cannot be a symbolic String");
             }

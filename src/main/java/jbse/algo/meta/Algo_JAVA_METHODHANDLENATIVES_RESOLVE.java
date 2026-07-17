@@ -216,11 +216,11 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 if (JAVA_CLASS.equals(memberNameDescriptorObject.getType().getClassName())) {
                     //memberNameDescriptorObject is an Instance of java.lang.Class:
                     //gets the name of the represented class and puts it in memberNameType
-                    memberNameType = toInternalName(((Instance_JAVA_CLASS) memberNameDescriptorObject).representedClass().getClassName());
+                    memberNameType = ((Instance_JAVA_CLASS) memberNameDescriptorObject).representedClass().getInternalTypeName();
                 } else if (JAVA_STRING.equals(memberNameDescriptorObject.getType().getClassName())) {
                     //memberNameDescriptorObject is an Instance of java.lang.String:
                     //gets its String value and puts it in memberNameDescriptor
-                    memberNameType = toInternalName(valueString(state, memberNameDescriptorObject)); //TODO shall we replace . with / in class names???
+                    memberNameType = toInternalName(valueString(state, memberNameDescriptorObject)); //TODO replace deprecated method!!!
                 } else {
                     //memberNameDescriptorObject is neither a Class nor a String:
                     //just fails

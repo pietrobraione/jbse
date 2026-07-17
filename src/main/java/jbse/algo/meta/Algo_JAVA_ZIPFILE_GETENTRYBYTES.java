@@ -7,7 +7,7 @@ import static jbse.algo.UtilControlFlow.throwVerifyError;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.BYTE;
-import static jbse.common.Type.internalClassName;
+import static jbse.common.Type.binaryToInternalClassName;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -76,7 +76,7 @@ public final class Algo_JAVA_ZIPFILE_GETENTRYBYTES extends Algo_INVOKEMETA_Nonbr
             method.setAccessible(true);
             this.entryBytes = (byte[]) method.invoke(null, state.getZipFileEntryJz(jzentry), type);
         } catch (InvocationTargetException e) {
-            final String cause = internalClassName(e.getCause().getClass().getName());
+            final String cause = binaryToInternalClassName(e.getCause().getClass().getName());
             throwNew(state, this.ctx.getCalculator(), cause);
             exitFromAlgorithm();
         } catch (ClassCastException e) {

@@ -4,7 +4,7 @@ import static jbse.algo.UtilControlFlow.exitFromAlgorithm;
 import static jbse.algo.UtilControlFlow.failExecution;
 import static jbse.algo.UtilControlFlow.throwNew;
 import static jbse.algo.UtilControlFlow.throwVerifyError;
-import static jbse.common.Type.internalClassName;
+import static jbse.common.Type.binaryToInternalClassName;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -95,7 +95,7 @@ public final class Algo_JAVA_INFLATER_SETDICTIONARY extends Algo_INVOKEMETA_Nonb
             method.setAccessible(true);
             method.invoke(null, state.getInflater(this.addr), this.b, this.ofst, this.len);
         } catch (InvocationTargetException e) {
-            final String cause = internalClassName(e.getCause().getClass().getName());
+            final String cause = binaryToInternalClassName(e.getCause().getClass().getName());
             throwNew(state, calc, cause);
             exitFromAlgorithm();
         } catch (ClassCastException e) {

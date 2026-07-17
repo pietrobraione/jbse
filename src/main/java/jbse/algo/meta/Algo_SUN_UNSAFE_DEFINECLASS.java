@@ -14,7 +14,7 @@ import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
-import static jbse.common.Type.internalClassName;
+import static jbse.common.Type.binaryToInternalClassName;
 
 import java.util.function.Supplier;
 
@@ -73,7 +73,7 @@ public final class Algo_SUN_UNSAFE_DEFINECLASS extends Algo_INVOKEMETA_Nonbranch
             if (state.isNull(nameReference)) {
                 name = null; //in this case, name must be ignored
             } else {
-                name = internalClassName(valueString(state, nameReference));
+                name = binaryToInternalClassName(valueString(state, nameReference));
                 if (name == null) {
                     throw new SymbolicValueNotAllowedException("The String name parameter to invocation of method java.util.zip.ZipFile.open cannot be a symbolic String.");
                 }

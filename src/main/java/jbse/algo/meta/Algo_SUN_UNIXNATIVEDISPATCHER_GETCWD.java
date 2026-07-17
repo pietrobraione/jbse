@@ -6,7 +6,7 @@ import static jbse.algo.UtilControlFlow.throwNew;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.SUN_UNIXNATIVEDISPATCHER;
 import static jbse.common.Type.ARRAYOF;
-import static jbse.common.Type.binaryClassName;
+import static jbse.common.Type.internalToBinaryClassName;
 import static jbse.common.Type.BYTE;
 
 import java.lang.reflect.InvocationTargetException;
@@ -53,7 +53,7 @@ public final class Algo_SUN_UNIXNATIVEDISPATCHER_GETCWD extends Algo_INVOKEMETA_
 	ClasspathException, InterruptException, RenameUnsupportedException {
         final Calculator calc = this.ctx.getCalculator();
 		try {
-			final Class<?> class_SUN_UNIXNATIVEDISPATCHER = Class.forName(binaryClassName(SUN_UNIXNATIVEDISPATCHER));
+			final Class<?> class_SUN_UNIXNATIVEDISPATCHER = Class.forName(internalToBinaryClassName(SUN_UNIXNATIVEDISPATCHER));
 			final Method getcwdMethod = class_SUN_UNIXNATIVEDISPATCHER.getDeclaredMethod("getcwd");
 			getcwdMethod.setAccessible(true);
 			final byte[] cwd = (byte []) getcwdMethod.invoke(null);

@@ -8,8 +8,8 @@ import static jbse.bc.Signatures.JAVA_MAP_CONTAINSKEY;
 import static jbse.common.Type.BOOLEAN;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
-import static jbse.common.Type.binaryClassName;
-import static jbse.common.Type.internalClassName;
+import static jbse.common.Type.internalToBinaryClassName;
+import static jbse.common.Type.binaryToInternalClassName;
 import static jbse.common.Type.isPrimitiveOrVoidCanonicalName;
 import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 
@@ -309,7 +309,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 				classPath.forEach(p -> listClassPath.add(p.toString()));
 				final String stringClassPath = String.join(File.pathSeparator, listClassPath.toArray(new String[0]));
 				final String mainClass = DecisionProcedureGuidanceJDILauncher.class.getName();
-				final String targetClass = binaryClassName(this.runnerParameters.getMethodSignature().getClassName());
+				final String targetClass = internalToBinaryClassName(this.runnerParameters.getMethodSignature().getClassName());
 				final String startMethodName = this.runnerParameters.getMethodSignature().getName();
 				return launchTarget("-classpath \"" + stringClassPath + File.pathSeparator + this.runnerParameters.getClasspath().jbseLibPath() + "\" " + mainClass + " " + targetClass + " " + startMethodName);
 			} catch (IOException e) {
@@ -505,7 +505,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 				buf.append("[");
 				name = name.substring(0, name.length() - 2);
 			}
-			buf.append(isPrimitiveOrVoidCanonicalName(name) ? toPrimitiveOrVoidInternalName(name) : (isArray ? REFERENCE : "") + internalClassName(name) + (isArray ? TYPEEND : ""));
+			buf.append(isPrimitiveOrVoidCanonicalName(name) ? toPrimitiveOrVoidInternalName(name) : (isArray ? REFERENCE : "") + binaryToInternalClassName(name) + (isArray ? TYPEEND : ""));
 			return buf.toString();
 		}
 

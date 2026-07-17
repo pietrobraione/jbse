@@ -1,7 +1,7 @@
 package jbse.algo.meta;
 
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM;
-import static jbse.common.Type.internalClassName;
+import static jbse.common.Type.binaryToInternalClassName;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
@@ -22,7 +22,7 @@ public final class Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX extends Algo_JAVA
     
     @Override
     protected String methodName() {
-        final boolean isUnix = JAVA_UNIXFILESYSTEM.equals(internalClassName(this.fileSystemClass.getName()));
+        final boolean isUnix = JAVA_UNIXFILESYSTEM.equals(binaryToInternalClassName(this.fileSystemClass.getName()));
         return "getBooleanAttributes" + (isUnix ? "0" : "");
     }
     

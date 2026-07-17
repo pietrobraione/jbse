@@ -4,7 +4,7 @@ import static jbse.algo.UtilControlFlow.failExecution;
 import static jbse.bc.Signatures.JAVA_CONCURRENTHASHMAP;
 import static jbse.bc.Signatures.JAVA_HASHMAP;
 import static jbse.bc.Signatures.JAVA_LINKEDHASHMAP;
-import static jbse.common.Type.binaryClassName;
+import static jbse.common.Type.internalToBinaryClassName;
 
 import java.util.function.Supplier;
 
@@ -47,9 +47,9 @@ public final class Algo_JBSE_JAVA_XMAP_NOTIFYMETHODEXECUTION extends Algo_INVOKE
             final Value v0 = state.getCurrentFrame().getLocalVariableValue(0);
             if (v0 instanceof SymbolicMemberField) {
                 final SymbolicMemberField originMemberField = (SymbolicMemberField) v0;
-                if ((binaryClassName(originMemberField.getFieldClass()).equals(JAVA_HASHMAP) || 
-                binaryClassName(originMemberField.getFieldClass()).equals(JAVA_CONCURRENTHASHMAP) || 
-                binaryClassName(originMemberField.getFieldClass()).equals(JAVA_LINKEDHASHMAP)) 
+                if ((internalToBinaryClassName(originMemberField.getFieldClass()).equals(JAVA_HASHMAP) || 
+                internalToBinaryClassName(originMemberField.getFieldClass()).equals(JAVA_CONCURRENTHASHMAP) || 
+                internalToBinaryClassName(originMemberField.getFieldClass()).equals(JAVA_LINKEDHASHMAP)) 
                 && originMemberField.getFieldName().equals("initialMap")) {
                     return; //do not notify operations on helper maps (initialMap) scoped within symbolic hash maps. The helper maps do not exist in the concrete execution.
                 }

@@ -5,7 +5,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static jbse.common.Type.BOOLEAN;
 import static jbse.common.Type.splitParametersDescriptors;
 import static jbse.common.Type.splitReturnValueDescriptor;
-import static jbse.common.Type.internalClassName;
+import static jbse.common.Type.binaryToInternalClassName;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Target;
@@ -208,7 +208,7 @@ public final class InitialHeapChecker {
         throws MethodNotFoundException {
             final String[] annotations = cf.getMethodAvailableAnnotations(sig);
             for (String annotation : annotations) {
-                if (internalClassName(this.methodAnnotationClass.getName()).equals(annotation)) {
+                if (binaryToInternalClassName(this.methodAnnotationClass.getName()).equals(annotation)) {
                     return true;
                 }
             }

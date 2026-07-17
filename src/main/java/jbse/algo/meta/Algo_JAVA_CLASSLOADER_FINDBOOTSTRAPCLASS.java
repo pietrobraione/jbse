@@ -9,7 +9,7 @@ import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
-import static jbse.common.Type.internalClassName;
+import static jbse.common.Type.binaryToInternalClassName;
 
 import java.util.function.Supplier;
 
@@ -61,7 +61,7 @@ public final class Algo_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS extends Algo_INVOKEM
                 return;
                 
             }
-            final String className = internalClassName(valueString(state, classNameRef));
+            final String className = binaryToInternalClassName(valueString(state, classNameRef));
             if (className == null) {
                 throw new SymbolicValueNotAllowedException("The className parameter to java.lang.ClassLoader.findBootstrapClass cannot be a symbolic String");
             }
