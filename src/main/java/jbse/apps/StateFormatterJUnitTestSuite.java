@@ -9,6 +9,7 @@ import static jbse.common.Type.isPrimitiveFloating;
 import static jbse.common.Type.isPrimitiveIntegral;
 import static jbse.common.Type.splitParametersDescriptors;
 import static jbse.common.Type.splitReturnValueDescriptor;
+import static jbse.common.Type.toPrimitiveOrVoidCanonicalName;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -19,7 +20,9 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Supplier;
 
+import jbse.bc.Signature;
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
@@ -61,7 +64,7 @@ import jbse.val.WideningConversion;
 public final class StateFormatterJUnitTestSuite implements Formatter {
     private final Supplier<State> initialStateSupplier;
     private final Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
-    private StringBuilder output = new StringBuilder();
+    private final StringBuilder output = new StringBuilder();
     private int testCounter = 0;
 
     public StateFormatterJUnitTestSuite(Supplier<State> initialStateSupplier, 
@@ -77,11 +80,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
 
     @Override
     public void formatState(State state) {
-        try {
-			new JUnitTestCase(this.output, this.initialStateSupplier.get(), state, this.modelSupplier.get(), this.testCounter++);
-		} catch (FrozenStateException e) {
-			this.output.delete(0, this.output.length());
-		}
+    	new JUnitTestCase(this.output, this.initialStateSupplier.get(), state, this.modelSupplier.get(), this.testCounter++);
     }
 
     @Override
@@ -96,7 +95,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
 
     @Override
     public void cleanup() {
-        this.output = new StringBuilder();
+        this.output.delete(0, this.output.length());
     }
 
     private static final String PROLOGUE =
@@ -116,7 +115,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
         "        AccessibleObject(Object o) {\n" +
         "            target = o;\n" +
         "        }\n"+
-        "        void set(String fieldName, Object value) {\n" +
+        "        void setValue(String fieldName, Object value) {\n" +
         "            try {\n" +
         "                final Field p = target.getClass().getDeclaredField(fieldName);\n" +
         "                p.setAccessible(true);\n" +
@@ -231,21 +230,38 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
     private static class JUnitTestCase {
         private static final String INDENT = "        ";
         private final StringBuilder s; 
-        private final HashMap<String, String> symbolsToVariables = new HashMap<>();
+        private final HashMap<String, String> symbolsToVariables = new HashMap<>();  //TODO can't we just use the symbol as key?
         private boolean panic = false;
         private ClauseAssume clauseLength = null;
 
-        JUnitTestCase(StringBuilder s, State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) 
-        throws FrozenStateException {
-            this.s = s;
-            appendMethodDeclaration(finalState, testCounter);
-            appendInputsInitialization(finalState, model, testCounter);
-            appendInvocationOfMethodUnderTest(initialState, finalState);
-            appendAssert(initialState, finalState);
-            appendMethodEnd(finalState, testCounter);
+        JUnitTestCase(StringBuilder s, State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
+            this.s = new StringBuilder();
+            try { 
+	            appendMethodDeclaration(finalState, testCounter);
+	            appendInputsInitialization(finalState, model, testCounter);
+	            appendInvocationOfMethodUnderTest(initialState, finalState);
+	            appendAssert(initialState, finalState);
+	            appendMethodEnd(finalState, testCounter);
+            } catch (InvalidInputException e) {
+            	this.s.delete(0, this.s.length());
+                this.s.append("    //Unable to generate test case ");
+                this.s.append(testCounter);
+                this.s.append(" for state ");
+                this.s.append(finalState.getBranchIdentifier());
+                this.s.append('[');
+                this.s.append(finalState.getSequenceNumber());
+                this.s.append("] (raised InvalidInputException");
+                if (e.getMessage() != null) {
+                    this.s.append(", message: ");
+                    this.s.append(e.getMessage());
+                }
+                this.s.append(")\n");
+            }
+            s.append(this.s);
         }
 
-        private void appendMethodDeclaration(State finalState, int testCounter) throws FrozenStateException {
+        private void appendMethodDeclaration(State finalState, int testCounter) 
+        throws InvalidInputException {
             if (this.panic) {
                 return;
             }
@@ -268,7 +284,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
         }
 
         private void appendInputsInitialization(State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) 
-        throws FrozenStateException {
+        throws InvalidInputException {
             if (this.panic) {
                 return;
             }
@@ -284,40 +300,50 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                     final ClauseAssumeExpands clauseExpands = (ClauseAssumeExpands) clause;
                     final Symbolic symbol = clauseExpands.getReference();
                     final long heapPosition = clauseExpands.getHeapPosition();
-                    setWithNewObject(finalState, symbol, heapPosition, iterator, model);
+                    appendSetWithNewObject(symbol, finalState, heapPosition, iterator, model);
                 } else if (clause instanceof ClauseAssumeNull) {
                 	clausePrinted = true;
                     this.s.append(INDENT);
                     final ClauseAssumeNull clauseNull = (ClauseAssumeNull) clause;
                     final ReferenceSymbolic symbol = clauseNull.getReference();
-                    setWithNull(symbol);
+                    appendSetWithNull(symbol);
                 } else if (clause instanceof ClauseAssumeAliases) {
                 	clausePrinted = true;
                     this.s.append(INDENT);
                     final ClauseAssumeAliases clauseAliases = (ClauseAssumeAliases) clause;
                     final Symbolic symbol = clauseAliases.getReference();
                     final long heapPosition = clauseAliases.getHeapPosition();
-                    setWithAlias(finalState, symbol, heapPosition);
+                    appendSetWithAlias(symbol, finalState, heapPosition);
                 } else if (clause instanceof ClauseAssume) {
                 	clausePrinted = true;
                     this.s.append(INDENT);
-                    if (model == null) {
-                        this.panic = true;
-                        return;
-                    }
                     final ClauseAssume clauseAssume = (ClauseAssume) clause;
                     final Primitive p = clauseAssume.getCondition();
-                    addPrimitiveSymbolAssignments(p, model);
+                    final Set<PrimitiveSymbolic> symbols = primitiveSymbolsIn(p);
+                    appendSetWithNumericValues(symbols, model);
                 } else {
+                	//clause to skip
                     clausePrinted = false;
                 }
+                if (this.panic) {
+                	//we panicked: we cannot do anything
+                	//else but return immediately from
+                	//this method (this.s will be reset
+                	//anyways)
+                	return;
+                }
                 if (clausePrinted) {
-                	this.s.append(" // "); //comment
+                	//we append a comment that describes the clause
+                	this.s.append(" // "); 
                 	this.s.append(clause.toString());
                 	if (this.clauseLength != null) {
+                		//it is possible that we printed two clauses, in
+                		//the second clause is a clause describing the
+                		//initial assumption on an array's length; we
+                		//add also this clause's description to the comment
                 		this.s.append(", ");
                 		this.s.append(this.clauseLength.toString());
-                		this.clauseLength = null;
+                		this.clauseLength = null; //reset for next iteration
                 	}
                 	this.s.append('\n');
                 }
@@ -325,7 +351,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
         }
 
         private void appendInvocationOfMethodUnderTest(State initialState, State finalState) 
-        throws FrozenStateException {
+        throws InvalidInputException {
             if (this.panic) {
                 return;
             }
@@ -334,15 +360,16 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 (returnedValue != null)  && (isPrimitive(returnedValue.getType()) || returnedValue instanceof Symbolic);
             this.s.append(INDENT);
             try {
+            	final Signature rootMethodSignature = initialState.getRootMethodSignature();
                 if (mustCheckReturnedValue) {
-                    final char returnType = splitReturnValueDescriptor(initialState.getRootMethodSignature().getDescriptor()).charAt(0);
-                    if (returnType == Type.CHAR) {
+                    final char methodReturnType = splitReturnValueDescriptor(rootMethodSignature.getDescriptor()).charAt(0);
+                    if (methodReturnType == Type.CHAR) {
                         this.s.append("char");
-                    } else if (returnType == Type.BOOLEAN) {
+                    } else if (methodReturnType == Type.BOOLEAN) {
                         this.s.append("boolean");
-                    } else if (isPrimitiveIntegral(returnType)) {
+                    } else if (isPrimitiveIntegral(methodReturnType)) {
                         this.s.append("long");
-                    } else if (isPrimitiveFloating(returnType)) {
+                    } else if (isPrimitiveFloating(methodReturnType)) {
                         this.s.append("double");
                     } else {
                         final Reference returnedRef = (Reference) returnedValue;
@@ -354,7 +381,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                     }
                     this.s.append(" __returnedValue = ");
                 }
-                final String methodName = initialState.getRootMethodSignature().getName();
+                final String methodName = rootMethodSignature.getName();
                 if ("this".equals(initialState.getRootFrame().getLocalVariableDeclaredName(0))) {
                     this.s.append("__ROOT_this.");
                     this.s.append(methodName);
@@ -364,7 +391,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 this.s.append('(');
                 final Map<Integer, Variable> lva = initialState.getRootFrame().localVariables();
                 final TreeSet<Integer> slots = new TreeSet<>(lva.keySet());
-                final int numParamsExcludedThis = splitParametersDescriptors(initialState.getRootMethodSignature().getDescriptor()).length;
+                final int numParamsExcludedThis = splitParametersDescriptors(rootMethodSignature.getDescriptor()).length;
                 int currentParam = 1;
                 for (int slot : slots) {
                     final Variable lv = lva.get(slot);
@@ -396,7 +423,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             }
         }
 
-        private void appendAssert(State initialState, State finalState) throws FrozenStateException {
+        private void appendAssert(State initialState, State finalState) throws InvalidInputException {
             if (this.panic) {
                 return;
             }
@@ -406,29 +433,29 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             if (mustCheckReturnedValue) {
                 this.s.append(INDENT);
                 this.s.append("assertTrue(__returnedValue == ");
-                final char returnType;
+                final char methodReturnType;
                 try {
-                    returnType = splitReturnValueDescriptor(initialState.getRootMethodSignature().getDescriptor()).charAt(0);
+                    methodReturnType = splitReturnValueDescriptor(initialState.getRootMethodSignature().getDescriptor()).charAt(0);
                 } catch (ThreadStackEmptyException e) {
                     //this should never happen
                     throw new UnexpectedInternalException(e);
                 }
-                if (returnType == Type.BOOLEAN) {
+                if (methodReturnType == Type.BOOLEAN) {
                     if (returnedValue instanceof Simplex) {
                         final Simplex returnedValueSimplex = (Simplex) returnedValue;
                         this.s.append(returnedValueSimplex.isZeroOne(true) ? "false" : "true");
                     } else {
                         this.s.append(returnedValue.toString());
                     }
-                } else if (isPrimitive(returnType)) {
+                } else if (isPrimitive(methodReturnType)) {
                     if (returnedValue instanceof Simplex) {
-                        if (returnType == Type.BYTE) {
+                        if (methodReturnType == Type.BYTE) {
                             this.s.append("(byte) "); 
-                        } else if (returnType == Type.CHAR) {
+                        } else if (methodReturnType == Type.CHAR) {
                             this.s.append("(char) ");
-                        } else if (returnType == Type.SHORT) {
+                        } else if (methodReturnType == Type.SHORT) {
                             this.s.append("(short) "); 
-                        }
+                        } //else, no cast is necessary
                     }
                     this.s.append(returnedValue.toString());
                 } else {
@@ -436,12 +463,8 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                     if (finalState.isNull(returnedRef)) {
                         this.s.append("null");
                     } else {
-                        final String var = generateName(finalState.getObject(returnedRef).getOrigin().asOriginString());
-                        if (hasMemberAccessor(var)) {
-                            this.s.append(getValue(var));
-                        } else {
-                            this.s.append(var);
-                        }
+                    	final String returnedRefOriginString = finalState.getObject(returnedRef).getOrigin().asOriginString();
+                    	appendGetValue(returnedRefOriginString);
                     }
                 }
                 this.s.append(");\n");
@@ -457,120 +480,227 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 this.s.append(finalState.getBranchIdentifier());
                 this.s.append('[');
                 this.s.append(finalState.getSequenceNumber());
-                this.s.append("] (no numeric solution from the solver)\n");
+                this.s.append("] (no model - aka numeric solution to path condition - from the solver)\n");
             } else {
                 this.s.append("    }\n");
             }
         }
 
-        private void setWithNewObject(State finalState, Symbolic symbol, long heapPosition, 
-                                      Iterator<Clause> iterator, Map<PrimitiveSymbolic, Simplex> model) 
-        throws FrozenStateException {        
+        private void appendSetWithNewObject(Symbolic symbol, State finalState, long heapPosition, 
+                                            Iterator<Clause> iterator, Map<PrimitiveSymbolic, Simplex> model) 
+        throws InvalidInputException {        
             makeVariableFor(symbol);
             final String var = getVariableFor(symbol);
-            final String type = getTypeOfObjectInHeap(finalState, heapPosition);
-            final String instantiationStmt;
+            final String type = getTypeOfObjectInHeap(finalState, heapPosition); //the type of the new object
+            final PrimitiveSymbolic symbolLength; //if the new object is an array, here we store the symbol for its length
+            final Simplex valueLength; //if the new object is an array, here we store the concrete value for its length
+            final String createNewObjectJavaExpression; //the Java expression that creates the new object
             if (isArray(type)) {
-                //the next clause predicates on the array length 
-                this.clauseLength = (ClauseAssume) iterator.next();
-                final Simplex length = arrayLength(this.clauseLength, model);
-                instantiationStmt = "newArray(\"" + javaType(getArrayMemberType(type)) + "\", " + length.toString() + ")";
+                //the next clause in the path condition predicates on the array length 
+                this.clauseLength = (ClauseAssume) iterator.next(); //we store the clause just for generating a comment in code
+                symbolLength = getArrayLength(this.clauseLength);
+            	//we need a concrete primitive value for the
+            	//array length: if we do not have a model we 
+                //panic
+                if (model == null) {
+                    this.panic = true;
+                    return;
+                }
+                valueLength = model.get(symbolLength);
+                if (valueLength == null) {
+                	//we REALLY need a concrete primitive value
+                	//for the array length
+                    throw new InvalidInputException("No value found in model for symbol " + symbolLength.toString() + ", that is the length of an array.");
+                }
+                createNewObjectJavaExpression = "(" + javaClass(type) + ") newArray(\"" + javaType(getArrayMemberType(type)) + "\", " + valueLength.toString() + ")";
             } else {
-                instantiationStmt = "newInstance(\"" + javaType(type) + "\")";
+            	symbolLength = null;
+            	valueLength = null;
+                createNewObjectJavaExpression = "(" + javaClass(type) + ") newInstance(\"" + javaType(type) + "\")";
             }
-            final String className = javaClass(type);
-            if (hasMemberAccessor(var)){
-                setByReflection(var, instantiationStmt);
-            } else if (hasArrayAccessor(var)) {
-                this.s.append(var);
-                this.s.append(" = (");
-                this.s.append(className);
-                this.s.append(") ");
-                this.s.append(instantiationStmt);
-                this.s.append(";");
-            } else {
-                this.s.append(className);
-                this.s.append(' ');
-                this.s.append(var);
-                this.s.append(" = (");
-                this.s.append(className);
-                this.s.append(") ");
-                this.s.append(instantiationStmt);
-                this.s.append(";");
+            appendSetValue(javaClass(type), var, createNewObjectJavaExpression);
+            
+            //if we have read the clause for the array length
+            //we must also emit the symbols in this clause
+            //(we are lucky, it is just one)
+            if (this.clauseLength != null) {
+            	appendSetWithNumericValue(symbolLength, valueLength);
             }
         }
 
-        private void setWithNull(ReferenceSymbolic symbol) {
+        private void appendSetWithNull(ReferenceSymbolic symbol) 
+        throws InvalidInputException {
             makeVariableFor(symbol);
             final String var = getVariableFor(symbol);
+            appendSetValue(javaClass(symbol.getStaticType()), var, "null");
+            
             if (hasMemberAccessor(var)) {
-                setByReflection(var, "null");
-            } else if (hasArrayAccessor(var)) {
-                this.s.append(var);
-                this.s.append(" = null;");
-            } else {
-                final String type = javaClass(symbol.getStaticType());
-                this.s.append(type);
-                this.s.append(' ');
-                this.s.append(var);
-                this.s.append(" = null;");
-            }
-            if (hasMemberAccessor(var)) {
+            	//also adds var to the set of the null object fields
                 final int splitPoint = var.lastIndexOf('.');
                 this.s.append("this.nullObjectFields.add(new ObjectField(");
-                this.s.append(getValue(var.substring(0, splitPoint)));
+                appendGetValue(var.substring(0, splitPoint));
                 this.s.append(", \"");
                 this.s.append(var.substring(splitPoint + 1));
                 this.s.append("\"));");
             }
         }
 
-        private void setWithAlias(State finalState, Symbolic symbol, long heapPosition) 
-        throws FrozenStateException {
+        private void appendSetWithAlias(Symbolic symbol, State finalState, long heapPosition) 
+        throws InvalidInputException {
             makeVariableFor(symbol);
             final String var = getVariableFor(symbol);
-            final String value = getValue(getOriginOfObjectInHeap(finalState, heapPosition));
-            if (hasMemberAccessor(var)) {
-                setByReflection(var, value);
-            } else if (hasArrayAccessor(var)) {
-                this.s.append(var);
+            final Symbolic ref = getReferenceExpansion(finalState, heapPosition);
+            makeVariableFor(ref);
+            final String val = getVariableFor(ref);
+            final String javaType = javaClass(getTypeOfObjectInHeap(finalState, heapPosition));
+            appendSetValue(javaType, var, val);
+        }
+        
+        private void appendSetWithNumericValues(Set<PrimitiveSymbolic> symbols, Map<PrimitiveSymbolic, Simplex> model) 
+        throws InvalidInputException {
+            for (PrimitiveSymbolic symbol : symbols) {
+            	//we append a variable initialization only if the symbol has not yet been processed;
+            	//we detect this by checking whether we have already created a variable for the symbol
+                if (getVariableFor(symbol) == null) {  
+                	//we need a concrete primitive value for the
+                	//symbol: if we do not have a model we panic
+                    if (model == null) {
+                        this.panic = true;
+                        return;
+                    }
+                    final Simplex value = model.get(symbol);
+                    if (value == null) {
+                    	//This can happen when the symbol is contained in a mangled
+                    	//subexpression, i.e., a subexpression that cannot be 
+                    	//represented by the solver; in this case we may have
+                    	//a model value for the whole mangled subexpression, but not for 
+                    	//the symbols it contains, thus we are stuck. Our (non-)solution 
+                    	//is to do nothing, i.e., just to skip this symbol and hope 
+                    	//for the best. (alternatively, we may just panic...)
+                    	continue;
+                    }
+                    appendSetWithNumericValue(symbol, value);
+                }
+            }
+        }
+
+        private void appendSetWithNumericValue(PrimitiveSymbolic symbol, Simplex value) 
+        throws InvalidInputException {
+        	makeVariableFor(symbol); //if the variable exists already, this method does nothing
+            final String var = getVariableFor(symbol);
+            final String val;
+        	final char symbolType = symbol.getType();
+            if (symbolType == Type.BOOLEAN) {
+            	val = "(" + value.toString() + " != 0)";
+            } else if (symbolType == Type.BYTE) {
+            	val = "(byte) " + value.toString();
+            } else if (symbolType == Type.CHAR) {
+            	val = "(char) " + value.toString();
+            } else if (symbolType == Type.SHORT) {
+            	val = "(short) " + value.toString();
+            } else { 
+            	//it is a JVM numeric type: no cast is necessary
+            	val = value.toString();
+            }
+        	final String javaType = toPrimitiveOrVoidCanonicalName(symbolType);
+
+            //appends the initialization statement for the variable
+            appendSetValue(javaType, var, val);
+        }
+
+        private void appendGetValue(String accessExpression) {
+            if (hasMemberAccessor(accessExpression)) {
+            	final String accessExpressionRoot = accessExpression.substring(0, accessExpression.indexOf('.'));
+                final String container = "new AccessibleObject(" + accessExpressionRoot + ")";
+                final String accessExpressionWithGetters = replaceAccessorsWithGetters(container, accessExpression);
+                this.s.append(accessExpressionWithGetters);
+                this.s.append(".getValue()");
+             } else { //hasArrayAccessor(accessExpression) or not
+                this.s.append(accessExpression);
+            }
+        }
+
+        private void appendSetValue(String javaType, String accessExpression, String value) {
+        	if (hasMemberAccessor(accessExpression)) {
+        		final String accessExpressionRoot = accessExpression.substring(0, accessExpression.indexOf('.'));
+        		final String container = "new AccessibleObject(" + accessExpressionRoot + ")";
+        		final String accessExpressionField = accessExpression.substring(0, accessExpression.lastIndexOf('.'));
+        		final String accessExpressionFieldWithGetters = replaceAccessorsWithGetters(container, accessExpressionField);
+        		final String fieldToSet = accessExpression.substring(accessExpression.lastIndexOf('.') + 1);
+        		this.s.append(accessExpressionFieldWithGetters);
+        		this.s.append(".setValue(\"");
+        		this.s.append(fieldToSet);
+        		this.s.append("\", ");
+        		this.s.append(value);
+        		this.s.append(");");
+        	} else if (hasArrayAccessor(accessExpression)) { 
+                this.s.append(accessExpression);
                 this.s.append(" = "); 
-                this.s.append(value);
+                appendGetValue(value);
                 this.s.append(';'); 
-            } else {
-                final String type = javaClass(getTypeOfObjectInHeap(finalState, heapPosition));
-                this.s.append(type);
+        	} else { //no accessor: it is a variable, declare it and initialize it
+                this.s.append(javaType);
                 this.s.append(' '); 
-                this.s.append(var); 
+                this.s.append(accessExpression); 
                 this.s.append(" = "); 
-                this.s.append(value);
+                appendGetValue(value);
                 this.s.append(';'); 
-            }
+        	}
         }
 
-        private Simplex arrayLength(ClauseAssume clause, Map<PrimitiveSymbolic, Simplex> model) {
-            //the clause has shape {length} >= 0 - i.e., it has just
-            //one symbol, the length
-            final Set<PrimitiveSymbolic> symbols = primitiveSymbolsIn(clause.getCondition());
-            final PrimitiveSymbolic symbol = symbols.iterator().next();
-            makeVariableFor(symbol); //so it remembers that the symbol has been processed
-            final Simplex value = model.get(symbol);
-            if (value == null) {
-                //this should never happen
-                throw new UnexpectedInternalException("No value found in model for symbol " + symbol.toString() + ".");
+        /**
+         * Creates a variable for a symbol, if has not already
+         * been created before.
+         * 
+         * @param symbol a {@link Symbolic}. It must not be {@code null}.
+         * @throws InvalidInputException if {@code symbol == null} or
+         *         if the variable fpr {@code symbol} was already
+         *         created before (usually a symptom of the fact
+         *         that we are processing a same symbol twice). 
+         */
+        private void makeVariableFor(Symbolic symbol) throws InvalidInputException {
+        	if (symbol == null) {
+            	throw new InvalidInputException("Invoked StateFormatterJUnitTestSuite.makeVariableFor with a null symbol parameter.");
+        	}
+            final String key = symbol.getValue(); //TODO can't we just use the symbol as key?
+            if (this.symbolsToVariables.containsKey(key)) {
+            	throw new InvalidInputException("Invoked StateFormatterJUnitTestSuite.makeVariableFor with a symbol parameter for which a variable was already created.");
             }
-            return value;
+            this.symbolsToVariables.put(key, generateName(symbol.asOriginString()));
         }
 
-        private String javaType(String s){
-            if (s == null) {
+        /**
+         * Gets the variable for a symbol.
+         * 
+         * @param symbol a {@link Symbolic}. It must not be {@code null}.
+         * @return a {@link String}, the Java name for
+         *         a variable, or {@code null} if the variable for 
+         *         {@code symbol} has not been previously created
+         *         (by invoking {@link #makeVariableFor(Symbolic)}) 
+         * @throws InvalidInputException if {@code symbol == null}. 
+         */
+        private String getVariableFor(Symbolic symbol) throws InvalidInputException {
+        	if (symbol == null) {
+            	throw new InvalidInputException("Invoked StateFormatterJUnitTestSuite.getVariableFor with a null symbol parameter.");
+        	}
+            final String key = symbol.getValue();  //TODO can't we just use the symbol as key?
+            return this.symbolsToVariables.get(key);
+        }
+        
+        //some private static utility methods for types
+
+        private static String javaType(String type){
+            if (type == null) {
                 return null;
             }
-            final String a = s.replace('/', '.');
+            final String a = type.replace('/', '.');
             return (isReference(a) ? className(a) : a);
         }
 
-        private String javaClass(String type){
+        private static String javaClass(String type){
+            if (type == null) {
+                return null;
+            }
             final String s = javaType(type).replace('$', '.');
             final char[] tmp = s.toCharArray();
             int arrayNestingLevel = 0;
@@ -593,54 +723,21 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             return retVal.toString();
         }
 
-        private String generateName(String name) {
-            return name.replace("{ROOT}:", "__ROOT_");
-        }
+        //some private static utility methods for origins and variable names
 
-        private void makeVariableFor(Symbolic symbol) {
-            final String value = symbol.getValue(); 
-            final String origin = symbol.asOriginString();
-            if (!this.symbolsToVariables.containsKey(value)) {
-                this.symbolsToVariables.put(value, generateName(origin));
-            }
+        private static String generateName(String originString) {
+            return originString.replace("{ROOT}:", "__ROOT_");
         }
-
-        private String getVariableFor(Symbolic symbol) {
-            final String value = symbol.getValue(); 
-            return this.symbolsToVariables.get(value);
-        }
-
-        private static String getTypeOfObjectInHeap(State finalState, long num) 
-        throws FrozenStateException {
-            final Map<Long, Objekt> heap = finalState.getHeap();
-            final Objekt o = heap.get(num);
-            return o.getType().getClassName();
-        }
-
-        private String getOriginOfObjectInHeap(State finalState, long heapPos){
-            //TODO extract this code and share with DecisionProcedureAlgorithms.getPossibleAliases
-            final Collection<Clause> path = finalState.getPathCondition();
-            for (Clause clause : path) {
-                if (clause instanceof ClauseAssumeExpands) { // == Obj fresh
-                    final ClauseAssumeExpands clauseExpands = (ClauseAssumeExpands) clause;
-                    final long heapPosCurrent = clauseExpands.getHeapPosition();
-                    if (heapPosCurrent == heapPos) {
-                        return getVariableFor(clauseExpands.getReference());
-                    }
-                }
-            }
-            return null;
-        }
-
-        private boolean hasMemberAccessor(String s) {
+        
+        private static boolean hasMemberAccessor(String s) {
             return (s.indexOf('.') != -1);
         }
 
-        private boolean hasArrayAccessor(String s) {
+        private static boolean hasArrayAccessor(String s) {
             return (s.indexOf('[') != -1);
         }
 
-        private String replaceAccessorsWithGetters(String container, String accessExpression) {
+        private static String replaceAccessorsWithGetters(String container, String accessExpression) {
             String a = container;
             String s = accessExpression;    
             if (hasMemberAccessor(s)) {
@@ -662,51 +759,78 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             return a;
         }
 
-        private String getValue(String accessExpression) {
-            if (hasMemberAccessor(accessExpression)) {
-                final String container = "new AccessibleObject(" + accessExpression.substring(0, accessExpression.indexOf('.')) + ")";
-                final String accessExpressionWithGetters = replaceAccessorsWithGetters(container, accessExpression);
-                return accessExpressionWithGetters + ".getValue()" ;
-            } else {
-                return accessExpression;
+        //some private static utility methods for accessing JBSE data structures
+        
+        private static PrimitiveSymbolic getArrayLength(ClauseAssume clause) 
+        throws InvalidInputException {
+            //the clause must have shape {length} >= 0 - i.e., it
+            //must have just one symbol, the length; we extract it
+            final Set<PrimitiveSymbolic> symbols = primitiveSymbolsIn(clause.getCondition());
+            if (symbols.size() != 1) {
+            	throw new InvalidInputException("Invoke StateFormatterJUnitTestSuite.arrayLength with a clause that does not seem a clause for the initial assumption of an array's length: " + clause.getCondition() + ".");
             }
+            final PrimitiveSymbolic symbolLength = symbols.iterator().next();
+            return symbolLength;
+        }
+        
+        private static ReferenceSymbolic getReferenceExpansion(State state, long heapPos) 
+        throws InvalidInputException {
+        	//TODO extract this code and share with DecisionProcedureAlgorithms.getPossibleAliases
+
+        	//finds the origin (reference) that expands to heapPos
+        	//by scanning the path condition
+        	final Collection<Clause> pathCondition = state.getPathCondition();
+        	ReferenceSymbolic referenceExpands = null;
+        	for (Clause clause : pathCondition) {
+        		if (clause instanceof ClauseAssumeExpands) {
+        			final ClauseAssumeExpands clauseExpands = (ClauseAssumeExpands) clause;
+        			final long heapPosCurrent = clauseExpands.getHeapPosition();
+        			if (heapPosCurrent == heapPos) {
+        				referenceExpands = clauseExpands.getReference();
+        				break;
+        			}
+        		}
+        	}
+        	
+        	//if we didn't find anything, the state is ill-formed
+            if (referenceExpands == null) {
+            	throw new InvalidInputException("No symbolic reference in state's path condition that expands to heap position " + heapPos + ".");
+            }
+
+        	//returns the reference
+        	return referenceExpands;
         }
 
-        private void setByReflection(String accessExpression, String value) {
-            final String container = "new AccessibleObject(" + accessExpression.substring(0, accessExpression.indexOf('.')) + ")";
-            final String accessExpressionWithGetters = replaceAccessorsWithGetters(container, accessExpression.substring(0, accessExpression.lastIndexOf('.')));
-            final String fieldToSet = accessExpression.substring(accessExpression.lastIndexOf('.') + 1);
-            this.s.append(accessExpressionWithGetters);
-            this.s.append(".set(\"");
-            this.s.append(fieldToSet);
-            this.s.append("\", ");
-            this.s.append(value);
-            this.s.append(");");
+        private static String getTypeOfObjectInHeap(State state, long num) 
+        throws FrozenStateException {
+            final Map<Long, Objekt> heap = state.getHeap();
+            final Objekt o = heap.get(num);
+            return o.getType().getClassName();
         }
         
-        private void addPrimitiveSymbolAssignments(Primitive e, Map<PrimitiveSymbolic, Simplex> model) {
-            final Set<PrimitiveSymbolic> symbols = primitiveSymbolsIn(e);
-            for (PrimitiveSymbolic symbol : symbols) {
-                if (getVariableFor(symbol) == null) { //not yet done
-                    final Simplex value = model.get(symbol);
-                    if (value == null) {
-                    	//This can happen when the symbol belongs to a mangled
-                    	//subexpression (i.e., is involved in an operator that
-                    	//cannot be represented); in this case, since we have
-                    	//a model value for the subexpression but not for its
-                    	//components, we are stuck. Our (non-)solution is to
-                    	//do nothing (i.e., leave the slot corresponding to the
-                    	//symbol with its default value).
-                    	return;
-                    }
-                    setWithNumericValue(symbol, value);
-                }
-            }
-        }
-        
-        private Set<PrimitiveSymbolic> primitiveSymbolsIn(Primitive e) {
-            final HashSet<PrimitiveSymbolic> symbols = new HashSet<>();
+    	/**
+    	 * Scavenges a {@link Primitive} for all the symbols
+    	 * with primitive type in it.
+    	 * 
+    	 * @param e a {@link Primitive}.
+    	 * @return a {@link Set}{@code <}{@link PrimitiveSymbolic}{@code >}
+    	 *         containing all the symbols with primtive type that are 
+    	 *         subterms of {@code e}.
+    	 * @throws InvalidInputException if {@code e} has a reference,
+    	 *         either symbolic or concrete, among its subterms
+    	 *         (we are not able to process this kind of expressions).
+    	 */
+        private static Set<PrimitiveSymbolic> primitiveSymbolsIn(Primitive e) 
+        throws InvalidInputException {
+            final HashSet<PrimitiveSymbolic> retVal = new HashSet<>();
+            
+    		//a PrimitiveVisitor that fills retVal with 
+    		//primitive symbol subterms
             PrimitiveVisitor v = new PrimitiveVisitor() {
+                @Override
+                public void visitNarrowingConversion(NarrowingConversion x) throws Exception {
+                    x.getArg().accept(this);
+                }
 
                 @Override
                 public void visitWideningConversion(WideningConversion x) throws Exception {
@@ -719,44 +843,44 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 @Override
                 public void visitSimplex(Simplex x) throws Exception { }
 
-				@Override
-				public void visitPrimitiveSymbolicHashCode(PrimitiveSymbolicHashCode x) {
-                    symbols.add(x);
-				}
-
-				@Override
-				public void visitPrimitiveSymbolicLocalVariable(PrimitiveSymbolicLocalVariable x) {
-                    symbols.add(x);
-				}
-
-				@Override
-				public void visitPrimitiveSymbolicMemberArray(PrimitiveSymbolicMemberArray x) {
-                    symbols.add(x);
-				}
-
-				@Override
-				public void visitPrimitiveSymbolicMemberArrayLength(PrimitiveSymbolicMemberArrayLength x) {
-                    symbols.add(x);
-				}
-
-				@Override
-				public void visitPrimitiveSymbolicMemberField(PrimitiveSymbolicMemberField x) {
-                    symbols.add(x);
-				}
- 
-                @Override
-                public void visitNarrowingConversion(NarrowingConversion x) throws Exception {
-                    x.getArg().accept(this);
-                }
-
                 @Override
                 public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) throws Exception {
                     for (Value v : x.getArgs()) {
                         if (v instanceof Primitive) {
                             ((Primitive) v).accept(this);
+                        } else {
+                        	//error: we found a reference,
+                        	//either symbolic or concrete
+                        	throw new InvalidInputException("StateFormatterJUnitTestSuite.primitiveSymbolsIn: found a subterm with reference type, this formatter currently cannot manage them.");
                         }
                     }
+                    //TODO shall we put also x?
                 }
+
+				@Override
+				public void visitPrimitiveSymbolicHashCode(PrimitiveSymbolicHashCode x) {
+                    retVal.add(x);
+				}
+
+				@Override
+				public void visitPrimitiveSymbolicLocalVariable(PrimitiveSymbolicLocalVariable x) {
+                    retVal.add(x);
+				}
+
+				@Override
+				public void visitPrimitiveSymbolicMemberArray(PrimitiveSymbolicMemberArray x) {
+                    retVal.add(x);
+				}
+
+				@Override
+				public void visitPrimitiveSymbolicMemberArrayLength(PrimitiveSymbolicMemberArrayLength x) {
+                    retVal.add(x);
+				}
+
+				@Override
+				public void visitPrimitiveSymbolicMemberField(PrimitiveSymbolicMemberField x) {
+                    retVal.add(x);
+				}
 
                 @Override
                 public void visitExpression(Expression e) throws Exception {
@@ -772,39 +896,17 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 public void visitAny(Any x) { }
            };
 
-            try {
-                e.accept(v);
-            } catch (Exception exc) {
-                //this should never happen
-                throw new AssertionError(exc);
-            }
-            return symbols;
-        }
+           //visits
+           try {
+        	   e.accept(v);
+           } catch (InvalidInputException exc) {
+        	   throw exc;
+           } catch (Exception exc) {
+        	   //this should never happen
+        	   throw new AssertionError(exc);
+           }
 
-        private void setWithNumericValue(PrimitiveSymbolic symbol, Simplex value) {
-            final boolean variableNotYetCreated = (getVariableFor(symbol) == null);
-            if (variableNotYetCreated) {
-                makeVariableFor(symbol);
-            }
-            final String var = getVariableFor(symbol);
-            if (hasMemberAccessor(var)) {
-                if (symbol.getType() == Type.BOOLEAN) {
-                    setByReflection(var, "(" + value.toString() + " != 0)");
-                } else if (symbol.getType() == Type.BYTE) {
-                    setByReflection(var, "(byte) " + value.toString());
-                } else if (symbol.getType() == Type.CHAR) {
-                    setByReflection(var, "(char) " + value.toString());
-                } else if (symbol.getType() == Type.SHORT) {
-                    setByReflection(var, "(short) " + value.toString());
-                } else {
-                    setByReflection(var, value.toString());
-                }
-            } else {
-                //TODO floating point values
-                this.s.append("long ");
-                this.s.append(var);
-                this.s.append(" = " + value.toString() + ";");
-            }
+           return retVal;
         }
     }
 }

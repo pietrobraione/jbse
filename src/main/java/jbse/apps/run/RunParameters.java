@@ -305,7 +305,15 @@ public final class RunParameters implements Cloneable {
          * covers all the symbolic states according to the
          * step show mode.  
          */
-        JUNIT_TEST
+        JUNIT_TEST,
+
+        /**
+         * Displays the result of applying the SUSHI formatter
+         * for EvoSuite, with calculation of path condition
+         * distance. Use it only in guided mode as it needs
+         * exactly one final state.
+         */
+        SUSHI_PATH_CONDITION
     }
 
     /** The runner parameters. */

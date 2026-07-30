@@ -16,11 +16,11 @@ import jbse.algo.StrategyUpdate;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.Instance;
 import jbse.mem.Objekt;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
@@ -43,7 +43,7 @@ public final class Algo_JAVA_OBJECT_CLONE extends Algo_INVOKEMETA_Nonbranching {
 
     @Override
     protected void cookMore(State state) 
-    throws InterruptException, ClasspathException, FrozenStateException {
+    throws InterruptException, ClasspathException, InvalidInputException {
         try {
             //gets the "this" object and the name of its class
             final Reference thisRef = (Reference) this.data.operand(0);

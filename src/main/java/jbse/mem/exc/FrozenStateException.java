@@ -4,7 +4,8 @@ import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
 
 /** 
- * Exception thrown whenever one attempts to mutate a frozen {@link State}.
+ * Exception thrown whenever one attempts to invoke a mutator 
+ * on a frozen {@link State}.
  * 
  * @author Pietro Braione
  *

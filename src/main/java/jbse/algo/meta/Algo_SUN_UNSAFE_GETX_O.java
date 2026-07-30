@@ -13,12 +13,12 @@ import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.KlassPseudoReference;
@@ -57,7 +57,7 @@ public abstract class Algo_SUN_UNSAFE_GETX_O extends Algo_INVOKEMETA_Nonbranchin
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
-    CannotManageStateException, InterruptException, FrozenStateException {
+    CannotManageStateException, InterruptException, InvalidInputException {
         try {           
             //gets and checks the object parameter
             final Reference objRef = (Reference) this.data.operand(1);

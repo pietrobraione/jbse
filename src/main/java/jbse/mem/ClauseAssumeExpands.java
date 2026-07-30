@@ -21,12 +21,19 @@ public final class ClauseAssumeExpands extends ClauseAssumeReferenceSymbolic {
 	 * @param referenceSymbolic a {@link ReferenceSymbolic}. 
 	 *        It must not be {@code null}.
 	 * @param heapPosition a {@code long}, a heap position.
-	 * @throws InvalidInputException if {@code referenceSymbolic == null || object == null}.
+	 * @param object the {@link HeapObjekt} at position {@code heapPosition}, 
+	 *        as it was at the beginning of symbolic execution (equivalently, 
+	 *        as it was when it was assumed).
+	 * @throws InvalidInputException if {@code referenceSymbolic == null} or 
+	 *         {@code heapPosition < }{@link Util#POS_ROOT} or {@code object == null}. 
 	 */
 	public ClauseAssumeExpands(ReferenceSymbolic referenceSymbolic, long heapPosition, HeapObjekt object) throws InvalidInputException { 
 		super(referenceSymbolic);
+		if (heapPosition < Util.POS_ROOT) {
+			throw new InvalidInputException("Tried to build a ClauseAssumeExpands with invalid heapPosition parameter.");
+		}
 		if (object == null) {
-			throw new InvalidInputException("Tried to build a " + getClass().getName() + " with null object.");
+			throw new InvalidInputException("Tried to build a ClauseAssumeExpands with null object parameter.");
 		}
 		this.heapPosition = heapPosition;
 		this.object = object.clone(); //safety copy

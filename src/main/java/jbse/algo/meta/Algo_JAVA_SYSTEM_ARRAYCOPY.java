@@ -23,7 +23,6 @@ import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
-import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_XASTORE;
 import jbse.val.Calculator;
 import jbse.val.Null;
@@ -142,7 +141,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                     destArray = (Array) state.getObject(this.dest);
                     final ClassFile destTypeComponent = destArray.getType().getMemberClass();
                     final ClasspathException[] _eCP = new ClasspathException[1]; //boxes so the next closure can store the exception
-                    final FrozenStateException[] _eFS = new FrozenStateException[1]; //boxes so the next closure can store the exception
+                    final InvalidInputException[] _eII = new InvalidInputException[1]; //boxes so the next closure can store the exception
                     final Iterator<? extends Array.AccessOutcomeIn> entries = 
                         destArray.arraycopy(calc, srcArray, this.srcPos, this.destPos, this.length,  
                                         (Reference ref) -> {
@@ -163,15 +162,15 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                                                     //then falls through
                                                 }
                                                 throw new ExitFromAlgorithmException();
-                                            } catch (FrozenStateException e) {
-                                            	_eFS[0] = e;
+                                            } catch (InvalidInputException e) {
+                                            	_eII[0] = e;
 											}
                                         });
                     if (_eCP[0] != null) {
                         throw _eCP[0];
                     }
-                    if (_eFS[0] != null) {
-                        throw _eFS[0];
+                    if (_eII[0] != null) {
+                        throw _eII[0];
                     }
                     this.ctx.decisionProcedure.completeArraycopy(entries, this.srcPos, this.destPos, this.length);
                 } catch (InvalidTypeException | InvalidInputException | ClassCastException e) {

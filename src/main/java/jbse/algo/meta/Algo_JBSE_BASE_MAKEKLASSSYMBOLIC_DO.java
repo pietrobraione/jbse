@@ -18,10 +18,10 @@ import jbse.algo.Symbolizer;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.Klass;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
@@ -37,7 +37,9 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
     }
 
     @Override
-    protected void cookMore(State state) throws FrozenStateException, SymbolicValueNotAllowedException, ClasspathException, InterruptException {
+    protected void cookMore(State state) 
+    throws InvalidInputException, SymbolicValueNotAllowedException, 
+    ClasspathException, InterruptException {
         try {
             //gets the first (int classLoader) parameter
             final Primitive definingClassLoaderPrimitive = (Primitive) this.data.operand(0);

@@ -21,7 +21,7 @@ public abstract class ClauseAssumeReferenceSymbolic implements Clause {
 	 */
 	protected ClauseAssumeReferenceSymbolic(ReferenceSymbolic referenceSymbolic) throws InvalidInputException { 
 		if (referenceSymbolic == null) {
-			throw new InvalidInputException("Tried to build a " + getClass().getName() + " with null referenceSymbolic.");
+			throw new InvalidInputException("Tried to build a ClauseAssumeReferenceSymbolic with null referenceSymbolic parameter.");
 		}
 	    this.referenceSymbolic = referenceSymbolic; 
 	}

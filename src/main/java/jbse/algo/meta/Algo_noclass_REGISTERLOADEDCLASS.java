@@ -8,9 +8,9 @@ import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.Algorithm;
 import jbse.algo.StrategyUpdate;
 import jbse.bc.ClassFile;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -35,7 +35,7 @@ public final class Algo_noclass_REGISTERLOADEDCLASS extends Algo_INVOKEMETA_Nonb
     }
     
     @Override
-    protected void cookMore(State state) throws FrozenStateException {
+    protected void cookMore(State state) throws InvalidInputException {
         try {
             //gets the classloader identifier
             final Primitive classLoaderPrimitive = (Primitive) this.data.operand(0);

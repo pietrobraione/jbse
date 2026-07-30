@@ -12,9 +12,9 @@ import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.Value;
@@ -34,7 +34,7 @@ public final class Algo_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD extends Algo_INVOKEM
 
     @Override
     protected void cookMore(State state) 
-    throws InterruptException, ClasspathException, FrozenStateException {
+    throws InterruptException, ClasspathException, InvalidInputException {
         try {
             //just sets some field of the NativeLibrary object, to simulate
             //the fact that the library is loaded

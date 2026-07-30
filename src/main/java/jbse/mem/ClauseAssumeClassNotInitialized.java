@@ -1,6 +1,7 @@
 package jbse.mem;
 
 import jbse.bc.ClassFile;
+import jbse.common.exc.InvalidInputException;
 
 /**
  * A path condition {@link Clause}, an assumption 
@@ -16,19 +17,27 @@ public class ClauseAssumeClassNotInitialized implements Clause {
     /**
      * Constructor.
      * 
-     * @param className a {@code String}, the name of the class.
-     *        It must not be {@code null}.
+     * @param classFile a {@code ClassFile}, the class assumed
+     *         to be not initialized. It must not be {@code null}.
+     * @throws InvalidInputException if {@code classFile == null}.
      */
-    public ClauseAssumeClassNotInitialized(ClassFile className) { 
-        this.classFile = className; 
+    public ClauseAssumeClassNotInitialized(ClassFile classFile) 
+    throws InvalidInputException {
+    	if (classFile == null) {
+    		throw new InvalidInputException("Tried to build a ClauseAssumeClassNotInitialized with null classFile parameter.");
+    	}
+        this.classFile = classFile; 
     }
 
     /**
-     * Returns the class name.
+     * Returns the not initialized class.
      * 
-     * @return a {@link String}, the name of the class assumed initialized.
+     * @return a {@link ClassFile}, the class assumed
+     *         to be not initialized.
      */
-    public ClassFile getClassFile() { return this.classFile; }	
+    public ClassFile getClassFile() { 
+    	return this.classFile; 
+    }	
 
     @Override
     public void accept(ClauseVisitor v) throws Exception {

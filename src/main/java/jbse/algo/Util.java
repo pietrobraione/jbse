@@ -322,8 +322,10 @@ public final class Util {
      *         {@code java.lang.String} but its value field
      *         is not a concrete array of {@code char}s.
      * @throws FrozenStateException if {@code s} is frozen.
+     * @throws InvalidInputException if {@code ref == null}.
      */
-    public static String valueString(State s, Reference ref) throws FrozenStateException {
+    public static String valueString(State s, Reference ref) 
+    throws FrozenStateException, InvalidInputException {
         final Instance i;
         try {
             i = (Instance) s.getObject(ref);
@@ -349,8 +351,10 @@ public final class Util {
      *         {@code java.lang.String} class, or its value
      *         is not a simple array of {@code char}s.
      * @throws FrozenStateException if {@code s} is frozen.
+     * @throws InvalidInputException if {@code i} is ill-formed.
      */
-    public static String valueString(State s, Instance i) throws FrozenStateException {
+    public static String valueString(State s, Instance i) 
+    throws FrozenStateException, InvalidInputException {
         final ClassFile cf_JAVA_STRING = s.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING); //surely loaded
         if (cf_JAVA_STRING == null) {
             failExecution("Could not find class java.lang.String.");

@@ -11,11 +11,11 @@ import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.HeapObjekt;
 import jbse.mem.Objekt;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
@@ -40,7 +40,7 @@ public final class Algo_JBSE_JAVA_XMAP_MAKEINITIAL extends Algo_INVOKEMETA_Nonbr
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
-    CannotManageStateException, InterruptException, FrozenStateException {
+    CannotManageStateException, InterruptException, InvalidInputException {
         try {           
             //gets the "this" object
             this.thisRef = (Reference) this.data.operand(0);

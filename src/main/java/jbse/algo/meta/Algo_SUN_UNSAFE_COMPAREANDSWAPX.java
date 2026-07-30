@@ -50,7 +50,7 @@ public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_No
     }
 
     protected abstract boolean checkCompare(State state, Value current, Value toCompare) 
-    throws CannotManageStateException, InterruptException, ClasspathException;
+    throws CannotManageStateException, InterruptException, ClasspathException, InvalidInputException;
 
     @Override
     protected final void cookMore(State state)

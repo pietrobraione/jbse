@@ -233,6 +233,24 @@ public final class Type {
     
     /**
      * Given a class name in internal format, returns
+     * its package name.
+     * 
+     * @param className a {@link String}, a class name.
+     * @return the package name, e.g., if {@code className == "a/b/C$D$E"}
+     *         returns {@code "a/b"}, and if {@code className == "x/y/Z"}
+     *         returns {@code "x/y"}.
+     */
+    public static String classNamePackage(String className) {
+    	final int lastSlashPosition = className.lastIndexOf('/');
+    	if (lastSlashPosition == -1) {
+    		return ""; //we are in the topmost (anonymous) package
+    	} else {
+    		return className.substring(0, lastSlashPosition);
+    	}
+    }
+    
+    /**
+     * Given a class name in internal format, returns
      * the topmost container class in the case it is 
      * a nested class.
      * 

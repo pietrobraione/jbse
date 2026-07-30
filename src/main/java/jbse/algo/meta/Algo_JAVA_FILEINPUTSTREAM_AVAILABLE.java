@@ -20,9 +20,9 @@ import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
 import jbse.val.Reference;
@@ -44,7 +44,7 @@ public final class Algo_JAVA_FILEINPUTSTREAM_AVAILABLE extends Algo_INVOKEMETA_N
     @Override
     protected void cookMore(State state) 
     throws InterruptException, ClasspathException, 
-    SymbolicValueNotAllowedException, FrozenStateException {
+    SymbolicValueNotAllowedException, InvalidInputException {
         final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the FileInputStream 'this' parameter and its file descriptor

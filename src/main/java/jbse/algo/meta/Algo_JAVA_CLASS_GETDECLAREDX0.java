@@ -110,7 +110,7 @@ abstract class Algo_JAVA_CLASS_GETDECLAREDX0 extends Algo_INVOKEMETA_Nonbranchin
     @Override
     protected final void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
-    CannotManageStateException, InterruptException, FrozenStateException {
+    CannotManageStateException, InterruptException, InvalidInputException {
         try {           
             //gets the classfile represented by the 'this' parameter
             final Reference thisClassRef = (Reference) this.data.operand(0);

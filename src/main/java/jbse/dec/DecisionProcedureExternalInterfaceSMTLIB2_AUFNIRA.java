@@ -19,6 +19,7 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.ExternalProtocolInterfaceException;
 import jbse.dec.exc.NoModelException;
 import jbse.mem.Objekt;
+import jbse.mem.Util;
 import jbse.val.Any;
 import jbse.val.Calculator;
 import jbse.val.Expression;
@@ -148,7 +149,7 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
     @Override
     public void sendClauseAssumeAliases(ReferenceSymbolic r, long heapPos, Objekt o) 
     throws ExternalProtocolInterfaceException {
-        if (r == null || heapPos < 0 || o == null) {
+        if (r == null || heapPos < Util.POS_ROOT || o == null) {
             throw new ExternalProtocolInterfaceException("Attempted to send an invalid clause (assume aliases).");
         }       
         if (this.hasCurrentClause) {

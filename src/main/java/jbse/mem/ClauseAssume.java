@@ -14,7 +14,7 @@ import jbse.val.Simplex;
  *
  */
 public class ClauseAssume implements Clause {
-	private final Primitive p;
+	private final Primitive condition;
 	
 	/**
 	 * Constructor.
@@ -28,20 +28,22 @@ public class ClauseAssume implements Clause {
 	 */
 	public ClauseAssume(Primitive condition) throws InvalidInputException {
 		if (condition == null) {
-			throw new InvalidInputException("Tried to build a ClauseAssume with null Primitive condition.");
+			throw new InvalidInputException("Tried to build a ClauseAssume with null condition.");
 		}
 		if (condition.getType() != Type.BOOLEAN || (! (condition instanceof Simplex) && ! (condition instanceof Expression))) {
-			throw new InvalidInputException("Tried to build a ClauseAssume with Primitive condition " + condition.toString() + ".");
+			throw new InvalidInputException("Tried to build a ClauseAssume with invalid condition " + condition.toString() + ".");
 		}
-		this.p = condition; 
+		this.condition = condition; 
 	}
 	
 	/**
 	 * Gets the assumption.
 	 * 
-	 * @return An {@link Expression}.
+	 * @return An {@link Expression} or a {@link Simplex}.
 	 */
-	public Primitive getCondition() { return this.p; }
+	public Primitive getCondition() { 
+		return this.condition; 
+	}
 	
 	@Override
 	public void accept(ClauseVisitor v) throws Exception {
@@ -52,7 +54,7 @@ public class ClauseAssume implements Clause {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((this.p == null) ? 0 : this.p.hashCode());
+		result = prime * result + ((this.condition == null) ? 0 : this.condition.hashCode());
 		return result;
 	}
 
@@ -68,11 +70,7 @@ public class ClauseAssume implements Clause {
 			return false;
 		}
 		final ClauseAssume other = (ClauseAssume) obj;
-		if (this.p == null) {
-			if (other.p != null) {
-				return false;
-			}
-		} else if (!this.p.equals(other.p)) {
+		if (!this.condition.equals(other.condition)) {
 			return false;
 		}
 		return true;
@@ -80,7 +78,7 @@ public class ClauseAssume implements Clause {
 
 	@Override
 	public String toString() {
-		return this.p.toString();
+		return this.condition.toString();
 	}
 	
 	@Override

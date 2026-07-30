@@ -64,7 +64,7 @@ public final class LocalVariableTable implements Iterable<LocalVariableTable.Row
      * @param length the length of the code.
      */
     public void addRow(int slot, String descriptor, String name, int start, int length) {
-        //silently rejects ill-formed rows
+        //silently rejects ill-formed parameters
         if (slot >= this.slots) {
             return;
         }
@@ -73,17 +73,17 @@ public final class LocalVariableTable implements Iterable<LocalVariableTable.Row
         }
 
         //gets/creates the set of rows associated to the slot number
-        final Set<Row> sub;
+        final Set<Row> rows;
         if (this.entries.containsKey(slot)) {
-            sub = this.entries.get(slot);
+            rows = this.entries.get(slot);
         } else {
-            sub = new HashSet<>();
-            this.entries.put(slot, sub);
+            rows = new HashSet<>();
+            this.entries.put(slot, rows);
         }
 
         //adds a new row to the set
         final Row r = new Row(slot, descriptor, name, start, length);
-        sub.add(r);
+        rows.add(r);
     }
 
     /**
@@ -136,28 +136,28 @@ public final class LocalVariableTable implements Iterable<LocalVariableTable.Row
     }
 
     private class MyIterator implements Iterator<Row> {
-        private Iterator<Map.Entry<Integer, Set<Row>>> itOuter;
-        private Iterator<Row> itSub;
+        private Iterator<Map.Entry<Integer, Set<Row>>> itEntries;
+        private Iterator<Row> itRows;
 
         public MyIterator() {
             //turns on the outer iterator
         	final Set<Map.Entry<Integer, Set<Row>>> entries = LocalVariableTable.this.entries.entrySet();
-            this.itOuter = entries.iterator();
-            this.itSub = null;
+            this.itEntries = entries.iterator();
+            this.itRows = null;
         }
 
         /**
-         * Checks if {@code this.itSub} is inert.
+         * Checks if {@code this.itRows} is inert.
          * 
-         * @return {@code true} iff {@code this.itSub} is 
+         * @return {@code true} iff {@code this.itRows} is 
          *         inert, i.e., iff it does not provide a next element. 
          */
-        private boolean itSubInert() {
-            return (this.itSub == null || this.itSub.hasNext() == false);
+        private boolean itRowsInert() {
+            return (this.itRows == null || this.itRows.hasNext() == false);
         }
 
         public boolean hasNext() {
-            return (!this.itSubInert() || this.itOuter.hasNext());
+            return (!this.itRowsInert() || this.itEntries.hasNext());
         }
 
         public Row next() {
@@ -165,15 +165,15 @@ public final class LocalVariableTable implements Iterable<LocalVariableTable.Row
             if (!this.hasNext())
                 throw new NoSuchElementException();
 
-            //if the inner iterator is inert, turns it on
-            if (this.itSubInert()) {
-                final Map.Entry<Integer, Set<Row>> e = this.itOuter.next();
-                final Set<Row> subEntries = e.getValue();
-                this.itSub = subEntries.iterator();
+            //if the rows iterator is inert, turns it on
+            if (this.itRowsInert()) {
+                final Map.Entry<Integer, Set<Row>> e = this.itEntries.next();
+                final Set<Row> rows = e.getValue();
+                this.itRows = rows.iterator();
             }
 
             //returns the next item
-            return this.itSub.next();
+            return this.itRows.next();
         }
 
         public void remove() {

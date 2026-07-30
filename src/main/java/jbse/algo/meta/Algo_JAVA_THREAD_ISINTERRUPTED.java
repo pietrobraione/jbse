@@ -10,9 +10,9 @@ import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance_JAVA_THREAD;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.Simplex;
@@ -35,7 +35,7 @@ public final class Algo_JAVA_THREAD_ISINTERRUPTED extends Algo_INVOKEMETA_Nonbra
     @Override
     protected void cookMore(State state) 
     throws SymbolicValueNotAllowedException, ClasspathException, 
-    InterruptException, FrozenStateException {
+    InterruptException, InvalidInputException {
         try {
             //there's only one thread in JBSE, so skips the first parameter
             //and gets the current thread from the context

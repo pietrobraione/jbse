@@ -27,7 +27,7 @@ import jbse.common.exc.UnexpectedInternalException;
  *
  */
 public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm<?, ?, ?, ?, ?>> {
-    private final Action_START        action_START       = new Action_START();
+    private final Action_START        action_START         = new Action_START();
     private final Action_INIT         action_INIT          = new Action_INIT();
     private final Algo_NOTALLOWED     algo_NOTALLOWED      = new Algo_NOTALLOWED();
     private final Algo_ACONST_NULL    algo_ACONST_NULL     = new Algo_ACONST_NULL();

@@ -14,10 +14,10 @@ import jbse.algo.StrategyRefine;
 import jbse.algo.StrategyUpdate;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.bc.ClassFile;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.mem.Array;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_XASTORE;
 import jbse.val.Calculator;
 import jbse.val.Primitive;
@@ -59,7 +59,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
     }
     
     protected abstract void arrayMemberTypeCheck(ClassFile arrayMemberType, State state, Value valueToStore) 
-    throws UndefinedResultException, FrozenStateException;
+    throws UndefinedResultException, InvalidInputException;
 
     @Override
     protected final BytecodeCooker bytecodeCooker() {

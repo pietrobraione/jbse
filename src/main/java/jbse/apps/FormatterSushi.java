@@ -30,7 +30,7 @@ public interface FormatterSushi extends Formatter {
 	 * @param stringLiterals a {@link Map}{@code <}{@link Long}{@code , }{@link String}{@code >}
 	 *        mapping the heap positions of the literals to their string values.
 	 */
-	void setStringsConstant(Map<Long, String> stringLiterals);
+	void setStringConstants(Map<Long, String> stringLiterals);
 	
 	/**
 	 * Used to pass to the formatter the set of the
@@ -40,7 +40,7 @@ public interface FormatterSushi extends Formatter {
 	 * @param stringOthers a {@link Set}{@code <}{@link Long}{@code >}
 	 *        containing the heap positions of the strings.
 	 */
-	void setStringsNonconstant(Set<Long> stringOthers);
+	void setStringNonconstants(Set<Long> stringOthers);
 	
 	/**
 	 * Used to pass to the formatter the set of 

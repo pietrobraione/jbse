@@ -15,9 +15,9 @@ import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.Util.ErrorAction;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
@@ -43,7 +43,7 @@ abstract class Algo_JAVA_METHODHANDLENATIVES_SETCALLSITETARGET extends Algo_INVO
 
 	@Override
 	protected void cookMore(State state) 
-	throws SymbolicValueNotAllowedException, FrozenStateException, InterruptException, ClasspathException {
+	throws SymbolicValueNotAllowedException, InvalidInputException, InterruptException, ClasspathException {
 		final ErrorAction THROW_JAVA_INTERNAL_ERROR = msg -> { throwNew(state, this.ctx.getCalculator(), INTERNAL_ERROR); exitFromAlgorithm(); };
 
 		//gets the first parameter (the CallSite)

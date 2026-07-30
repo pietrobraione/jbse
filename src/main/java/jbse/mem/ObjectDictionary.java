@@ -87,13 +87,13 @@ final class ObjectDictionary implements Cloneable {
      * {@link Instance_JAVA_CLASS}es for the same class. This
      * holds only for nonprimitive types. 
      */
-    private HashMap<ClassFile, ReferenceConcrete> classesNonprimitive = new HashMap<>();
+    private HashMap<ClassFile, ReferenceConcrete> javaClassesNonprimitive = new HashMap<>();
 
     /** 
      * Maps the names of primitive types to The {@link ReferenceConcrete}s to 
      * {@link Instance_JAVA_CLASS}es for the same primitive type. 
      */
-    private HashMap<String, ReferenceConcrete> classesPrimitive = new HashMap<>();
+    private HashMap<String, ReferenceConcrete> javaClassesPrimitive = new HashMap<>();
     
     /** 
      * Maps classloader identifiers (the position in the list) to 
@@ -130,27 +130,27 @@ final class ObjectDictionary implements Cloneable {
     }
     
     void putClassNonprimitive(ClassFile classFile, ReferenceConcrete referenceClass) {
-    	this.classesNonprimitive.put(classFile, referenceClass);
+    	this.javaClassesNonprimitive.put(classFile, referenceClass);
     }
     
     boolean hasClassNonprimitive(ClassFile classFile) {
-    	return this.classesNonprimitive.containsKey(classFile);
+    	return this.javaClassesNonprimitive.containsKey(classFile);
     }
     
     ReferenceConcrete getClassNonprimitive(ClassFile classFile) {
-    	return this.classesNonprimitive.get(classFile);
+    	return this.javaClassesNonprimitive.get(classFile);
     }
     
     void putClassPrimitive(String typeName, ReferenceConcrete referenceClass) {
-    	this.classesPrimitive.put(typeName, referenceClass);
+    	this.javaClassesPrimitive.put(typeName, referenceClass);
     }
     
     boolean hasClassPrimitive(String typeName) {
-    	return this.classesPrimitive.containsKey(typeName);
+    	return this.javaClassesPrimitive.containsKey(typeName);
     }
     
     ReferenceConcrete getClassPrimitive(String typeName) {
-    	return this.classesPrimitive.get(typeName);
+    	return this.javaClassesPrimitive.get(typeName);
     }
     
     void addClassLoader(ReferenceConcrete referenceClassLoader) {
@@ -195,8 +195,8 @@ final class ObjectDictionary implements Cloneable {
     Collection<ReferenceConcrete> getReferences() {
     	final HashSet<ReferenceConcrete> retVal = new HashSet<>();
     	retVal.addAll(this.stringLiterals.values());
-    	retVal.addAll(this.classesNonprimitive.values());
-    	retVal.addAll(this.classesPrimitive.values());
+    	retVal.addAll(this.javaClassesNonprimitive.values());
+    	retVal.addAll(this.javaClassesPrimitive.values());
     	retVal.addAll(this.classLoaders);
     	retVal.addAll(this.methodTypes.values());
     	retVal.addAll(this.methodHandles.values());
@@ -213,8 +213,8 @@ final class ObjectDictionary implements Cloneable {
         }
         
         o.stringLiterals = new HashMap<>(o.stringLiterals);
-        o.classesNonprimitive = new HashMap<>(o.classesNonprimitive);
-        o.classesPrimitive = new HashMap<>(o.classesPrimitive);
+        o.javaClassesNonprimitive = new HashMap<>(o.javaClassesNonprimitive);
+        o.javaClassesPrimitive = new HashMap<>(o.javaClassesPrimitive);
         o.classLoaders = new ArrayList<>(o.classLoaders);
         o.methodTypes = new HashMap<>(o.methodTypes);
         o.methodHandles = new HashMap<>(o.methodHandles);

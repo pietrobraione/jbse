@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.val.KlassPseudoReference;
 import jbse.val.Null;
 import jbse.val.Primitive;
@@ -59,30 +60,6 @@ public class Util {
 	}
 	
 	/**
-	 * Checks whether a {@link Value} is a resolved symbolic 
-	 * {@link Reference}.
-	 * 
-	 * @param s a {@link State}. It must not be {@code null}.
-	 * @param v a {@link Value}. It must not be {@code null}.
-	 * @return {@code true} iff {@code v} is a symbolic 
-	 * {@link Reference} resolved in {@code s}.
-	 */
-	public static boolean isResolvedSymbolicReference(List<Clause> l, Value v) {
-		if (!isSymbolicReference(v)) {
-			return false;
-		}
-        for (Clause c : l) {
-        	if (c instanceof ClauseAssumeReferenceSymbolic) {
-        		final ClauseAssumeReferenceSymbolic cr = (ClauseAssumeReferenceSymbolic) c;
-        		if (cr.getReference().equals(v)) {
-        			return true;
-        		}
-        	}
-        }
-        return false;
-	}
-	
-	/**
 	 * Checks whether a {@link Reference} is null. 
 	 * 
 	 * @param s a {@link State}. It must not be {@code null}.
@@ -90,8 +67,12 @@ public class Util {
 	 * @return {@code true} iff {@code r} is a symbolic 
 	 * {@link Reference} resolved to null in {@code s}, or the 
 	 * {@link Null} concrete reference.
+	 * @throws InvalidInputException if {@code s == null} or {@code r == null}. 
 	 */
-	public static boolean isNull(State s, Reference r) {
+	public static boolean isNull(State s, Reference r) throws InvalidInputException {
+		if (s == null || r == null) {
+			throw new InvalidInputException("jbse.mem.Util.isNull invoked with null parameter.");
+		}
 		return (r.isSymbolic() && s.getResolution((ReferenceSymbolic) r) == POS_NULL) ||
 			   (!r.isSymbolic() && ((ReferenceConcrete) r).isNull());
 	}
@@ -106,8 +87,14 @@ public class Util {
 	 *         the same heap position (i.e. either {@code r1 == r2}
 	 *         or they are both resolved to the same heap position), 
 	 *         {@code false} otherwise.
+	 * @throws InvalidInputException if {@code s == null} or {@code r1 == null}
+	 *         or {@code r2 == null}. 
 	 */
-	public static boolean areAlias(State s, Reference r1, Reference r2) {
+	public static boolean areAlias(State s, Reference r1, Reference r2) 
+	throws InvalidInputException {
+		if (s == null || r1 == null || r2 == null) {
+			throw new InvalidInputException("jbse.mem.Util.areAlias invoked with null parameter.");
+		}
 		final long r1Pos = heapPosition(s, r1);
 		final long r2Pos = heapPosition(s, r2);
 		if (r1Pos == POS_UNKNOWN || r2Pos == POS_UNKNOWN) {
@@ -126,8 +113,13 @@ public class Util {
 	 * @return {@code true} if {@code r1} and {@code r2} surely denote 
 	 *         different heap position (i.e. they are both resolved 
 	 *         to different heap position), {@code false} otherwise.
+	 * @throws InvalidInputException if {@code s == null} or {@code r1 == null}
+	 *         or {@code r2 == null}. 
 	 */
-	public static boolean areNotAlias(State s, Reference r1, Reference r2) {
+	public static boolean areNotAlias(State s, Reference r1, Reference r2) throws InvalidInputException {
+		if (s == null || r1 == null || r2 == null) {
+			throw new InvalidInputException("jbse.mem.Util.areNotAlias invoked with null parameter.");
+		}
 		final long r1Pos = heapPosition(s, r1);
 		final long r2Pos = heapPosition(s, r2);
 		if (r1Pos == POS_UNKNOWN || r2Pos == POS_UNKNOWN) {
@@ -140,13 +132,18 @@ public class Util {
 	/**
 	 * Returns the position in the heap a {@link Reference} points to
 	 * 
-	 * @param s a {@link State}.
-	 * @param r a {@link Reference}.
+	 * @param s a {@link State}. It must not be {@code null}.
+	 * @param r a {@link Reference}. It must not be {@code null}.
 	 * @return a {@code long}, the position in the heap of {@code s} to
 	 *         which {@code r} points, or {@link #POS_UNKNOWN} if
 	 *         {@code r} is not resolved.
+	 * @throws InvalidInputException if {@code s == null} or {@code r == null}.
 	 */
-	public static long heapPosition(State s, Reference r) {
+	public static long heapPosition(State s, Reference r) 
+	throws InvalidInputException {
+		if (s == null || r == null) {
+			throw new InvalidInputException("jbse.mem.Util.heapPosition invoked with null parameter.");
+		}
 		if (isResolved(s.getPathCondition(), r)) {
 	        return (r.isSymbolic() ? s.getResolution((ReferenceSymbolic) r) : ((ReferenceConcrete) r).getHeapPosition());
 		}
@@ -162,6 +159,7 @@ public class Util {
 	 * either is a {@link Primitive} (symbolic or not), or a 
 	 * concrete {@link Reference}, or a symbolic 
 	 * {@link Reference} resolved in {@code s}.
+	 * @throws InvalidInputException if {@code s == null} or {@code v == null}.
 	 */
 	public static boolean isResolved(State s, Value v) {
 		return
@@ -170,6 +168,32 @@ public class Util {
         v instanceof ReferenceArrayImmaterial ||
         v instanceof KlassPseudoReference ||
 		isResolvedSymbolicReference(s, v);
+	}
+	
+	/**
+	 * Checks whether a {@link Value} is a resolved symbolic 
+	 * {@link Reference}.
+	 * 
+	 * @param l a {@link List}{@code <}{@link Clause}{@code >}. 
+	 *        It must not be {@code null}.
+	 * @param v a {@link Value}. It must not be {@code null}.
+	 * @return {@code true} iff {@code v} is a symbolic 
+	 *         {@link Reference} for which there is a 
+	 *         resolution clause in {@code l}.
+	 */
+	private static boolean isResolvedSymbolicReference(List<Clause> l, Value v) {
+		if (!isSymbolicReference(v)) {
+			return false;
+		}
+        for (Clause c : l) {
+        	if (c instanceof ClauseAssumeReferenceSymbolic) {
+        		final ClauseAssumeReferenceSymbolic cr = (ClauseAssumeReferenceSymbolic) c;
+        		if (cr.getReference().equals(v)) {
+        			return true;
+        		}
+        	}
+        }
+        return false;
 	}
 	
 	/**
@@ -183,7 +207,11 @@ public class Util {
 	 * concrete {@link Reference}, or a symbolic 
 	 * {@link Reference} resolved by some {@link Clause} in {@code l}.
 	 */
-	public static boolean isResolved(List<Clause> l, Value v) {
+	public static boolean isResolved(List<Clause> l, Value v) 
+	throws InvalidInputException {
+		if (l == null || v == null) {
+			throw new InvalidInputException("jbse.mem.Util.isResolved invoked with null parameter.");
+		}
 		return
 		isPrimitive(v.getType()) ||
 		v instanceof ReferenceConcrete ||

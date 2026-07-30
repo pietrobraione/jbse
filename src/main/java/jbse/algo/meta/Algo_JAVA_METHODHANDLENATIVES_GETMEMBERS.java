@@ -81,7 +81,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_GETMEMBERS extends Algo_INVOKEM
 	private static final String THIS_METHOD = "java.lang.invoke.MethodHandleNatives.getMembers";
 
 	@Override
-	protected void cookMore(State state) throws SymbolicValueNotAllowedException, FrozenStateException, 
+	protected void cookMore(State state) throws SymbolicValueNotAllowedException, InvalidInputException, 
 	InterruptException, ClasspathException {
 		//checks and gets the parameters, exits when trivial results
 		this.justReturnMinusOne = false;

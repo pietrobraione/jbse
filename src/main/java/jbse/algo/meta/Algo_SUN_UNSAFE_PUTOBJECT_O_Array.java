@@ -3,9 +3,9 @@ package jbse.algo.meta;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.val.Reference;
 import jbse.val.Value;
 
@@ -24,7 +24,7 @@ public final class Algo_SUN_UNSAFE_PUTOBJECT_O_Array extends Algo_SUN_UNSAFE_PUT
 	
 	@Override
 	protected void arrayMemberTypeCheck(ClassFile arrayMemberType, State state, Value valueToStore) 
-	throws UndefinedResultException, FrozenStateException {
+	throws UndefinedResultException, InvalidInputException {
         if (arrayMemberType.isReference() || arrayMemberType.isArray()) {
             final Reference valueToStoreRef = (Reference) valueToStore;
             final Objekt o = state.getObject(valueToStoreRef);

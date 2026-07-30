@@ -23,9 +23,10 @@ public class ClauseAssumeClassInitialized implements Clause {
      * @param k the symbolic or concrete initial {@link Klass} corresponding to 
      *        {@code classFile}. In the latter case, {@code k} is zeroed.
      *        It must not be {@code null}.  
-     * @throws InvalidInputException if {@code classFile == null || k == null}.
+     * @throws InvalidInputException if {@code classFile == null} or {@code k == null}.
      */
-    public ClauseAssumeClassInitialized(ClassFile classFile, Klass k) throws InvalidInputException {
+    public ClauseAssumeClassInitialized(ClassFile classFile, Klass k) 
+    throws InvalidInputException {
         if (classFile == null || k == null) {
             throw new InvalidInputException("Tried to build a ClauseAssumeClassInitialized with null classFile or k parameter.");
         }
@@ -42,18 +43,8 @@ public class ClauseAssumeClassInitialized implements Clause {
         return this.classFile;
     }
     
-    /**
-     * Checks whether the initial {@link Klass} is
-     * symbolic.
-     * 
-     * @return {@code true} iff it is symbolic.
-     */
-    public boolean isSymbolic() {
-        return this.k.isSymbolic();
-    }
-
-    Klass getKlass() { 
-        return (this.k == null ? null : this.k.clone()); //preserves the safety copy
+    Klass getKlass() { //used only by State for refinement
+        return this.k.clone(); //preserves the safety copy
     }
 
     @Override
@@ -65,9 +56,8 @@ public class ClauseAssumeClassInitialized implements Clause {
     public int hashCode() {
         final int prime = 89;
         int result = 1;
-        result = prime * result
-        + ((this.classFile == null) ? 0 : this.classFile.hashCode());
-        result = prime * result + ((this.k == null) ? 0 : this.k.hashCode());
+        result = prime * result + this.classFile.hashCode();
+        result = prime * result + this.k.hashCode();
         return result;
     }
 
@@ -83,11 +73,7 @@ public class ClauseAssumeClassInitialized implements Clause {
             return false;
         }
         final ClauseAssumeClassInitialized other = (ClauseAssumeClassInitialized) obj;
-        if (this.classFile == null) {
-            if (other.classFile != null) {
-                return false;
-            }
-        } else if (!this.classFile.equals(other.classFile)) {
+        if (!this.classFile.equals(other.classFile)) {
             return false;
         }
         return true;

@@ -23,11 +23,19 @@ public final class ClauseAssumeAliases extends ClauseAssumeReferenceSymbolic {
 	 *        the position of an object assumed by a previous expansion. 
 	 * @param object the {@link HeapObjekt} at position {@code heapPosition}, 
 	 *        as it was at the beginning of symbolic execution (equivalently, 
-	 *        as it was when it was assumed).
-	 * @throws InvalidInputException if {@code referenceSymbolic == null || object == null}. 
+	 *        as it was when it was assumed at the expansion of its origin).
+	 * @throws InvalidInputException if {@code referenceSymbolic == null} or 
+	 *         {@code heapPosition < }{@link Util#POS_ROOT} or {@code object == null}. 
 	 */
-	public ClauseAssumeAliases(ReferenceSymbolic referenceSymbolic, long heapPosition, HeapObjekt object) throws InvalidInputException { 
+	public ClauseAssumeAliases(ReferenceSymbolic referenceSymbolic, long heapPosition, HeapObjekt object) 
+	throws InvalidInputException { 
 		super(referenceSymbolic);
+		if (heapPosition < Util.POS_ROOT) {
+			throw new InvalidInputException("Tried to build a ClauseAssumeAliases with invalid heapPosition parameter.");
+		}
+		if (object == null) {
+			throw new InvalidInputException("Tried to build a ClauseAssumeAliases with null object parameter.");
+		}
 		this.heapPosition = heapPosition;
 		this.object = object;
 	}

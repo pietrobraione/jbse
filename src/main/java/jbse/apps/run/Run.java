@@ -1,5 +1,7 @@
 package jbse.apps.run;
 
+import static jbse.common.Type.classNamePackage;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
@@ -24,6 +26,7 @@ import jbse.apps.StateFormatterJUnitTestSuite;
 import jbse.apps.StateFormatterText;
 import jbse.apps.Stats;
 import jbse.apps.StateFormatterPath;
+import jbse.apps.StateFormatterSushiPathCondition;
 import jbse.apps.Timer;
 import jbse.apps.Util;
 import jbse.apps.run.RunParameters.DecisionProcedureCreationStrategy;
@@ -863,17 +866,23 @@ public final class Run {
      * @throws CannotBuildFormatterException upon failure.
      */
     private void createFormatter() throws CannotBuildFormatterException {
-        final StateFormatMode type = this.parameters.getStateFormatMode();
-        if (type == StateFormatMode.FULLTEXT) {
+        final StateFormatMode formatterType = this.parameters.getStateFormatMode();
+        if (formatterType == StateFormatMode.FULLTEXT) {
             this.formatter = new StateFormatterText(this.parameters.getSourcePath(), true);
-        } else if (type == StateFormatMode.TEXT) {
+        } else if (formatterType == StateFormatMode.TEXT) {
             this.formatter = new StateFormatterText(this.parameters.getSourcePath(), false);
-        } else if (type == StateFormatMode.GRAPHVIZ) {
+        } else if (formatterType == StateFormatMode.GRAPHVIZ) {
             this.formatter = new StateFormatterGraphviz();
-        } else if (type == StateFormatMode.PATH) {
+        } else if (formatterType == StateFormatMode.PATH) {
             this.formatter = new StateFormatterPath();
-        } else if (type == StateFormatMode.JUNIT_TEST) {
+        } else if (formatterType == StateFormatMode.JUNIT_TEST) {
             this.formatter = new StateFormatterJUnitTestSuite(this::getInitialState, this::getModel);
+        } else if (formatterType == StateFormatMode.SUSHI_PATH_CONDITION) {
+        	//gets the package name of the class under test
+        	//and creates the formatter
+        	final String className = this.parameters.getMethodSignature().getClassName();
+        	final String packageName = classNamePackage(className);
+            this.formatter = new StateFormatterSushiPathCondition(packageName, 0L, this::getInitialState, false);
         } else {
             throw new CannotBuildFormatterException(ERROR_UNDEF_STATE_FORMAT);
         }
@@ -1081,11 +1090,11 @@ public final class Run {
      * Emits the prologue of the symbolic execution.
      */
     private void emitPrologue() {
-    	final long timestampStart = System.currentTimeMillis();
+    	final long startMillis = System.currentTimeMillis();
         this.formatter.cleanup();
         this.formatter.formatPrologue();
         outNoBreak(this.formatter.emit());
-        this.elapsedTimeEmit += System.currentTimeMillis() - timestampStart;
+        this.elapsedTimeEmit += System.currentTimeMillis() - startMillis;
     }
 
     /**
@@ -1094,22 +1103,22 @@ public final class Run {
      * @param s the {@link State} to be emitted.
      */
     private void emitState(State s) {
-    	final long timestampStart = System.currentTimeMillis();
+    	final long startMillis = System.currentTimeMillis();
         this.formatter.cleanup();
         this.formatter.formatState(s);
         outNoBreak(this.formatter.emit());
-        this.elapsedTimeEmit += System.currentTimeMillis() - timestampStart;
+        this.elapsedTimeEmit += System.currentTimeMillis() - startMillis;
     }
 
     /**
      * Emits the epilogue of the symbolic execution.
      */
     private void emitEpilogue() {
-    	final long timestampStart = System.currentTimeMillis();
+    	final long startMillis = System.currentTimeMillis();
         this.formatter.cleanup();
         this.formatter.formatEpilogue();
         outNoBreak(this.formatter.emit());
-        this.elapsedTimeEmit += System.currentTimeMillis() - timestampStart;
+        this.elapsedTimeEmit += System.currentTimeMillis() - startMillis;
     }
 
     /**

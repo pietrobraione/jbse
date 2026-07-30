@@ -11,9 +11,9 @@ import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.Simplex;
@@ -33,7 +33,7 @@ public final class Algo_JAVA_CLASS_ISINTERFACE extends Algo_INVOKEMETA_Nonbranch
 
     @Override
     protected void cookMore(State state) 
-    throws InterruptException, ClasspathException, FrozenStateException {
+    throws InterruptException, ClasspathException, InvalidInputException {
         try {
             final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject((Reference) this.data.operand(0));
             if (clazz == null) {

@@ -6,11 +6,11 @@ import static jbse.common.Type.parametersNumber;
 
 import java.util.function.Supplier;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.Variable;
-import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -42,7 +42,7 @@ public final class Algo_INVOKEMETA_Uninterpreted extends Algo_INVOKEMETA_Nonbran
     }
 
     @Override
-    protected void cookMore(State state) throws InterruptException, FrozenStateException {
+    protected void cookMore(State state) throws InterruptException, InvalidInputException {
     	//if this algorithm is overriding a native method, the only
     	//possible alternative is trying to execute it metacircularly
     	if (this.isOverriddenMethodNative) {
@@ -77,7 +77,7 @@ public final class Algo_INVOKEMETA_Uninterpreted extends Algo_INVOKEMETA_Nonbran
     	}
     }
     
-    private static boolean isSimple(State state, Reference objRef) throws FrozenStateException {
+    private static boolean isSimple(State state, Reference objRef) throws InvalidInputException {
 		if (state.isNull(objRef)) {
 			return true;
 		}

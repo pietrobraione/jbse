@@ -4,11 +4,11 @@ import java.util.Map;
 
 import jbse.bc.Signature;
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance;
 import jbse.mem.Klass;
 import jbse.mem.Objekt;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
@@ -42,7 +42,7 @@ public class StateFormatterGraphviz implements Formatter {
         this.output += "digraph \"" + s.getBranchIdentifier() + "[" + s.getSequenceNumber() + "]\"" + " { ";
         try {
 			this.output += this.formatHeap(s);
-		} catch (FrozenStateException e) {
+		} catch (InvalidInputException e) {
 	        this.output = "";
 	        return;
 		}
@@ -60,7 +60,7 @@ public class StateFormatterGraphviz implements Formatter {
         this.output = "";
     }
 
-    private String formatHeap(State s) throws FrozenStateException {
+    private String formatHeap(State s) throws InvalidInputException {
         final Map<Long, Objekt> h = s.getHeap();
         String retVal = ""; //= "subgraph cluster_heap { label=\"heap\" labeljust=l ";
         this.currentNodePrefix = "H";
@@ -109,7 +109,7 @@ public class StateFormatterGraphviz implements Formatter {
 		return retVal;
 	}*/
 
-    private String formatObject(State s, Objekt o) {
+    private String formatObject(State s, Objekt o) throws InvalidInputException {
         if (o instanceof Instance || o instanceof Klass) {
             for (Signature sig : o.getStoredFieldSignatures()) {
                 if (Type.isArray(sig.getDescriptor()) ||

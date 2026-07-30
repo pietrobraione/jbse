@@ -14,10 +14,10 @@ import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.bc.Signature;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Instance;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
@@ -48,7 +48,7 @@ public final class Algo_noclass_STORELINKEDMETHODADAPTERANDAPPENDIX extends Algo
     @Override
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
-    CannotManageStateException, InterruptException, FrozenStateException {
+    CannotManageStateException, InterruptException, InvalidInputException {
         final String methodName = valueString(state, (ReferenceConcrete) this.data.operand(0));
         final Instance methodType = (Instance) state.getObject((ReferenceConcrete) this.data.operand(1));
         final String methodDescriptor = valueString(state, (Reference) methodType.getFieldValue(JAVA_METHODTYPE_METHODDESCRIPTOR));

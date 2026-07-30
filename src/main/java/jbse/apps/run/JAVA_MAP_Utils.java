@@ -82,6 +82,26 @@ public final class JAVA_MAP_Utils {
 		}				
 	}
 
+	public static String possiblyAdaptMapModelSymbols(String originString) {
+		final String initialMapFieldRegex = "\\.[^\\.]*Map:" + INITIAL_MAP_FIELD_NAME;
+		final String originStringNoInitialMap;
+		if (originString.matches(".*" + initialMapFieldRegex + ".*")) {
+			originStringNoInitialMap = originString.replaceAll(initialMapFieldRegex, "");
+		} else {
+			originStringNoInitialMap = originString;
+		}
+		final String retVal;
+		if (originStringNoInitialMap.contains(GET_SIGIL)) {
+			final String mapRef = originStringNoInitialMap.substring(0, originStringNoInitialMap.indexOf(GET_SIGIL));
+			String keyRef = originStringNoInitialMap.substring(originStringNoInitialMap.indexOf(GET_SIGIL) + GET_SIGIL.length());
+			keyRef = keyRef.substring(0, keyRef.indexOf(')'));
+			retVal = "<" + JAVA_MAP_GET.toString() + "@" + mapRef + "," + keyRef + ">";
+		} else {
+			retVal = originStringNoInitialMap;
+		}
+		return retVal;
+	}
+
 	//only tardis
 	public static boolean mapModelAssumptionViolated(ClassHierarchy hier, Clause clause) {
 		if (clause instanceof ClauseAssumeReferenceSymbolic) {
@@ -102,27 +122,6 @@ public final class JAVA_MAP_Utils {
 			}
 		}
 		return false;
-	}
-
-	//only sushi-lib
-	public static String possiblyAdaptMapModelSymbols(String origin) {
-		final String INITIAL_MAP_FIELD_FULL = "\\.[^\\.]*Map:" + INITIAL_MAP_FIELD_NAME;
-		final String originNoInitialMap;
-		if (origin.matches(".*" + INITIAL_MAP_FIELD_FULL + ".*")) {
-			originNoInitialMap = origin.replaceAll(INITIAL_MAP_FIELD_FULL, "");
-		} else {
-			originNoInitialMap = origin;
-		}
-		final String retVal;
-		if (originNoInitialMap.contains(GET_SIGIL)) {
-			final String mapRef = originNoInitialMap.substring(0, originNoInitialMap.indexOf(GET_SIGIL));
-			String keyRef = originNoInitialMap.substring(originNoInitialMap.indexOf(GET_SIGIL) + GET_SIGIL.length());
-			keyRef = keyRef.substring(0, keyRef.indexOf(')'));
-			retVal = "<" + JAVA_MAP_GET.toString() + "@" + mapRef + "," + keyRef + ">";
-		} else {
-			retVal = originNoInitialMap;
-		}
-		return retVal;
 	}
 	
     /**

@@ -1288,7 +1288,7 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
 					throw new GuidanceException(ERROR_BAD_HISTORY_POINT + historyPoint.toString());
 				}
 				return state.getObject(reference);
-			} catch (FrozenStateException e) {
+			} catch (InvalidInputException e) {
 				//this should never happen
 				throw new UnexpectedInternalException(e);
 			}

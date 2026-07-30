@@ -79,7 +79,7 @@ public final class InitialHeapChecker {
         try {
         	//runs the check methods on all the instances in the heap 
         	for (long heapPos : sIni.getHeap().keySet()) {
-        		final Reference objectRef = new ReferenceConcrete(heapPos);
+        		final ReferenceConcrete objectRef = new ReferenceConcrete(heapPos);
         		final HeapObjekt obj = sIni.getObject(objectRef);
         		if (obj.isSymbolic()) {
         			final Signature methodSignature = this.checkMethodTable.findCheckMethod(obj.getType(), sIni);
@@ -95,7 +95,7 @@ public final class InitialHeapChecker {
         			}
         		}
         	}
-        } catch (DecisionException | FrozenStateException |
+        } catch (DecisionException | InvalidInputException |
                 InitializationException | InvalidClassFileFactoryClassException | 
                 NonexistingObservedVariablesException |  
                 CannotBacktrackException | EngineStuckException | CannotManageStateException | 

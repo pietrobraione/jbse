@@ -12,9 +12,9 @@ import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
@@ -28,7 +28,7 @@ public final class Algo_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED extends Algo_INV
     
     @Override
     protected void cookMore(State state) 
-    throws ClasspathException, InterruptException, FrozenStateException {
+    throws ClasspathException, InterruptException, InvalidInputException {
         Reference javaClassRef = null; //to keep the compiler happy
         try {
             javaClassRef = (Reference) this.data.operand(0);

@@ -43,12 +43,12 @@ import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.Instance;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
@@ -74,7 +74,7 @@ public final class Algo_JAVA_EXECUTABLE_GETPARAMETERS0 extends Algo_INVOKEMETA_N
 
     @Override
     protected void cookMore(State state) 
-    throws FrozenStateException, SymbolicValueNotAllowedException, ClasspathException, InterruptException {
+    throws InvalidInputException, SymbolicValueNotAllowedException, ClasspathException, InterruptException {
         final Calculator calc = this.ctx.getCalculator();
         try {           
             //gets the Executable represented by 'this'

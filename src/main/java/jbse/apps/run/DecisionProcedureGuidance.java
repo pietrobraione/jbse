@@ -34,7 +34,6 @@ import jbse.mem.State;
 import jbse.mem.SwitchTable;
 import jbse.mem.State.Phase;
 import jbse.mem.exc.ContradictionException;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XALOAD;
@@ -407,7 +406,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             final ReferenceSymbolic aliasOrigin;
             try {
                 aliasOrigin = state.getObject(new ReferenceConcrete(dara.getObjectPosition())).getOrigin();
-            } catch (FrozenStateException e) {
+            } catch (InvalidInputException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             }

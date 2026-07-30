@@ -1,6 +1,5 @@
 package jbse.algo.meta;
 
-
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
@@ -10,11 +9,11 @@ import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.Instance_METALEVELBOX;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
@@ -50,7 +49,7 @@ public final class Algo_noclass_STORELINKEDCALLSITEADAPTERANDAPPENDIX extends Al
     @Override
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
-    CannotManageStateException, InterruptException, FrozenStateException {
+    CannotManageStateException, InterruptException, InvalidInputException {
     	final Instance_JAVA_CLASS containerClassInstance = (Instance_JAVA_CLASS) state.getObject((Reference) this.data.operand(2));
     	this.containerClass = containerClassInstance.representedClass();
     	final Instance_METALEVELBOX bDescriptor = (Instance_METALEVELBOX) state.getObject((Reference) this.data.operand(3));

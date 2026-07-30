@@ -30,9 +30,9 @@ final class Heap implements Cloneable {
     private TreeMap<Long, HeapObjekt> objects; //nonfinal to allow cloning
     
     /**
-     * The next available heap position.
+     * The next free heap position.
      */
-    private long nextIndex;
+    private long nextFreePosition;
     
     /**
      * Constructor.
@@ -44,7 +44,7 @@ final class Heap implements Cloneable {
     	this.delegate = null;
         this.maxHeapSize = maxHeapSize;
         this.objects = new TreeMap<>();
-        this.nextIndex = Util.POS_ROOT;
+        this.nextFreePosition = Util.POS_ROOT;
     }
 
     /**
@@ -75,17 +75,17 @@ final class Heap implements Cloneable {
      *         where {@code item} is stored.
      */
     long addNewSurely(HeapObjektImpl item) {
-        //finds a free index
-        while (existsAt(this.nextIndex)) {
-            if (this.nextIndex == Long.MAX_VALUE) {
+        //finds a free position
+        while (existsAt(this.nextFreePosition)) {
+            if (this.nextFreePosition == Long.MAX_VALUE) {
                 throw new UnexpectedInternalException("Heap space exhausted.");
             }
-            ++this.nextIndex;
+            ++this.nextFreePosition;
         }
         
         //puts the object
-        this.objects.put(this.nextIndex, item);
-        return this.nextIndex;
+        this.objects.put(this.nextFreePosition, item);
+        return this.nextFreePosition;
     }
     
     /**

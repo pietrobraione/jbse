@@ -11,10 +11,10 @@ import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
@@ -38,7 +38,7 @@ public final class Algo_JAVA_STRING_HASHCODE extends Algo_INVOKEMETA_Nonbranchin
     @Override
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, InterruptException, 
-    ClasspathException, FrozenStateException {
+    ClasspathException, InvalidInputException {
         try {
             final Reference thisReference = (Reference) this.data.operand(0);
             final Objekt thisObject = state.getObject(thisReference);

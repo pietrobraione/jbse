@@ -890,40 +890,54 @@ public final class State implements Cloneable {
      * unwinding, sets the state to stuck with the unhandled exception
      * throw as a cause.
      * 
-     * @param exceptionToThrow a {@link Reference} to a throwable 
+     * @param exceptionToThrowReference a {@link Reference} to a throwable 
      *        {@link Objekt} in the state's {@link Heap}.
-     * @throws InvalidInputException if the state is frozen, or 
-     *         {@code exceptionToThrow} is an unresolved symbolic reference, 
-     *         or is a null reference, or is a reference to an object that 
-     *         does not extend {@code java.lang.Throwable}.
+     * @throws FrozenStateException if the state is frozen. 
+     * @throws InvalidInputException if {@code exceptionToThrow == null}
+     *         of {@code exceptionToThrow} is an unresolved symbolic 
+     *         reference, or is the concrete {@link Null} reference, or 
+     *         is a symbolic reference resolved to {@code null}, or is a 
+     *         reference to an object that does not extend {@code java.lang.Throwable}.
      * @throws InvalidIndexException if the exception type field in a row of the exception table 
      *         does not contain the index of a valid CONSTANT_Class in the class constant pool.
      * @throws InvalidProgramCounterException if the program counter handle in a row 
      *         of the exception table does not contain a valid program counter.
      */
-    public void unwindStack(Reference exceptionToThrow) 
-    throws InvalidInputException, InvalidIndexException, InvalidProgramCounterException {
+    public void unwindStack(Reference exceptionToThrowReference) 
+    throws FrozenStateException, InvalidInputException, InvalidIndexException, InvalidProgramCounterException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        //checks that exceptionToThrow is resolved to a throwable Objekt
-        final Objekt myException = getObject(exceptionToThrow);
+    	if (exceptionToThrowReference == null) {
+    		throw new InvalidInputException("Invoked State.unwindStack with null exceptionToThrow parameter.");
+    	}
+        //tries to get the exception object with 
+    	//exceptionToThrow, if fails throws an exception
+    	//and checks that it is
+    	//resolved to a throwable Objekt
+        final Objekt exceptionToThrowObject = getObject(exceptionToThrowReference);
+        if (exceptionToThrowObject == null) {
+            throw new InvalidInputException("Invoked State.unwindStack with an exceptionToThrowReference parameter that does not correspond to any Objekt in the state's heap.");
+        }
+        
+        //checks that ExceptionToThrowObject implements java.lang.Throwable
         final ClassFile cf_JAVA_THROWABLE;
         try {
             cf_JAVA_THROWABLE = this.classHierarchy.loadCreateClass(JAVA_THROWABLE);
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
                  RenameUnsupportedException | WrongClassNameException | IncompatibleClassFileException |
                  InvalidInputException | ClassFileNotAccessibleException e) {
-            //this should never happen
+            //this should never happen - Throwable is a primordial standard class
             throw new UnexpectedInternalException(e);
         }
-        if (myException == null || !myException.getType().isSubclass(cf_JAVA_THROWABLE)) {
-            throw new InvalidInputException("Attempted to throw an unresolved or null reference, or a reference to an object that is not Throwable.");
+        if (!exceptionToThrowObject.getType().isSubclass(cf_JAVA_THROWABLE)) {
+            throw new InvalidInputException("Invoked State.unwindStack with an exceptionToThrowReference parameter that refers an Objekt that does not implement java.lang.Throwable.");
         }
 
-        //fills a vector with all the superclass names of the exception
+        //fills a vector with the names of all the superclasses
+        //of the exception object
         final ArrayList<String> excTypes = new ArrayList<>();
-        for (ClassFile f : myException.getType().superclasses()) {
+        for (ClassFile f : exceptionToThrowObject.getType().superclasses()) {
             excTypes.add(f.getClassName());
         }
 
@@ -932,7 +946,7 @@ public final class State implements Cloneable {
             while (true) {
                 if (this.stack.isEmpty()) {
                 	if (phase() == Phase.POST_INITIAL) {
-                		setStuckException(exceptionToThrow);
+                		setStuckException(exceptionToThrowReference);
                 	}
                     return;
                 }
@@ -949,7 +963,7 @@ public final class State implements Cloneable {
                 } else {
                     clearOperands();
                     setProgramCounter(exceptionTableEntry.programCounterHandler);
-                    pushOperand(exceptionToThrow);
+                    pushOperand(exceptionToThrowReference);
                     return;				
                 }
             }
@@ -1180,6 +1194,7 @@ public final class State implements Cloneable {
     /**
      * Makes symbolic arguments for the root method invocation. This includes the
      * root object.
+     * 
      * @param f the root {@link MethodFrame}.
      * @param isStatic
      *        {@code true} iff INVOKESTATIC method invocation rules 
@@ -1211,7 +1226,10 @@ public final class State implements Cloneable {
         final String methodClassName = methodClass.getClassName();
         final Value[] args = new Value[numArgs];
         for (int i = 0, slot = 0; i < numArgs; ++i) {
-            //builds a symbolic value from signature and name
+            //builds a symbolic value from method class/descriptor/generic signature 
+        	//and the name of the frame's local variable where the 
+        	//symbol will be stored (note that this means that we 
+        	//require the presence of debug symbols)
             final String variableName = f.getLocalVariableDeclaredName(slot);
             try {
                 if (slot == ROOT_THIS_SLOT && !isStatic) {
@@ -1317,8 +1335,16 @@ public final class State implements Cloneable {
      * @throws FrozenStateException if the state is frozen.
      */
     public void gc() throws FrozenStateException {
-        final Set<Long> doNotDispose = new ReachableObjectsCollector().reachable(this, true);
-        this.heap.disposeExcept(doNotDispose);
+        final Set<Long> reachableHeapPositions;
+        try {
+        	reachableHeapPositions = new ReachableObjectsCollector().reachable(this, true);
+        } catch (FrozenStateException e) {
+        	throw e;
+        } catch (InvalidInputException e) {
+        	//this is plainly impossible
+        	throw new UnexpectedInternalException(e);
+        }
+        this.heap.disposeExcept(reachableHeapPositions);
     }
     
     /**
@@ -2056,20 +2082,24 @@ public final class State implements Cloneable {
      * @param ref a {@link Reference}.
      * @return the {@link HeapObjekt} referred to by {@code ref}, or 
      *         {@code null} if {@code ref} does not refer to 
-     *         an object in the heap, i.e.
+     *         an object in the heap, that happens when either:.
      *         <ul>
      *         <li>{@code ref} is {@link Null}, or</li> 
      *         <li>{@code ref} is concrete and its heap position is free, or</li> 
-     *         <li>{@code ref} is symbolic and resolved to null, or</li> 
      *         <li>{@code ref} is symbolic and unresolved, or</li>
+     *         <li>{@code ref} is symbolic and resolved to null, or</li> 
      *         <li>{@code ref} is a {@link KlassPseudoReference}.</li>
      *         </ul>
-     * @throws FrozenStateException if the state is frozen.
-     * @throws NullPointerException if {@code ref == null}.
+     * @throws FrozenStateException if this state is frozen.
+     * @throws InvalidInputException if {@code ref == null}.
      */
-    public HeapObjekt getObject(Reference ref) throws FrozenStateException {
+    public HeapObjekt getObject(Reference ref) 
+    throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
+    	}
+    	if (ref == null) {
+    		throw new InvalidInputException("State.getObject was invoked with a null ref parameter.");
     	}
         final HeapObjekt retVal;
         if (ref.isSymbolic()) {
@@ -3015,7 +3045,6 @@ public final class State implements Cloneable {
         };
     }
     
-    
     /**
      * Tests whether a symbolic reference is resolved.
      * 
@@ -3025,7 +3054,10 @@ public final class State implements Cloneable {
      *         {@link State}'s heap contains an {@link Objekt}
      *         at the position indicated by {@code ref}, 
      *         or {@code ref} is resolved by null.
-     * @throws NullPointerException if {@code ref == null}.
+     *         Note also that if {@code reference == null} the
+     *         method will return {@code false}, so it is
+     *         safe to test with this method before invoking
+     *         {@link #getResolution(ReferenceSymbolic)}.
      */
     public boolean resolved(ReferenceSymbolic ref) {
         return this.pathCondition.resolved(ref);
@@ -3035,29 +3067,37 @@ public final class State implements Cloneable {
      * Returns the heap position associated to a resolved 
      * symbolic reference.
      * 
-     * @param ref a {@link ReferenceSymbolic}. It must be 
+     * @param reference a {@link ReferenceSymbolic}. It must be 
      * {@link #resolved}{@code (reference) == true}.
      * @return a {@code long}, the heap position to which
-     * {@code ref} has been resolved.
-     * @throws NullPointerException if {@code ref == null}.
+     * {@code reference} has been resolved. Note that if
+     * {@code reference} has been resolved to {@code null},
+     * the method will return {@link Util#POS_NULL POS_NULL}.
+     * @throws InvalidInputException if {@code reference == null} 
+     * or {@link #resolved}{@code (reference) == false}.
      */
-    public long getResolution(ReferenceSymbolic ref) {
-        return this.pathCondition.getResolution(ref);
+    public long getResolution(ReferenceSymbolic reference) 
+    throws InvalidInputException {
+    	if (reference == null || !resolved(reference)) {
+    		throw new InvalidInputException("Invoked State.getResolution with a null parameter.");
+    	}
+        return this.pathCondition.getResolution(reference);
     }
 
     /**
-     * Tests whether a reference is null.
+     * Tests whether a reference is the null reference.
      * 
      * @param ref a {@link Reference}.
      * @return {@code true} iff {@code ref} is {@link Null}, 
-     * or if is a symbolic reference resolved to null.
-     * @throws NullPointerException if {@code ref == null}.
+     * or is a symbolic reference resolved to null.
+     * @throws InvalidInputException if {@code ref == null}. 
      */
-    public boolean isNull(Reference ref) {
+    public boolean isNull(Reference ref)
+    throws InvalidInputException {
         if (ref instanceof ReferenceSymbolic) {
             final ReferenceSymbolic refS = (ReferenceSymbolic) ref;
             return (resolved(refS) && getResolution(refS) == jbse.mem.Util.POS_NULL);
-        } else {
+        } else { //any other kind of reference
             return (ref == Null.getInstance());
         }
     }
@@ -3453,10 +3493,12 @@ public final class State implements Cloneable {
      * Sets a stuck state caused by an unhandled throw.
      * 
      * @param exc a {@link Reference} to some instance 
-     *            in this {@link State}'s heap. 
+     *        in this {@link State}'s heap. 
      * @throws FrozenStateException if the state is frozen.
      */
-    public void setStuckException(Reference exc) throws FrozenStateException {
+    public void setStuckException(Reference exc) 
+    throws FrozenStateException {
+    	
         setStuckReturn();
         this.exc = exc;
     }

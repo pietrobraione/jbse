@@ -18,11 +18,11 @@ import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Instance;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
@@ -43,7 +43,7 @@ public final class Algo_SUN_UNSAFE_STATICFIELDBASE extends Algo_INVOKEMETA_Nonbr
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
-    CannotManageStateException, InterruptException, FrozenStateException, 
+    CannotManageStateException, InterruptException, InvalidInputException, 
     InvalidTypeException, InvalidOperandException {
     	final Calculator calc = this.ctx.getCalculator();
         try {

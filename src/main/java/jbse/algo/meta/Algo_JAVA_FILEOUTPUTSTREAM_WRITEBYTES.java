@@ -29,7 +29,6 @@ import jbse.mem.Array.AccessOutcomeInValue;
 import jbse.mem.Instance;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
-import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
 import jbse.val.Primitive;
@@ -55,7 +54,7 @@ public final class Algo_JAVA_FILEOUTPUTSTREAM_WRITEBYTES extends Algo_INVOKEMETA
     @Override
     protected void cookMore(State state) 
     throws InterruptException, ClasspathException, 
-    SymbolicValueNotAllowedException, FrozenStateException {
+    SymbolicValueNotAllowedException, InvalidInputException {
     	final Calculator calc = this.ctx.getCalculator();    	
         try {
             //gets the FileOutputStream 'this' parameter and its file descriptor

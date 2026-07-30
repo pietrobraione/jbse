@@ -14,9 +14,9 @@ import jbse.algo.StrategyUpdate;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
@@ -38,7 +38,7 @@ public final class Algo_SUN_UNSAFE_ALLOCATEINSTANCE extends Algo_INVOKEMETA_Nonb
     
     @Override
     protected void cookMore(State state) 
-    throws FrozenStateException, UndefinedResultException, ClasspathException, InterruptException {
+    throws InvalidInputException, UndefinedResultException, ClasspathException, InterruptException {
         try {
             final Reference refParam = (Reference) this.data.operand(1);
             final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject(refParam);

@@ -23,11 +23,11 @@ import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Instance;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
@@ -53,7 +53,7 @@ abstract class Algo_SUN_UNSAFE_FIELDOFFSET extends Algo_INVOKEMETA_Nonbranching 
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
-    CannotManageStateException, InterruptException, FrozenStateException, 
+    CannotManageStateException, InterruptException, InvalidInputException, 
     InvalidTypeException, InvalidOperandException {
     	final Calculator calc = this.ctx.getCalculator();
         try {

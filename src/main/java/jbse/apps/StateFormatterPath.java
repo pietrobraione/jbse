@@ -5,10 +5,10 @@ import static jbse.mem.Frame.UNKNOWN_PC;
 import static jbse.mem.Frame.UNKNOWN_SOURCE_ROW;
 
 import jbse.apps.disasm.Disassembler;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.SnippetFrameNoWrap;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -34,7 +34,7 @@ public final class StateFormatterPath implements Formatter {
     private static final String FIELD_SEP = " ";
 
     /** Here the result of {@link StateFormatterPath#formatState(State)}. */
-    private String output;
+    private String output = null;
 
     private Disassembler bcf = new Disassembler();
 
@@ -65,13 +65,13 @@ public final class StateFormatterPath implements Formatter {
         		}
         	}
             this.output += "\n";
-        } catch (FrozenStateException e) {
-        	this.output = "";
+        } catch (InvalidInputException e) {
+        	this.output = "(Failed formatting of state " + s.getBranchIdentifier() + '[' + s.getSequenceNumber() + "] : raised InvalidInputException)\n";
         	return;
         }
     }
 
-    private String formatReturn(State s, Value v) throws FrozenStateException {
+    private String formatReturn(State s, Value v) throws InvalidInputException {
         if (v instanceof Primitive) {
             return formatPrimitive((Primitive) v);
         } else if (v instanceof Reference) {
@@ -92,6 +92,6 @@ public final class StateFormatterPath implements Formatter {
 
     @Override
     public final void cleanup() {
-        this.output = "";
+        this.output = null;
     }
 }

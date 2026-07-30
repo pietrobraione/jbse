@@ -186,7 +186,13 @@ public class TriggerManager {
         if (da instanceof DecisionAlternative_XYLOAD_GETX_Aliases) {
             final DecisionAlternative_XYLOAD_GETX_Aliases daa = (DecisionAlternative_XYLOAD_GETX_Aliases) da;
             final ReferenceSymbolic ref = daa.getValueToLoad();
-            final Objekt o = s.getObject(new ReferenceConcrete(daa.getObjectPosition()));
+            final Objekt o;
+            try {
+				o = s.getObject(new ReferenceConcrete(daa.getObjectPosition()));
+			} catch (InvalidInputException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
             final ArrayList<TriggerRuleAliases> rulesNonMax = rulesRepo.matchingTriggerRulesAliasesNonMax(ref);
             final ArrayList<TriggerRuleAliases> rulesMax = rulesRepo.matchingTriggerRulesAliasesMax(ref);
             final ArrayList<TriggerRule> retVal = new ArrayList<>();

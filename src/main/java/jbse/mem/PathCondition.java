@@ -55,15 +55,16 @@ final class PathCondition implements Cloneable {
 	 * @throws InvalidInputException if {@code condition == null} or 
 	 *         {@code condition} has not boolean type, or is not an 
 	 *         instance of either {@link Simplex} or {@link Expression}.
-	 * @throws ContradictionException if {@code condition.}{@link Primitive#surelyFalse() surelyFalse}{@code ()}.
+	 * @throws ContradictionException if {@code condition.}{@link Primitive#surelyFalse() surelyFalse}{@code () == true}.
      */
-    void addClauseAssume(Primitive condition) throws InvalidInputException, ContradictionException {
+    void addClauseAssume(Primitive condition) 
+    throws InvalidInputException, ContradictionException {
     	final ClauseAssume clause = new ClauseAssume(condition);
     	if (condition.surelyTrue()) {
     		return; //nothing to add
     	}
     	if (condition.surelyFalse()) {
-    		throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".addClauseAssume with a surely false condition.");
+    		throw new ContradictionException("Attempted to invoke PathCondition.addClauseAssume with a surely false condition.");
     	}
         this.clauses.add(clause);
     }
@@ -81,7 +82,8 @@ final class PathCondition implements Cloneable {
      * @param object the {@link HeapObjekt} at position {@code heapPosition}
      *        as it was at the beginning of symbolic execution, or equivalently 
      *        at the time of its assumption. It must not be {@code null}.
-     * @throws InvalidInputException if {@code referenceSymbolic == null || object == null}.
+     * @throws InvalidInputException if {@code referenceSymbolic == null} or
+     *         {@code heapPosition < }{@link Util#POS_ROOT} or {@code object == null}.
      * @throws ContradictionException if {@link #resolved(ReferenceSymbolic) resolved}{@code (referenceSymbolic)}
      *         to a different heap position.
      */
@@ -89,10 +91,10 @@ final class PathCondition implements Cloneable {
     throws InvalidInputException, ContradictionException {
     	final ClauseAssumeExpands clause = new ClauseAssumeExpands(referenceSymbolic, heapPosition, object);
         if (resolved(referenceSymbolic)) {
-        	if (this.referenceResolutionMap.get(referenceSymbolic) == heapPosition) {
+        	if (getResolution(referenceSymbolic) == heapPosition) {
         		return; //nothing to add
         	} else {
-        		throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".addClauseAssumeExpands with an referenceSymbolic resolved to a heap position different to " + heapPosition + ".");
+        		throw new ContradictionException("Invoked PathCondition.addClauseAssumeExpands with an referenceSymbolic resolved to a heap position different from " + heapPosition + ".");
         	}
         }
         this.clauses.add(clause);
@@ -119,7 +121,8 @@ final class PathCondition implements Cloneable {
      * @param object the {@link HeapObjekt} at position {@code heapPosition}
      *        as it was at the beginning of symbolic execution, or equivalently 
      *        at the time of its assumption. It must not be {@code null}.
-     * @throws InvalidInputException if {@code referenceSymbolic == null || object == null}.
+     * @throws InvalidInputException if {@code referenceSymbolic == null} or
+     *         {@code heapPosition < }{@link Util#POS_ROOT} or {@code object == null}.
      * @throws ContradictionException if {@link #resolved(ReferenceSymbolic) resolved}{@code (referenceSymbolic)}
      *         to a different heap position.
      */
@@ -127,10 +130,10 @@ final class PathCondition implements Cloneable {
     throws InvalidInputException, ContradictionException {
     	final ClauseAssumeAliases clause = new ClauseAssumeAliases(referenceSymbolic, heapPosition, object);
         if (resolved(referenceSymbolic)) {
-        	if (this.referenceResolutionMap.get(referenceSymbolic) == heapPosition) {
+        	if (getResolution(referenceSymbolic) == heapPosition) {
         		return; //nothing to add
         	} else {
-        		throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".addClauseAssumeAliases with an referenceSymbolic resolved to a heap position different to " + heapPosition + ".");
+        		throw new ContradictionException("Invoked PathCondition.addClauseAssumeAliases with a referenceSymbolic resolved to a heap position different from " + heapPosition + ".");
         	}
         }
         this.clauses.add(clause);
@@ -150,10 +153,10 @@ final class PathCondition implements Cloneable {
     throws InvalidInputException, ContradictionException {
     	final ClauseAssumeNull clause = new ClauseAssumeNull(referenceSymbolic);
         if (resolved(referenceSymbolic)) {
-        	if (this.referenceResolutionMap.get(referenceSymbolic) == Util.POS_NULL) {
+        	if (getResolution(referenceSymbolic) == Util.POS_NULL) {
         		return; //nothing to add
         	} else {
-        		throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".addClauseAssumeNull with a referenceSymbolic that is already resolved but not to null.");
+        		throw new ContradictionException("Invoked PathCondition.addClauseAssumeNull with a referenceSymbolic that is already resolved but not to null.");
         	}
         }
         this.clauses.add(clause);
@@ -168,9 +171,11 @@ final class PathCondition implements Cloneable {
      * @param klass the symbolic or concrete {@link Klass} object to which 
      *        {@code classFile} is resolved. In the latter case the object
      *        is zeroed.  It must not be {@code null}.
-     * @throws InvalidInputException if {@code classFile == null || klass == null}.
+     * @throws InvalidInputException if {@code classFile == null} or 
+     *         {@code klass == null}.
      */
-    void addClauseAssumeClassInitialized(ClassFile classFile, Klass klass) throws InvalidInputException {
+    void addClauseAssumeClassInitialized(ClassFile classFile, Klass klass) 
+    throws InvalidInputException {
         this.clauses.add(new ClauseAssumeClassInitialized(classFile, klass));
     }
 
@@ -179,8 +184,10 @@ final class PathCondition implements Cloneable {
      * class by assuming it not initialized.
      *   
      * @param classFile a {@link ClassFile}.
+     * @throws InvalidInputException if {@code classFile == null}.
      */
-    void addClauseAssumeClassNotInitialized(ClassFile classFile) {
+    void addClauseAssumeClassNotInitialized(ClassFile classFile) 
+    throws InvalidInputException {
         this.clauses.add(new ClauseAssumeClassNotInitialized(classFile));
     }
 
@@ -189,7 +196,10 @@ final class PathCondition implements Cloneable {
      * 
      * @param reference a {@link ReferenceSymbolic}.
      * @return {@code true} iff {@code reference} is resolved.
-     * @throws NullPointerException if {@code reference == null}.
+     *         Note that if {@code reference == null} the
+     *         method will return {@code false}, so it is
+     *         safe to test with this method before invoking
+     *         {@link #getResolution(ReferenceSymbolic)}.
      */
     boolean resolved(ReferenceSymbolic reference) {
         return this.referenceResolutionMap.containsKey(reference);
@@ -202,10 +212,16 @@ final class PathCondition implements Cloneable {
      * @param reference a {@link ReferenceSymbolic}. It must be 
      * {@link #resolved}{@code (reference) == true}.
      * @return a {@code long}, the heap position to which
-     * {@code reference} has been resolved.
-     * @throws NullPointerException if {@code reference == null}.
+     * {@code reference} has been resolved. Note that if
+     * {@code reference} has been resolved to {@code null},
+     * the method will return {@link Util#POS_NULL POS_NULL}.
+     * @throws InvalidInputException if {@code reference == null}.
      */
-    long getResolution(ReferenceSymbolic reference) {
+    long getResolution(ReferenceSymbolic reference) 
+    throws InvalidInputException {
+    	if (reference == null) {
+    		throw new InvalidInputException("Invoked PathCondition.getResolution with null reference parameter.");
+    	}
         return this.referenceResolutionMap.get(reference);
     }
 

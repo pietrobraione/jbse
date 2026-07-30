@@ -10,9 +10,9 @@ import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
@@ -33,7 +33,7 @@ public final class Algo_JAVA_CLASS_ISARRAY extends Algo_INVOKEMETA_Nonbranching 
 
     @Override
     protected void cookMore(State state)
-    throws ThreadStackEmptyException, InterruptException, ClasspathException, FrozenStateException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException, InvalidInputException {
         try {
             //gets the 'this' java.lang.Class instance from the heap 
             //and the name of the class it represents

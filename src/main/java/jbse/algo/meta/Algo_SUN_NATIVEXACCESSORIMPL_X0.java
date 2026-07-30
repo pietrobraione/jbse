@@ -267,7 +267,7 @@ abstract class Algo_SUN_NATIVEXACCESSORIMPL_X0 extends Algo_INVOKEMETA_Nonbranch
     }
     
     private Value checkAndConvert(State state, Reference refTypeFormal, Reference refValActual) 
-    throws InterruptException, ClasspathException, FrozenStateException {
+    throws InterruptException, ClasspathException, InvalidInputException {
     	final Calculator calc = this.ctx.getCalculator();
         try {
             final Instance_JAVA_CLASS typeFormalJavaClass = (Instance_JAVA_CLASS) state.getObject(refTypeFormal);

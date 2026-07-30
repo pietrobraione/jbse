@@ -20,9 +20,9 @@ import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.Simplex;
@@ -45,7 +45,7 @@ public final class Algo_JAVA_FILEINPUTSTREAM_CLOSE0 extends Algo_INVOKEMETA_Nonb
     @Override
     protected void cookMore(State state) 
     throws InterruptException, ClasspathException, 
-    SymbolicValueNotAllowedException, FrozenStateException {
+    SymbolicValueNotAllowedException, InvalidInputException {
         try {
             //gets the FileInputStream 'this' parameter and its file descriptor
             final Reference thisReference = (Reference) this.data.operand(0);

@@ -7,6 +7,7 @@ import java.util.SortedMap;
 
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -45,16 +46,22 @@ public final class ReachableObjectsCollector {
      * @return a {@link Set}{@code <}{@link Long}{@code >}
      *         containing all the heap positions of the objects
      *         reachable from the collection roots.
+     * @throws InvalidInputException if {@code s == null}.
      * @throws FrozenStateException if {@code s} is frozen.
      */
-    public Set<Long> reachable(State s, boolean precise) throws FrozenStateException {
+    public Set<Long> reachable(State s, boolean precise) 
+    throws InvalidInputException, FrozenStateException {
+    	if (s == null) {
+    		throw new InvalidInputException("Invoked ReachableObjectsCollector.reachable with null s parameter.");
+    	}
         try {
             final boolean emptyStack = s.getStack().isEmpty();
             final Reference rootObjectReference = (emptyStack ? null : s.getRootObjectReference());
-            final long rootObjectPosition = (rootObjectReference == null ? -1 : rootObjectReference instanceof ReferenceConcrete ? ((ReferenceConcrete) rootObjectReference).getHeapPosition() : s.getResolution((ReferenceSymbolic) rootObjectReference));
+            final long rootObjectPosition = (rootObjectReference == null ? Util.POS_UNKNOWN : rootObjectReference instanceof ReferenceConcrete ? ((ReferenceConcrete) rootObjectReference).getHeapPosition() : s.getResolution((ReferenceSymbolic) rootObjectReference));
             final ClassFile rootClass = (emptyStack ? null : s.getRootClass());
             return reachable(s, precise, rootObjectPosition, rootClass);
         } catch (ThreadStackEmptyException e) {
+        	//this should never happen
             throw new UnexpectedInternalException(e);
         }
     }
@@ -75,36 +82,44 @@ public final class ReachableObjectsCollector {
      *        the static fields, the string literals, the classes,
      *        including the primitive ones, the classloaders, the
      *        method types, the threads and the thread groups.
-     * @param rootObject a {@code long}. If {@code rootObject >= 0}
+     * @param rootObjectPosition a {@code long}. If 
+     *        {@code rootObjectPosition >= }{@link Util#POS_ROOT}
      *        this parameter is interpreted as the heap position of 
      *        the root object, and all its static and nonstatic 
      *        fields are also considered as roots for collection.
+     *        Otherwise the parameter is ignored.
      * @param rootClass a {@link ClassFile}. If {@code rootClass != null}
      *        all the static fields of the root class are also considered 
-     *        as roots for collection.
+     *        as roots for collection. Otherwise the parameter
+     *        is ignored.
      * @return a {@link Set}{@code <}{@link Long}{@code >}
      *         containing all the heap positions of the objects
      *         reachable from the collection roots.
      * @throws FrozenStateException if {@code s} is frozen.
+     * @throws InvalidInputException if {@code s} is frozen.
      */
-    private Set<Long> reachable(State s, boolean precise, long rootObject, ClassFile rootClass) throws FrozenStateException {
-        if (s == null) {
-            throw new NullPointerException();
-        }
-        
+    private Set<Long> reachable(State s, boolean precise, long rootObjectPosition, ClassFile rootClass) 
+    throws FrozenStateException, InvalidInputException {
         final HashSet<Long> reachable = new HashSet<>();
         
-        //if the state is stuck, possibly adds the return
-        //value and/or the thrown exception
+        //if the state is stuck, adds the return
+        //value and/or the thrown exception (if present
+        //and of reference type)
         if (s.isStuck()) {
     		addIfReference(reachable, s, s.getStuckException());
     		addIfReference(reachable, s, s.getStuckReturn());
         }
         
         //possibly adds the root object and its static fields
-        if (rootObject >= 0) {
-            reachable.add(rootObject);
-            final ClassFile rootObjectClass = s.getObject(new ReferenceConcrete(rootObject)).getType();
+        if (rootObjectPosition >= Util.POS_ROOT) {
+            reachable.add(rootObjectPosition);
+            final ClassFile rootObjectClass;
+            try {
+            	rootObjectClass = s.getObject(new ReferenceConcrete(rootObjectPosition)).getType();
+            } catch (InvalidInputException e) {
+            	//this should never happen
+            	throw new UnexpectedInternalException(e);
+            }
             final Klass k = s.getKlass(rootObjectClass);
             final Map<Signature, Variable> fields = k.fields();
             for (Variable var : fields.values()) {
@@ -161,7 +176,15 @@ public final class ReachableObjectsCollector {
         //possibly adds the objects in the state's object dictionary
         if (precise) {
             s.getObjectsInDictionary().stream()
-                .filter(r -> !s.isNull(r))
+                .filter(r -> { 
+                	try {
+                		return !s.isNull(r);
+                	} catch (InvalidInputException e) {
+                		//discards all the possible nulls
+                		//that are contained in the dictionary
+                		return false; 
+                	}
+                })
                 .map(ReferenceConcrete::getHeapPosition)
                 .forEachOrdered(reachable::add);
         }
@@ -206,7 +229,8 @@ public final class ReachableObjectsCollector {
         return reachable;
     }
     
-    private void addIfReference(Set<Long> set, State s, Value v) {
+    private void addIfReference(Set<Long> set, State s, Value v) 
+    throws InvalidInputException {
         if (v instanceof Reference) {
             final Reference ref = (Reference) v;
             if (s.isNull(ref)) {
@@ -220,7 +244,8 @@ public final class ReachableObjectsCollector {
         }
     }
     
-    private void addIfReferenceAndMarkNext(Set<Long> reachable, Set<Long> next, State s, Value v) {
+    private void addIfReferenceAndMarkNext(Set<Long> reachable, Set<Long> next, State s, Value v) 
+    throws InvalidInputException {
         if (v instanceof Reference) {
             final Reference ref = (Reference) v;
             if (s.isNull(ref)) {

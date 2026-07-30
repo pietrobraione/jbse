@@ -3,12 +3,12 @@ package jbse.jvm;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.jvm.exc.NonexistingObservedVariablesException;
 import jbse.mem.Instance;
@@ -28,7 +28,7 @@ import jbse.val.Value;
  * @author Pietro Braione
  *
  */
-class VariableObserverManager {
+final class VariableObserverManager {
     /** The name of the (root) class containing the variables to observe. */ 
     private final String rootClassName;
 
@@ -66,7 +66,7 @@ class VariableObserverManager {
     }
 
     void init(Engine engine) 
-    throws ThreadStackEmptyException, NonexistingObservedVariablesException {
+    throws ThreadStackEmptyException, NonexistingObservedVariablesException, InvalidInputException {
         this.engine = engine;
         try {
 			this.rootObjectReference = this.engine.getCurrentState().getRootObjectReference();
@@ -76,7 +76,7 @@ class VariableObserverManager {
 		}
 
         //saves the values of the observed variables
-        final List<Integer> nonexistingVariables = new LinkedList<Integer>();
+        final LinkedList<Integer> nonexistingVariables = new LinkedList<>();
         if (hasObservers()) {
             for (int i = 0; i < this.numObservers(); ++i) {
                 this.values.add(getObservedVariableValue(i));
@@ -95,7 +95,7 @@ class VariableObserverManager {
         }		
     }
 
-    void notifyObservers(BranchPoint bp) {
+    void notifyObservers(BranchPoint bp) throws InvalidInputException {
         //if may backtrack, saves last observed values
         saveObservedVariablesValues(bp);
         
@@ -167,8 +167,10 @@ class VariableObserverManager {
      * @return the current value of {@code this.varSigs[i]}, or 
      *         {@code null} if the variable does not exist
      *         neither in the root object nor in the root class.
+     * @throws InvalidInputException if getting the root object
+     *         from the current state fails.
      */
-    private Value getObservedVariableValue(int i) {
+    private Value getObservedVariableValue(int i) throws InvalidInputException {
     	try {
     		final State currentState = this.engine.getCurrentState();
     		final Signature obsVarSignature = this.varSigs.get(i);

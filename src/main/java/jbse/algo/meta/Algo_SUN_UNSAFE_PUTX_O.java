@@ -9,11 +9,11 @@ import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.KlassPseudoReference;
 import jbse.val.Primitive;
@@ -48,7 +48,7 @@ public abstract class Algo_SUN_UNSAFE_PUTX_O extends Algo_INVOKEMETA_Nonbranchin
     
     @Override
     protected void cookMore(State state) 
-    throws SymbolicValueNotAllowedException, UndefinedResultException, FrozenStateException, InterruptException {
+    throws SymbolicValueNotAllowedException, UndefinedResultException, InvalidInputException, InterruptException {
         //gets and checks the object parameter
         final Reference objRef = (Reference) this.data.operand(1);
         if (objRef instanceof KlassPseudoReference) {

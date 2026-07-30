@@ -146,7 +146,7 @@ public final class ClassHierarchy implements Cloneable {
     public ClassHierarchy(Classpath classPath, Class<? extends ClassFileFactory> factoryClass, Map<String, Set<String>> expansionBackdoor, Map<String, String> modelClassSubstitutions)
     throws InvalidClassFileFactoryClassException, InvalidInputException {
     	if (classPath == null || factoryClass == null || expansionBackdoor == null || modelClassSubstitutions == null) {
-    		throw new InvalidInputException("Attempted creation of a " + this.getClass().getName() + " with a null classPath, or factoryClass, or expansionBackdoor, or modelClassSubstitutions.");
+    		throw new InvalidInputException("Attempted creation of a ClassHierarchy with a null classPath, or factoryClass, or expansionBackdoor, or modelClassSubstitutions.");
     	}
         this.cp = classPath; //safety copy
         this.cfs = new ClassFileStore();
@@ -216,13 +216,13 @@ public final class ClassHierarchy implements Cloneable {
     private ClassFile createClassFileClass(ClassFile classFile, ClassFile superClass, ClassFile[] superInterfaces) 
     throws InvalidInputException {
         if (classFile == null) {
-            throw new InvalidInputException("Invoked " + getClass().getName() + ".createClassFileClass() with a classFile parameter that has value null.");
+            throw new InvalidInputException("Invoked ClassHierarchy.createClassFileClass() with a classFile parameter that has value null.");
         }
         if (!classFile.isDummy()) {
-            throw new InvalidInputException("Invoked " + getClass().getName() + ".createClassFileClass() with a classFile parameter that is not dummy.");
+            throw new InvalidInputException("Invoked ClassHierarchy.createClassFileClass() with a classFile parameter that is not dummy.");
         }
         if (!classFile.isReference()) {
-            throw new InvalidInputException("Invoked " + getClass().getName() + ".createClassFileClass() with a classFile parameter that is not an object classfile but a classfile for class " + classFile.getClassName() + ".");
+            throw new InvalidInputException("Invoked ClassHierarchy.createClassFileClass() with a classFile parameter that is not an object classfile but a classfile for class " + classFile.getClassName() + ".");
         }
         final ClassFile retVal;
         try {
@@ -251,15 +251,15 @@ public final class ClassHierarchy implements Cloneable {
         //standard classes in the loaded class cache
         final ClassFile cf_JAVA_OBJECT = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_OBJECT); //surely loaded
         if (cf_JAVA_OBJECT == null) {
-            throw new UnexpectedInternalException("Method " + getClass().getName() + ".createClassFileArray was unable to find standard class java.lang.Object.");
+            throw new UnexpectedInternalException("Method ClassHierarchy.createClassFileArray was unable to find standard class java.lang.Object.");
         }
         final ClassFile cf_JAVA_CLONEABLE = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLONEABLE); //surely loaded
         if (cf_JAVA_CLONEABLE == null) {
-            throw new UnexpectedInternalException("Method " + getClass().getName() + ".createClassFileArray was unable to find standard class java.lang.Cloneable.");
+            throw new UnexpectedInternalException("Method ClassHierarchy.createClassFileArray was unable to find standard class java.lang.Cloneable.");
         } 
         final ClassFile cf_JAVA_SERIALIZABLE = getClassFileClassArray(CLASSLOADER_BOOT, JAVA_SERIALIZABLE); //surely loaded
         if (cf_JAVA_SERIALIZABLE == null) {
-            throw new UnexpectedInternalException("Method " + getClass().getName() + ".createClassFileArrays was unable to find standard class java.lang.Cloneable.");
+            throw new UnexpectedInternalException("Method ClassHierarchy.createClassFileArrays was unable to find standard class java.lang.Cloneable.");
         }
 
         final ClassFile retval =
@@ -376,10 +376,10 @@ public final class ClassHierarchy implements Cloneable {
     private ClassFile createClassFileAnonymous(ClassFile classFile, ClassFile superClass, ClassFile[] superInterfaces, Object[] cpPatches) 
     throws InvalidInputException {
         if (classFile == null) {
-            throw new InvalidInputException("Invoked " + getClass().getName() + ".addClassFileAnonymous() with a classFile parameter that has value null.");
+            throw new InvalidInputException("Invoked ClassHierarchy.addClassFileAnonymous() with a classFile parameter that has value null.");
         }
         if (!classFile.isAnonymousUnregistered()) {
-            throw new InvalidInputException("Invoked " + getClass().getName() + ".addClassFileAnonymous() with a classFile parameter that is not anonymous.");
+            throw new InvalidInputException("Invoked ClassHierarchy.addClassFileAnonymous() with a classFile parameter that is not anonymous.");
         }
         final ClassFile retVal;
         try {
@@ -601,14 +601,14 @@ public final class ClassHierarchy implements Cloneable {
     BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException  {
         //checks parameters
         if (initiatingLoader < CLASSLOADER_BOOT) {
-            throw new InvalidInputException("Invoked " + this.getClass().getName() + ".loadCreateClass with invalid initiating loader " + initiatingLoader + ".");
+            throw new InvalidInputException("Invoked ClassHierarchy.loadCreateClass with invalid initiating loader " + initiatingLoader + ".");
         }
         if (bypassStandardLoading && initiatingLoader > CLASSLOADER_APP) {
-            throw new InvalidInputException("Invoked " + this.getClass().getName() + ".loadCreateClass with bypassStandardLoading == true " + 
+            throw new InvalidInputException("Invoked ClassHierarchy.loadCreateClass with bypassStandardLoading == true " + 
                                             "but the accessor has defining classloader with id " + initiatingLoader + ".");
         }
         if (classSignature == null) {
-            throw new InvalidInputException("Invoked " + this.getClass().getName() + ".loadCreateClass with classSignature == null.");
+            throw new InvalidInputException("Invoked ClassHierarchy.loadCreateClass with classSignature == null.");
         }
 
         
@@ -758,10 +758,10 @@ public final class ClassHierarchy implements Cloneable {
     ClassFileNotAccessibleException, IncompatibleClassFileException, PleaseLoadClassException {
         //checks parameters
         if (definingClassLoader < CLASSLOADER_BOOT) {
-            throw new InvalidInputException("Invoked " + this.getClass().getName() + ".defineClass with invalid defining class loader " + definingClassLoader + ".");
+            throw new InvalidInputException("Invoked ClassHierarchy.defineClass with invalid defining class loader " + definingClassLoader + ".");
         }
         if (bytecode == null) {
-            throw new InvalidInputException("Invoked " + this.getClass().getName() + ".defineClass with null bytecode.");
+            throw new InvalidInputException("Invoked ClassHierarchy.defineClass with null bytecode.");
         }
         
         //checks if a ClassFile exists for classSignature
@@ -807,7 +807,7 @@ public final class ClassHierarchy implements Cloneable {
     throws InvalidInputException, ClassFileIllFormedException, BadClassFileVersionException, ClassFileNotFoundException, RenameUnsupportedException, 
     WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException {
         if (bytecode == null) {
-            throw new InvalidInputException("Invoked " + this.getClass().getName() + ".defineClassAnonymous with null bytecode.");
+            throw new InvalidInputException("Invoked ClassHierarchy.defineClassAnonymous with null bytecode.");
         }
         
         //makes a dummy ClassFile

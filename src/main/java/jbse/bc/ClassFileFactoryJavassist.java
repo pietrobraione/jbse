@@ -14,13 +14,13 @@ public class ClassFileFactoryJavassist extends ClassFileFactory {
     protected ClassFile newClassFileClass(int definingClassLoader, String className, byte[] bytecode, ClassFile superClass, ClassFile[] superInterfaces) 
     throws InvalidInputException, ClassFileIllFormedException {
         if (definingClassLoader < 0) {
-            throw new InvalidInputException("The definingClassLoader parameter to " + ClassFileFactoryJavassist.class.getName() + ".newClassFileClass method was negative.");
+            throw new InvalidInputException("The definingClassLoader parameter to ClassFileFactoryJavassist.newClassFileClass method was negative.");
         }
         if (className == null) {
-            throw new InvalidInputException("The className parameter to " + ClassFileFactoryJavassist.class.getName() + ".newClassFileClass method was null.");
+            throw new InvalidInputException("The className parameter to ClassFileFactoryJavassist.newClassFileClass method was null.");
         }
         if (bytecode == null) {
-            throw new InvalidInputException("The bytecode parameter to " + ClassFileFactoryJavassist.class.getName() + ".newClassFileClass method was null.");
+            throw new InvalidInputException("The bytecode parameter to ClassFileFactoryJavassist.newClassFileClass method was null.");
         }
         
         return new ClassFileJavassist(definingClassLoader, className, bytecode, superClass, superInterfaces);

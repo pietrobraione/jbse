@@ -35,6 +35,7 @@ import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Frame;
@@ -42,7 +43,6 @@ import jbse.mem.HeapObjekt;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
@@ -238,12 +238,13 @@ StrategyUpdate<DecisionAlternative_NONE>> {
      * @throws ThreadStackEmptyException if the stack is empty.
      * @throws ContradictionException  if some initialization assumption is
      *         contradicted.
-     * @throws FrozenStateException if {@code state} is frozen.
+     * @throws InvalidInputException  if some input is invalid or is in an
+     *         invalid state.
      */
     protected abstract void checkMore(State state)
     throws FieldNotFoundException, DecisionException, 
     ClasspathException, InterruptException, ThreadStackEmptyException, 
-    ContradictionException, FrozenStateException;
+    ContradictionException, InvalidInputException;
     
     /**
      * Returns the destination puts the value to its destination. 
@@ -254,10 +255,11 @@ StrategyUpdate<DecisionAlternative_NONE>> {
      * @throws InterruptException if the {@link Algorithm} must be interrupted.
      * @throws ClasspathException if it needs to throw a {@code java.lang.VerifyException}
      *         but it is not found, or ill-formed, or cannot access its superclasses/superinterfaces.
-     * @throws FrozenStateException if {@code state} is frozen.
+     * @throws InvalidInputException if some input is invalid or is in an
+     *         invalid state.
      */
     protected abstract Objekt destination(State state)
-    throws InterruptException, ClasspathException, FrozenStateException;
+    throws InterruptException, ClasspathException, InvalidInputException;
 
     @Override
     protected final Supplier<Boolean> isProgramCounterUpdateAnOffset() {

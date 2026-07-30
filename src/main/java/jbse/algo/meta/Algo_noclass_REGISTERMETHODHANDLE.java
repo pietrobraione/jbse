@@ -9,11 +9,11 @@ import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.Algorithm;
 import jbse.algo.StrategyUpdate;
 import jbse.bc.ClassFile;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.Instance_METALEVELBOX;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
@@ -47,7 +47,7 @@ public final class Algo_noclass_REGISTERMETHODHANDLE extends Algo_INVOKEMETA_Non
     }
     
     @Override
-    protected void cookMore(State state) throws FrozenStateException {
+    protected void cookMore(State state) throws InvalidInputException {
         try {
             this.methodHandle = (ReferenceConcrete) this.data.operand(0);
             this.refKind = ((Integer) ((Simplex) this.data.operand(1)).getActualValue()).intValue();

@@ -20,10 +20,10 @@ import jbse.bc.ConstantPoolUtf8;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
@@ -45,7 +45,7 @@ public final class Algo_SUN_CONSTANTPOOL_GETUTF8AT0 extends Algo_INVOKEMETA_Nonb
     }
 
     @Override
-    protected void cookMore(State state) throws FrozenStateException, UndefinedResultException, 
+    protected void cookMore(State state) throws InvalidInputException, UndefinedResultException, 
     SymbolicValueNotAllowedException, ClasspathException, InterruptException {
         final Calculator calc = this.ctx.getCalculator();
         

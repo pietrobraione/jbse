@@ -6,6 +6,7 @@ import static jbse.common.Type.INT;
 import jbse.algo.InterruptException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.Instance;
 import jbse.mem.State;
@@ -28,7 +29,7 @@ class Util {
 
 	static Instance getInstance(State state, Value ref, String methodName, String paramName, 
 	ErrorAction whenNoRef, ErrorAction whenNull, ErrorAction whenUnresolved)
-	throws InterruptException, SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
+	throws InterruptException, SymbolicValueNotAllowedException, ClasspathException, InvalidInputException {
 		//TODO handle cast errors
 		if (ref == null) {
 			whenNoRef.doIt("Unexpected null value while accessing " + paramName + " parameter to " + methodName + ".");
@@ -50,7 +51,7 @@ class Util {
 	static Array getArray(State state, Value ref, String methodName, String paramName, 
 	ErrorAction whenNoRef, ErrorAction whenNull, ErrorAction whenUnresolved, 
 	ErrorAction whenNotSimple)
-	throws InterruptException, SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
+	throws InterruptException, SymbolicValueNotAllowedException, ClasspathException, InvalidInputException {
 		//TODO handle cast errors
 		if (ref == null) {
 			whenNoRef.doIt("Unexpected null value while accessing " + paramName + " parameter to " + methodName + ".");
